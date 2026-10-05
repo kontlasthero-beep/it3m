@@ -75,6 +75,7 @@
     .subtitle { margin: 5px 0 0; color: var(--muted); font-size: 14px; }
 
     .turn-status {
+      position: relative;
       min-width: 220px;
       padding: 10px 12px;
       border-left: 4px solid var(--accent);
@@ -84,6 +85,21 @@
     }
 
     .status-topline { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .status-controls { display: inline-flex; align-items: center; gap: 6px; }
+    .connection-status-button { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 4px 8px; border-color: #526464; background: #101a1c; color: var(--muted); font-size: 11px; line-height: 1; white-space: nowrap; }
+    .connection-status-button[hidden] { display: none; }
+    .connection-status-button[data-state="good"] { border-color: #419d7d; color: #a5f2d6; }
+    .connection-status-button[data-state="warn"] { border-color: #c49c45; color: #f4d487; }
+    .connection-status-button[data-state="bad"] { border-color: #bb5353; color: #ffaaaa; }
+    .connection-dot { width: 8px; height: 8px; flex: 0 0 8px; border-radius: 50%; background: #8c9997; }
+    .connection-status-button[data-state="good"] .connection-dot { background: #53d3a0; box-shadow: 0 0 8px rgba(83, 211, 160, .6); }
+    .connection-status-button[data-state="warn"] .connection-dot { background: #efbd52; }
+    .connection-status-button[data-state="bad"] .connection-dot { background: #fa6666; }
+    .connection-details { position: absolute; z-index: 25; top: calc(100% + 6px); right: 0; width: min(270px, calc(100vw - 32px)); padding: 11px 12px; border: 1px solid #526464; border-radius: 5px; background: #101a1c; box-shadow: 0 10px 24px rgba(0, 0, 0, .4); color: var(--muted); font-size: 12px; }
+    .connection-details[hidden] { display: none; }
+    .connection-details dl { display: grid; grid-template-columns: 1fr auto; gap: 7px 12px; margin: 0; }
+    .connection-details dt, .connection-details dd { margin: 0; }
+    .connection-details dd { color: var(--ink); font-variant-numeric: tabular-nums; text-align: right; }
     .turn-status strong { display: block; margin-top: 2px; color: var(--ink); font-size: 17px; }
     .speed-toggle { display: inline-flex; align-items: center; gap: 5px; min-height: 30px; padding: 4px 8px; color: var(--ink); font-size: 12px; line-height: 1; touch-action: manipulation; }
     .speed-toggle svg { width: 17px; height: 14px; fill: currentColor; }
@@ -394,10 +410,24 @@
       <div class="turn-status">
         <div class="status-topline">
           <span>현재 턴</span>
-          <button class="speed-toggle" id="speedToggle" data-speed-level="0" type="button" aria-label="게임 속도: 정상 속도" aria-pressed="false" title="게임 속도 전환">
-            <svg viewBox="0 0 20 16" aria-hidden="true"><path data-speed-arrow="1" d="M0 2v12l7-6z"/><path data-speed-arrow="2" d="M6 2v12l7-6z"/><path data-speed-arrow="3" d="M12 2v12l7-6z"/></svg>
-            <span id="speedLabel">100%</span>
-          </button>
+          <div class="status-controls">
+            <button class="connection-status-button" id="connectionStatusButton" type="button" data-state="idle" aria-expanded="false" aria-controls="connectionDetails" title="실시간 연결 상태" hidden>
+              <span class="connection-dot" aria-hidden="true"></span><span id="connectionStatusLabel">연결 대기</span>
+            </button>
+            <button class="speed-toggle" id="speedToggle" data-speed-level="0" type="button" aria-label="게임 속도: 정상 속도" aria-pressed="false" title="게임 속도 전환">
+              <svg viewBox="0 0 20 16" aria-hidden="true"><path data-speed-arrow="1" d="M0 2v12l7-6z"/><path data-speed-arrow="2" d="M6 2v12l7-6z"/><path data-speed-arrow="3" d="M12 2v12l7-6z"/></svg>
+              <span id="speedLabel">100%</span>
+            </button>
+          </div>
+        </div>
+        <div class="connection-details" id="connectionDetails" hidden>
+          <dl>
+            <dt>전송 경로</dt><dd id="connectionRouteValue">확인 중</dd>
+            <dt>왕복 지연</dt><dd id="connectionLatencyValue">-</dd>
+            <dt>마지막 응답</dt><dd id="connectionAgeValue">-</dd>
+            <dt>게임 상태 갱신</dt><dd id="connectionSnapshotValue">-</dd>
+            <dt>P2P 상태</dt><dd id="connectionPeerValue">대기 중</dd>
+          </dl>
         </div>
         <strong id="turnText">게임 시작 대기</strong>
         <div class="audio-controls" aria-label="오디오 설정">
@@ -640,6 +670,14 @@
       const musicToggle = document.querySelector('#musicToggle');
       const speedToggle = document.querySelector('#speedToggle');
       const speedLabel = document.querySelector('#speedLabel');
+      const connectionStatusButton = document.querySelector('#connectionStatusButton');
+      const connectionStatusLabel = document.querySelector('#connectionStatusLabel');
+      const connectionDetails = document.querySelector('#connectionDetails');
+      const connectionRouteValue = document.querySelector('#connectionRouteValue');
+      const connectionLatencyValue = document.querySelector('#connectionLatencyValue');
+      const connectionAgeValue = document.querySelector('#connectionAgeValue');
+      const connectionSnapshotValue = document.querySelector('#connectionSnapshotValue');
+      const connectionPeerValue = document.querySelector('#connectionPeerValue');
       const mobileLayoutQuery = window.matchMedia('(max-width: 700px), (pointer: coarse)');
       let connectionNoticeTimer = null;
       playerNameInput.value = createRandomNickname();
@@ -814,6 +852,90 @@
           connectionNotice.hidden = true;
           connectionNotice.classList.remove('visible');
         }, 2800);
+      }
+
+      function formatConnectionAge(age) {
+        if (!Number.isFinite(age) || age < 0) return '-';
+        if (age < 1000) return '방금';
+        return `${(age / 1000).toFixed(age < 10_000 ? 1 : 0)}초 전`;
+      }
+
+      function updateConnectionStatusUI(session = onlineSession) {
+        if (!session) {
+          connectionStatusButton.hidden = true;
+          connectionDetails.hidden = true;
+          connectionStatusButton.setAttribute('aria-expanded', 'false');
+          return;
+        }
+        connectionStatusButton.hidden = false;
+        const now = performance.now();
+        const responseAge = session.lastConnectionPongAt == null ? Infinity : now - session.lastConnectionPongAt;
+        const routeTransport = session.lastConnectionTransport || session.lastRealtimeTransport;
+        const route = routeTransport === 'datachannel' ? 'WebRTC DataChannel' :
+          routeTransport === 'websocket' ? 'WebSocket 서버 중계' : '경로 확인 중';
+        let status = '연결 확인 중';
+        let level = 'warn';
+        if (!session.started) {
+          status = session.socket?.readyState === WebSocket.OPEN ? '방 서버 연결됨' : '방 서버 연결 중';
+          level = session.socket?.readyState === WebSocket.OPEN ? 'good' : 'warn';
+        } else if (responseAge < 6000) {
+          const label = session.lastConnectionTransport === 'datachannel' ? 'RTC' : '서버';
+          status = `${label} ${Math.round(session.connectionRtt)}ms`;
+          level = session.connectionRtt < 180 ? 'good' : session.connectionRtt < 500 ? 'warn' : 'bad';
+        } else if (session.forceWebSocketUntil > now) {
+          status = '서버 경유 확인 중';
+          level = 'warn';
+        } else if (responseAge < 12_000) {
+          status = '응답 지연';
+          level = 'warn';
+        } else if (Number.isFinite(responseAge)) {
+          status = '응답 없음';
+          level = 'bad';
+        } else if (session.lastConnectionPingAt > 0 && now - session.lastConnectionPingAt > 4000) {
+          status = '응답 대기';
+          level = 'warn';
+        }
+        connectionStatusButton.dataset.state = level;
+        connectionStatusLabel.textContent = status;
+        connectionStatusButton.setAttribute('aria-label', `온라인 연결 상태: ${status}`);
+        connectionRouteValue.textContent = route;
+        connectionLatencyValue.textContent = Number.isFinite(session.connectionRtt) ? `${Math.round(session.connectionRtt)} ms` : '-';
+        connectionAgeValue.textContent = Number.isFinite(responseAge) ? formatConnectionAge(responseAge) : '-';
+        const snapshotAt = session.role === 'host' ? session.lastSnapshotSentAt : session.lastSnapshotReceivedAt;
+        connectionSnapshotValue.textContent = snapshotAt ? formatConnectionAge(now - snapshotAt) : '대기 중';
+        const peerState = session.peerConnection?.connectionState || 'new';
+        const iceState = session.peerConnection?.iceConnectionState || 'new';
+        const stateNames = { connected: '연결됨', connecting: '연결 중', checking: '확인 중', new: '대기 중', disconnected: '끊김', failed: '실패', closed: '종료' };
+        connectionPeerValue.textContent = `${stateNames[peerState] || peerState} · ICE ${stateNames[iceState] || iceState}`;
+      }
+
+      function startConnectionMonitor(session) {
+        if (session.connectionMonitorTimer || !session.started) return;
+        session.pendingConnectionPings = new Map();
+        session.lastConnectionPingAt = 0;
+        session.connectionMonitorTimer = setInterval(() => {
+          if (onlineSession !== session || !session.started) return;
+          const now = performance.now();
+          for (const [id, pending] of session.pendingConnectionPings) {
+            if (now - pending.sentAt < 3500) continue;
+            session.pendingConnectionPings.delete(id);
+            if (pending.transport === 'datachannel') {
+              session.forceWebSocketUntil = now + 12_000;
+              session.pendingActions?.forEach((action, actionId) => sendOnlineSocketMessage(session, { type: 'action', actionId, action }));
+              showConnectionNotice('P2P 응답 지연 · 서버 경유로 전환합니다');
+            }
+          }
+          if (!session.pendingConnectionPings.size && now - session.lastConnectionPingAt >= 2000) {
+            const id = crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+            const sent = sendOnlineRealtimeMessage(session, { type: 'connection-ping', id });
+            if (sent) {
+              session.pendingConnectionPings.set(id, { sentAt: now, transport: session.lastRealtimeTransport });
+              session.lastConnectionPingAt = now;
+            }
+          }
+          updateConnectionStatusUI(session);
+        }, 500);
+        updateConnectionStatusUI(session);
       }
 
       function scheduleTone(frequency, endFrequency, time, duration, waveform, volume, bus) {
@@ -1995,7 +2117,11 @@
         else if (room.status === 'ready') onlineStatus.textContent = '양쪽 맵이 확정되었습니다. 대전을 준비합니다.';
         else if (room.status === 'playing') onlineStatus.textContent = '3전 2선승 온라인 대전 진행 중';
         else if (room.status === 'complete') onlineStatus.textContent = '대전이 종료되었습니다.';
-        if (room.status === 'playing') ensureOnlinePeerConnection(onlineSession);
+        if (room.status === 'playing') {
+          startConnectionMonitor(onlineSession);
+          ensureOnlinePeerConnection(onlineSession);
+        }
+        updateConnectionStatusUI(onlineSession);
         if (Number.isInteger(room.forfeitWinner)) showOnlineForfeitResult(room.forfeitWinner);
       }
 
@@ -2035,23 +2161,41 @@
 
       function sendOnlineRealtimeMessage(session, message) {
         const channel = session?.dataChannel;
-        if (channel?.readyState === 'open' && channel.bufferedAmount < 512 * 1024) {
+        const preferWebSocket = performance.now() < (session?.forceWebSocketUntil || 0);
+        if (!preferWebSocket && channel?.readyState === 'open' && channel.bufferedAmount < 512 * 1024) {
           try {
             const directMessage = message.type === 'action' && !message.packet
               ? { type: 'action', packet: { id: message.actionId, playerIndex: 1, action: message.action } }
               : message;
             channel.send(JSON.stringify(directMessage));
+            session.lastRealtimeTransport = 'datachannel';
             return true;
           } catch {}
         }
-        return sendOnlineSocketMessage(session, message);
+        const sent = sendOnlineSocketMessage(session, message);
+        if (sent) session.lastRealtimeTransport = 'websocket';
+        return sent;
       }
 
       function handleOnlineRealtimeMessage(session, message, transport) {
-        if (message.type === 'snapshot' && session.role === 'challenger' && Number.isSafeInteger(message.revision) && message.revision > session.snapshotRevision) {
+        if (message.type === 'connection-ping' && typeof message.id === 'string') {
+          if (transport === 'datachannel') {
+            try { session.dataChannel?.send(JSON.stringify({ type: 'connection-pong', id: message.id })); } catch {}
+          } else sendOnlineSocketMessage(session, { type: 'connection-pong', id: message.id });
+        } else if (message.type === 'connection-pong' && typeof message.id === 'string') {
+          const pending = session.pendingConnectionPings?.get(message.id);
+          if (!pending) return;
+          session.pendingConnectionPings.delete(message.id);
+          session.connectionRtt = performance.now() - pending.sentAt;
+          session.lastConnectionPongAt = performance.now();
+          session.lastConnectionTransport = transport;
+          updateConnectionStatusUI(session);
+        } else if (message.type === 'snapshot' && session.role === 'challenger' && Number.isSafeInteger(message.revision) && message.revision > session.snapshotRevision) {
           if (localAimPointerId === null && state.phase !== 'trigger-select') {
             applyOnlineSnapshot(message.snapshot);
             session.snapshotRevision = message.revision;
+            session.lastSnapshotReceivedAt = performance.now();
+            updateConnectionStatusUI(session);
           }
         } else if (message.type === 'action' && session.role === 'host') {
           const packet = message.packet;
@@ -2105,12 +2249,15 @@
             if (peer.connectionState === 'connected') showConnectionNotice('P2P 데이터 연결됨');
             else if (peer.connectionState === 'failed' || peer.connectionState === 'closed') {
               session.dataChannelReady = false;
+              session.forceWebSocketUntil = performance.now() + 12_000;
               session.pendingActions?.forEach((action, id) => sendOnlineSocketMessage(session, { type: 'action', actionId: id, action }));
               showConnectionNotice('직접 연결이 안 되어 서버 연결로 계속합니다');
             }
+            updateConnectionStatusUI(session);
           };
           peer.oniceconnectionstatechange = () => {
             if (peer.iceConnectionState === 'failed') showConnectionNotice('P2P 연결 실패 · 서버 연결로 계속합니다');
+            updateConnectionStatusUI(session);
           };
           if (session.role === 'host') {
             attachOnlineDataChannel(session, peer.createDataChannel('game', { ordered: true }));
@@ -2135,6 +2282,7 @@
         channel.onopen = () => {
           if (onlineSession !== session) return;
           session.dataChannelReady = true;
+          updateConnectionStatusUI(session);
           session.pendingActions.forEach((action, id) => {
             channel.send(JSON.stringify({ type: 'action', packet: { id, playerIndex: 1, action } }));
           });
@@ -2149,8 +2297,14 @@
           session.dataChannelReady = false;
           session.pendingActions?.forEach((action, id) => sendOnlineSocketMessage(session, { type: 'action', actionId: id, action }));
           if (onlineSession === session && session.started) showConnectionNotice('직접 연결 종료 · 서버 연결로 계속합니다');
+          updateConnectionStatusUI(session);
         };
-        channel.onerror = () => { session.dataChannelReady = false; };
+        channel.onerror = () => {
+          session.dataChannelReady = false;
+          session.forceWebSocketUntil = performance.now() + 12_000;
+          session.pendingActions?.forEach((action, id) => sendOnlineSocketMessage(session, { type: 'action', actionId: id, action }));
+          updateConnectionStatusUI(session);
+        };
       }
 
       function queueOnlineRtcSignal(session, signal) {
@@ -2199,6 +2353,9 @@
         if (!session) return;
         session.keepSocket = false;
         clearTimeout(session.reconnectTimer);
+        clearInterval(session.connectionMonitorTimer);
+        session.connectionMonitorTimer = null;
+        session.pendingConnectionPings?.clear();
         if (session.socket && session.socket.readyState < WebSocket.CLOSING) session.socket.close(1000, 'Leaving room');
         session.socket = null;
         session.dataChannelReady = false;
@@ -2206,6 +2363,7 @@
         session.peerConnection?.close();
         session.dataChannel = null;
         session.peerConnection = null;
+        if (onlineSession === session) updateConnectionStatusUI(null);
       }
 
       function connectOnlineSocket(session) {
@@ -2222,6 +2380,7 @@
           const reconnected = session.reconnectCount > 0;
           session.reconnectCount = 0;
           session.reconnectDelay = 500;
+          updateConnectionStatusUI(session);
           if (reconnected) showConnectionNotice('실시간 연결 복구');
           session.pendingActions.forEach((action, actionId) => sendOnlineRealtimeMessage(session, { type: 'action', actionId, action }));
           session.pendingRtcOutgoingSignals?.splice(0).forEach(signal => sendOnlineSocketMessage(session, { type: 'rtc-signal', signal }));
@@ -2238,12 +2397,16 @@
             if (message.type === 'welcome' && session.role === 'challenger' && message.snapshot) {
               session.snapshotRevision = message.snapshotRevision || 0;
               applyOnlineSnapshot(message.snapshot);
+              session.lastSnapshotReceivedAt = performance.now();
+              updateConnectionStatusUI(session);
             }
           } else if (message.type === 'snapshot') {
             handleOnlineRealtimeMessage(session, message, 'websocket');
           } else if (message.type === 'action' && session.role === 'host') {
             handleOnlineRealtimeMessage(session, message, 'websocket');
           } else if (message.type === 'action-ack' && session.role === 'challenger') {
+            handleOnlineRealtimeMessage(session, message, 'websocket');
+          } else if (message.type === 'connection-ping' || message.type === 'connection-pong') {
             handleOnlineRealtimeMessage(session, message, 'websocket');
           } else if (message.type === 'rtc-signal') {
             queueOnlineRtcSignal(session, message.signal);
@@ -2263,6 +2426,7 @@
         socket.addEventListener('close', () => {
           if (onlineSession !== session || session.socket !== socket) return;
           session.socket = null;
+          updateConnectionStatusUI(session);
           scheduleOnlineSocketReconnect(session);
         });
       }
@@ -2295,6 +2459,14 @@
         session.pendingRtcOutgoingSignals = [];
         session.pendingIceCandidates = [];
         session.rtcProcessing = false;
+        session.connectionMonitorTimer = null;
+        session.pendingConnectionPings = new Map();
+        session.connectionRtt = null;
+        session.lastConnectionPongAt = null;
+        session.lastConnectionTransport = null;
+        session.lastRealtimeTransport = null;
+        session.forceWebSocketUntil = 0;
+        session.lastSnapshotReceivedAt = null;
         session.rtcSetupPromise = null;
         session.peerConnection = null;
         session.dataChannel = null;
@@ -2438,6 +2610,7 @@
           if (onlineSession !== session) return;
           session.maps = started.room.seriesMaps;
           session.started = true;
+          startConnectionMonitor(session);
           session.roundIndex = 0;
           session.wins = [0, 0];
           session.totalScores = [0, 0];
@@ -3430,6 +3603,16 @@
         if (onlineSession?.started && onlineSession.role === 'challenger') {
           onlineSession.pendingSpeedLevel = nextLevel;
           sendOnlineAction({ type: 'speed', level: nextLevel });
+        }
+      });
+      connectionStatusButton.addEventListener('click', () => {
+        connectionDetails.hidden = !connectionDetails.hidden;
+        connectionStatusButton.setAttribute('aria-expanded', String(!connectionDetails.hidden));
+      });
+      document.addEventListener('pointerdown', event => {
+        if (!connectionDetails.hidden && !connectionDetails.contains(event.target) && !connectionStatusButton.contains(event.target)) {
+          connectionDetails.hidden = true;
+          connectionStatusButton.setAttribute('aria-expanded', 'false');
         }
       });
       musicToggle.addEventListener('change', () => {

@@ -155,6 +155,15 @@ function receiveRoomSocketMessage(room, member, socket, raw) {
   }
   room.updatedAt = Date.now();
 
+  if (['connection-ping', 'connection-pong'].includes(message.type) &&
+      typeof message.id === 'string' && message.id.length <= 80 && room.challenger) {
+    sendToRoomRole(room, member.role === 'host' ? 'challenger' : 'host', {
+      type: message.type,
+      id: message.id
+    });
+    return;
+  }
+
   if (message.type === 'snapshot' && member.role === 'host' && ['playing', 'complete'].includes(room.status) && message.snapshot && typeof message.snapshot === 'object') {
     if (Number.isSafeInteger(message.revision) && message.revision <= room.snapshotRevision) return;
     room.snapshot = message.snapshot;
