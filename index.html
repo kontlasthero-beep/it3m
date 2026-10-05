@@ -1,0 +1,2704 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0c1315">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Underhanded Curling Club">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <title>Underhanded Curling Club</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #f4f0e6;
+      --muted: #aab5b4;
+      --panel: #182426;
+      --line: #425657;
+      --p1: #4287ff;
+      --p2: #f05252;
+      --accent: #e5b35a;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { min-height: 100%; background: #0c1315; }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      min-height: 100dvh;
+      margin: 0;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+      background: #0c1315;
+      color: var(--ink);
+      font-family: "Malgun Gothic", "Segoe UI", sans-serif;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      padding: 10px 16px;
+      background: #233538;
+      color: var(--ink);
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:hover { background: #30474a; }
+    button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+    .app {
+      width: min(1240px, 100%);
+      margin: 0 auto;
+      padding: 24px 20px 32px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(24px, 4vw, 38px);
+      letter-spacing: 0;
+    }
+
+    .subtitle { margin: 5px 0 0; color: var(--muted); font-size: 14px; }
+
+    .turn-status {
+      min-width: 220px;
+      padding: 10px 12px;
+      border-left: 4px solid var(--accent);
+      background: #152023;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .status-topline { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .turn-status strong { display: block; margin-top: 2px; color: var(--ink); font-size: 17px; }
+    .speed-toggle { display: inline-flex; align-items: center; gap: 5px; min-height: 30px; padding: 4px 8px; color: var(--ink); font-size: 12px; line-height: 1; touch-action: manipulation; }
+    .speed-toggle svg { width: 17px; height: 14px; fill: currentColor; }
+    .speed-toggle[data-speed-level="1"] [data-speed-arrow="3"],
+    .speed-toggle[data-speed-level="2"] [data-speed-arrow="2"],
+    .speed-toggle[data-speed-level="2"] [data-speed-arrow="3"] { display: none; }
+    .speed-toggle[aria-pressed="true"] { border-color: #65d6bd; color: #8debd7; background: #163a35; }
+    .audio-controls { display: flex; gap: 12px; margin-top: 9px; }
+    .audio-controls label { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-size: 12px; cursor: pointer; }
+    .audio-controls input { accent-color: var(--accent); }
+
+    .scoreboard {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .player-panel {
+      min-height: 72px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--panel);
+    }
+
+    .player-panel.current { border-color: var(--accent); }
+    .player-panel.p1 { border-left: 5px solid var(--p1); }
+    .player-panel.p2 { border-left: 5px solid var(--p2); }
+    .player-label { color: var(--muted); font-size: 13px; }
+    .player-score { margin-top: 4px; font-size: 21px; font-weight: 800; }
+
+    .game-shell {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid #506769;
+      border-radius: 6px;
+      background: #111b1d;
+      box-shadow: 0 20px 48px rgba(0, 0, 0, .34);
+    }
+
+    #aimOverlay { position: fixed; z-index: 15; inset: 0; display: none; width: 100vw; height: 100vh; height: 100dvh; overflow: visible; pointer-events: none; }
+
+    canvas { display: block; width: 100%; height: auto; touch-action: none; }
+
+    .entity-tooltip {
+      position: absolute;
+      z-index: 5;
+      width: max-content;
+      max-width: min(240px, calc(100% - 16px));
+      padding: 9px 11px;
+      border: 1px solid #84918e;
+      border-radius: 5px;
+      background: rgba(10, 17, 19, .96);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, .4);
+      color: var(--ink);
+      font-size: 12px;
+      line-height: 1.45;
+      pointer-events: none;
+    }
+
+    .entity-tooltip[hidden] { display: none; }
+    .entity-tooltip strong { display: block; margin-bottom: 3px; font-size: 13px; }
+    .entity-tooltip span { display: block; color: #c2cecb; }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: rgba(8, 15, 16, .74);
+    }
+
+    .overlay[hidden] { display: none; }
+
+    .dialog {
+      width: min(440px, 100%);
+      padding: 26px;
+      border: 1px solid #607777;
+      border-radius: 6px;
+      background: #162326;
+      text-align: center;
+    }
+
+    .start-fields { display: grid; gap: 10px; margin: 16px 0; text-align: left; }
+    .start-fields label { display: grid; gap: 5px; color: var(--muted); font-size: 12px; }
+    .start-fields input { width: 100%; min-height: 40px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; background: #0f191b; color: var(--ink); font: inherit; }
+    .online-entry { display: grid; grid-template-columns: 1fr 1.15fr; gap: 8px; }
+    .online-entry button { padding: 9px 8px; font-size: 12px; }
+    .join-entry { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 7px; }
+    .start-status, .online-status { min-height: 20px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .room-code-view { margin: 10px 0; padding: 10px; background: #0f191b; color: var(--muted); }
+    .room-code-view strong { display: block; margin-top: 3px; color: var(--accent); font-size: 24px; letter-spacing: 2px; }
+    .online-player-status { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
+    .online-player-status span { padding: 8px; background: #0f191b; color: var(--muted); font-size: 12px; }
+
+    .dialog h2 { margin: 0 0 8px; font-size: 29px; }
+    .dialog p { margin: 0 0 20px; color: var(--muted); line-height: 1.55; }
+    .primary { border-color: #f0c874; background: #b47522; color: #18110a; }
+    .primary:hover { background: #d09336; }
+
+    .result-title { animation: winner-pop 720ms cubic-bezier(.18, .9, .22, 1.25) both; }
+    @keyframes winner-pop {
+      from { opacity: 0; transform: translateY(22px) scale(.78); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 18px 0 22px;
+      text-align: left;
+    }
+
+    .result-grid div { padding: 10px; background: #0f191b; }
+    .result-grid span { display: block; color: var(--muted); font-size: 12px; }
+    .result-grid strong { display: block; margin-top: 3px; font-size: 18px; }
+
+    .bottom-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .remaining-ui { display: flex; gap: 8px; }
+    .remaining-player {
+      min-width: 148px;
+      padding: 9px 12px;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: var(--panel);
+      font-size: 13px;
+    }
+    .remaining-player strong { display: block; margin-top: 3px; font-size: 17px; }
+    .remaining-player.p1 { border-left: 4px solid var(--p1); }
+    .remaining-player.p2 { border-left: 4px solid var(--p2); }
+    .turn-actions { display: flex; align-items: center; gap: 12px; }
+    #actionHint { color: var(--muted); font-size: 13px; }
+    #endTurnButton:disabled { opacity: .42; cursor: not-allowed; }
+    .roulette-name { color: var(--accent); font-size: 30px !important; }
+    .map-indicator { color: var(--accent); font-weight: 700; }
+    .map-dialog { width: min(700px, 100%); }
+    .map-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin: 18px 0; text-align: left; }
+    .map-option { display: grid; grid-template-columns: 48px minmax(0, 1fr); align-items: center; gap: 11px; min-width: 0; padding: 10px; border-color: #425657; background: #101a1c; text-align: left; }
+    .map-option[aria-checked="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: #263331; }
+    .map-swatch { width: 48px; aspect-ratio: 1.3; border: 2px solid rgba(255, 255, 255, .55); border-radius: 3px; }
+    .map-option strong, .map-option span { display: block; }
+    .map-option strong { margin-bottom: 3px; font-size: 14px; }
+    .map-option span { color: var(--muted); font-size: 11px; line-height: 1.4; }
+    .map-actions { display: flex; justify-content: center; gap: 9px; }
+    .hands { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .hand-panel { min-width: 0; padding: 10px; border: 1px solid var(--line); border-radius: 5px; background: var(--panel); }
+    .hand-panel.current { border-color: var(--accent); }
+    .hand-title { margin-bottom: 8px; color: var(--muted); font-size: 13px; }
+    .hand-cards { display: flex; flex-wrap: wrap; gap: 7px; min-height: 38px; }
+    .hand-row { display: flex; align-items: flex-start; gap: 10px; }
+    .hand-row .hand-cards { flex: 1; }
+    .trigger-tool { min-width: 116px; min-height: 38px; padding: 7px 9px; border-color: #54756f; background: #183b37; font-size: 12px; white-space: nowrap; touch-action: none; user-select: none; }
+    .trigger-tool[disabled] { opacity: .42; cursor: not-allowed; }
+    .ability-card { padding: 8px 10px; border: 1px solid #70817a; border-radius: 4px; background: #283b34; color: var(--ink); font-size: 13px; touch-action: none; user-select: none; }
+    .ability-card.usable { cursor: grab; }
+    .ability-card.usable:active { cursor: grabbing; }
+    .ability-card.card-back { border-style: dashed; background: #1b2925; color: #a3b0ab; cursor: default; touch-action: auto; }
+    .ability-card.spent { opacity: .45; }
+    .card-ghost { position: fixed; z-index: 20; pointer-events: none; transform: translate(-50%, -50%); }
+    .trigger-placement-preview { position: fixed; z-index: 21; display: none; box-sizing: border-box; pointer-events: none; transform: translate(-50%, -50%); border: 3px solid #c1fff0; border-radius: 50%; background: #17302f; color: #56e0bc; opacity: .9; text-align: center; font-weight: 700; line-height: 1; }
+    .deal-player { margin: 16px 0 6px; color: var(--muted); font-size: 14px; }
+    .deal-card { min-height: 42px; color: var(--accent); font-size: 24px; font-weight: 800; }
+    .trigger-select-overlay { position: fixed; z-index: 30; inset: 0; background: rgba(3, 8, 10, .78); }
+    .trigger-select-overlay[hidden] { display: none; }
+    .trigger-type-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 16px 0; text-align: left; }
+    .trigger-type-option { min-width: 0; padding: 10px; background: #101a1c; text-align: left; }
+    .trigger-type-option[aria-checked="true"] { border-color: var(--accent); background: #263331; }
+    .trigger-type-option strong, .trigger-type-option span { display: block; }
+    .trigger-type-option span { margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 1.4; white-space: normal; }
+
+    @media (max-width: 620px) {
+      .app { padding: max(12px, env(safe-area-inset-top)) 10px max(18px, env(safe-area-inset-bottom)); }
+      .topbar { display: block; }
+      .turn-status { margin-top: 14px; min-width: 0; }
+      .scoreboard { gap: 6px; }
+      .player-panel { padding: 10px; }
+      .player-score { font-size: 17px; }
+      .dialog { padding: 20px 16px; }
+      .online-entry { grid-template-columns: 1fr; }
+      .map-options { grid-template-columns: 1fr; gap: 7px; margin: 12px 0; }
+      .map-option { padding: 8px; }
+      .bottom-bar { align-items: stretch; flex-direction: column; }
+      .remaining-ui { display: grid; grid-template-columns: 1fr 1fr; }
+      .remaining-player { min-width: 0; }
+      .turn-actions { justify-content: space-between; }
+      #actionHint { max-width: 55%; }
+      .hands { grid-template-columns: 1fr; }
+      .hand-row { flex-wrap: wrap; }
+      .trigger-type-list { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="topbar" aria-label="게임 정보">
+      <div>
+        <h1>Underhanded Curling Club</h1>
+        <p class="subtitle"><span class="map-indicator" id="mapIndicator">맵 선택 대기</span> · 왼쪽 끝선에 가까울수록 높은 점수</p>
+      </div>
+      <div class="turn-status">
+        <div class="status-topline">
+          <span>현재 턴</span>
+          <button class="speed-toggle" id="speedToggle" data-speed-level="0" type="button" aria-label="게임 속도: 정상 속도" aria-pressed="false" title="게임 속도 전환">
+            <svg viewBox="0 0 20 16" aria-hidden="true"><path data-speed-arrow="1" d="M0 2v12l7-6z"/><path data-speed-arrow="2" d="M6 2v12l7-6z"/><path data-speed-arrow="3" d="M12 2v12l7-6z"/></svg>
+            <span id="speedLabel">100%</span>
+          </button>
+        </div>
+        <strong id="turnText">게임 시작 대기</strong>
+        <div class="audio-controls" aria-label="오디오 설정">
+          <label><input id="sfxToggle" type="checkbox" checked>효과음</label>
+          <label><input id="musicToggle" type="checkbox" checked>배경음악</label>
+        </div>
+      </div>
+    </section>
+
+    <section class="scoreboard" aria-label="점수판">
+      <div class="player-panel p1" id="panel0">
+        <div class="player-label">플레이어 1 · 병뚜껑 4개</div>
+        <div class="player-score" id="score0">거리 0 · 점수 0</div>
+      </div>
+      <div class="player-panel p2" id="panel1">
+        <div class="player-label">플레이어 2 · 병뚜껑 4개</div>
+        <div class="player-score" id="score1">거리 0 · 점수 0</div>
+      </div>
+    </section>
+
+    <section class="game-shell" aria-label="컬링 테이블">
+      <canvas id="game" width="1200" height="700" aria-label="Underhanded Curling Club 게임"></canvas>
+      <div class="entity-tooltip" id="entityTooltip" role="tooltip" hidden>
+        <strong id="entityTooltipTitle"></strong>
+        <span id="entityTooltipDetail"></span>
+      </div>
+      <div class="overlay" id="startOverlay">
+        <div class="dialog">
+          <h2>Underhanded Curling Club</h2>
+          <p>이름을 정하고 온라인 방을 만들거나 참가하세요.</p>
+          <div class="start-fields">
+            <label>내 이름<input id="playerNameInput" maxlength="20" autocomplete="nickname" value="플레이어 1"></label>
+            <div class="online-entry">
+              <button id="createRoomButton">온라인 방 만들기</button>
+              <div class="join-entry"><input id="roomCodeInput" maxlength="6" autocomplete="off" placeholder="방 코드" aria-label="참가할 방 코드"><button id="joinRoomButton">참가</button></div>
+            </div>
+            <p class="start-status" id="startStatus" role="status"></p>
+          </div>
+          <button class="primary" id="startButton">로컬 2인 플레이</button>
+        </div>
+      </div>
+      <div class="overlay" id="mapSelectOverlay" hidden>
+        <div class="dialog map-dialog">
+          <h2 id="mapSelectTitle">맵 선택</h2>
+          <p id="mapSelectDescription">이번 판에서 플레이할 맵을 고르세요.</p>
+          <div class="room-code-view" id="roomCodeView" hidden>초대 코드<strong id="roomCodeText"></strong></div>
+          <div class="online-player-status" id="onlinePlayerStatus" hidden></div>
+          <p class="online-status" id="onlineStatus" role="status" hidden></p>
+          <div class="map-options" id="mapOptions" role="radiogroup" aria-label="플레이 맵 선택"></div>
+          <div class="map-actions">
+            <button id="cancelMapButton">취소</button>
+            <button class="primary" id="confirmMapButton">선택한 맵으로 시작</button>
+          </div>
+        </div>
+      </div>
+      <div class="overlay" id="dealOverlay" hidden>
+        <div class="dialog">
+          <h2>카드 배분</h2>
+          <p class="deal-player" id="dealPlayer">플레이어 1</p>
+          <strong class="deal-card" id="dealCard">경질화</strong>
+        </div>
+      </div>
+      <div class="overlay" id="resultOverlay" hidden>
+        <div class="dialog">
+          <h2 class="result-title" id="winnerTitle">플레이어 1 승리!</h2>
+          <p id="resultMessage"></p>
+          <div class="result-grid" id="resultGrid"></div>
+          <button class="primary" id="replayButton">다시 플레이</button>
+        </div>
+      </div>
+    </section>
+    <section class="bottom-bar" aria-label="남은 병뚜껑과 턴 조작">
+      <div class="remaining-ui">
+        <div class="remaining-player p1">플레이어 1 남은 병뚜껑<strong id="remaining0">4개</strong></div>
+        <div class="remaining-player p2">플레이어 2 남은 병뚜껑<strong id="remaining1">4개</strong></div>
+      </div>
+      <div class="turn-actions">
+        <span id="actionHint">병뚜껑을 당겨 발사하세요</span>
+        <button id="endTurnButton" disabled>턴 종료</button>
+      </div>
+    </section>
+    <section class="hands" aria-label="플레이어 카드">
+      <div class="hand-panel" id="handPanel0"><div class="hand-title">플레이어 1 카드</div><div class="hand-row"><div class="hand-cards" id="hand0"></div><button class="trigger-tool" data-owner="0" disabled>트리거 배치 · 1회</button></div></div>
+      <div class="hand-panel" id="handPanel1"><div class="hand-title">플레이어 2 카드</div><div class="hand-row"><div class="hand-cards" id="hand1"></div><button class="trigger-tool" data-owner="1" disabled>트리거 배치 · 1회</button></div></div>
+    </section>
+  </main>
+
+  <div class="overlay trigger-select-overlay" id="triggerSelectOverlay" hidden>
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="triggerSelectTitle">
+      <h2 id="triggerSelectTitle">트리거 선택</h2>
+      <p>배치할 트리거 종류를 선택하세요.</p>
+      <div class="trigger-type-list" id="triggerTypeOptions" role="radiogroup" aria-label="트리거 종류"></div>
+      <div class="map-actions">
+        <button id="cancelTriggerButton">취소</button>
+        <button class="primary" id="confirmTriggerButton" disabled>이 위치에 배치</button>
+      </div>
+    </div>
+  </div>
+
+  <svg id="aimOverlay" aria-hidden="true">
+    <path id="aimPath" fill="none" stroke-linecap="round" />
+    <circle id="aimTip" fill="#f4f0e6" />
+  </svg>
+  <script>
+    (() => {
+      const canvas = document.querySelector('#game');
+      const ctx = canvas.getContext('2d');
+      const aimOverlay = document.querySelector('#aimOverlay');
+      const aimPath = document.querySelector('#aimPath');
+      const aimTip = document.querySelector('#aimTip');
+      const entityTooltip = document.querySelector('#entityTooltip');
+      const entityTooltipTitle = document.querySelector('#entityTooltipTitle');
+      const entityTooltipDetail = document.querySelector('#entityTooltipDetail');
+      const startOverlay = document.querySelector('#startOverlay');
+      const resultOverlay = document.querySelector('#resultOverlay');
+      const mapSelectOverlay = document.querySelector('#mapSelectOverlay');
+      const dealOverlay = document.querySelector('#dealOverlay');
+      const startButton = document.querySelector('#startButton');
+      const playerNameInput = document.querySelector('#playerNameInput');
+      const roomCodeInput = document.querySelector('#roomCodeInput');
+      const createRoomButton = document.querySelector('#createRoomButton');
+      const joinRoomButton = document.querySelector('#joinRoomButton');
+      const startStatus = document.querySelector('#startStatus');
+      const replayButton = document.querySelector('#replayButton');
+      const turnText = document.querySelector('#turnText');
+      const scoreEls = [document.querySelector('#score0'), document.querySelector('#score1')];
+      const panels = [document.querySelector('#panel0'), document.querySelector('#panel1')];
+      const playerLabelEls = [...document.querySelectorAll('.player-label')];
+      const remainingPanelEls = [...document.querySelectorAll('.remaining-player')];
+      const winnerTitle = document.querySelector('#winnerTitle');
+      const resultMessage = document.querySelector('#resultMessage');
+      const resultGrid = document.querySelector('#resultGrid');
+      const mapOptions = document.querySelector('#mapOptions');
+      const mapSelectTitle = document.querySelector('#mapSelectTitle');
+      const mapSelectDescription = document.querySelector('#mapSelectDescription');
+      const roomCodeView = document.querySelector('#roomCodeView');
+      const roomCodeText = document.querySelector('#roomCodeText');
+      const onlinePlayerStatus = document.querySelector('#onlinePlayerStatus');
+      const onlineStatus = document.querySelector('#onlineStatus');
+      const confirmMapButton = document.querySelector('#confirmMapButton');
+      const cancelMapButton = document.querySelector('#cancelMapButton');
+      const triggerSelectOverlay = document.querySelector('#triggerSelectOverlay');
+      const triggerTypeOptions = document.querySelector('#triggerTypeOptions');
+      const confirmTriggerButton = document.querySelector('#confirmTriggerButton');
+      const cancelTriggerButton = document.querySelector('#cancelTriggerButton');
+      const mapIndicator = document.querySelector('#mapIndicator');
+      const remainingEls = [document.querySelector('#remaining0'), document.querySelector('#remaining1')];
+      const endTurnButton = document.querySelector('#endTurnButton');
+      const actionHint = document.querySelector('#actionHint');
+      const dealPlayer = document.querySelector('#dealPlayer');
+      const dealCard = document.querySelector('#dealCard');
+      const handEls = [document.querySelector('#hand0'), document.querySelector('#hand1')];
+      const handPanels = [document.querySelector('#handPanel0'), document.querySelector('#handPanel1')];
+      const triggerToolButtons = [...document.querySelectorAll('.trigger-tool')];
+      const sfxToggle = document.querySelector('#sfxToggle');
+      const musicToggle = document.querySelector('#musicToggle');
+      const speedToggle = document.querySelector('#speedToggle');
+      const speedLabel = document.querySelector('#speedLabel');
+
+      // Synthesized interface cues remain configurable here; gameplay impacts use the WAV files below.
+      const AUDIO_CONFIG = {
+        sfxVolume: 0.34,
+        sounds: {
+          start: { frequency: 523, endFrequency: 784, duration: .2, waveform: 'sine', volume: .45 },
+          deal: { frequency: 640, endFrequency: 880, duration: .11, waveform: 'triangle', volume: .28 },
+          launch: { frequency: 300, endFrequency: 115, duration: .25, waveform: 'triangle', volume: .58 },
+          wallHit: { frequency: 260, endFrequency: 145, duration: .12, waveform: 'square', volume: .38, cooldown: 80 },
+          guardHit: { frequency: 520, endFrequency: 250, duration: .1, waveform: 'sine', volume: .35, cooldown: 90 },
+          card: { frequency: 690, endFrequency: 920, duration: .13, waveform: 'triangle', volume: .38 },
+          pulse: { frequency: 180, endFrequency: 720, duration: .32, waveform: 'sawtooth', volume: .52 },
+          blackhole: { frequency: 210, endFrequency: 620, duration: .46, waveform: 'sine', volume: .5 },
+          elasticStretch: { frequency: 150, endFrequency: 430, duration: .095, waveform: 'sawtooth', volume: .16, cooldown: 75 },
+          strainRumble: { frequency: 54, endFrequency: 76, duration: .12, waveform: 'square', volume: .12, cooldown: 145 },
+          drop: { frequency: 190, endFrequency: 95, duration: .2, waveform: 'square', volume: .4 },
+          turn: { frequency: 440, endFrequency: 660, duration: .15, waveform: 'sine', volume: .3 },
+          win: { frequency: 523, endFrequency: 1046, duration: .7, waveform: 'triangle', volume: .48 }
+        }
+      };
+
+      const AUDIO_FILES = {
+        weakHit: new Audio('효과음/Midhit_1.wav'),
+        strongHit: new Audio('효과음/Stronghit_1.wav'),
+        unitDeath: new Audio('효과음/Unit_death_sound_for_1.wav'),
+        unitKill: new Audio('효과음/Unit_kill_sound_1.wav'),
+        pulseCast: new Audio('효과음/shockwave_sound_1.wav'),
+        blackholeCast: new Audio('효과음/Blackhole_shockwave_1.wav'),
+        music: new Audio('배경음악/비겁한 컬링 클럽.wav')
+      };
+      AUDIO_FILES.music.loop = true;
+      AUDIO_FILES.music.volume = 0.28;
+      AUDIO_FILES.music.preload = 'auto';
+      const fileSoundLastPlayed = new Map();
+      const STRONG_HIT_THRESHOLD = 500;
+
+      const TABLE = { left: 88, right: 1112, top: 58, bottom: 652, goalX: 108, launchX: 1060 };
+      const CONFIG = {
+        unitRadius: 29,
+        maxTurnsPerPlayer: 4,
+        launchScale: 5.566,
+        maxPullDistance: 250,
+        maxLaunchSpeed: 1392,
+        stopSpeed: 12,
+        restitution: 0.84,
+        separation: 0.52
+      };
+      const BLACK_HOLE = { range: 136.5, duration: 0.85, impulse: 650 };
+      const PULSE_RANGE = 150.9375;
+      const PULSE_IMPULSE = 274.21875;
+      const ENTITY_KIND = Object.freeze({ UNIT: 'unit', STRUCTURE: 'structure', TRIGGER: 'trigger' });
+      const ITEM_TRIGGERS = [
+        { id: 'blackhole', name: '블랙홀 방출', description: '범위 내 유닛을 끌어당깁니다.', color: '#bd75f5', range: BLACK_HOLE.range * 1.35 },
+        { id: 'pulse', name: '방출', description: '넓은 범위의 유닛을 강하게 밀쳐냅니다.', color: '#00d9ff', range: PULSE_RANGE * 1.15 * 1.35, impulse: PULSE_IMPULSE * 1.35 },
+        { id: 'hardening', name: '경질화', description: '중첩할 때마다 마찰력이 3배씩 곱해집니다.', color: '#aeb8bc' },
+        { id: 'guard', name: '방호벽', description: '중첩하면 위성체가 최대 네 개까지 늘어납니다.', color: '#f1b66e' }
+      ];
+      const CARDS = [
+        { id: 'hardening', name: '경질화' }, { id: 'hardening', name: '경질화' },
+        { id: 'guard', name: '방호벽' }, { id: 'guard', name: '방호벽' },
+        { id: 'pulse', name: '방출' }, { id: 'pulse', name: '방출' },
+        { id: 'reposition', name: '재배치' }, { id: 'reposition', name: '재배치' },
+        { id: 'brick', name: '구조물 투하' }, { id: 'brick', name: '구조물 투하' },
+        { id: 'blackhole', name: '블랙홀 방출' }, { id: 'blackhole', name: '블랙홀 방출' }
+      ];
+      const UNIT_EFFECTS = Object.freeze({
+        hardening: { maxStacks: Infinity, frictionPerStack: 3 },
+        guard: { maxStacks: 2, satellitesPerStack: 2 }
+      });
+      const MAPS = [
+        { id: 'classic', name: '기본 맵', description: '적당한 마찰력의 표준 테이블', friction: 0.020625, color: '#1f7770', walls: false },
+        { id: 'ice', name: '얼음판 맵', description: '낮은 마찰력으로 더 길게 미끄러집니다', friction: 0.007115625, color: '#8edaf2', walls: false },
+        { id: 'moving-walls', name: '구조물 맵', description: '왕복하는 다섯 구조물을 활용합니다', friction: 0.020625, color: '#527456', walls: true },
+        { id: 'items', name: '아이템 맵', description: '턴마다 생성되는 트리거를 획득합니다', friction: 0.020625, color: '#356b58', walls: false, items: true }
+      ];
+      const PLAYER = [
+        { name: '플레이어 1', color: '#4287ff', imagePath: '병뚜껑 1.png' },
+        { name: '플레이어 2', color: '#f05252', imagePath: '병뚜껑 2.png' }
+      ];
+
+      const images = PLAYER.map(player => {
+        const image = new Image();
+        image.src = player.imagePath;
+        return image;
+      });
+
+      const state = {
+        units: [],
+        bricks: [],
+        triggers: [],
+        fallPoints: [0, 0],
+        particles: [],
+        effects: [],
+        aiming: false,
+        aimPoint: null,
+        aimTension: 0,
+        phase: 'intro',
+        advanceAt: 0,
+        lastTime: 0,
+        gameSpeed: 1,
+        speedLevel: 0,
+        currentMap: MAPS[0],
+        selectedMap: MAPS[0],
+        mapSelectionOrigin: 'start',
+        mapTime: 0,
+        cardDrawTimer: null,
+        dealOwner: 0,
+        lastDealtCardName: '',
+        deck: [],
+        nextCardId: 0,
+        hands: [[], []],
+        cardDrag: null,
+        repositionUnit: null,
+        triggerPlacementUsed: [false, false],
+        pendingTriggerPlacement: null,
+        selectedTriggerType: null,
+        phaseBeforeTriggerSelect: null
+      };
+
+      let onlineSession = null;
+      let onlinePollTimer = null;
+      let onlinePollPending = false;
+      let onlineStartPending = false;
+
+      const audio = { context: null, sfxBus: null, lastPlayed: new Map() };
+
+      function initializeAudio() {
+        if (audio.context) {
+          if (audio.context.state === 'suspended') audio.context.resume();
+          return true;
+        }
+        const Context = window.AudioContext || window.webkitAudioContext;
+        if (!Context) return false;
+        audio.context = new Context();
+        audio.sfxBus = audio.context.createGain();
+        audio.sfxBus.gain.value = 1;
+        audio.sfxBus.connect(audio.context.destination);
+        audio.context.resume();
+        return true;
+      }
+
+      function scheduleTone(frequency, endFrequency, time, duration, waveform, volume, bus) {
+        const oscillator = audio.context.createOscillator();
+        const envelope = audio.context.createGain();
+        oscillator.type = waveform;
+        oscillator.frequency.setValueAtTime(frequency, time);
+        oscillator.frequency.exponentialRampToValueAtTime(Math.max(30, endFrequency), time + duration);
+        envelope.gain.setValueAtTime(.0001, time);
+        envelope.gain.linearRampToValueAtTime(Math.max(.0002, volume), time + Math.min(.018, duration * .25));
+        envelope.gain.exponentialRampToValueAtTime(.0001, time + duration);
+        oscillator.connect(envelope);
+        envelope.connect(bus);
+        oscillator.start(time);
+        oscillator.stop(time + duration + .02);
+      }
+
+      function playSound(name, intensity = 1) {
+        if (!sfxToggle.checked || !initializeAudio()) return;
+        const sound = AUDIO_CONFIG.sounds[name];
+        if (!sound) return;
+        const now = performance.now();
+        const last = audio.lastPlayed.get(name) || 0;
+        if (sound.cooldown && now - last < sound.cooldown) return;
+        audio.lastPlayed.set(name, now);
+        scheduleTone(sound.frequency, sound.endFrequency || sound.frequency, audio.context.currentTime,
+          sound.duration, sound.waveform, AUDIO_CONFIG.sfxVolume * sound.volume * Math.min(1.5, intensity), audio.sfxBus);
+      }
+
+      function playFileSound(name, { volume = 1, cooldown = 0 } = {}) {
+        if (!sfxToggle.checked) return;
+        const source = AUDIO_FILES[name];
+        if (!source) return;
+        const now = performance.now();
+        if (now - (fileSoundLastPlayed.get(name) || 0) < cooldown) return;
+        fileSoundLastPlayed.set(name, now);
+        const clip = source.cloneNode();
+        clip.volume = volume;
+        clip.currentTime = 0;
+        const playback = clip.play();
+        if (playback?.catch) playback.catch(() => {});
+      }
+
+      function playUnitImpactSound(impulse) {
+        playFileSound(Math.abs(impulse) >= STRONG_HIT_THRESHOLD ? 'strongHit' : 'weakHit', { volume: .8, cooldown: 65 });
+      }
+
+      function startMusic() {
+        if (!musicToggle.checked) return;
+        const playback = AUDIO_FILES.music.play();
+        if (playback?.catch) playback.catch(() => {});
+      }
+
+      function stopMusic() {
+        AUDIO_FILES.music.pause();
+        AUDIO_FILES.music.currentTime = 0;
+      }
+
+      // Units are intentionally self-contained so future abilities can hook into turns or collisions.
+      class CurlingUnit {
+        constructor({ id, owner, turnNumber, x, y }) {
+          this.entityKind = ENTITY_KIND.UNIT;
+          this.unitKind = 'cap';
+          this.id = id;
+          this.owner = owner;
+          this.turnNumber = turnNumber;
+          this.x = x;
+          this.y = y;
+          this.vx = 0;
+          this.vy = 0;
+          this.radius = CONFIG.unitRadius;
+          this.status = 'ready'; // ready, sliding, resting, fallen
+          this.score = 0;
+          this.distance = 0;
+          this.ability = null;
+          this.relaunchAvailable = false;
+          this.relaunchUsed = false;
+          this.fluidTimer = 0;
+          this.fallRewarded = false;
+          this.previousX = x;
+          this.previousY = y;
+        }
+
+        launch(vx, vy) {
+          this.vx = vx;
+          this.vy = vy;
+          this.status = 'sliding';
+        }
+
+        update(dt) {
+          this.fluidTimer = Math.max(0, this.fluidTimer - dt);
+          this.previousX = this.x;
+          this.previousY = this.y;
+          if (this.status !== 'sliding') return;
+          this.x += this.vx * dt;
+          this.y += this.vy * dt;
+          const drag = Math.pow(Math.max(0, 1 - this.frictionAtPosition()), dt * 60);
+          this.vx *= drag;
+          this.vy *= drag;
+          if (Math.hypot(this.vx, this.vy) < CONFIG.stopSpeed) {
+            this.vx = 0;
+            this.vy = 0;
+            this.status = 'resting';
+          }
+          if (this.x < TABLE.left - this.radius || this.x > TABLE.right + this.radius ||
+              this.y < TABLE.top - this.radius || this.y > TABLE.bottom + this.radius) {
+            this.status = 'fallen';
+            this.vx = 0;
+            this.vy = 0;
+            playFileSound('unitDeath', { volume: .5 });
+            awardKnockoutPoints(this);
+          }
+        }
+
+        frictionAtPosition() {
+          const hardeningStacks = this.ability?.stacks?.hardening ?? (this.ability?.hardening ? 1 : 0);
+          let multiplier = this.frictionMultiplier ?? (UNIT_EFFECTS.hardening.frictionPerStack ** hardeningStacks);
+          for (const brick of state.bricks) {
+            if (Math.abs(this.x - brick.x) <= brick.width / 2 + this.radius &&
+                Math.abs(this.y - brick.y) <= brick.height / 2 + this.radius) multiplier += brick.frictionMultiplier - 1;
+          }
+          return state.currentMap.friction * multiplier;
+        }
+
+        get isOnTable() { return this.status !== 'fallen'; }
+      }
+
+      class BrickUnit {
+        constructor({ x, y, owner }) {
+          this.entityKind = ENTITY_KIND.UNIT;
+          this.unitKind = 'brick';
+          this.id = `brick-${Date.now()}-${state.bricks.length}`;
+          this.x = x;
+          this.y = y;
+          this.owner = owner;
+          this.width = 18;
+          this.height = 64;
+          this.frictionMultiplier = 1.5;
+          this.mass = 2;
+          this.restitution = 0.58;
+          this.vx = 0;
+          this.vy = 0;
+          this.score = 0;
+          this.previousX = x;
+          this.previousY = y;
+        }
+
+        frictionAtPosition() {
+          return state.currentMap.friction * this.frictionMultiplier;
+        }
+
+        update(dt) {
+          this.previousX = this.x;
+          this.previousY = this.y;
+          this.x += this.vx * dt;
+          this.y += this.vy * dt;
+          const drag = Math.pow(Math.max(0, 1 - state.currentMap.friction * this.frictionMultiplier), dt * 60);
+          this.vx *= drag;
+          this.vy *= drag;
+          if (Math.hypot(this.vx, this.vy) < 5) this.vx = this.vy = 0;
+          const halfW = this.width / 2;
+          const halfH = this.height / 2;
+          if (this.x < TABLE.left + halfW) { this.x = TABLE.left + halfW; this.vx = Math.abs(this.vx) * this.restitution; }
+          if (this.x > TABLE.right - halfW) { this.x = TABLE.right - halfW; this.vx = -Math.abs(this.vx) * this.restitution; }
+          if (this.y < TABLE.top + halfH) { this.y = TABLE.top + halfH; this.vy = Math.abs(this.vy) * this.restitution; }
+          if (this.y > TABLE.bottom - halfH) { this.y = TABLE.bottom - halfH; this.vy = -Math.abs(this.vy) * this.restitution; }
+        }
+      }
+
+      // The turn manager owns turn order and exposes an explicit current player/turn identity.
+      class TurnManager {
+        constructor() { this.reset(); }
+
+        reset() {
+          this.globalTurn = 0;
+          this.currentUnit = null;
+        }
+
+        get isComplete() { return this.globalTurn >= CONFIG.maxTurnsPerPlayer * PLAYER.length; }
+        get playerIndex() { return this.globalTurn % PLAYER.length; }
+        get playerTurn() { return Math.floor(this.globalTurn / PLAYER.length) + 1; }
+
+        createCurrentUnit() {
+          if (this.isComplete) return null;
+          const unit = new CurlingUnit({
+            id: `unit-${this.globalTurn + 1}`,
+            owner: this.playerIndex,
+            turnNumber: this.playerTurn,
+            x: TABLE.launchX,
+            y: 355
+          });
+          state.units.push(unit);
+          this.currentUnit = unit;
+          return unit;
+        }
+
+        finishCurrentTurn() {
+          this.currentUnit = null;
+          this.globalTurn += 1;
+        }
+      }
+
+      const turns = new TurnManager();
+
+      function beginRound() {
+        turns.reset();
+        state.units = [];
+        state.bricks = [];
+        state.triggers = [];
+        state.fallPoints = [0, 0];
+        state.particles = [];
+        state.effects = [];
+        state.aiming = false;
+        state.aimPoint = null;
+        state.aimTension = 0;
+        state.repositionUnit = null;
+        state.triggerPlacementUsed = [false, false];
+        state.pendingTriggerPlacement = null;
+        state.selectedTriggerType = null;
+        state.phaseBeforeTriggerSelect = null;
+        state.mapTime = 0;
+        state.phase = 'aiming';
+        state.advanceAt = 0;
+        resultOverlay.hidden = true;
+        mapSelectOverlay.hidden = true;
+        dealOverlay.hidden = true;
+        startOverlay.hidden = true;
+        prepareTurn();
+      }
+
+      function prepareTurn() {
+        if (turns.isComplete) {
+          finishGame();
+          return;
+        }
+        drawCardForPlayer(turns.playerIndex, () => {
+          turns.createCurrentUnit();
+          if (state.currentMap.items) spawnItemTrigger();
+          state.phase = 'aiming';
+          updateHud();
+        });
+      }
+
+      function drawCardForPlayer(owner, onComplete) {
+        const card = state.deck.pop();
+        if (!card) {
+          onComplete();
+          return;
+        }
+        card.instanceId = `card-${++state.nextCardId}`;
+        state.dealOwner = owner;
+        state.lastDealtCardName = card.name;
+        dealPlayer.textContent = PLAYER[owner].name;
+        dealCard.textContent = onlineSession?.started && owner !== onlineSession.playerIndex ? '카드 1장' : card.name;
+        dealOverlay.hidden = false;
+        state.phase = 'dealing';
+        updateHud();
+        updateTriggerTools();
+        playSound('deal', owner === 0 ? 1 : .8);
+        state.cardDrawTimer = setTimeout(() => {
+          state.hands[owner].push(card);
+          renderHands();
+          dealOverlay.hidden = true;
+          onComplete();
+        }, 560);
+      }
+
+      function updateTriggerTools() {
+        triggerToolButtons.forEach(button => {
+          const owner = Number(button.dataset.owner);
+          const spent = state.triggerPlacementUsed[owner];
+          button.disabled = spent || owner !== turns.playerIndex || !canControlPlayer(owner) || !turns.currentUnit ||
+            !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase);
+          button.textContent = spent ? '트리거 배치 · 사용 완료' : '트리거 배치 · 1회';
+        });
+      }
+
+      function updateHud() {
+        const scores = calculateScores();
+        scores.forEach((result, index) => {
+          const bonus = result.fallBonus ? ` (+${result.fallBonus} 낙사)` : '';
+          scoreEls[index].textContent = `거리 ${Math.round(result.distance)} · 점수 ${result.score}${bonus}`;
+          panels[index].classList.toggle('current', !turns.isComplete && index === turns.playerIndex);
+          const used = state.units.filter(unit => unit.owner === index).length;
+          remainingEls[index].textContent = `${CONFIG.maxTurnsPerPlayer - used}개`;
+        });
+        endTurnButton.disabled = state.phase !== 'turn-ready' || !canControlPlayer(turns.playerIndex);
+        actionHint.textContent = state.phase === 'sliding' ? '병뚜껑이 움직이는 중' : state.phase === 'turn-ready' ? '턴을 마치거나 재배치 카드를 사용하세요' : state.phase === 'reposition' ? '재배치: 병뚜껑을 다시 당겨 발사하세요' : state.phase === 'trigger-select' ? '트리거 종류를 선택하세요' : '병뚜껑을 당겨 발사하세요';
+        handPanels.forEach((panel, index) => panel.classList.toggle('current', !turns.isComplete && index === turns.playerIndex));
+        updateTriggerTools();
+        if (turns.isComplete) return;
+        turnText.textContent = `${PLAYER[turns.playerIndex].name} · ${turns.playerTurn}번째 병뚜껑`;
+      }
+
+      function calculateScores() {
+        return PLAYER.map((player, index) => {
+          const units = state.units.filter(unit => unit.owner === index && unit.isOnTable && unit.status !== 'ready');
+          let distance = 0;
+          let score = 0;
+          units.forEach(unit => {
+            unit.distance = Math.max(0, unit.x - TABLE.goalX);
+            unit.score = Math.round(Math.max(0, 100 * (1 - unit.distance / (TABLE.right - TABLE.goalX))));
+            distance += unit.distance;
+            score += unit.score;
+          });
+          const fallBonus = state.fallPoints[index];
+          return { player, units, distance, score: score + fallBonus, fallBonus };
+        });
+      }
+
+      function awardKnockoutPoints(victim) {
+        if (victim.fallRewarded || victim.owner === turns.playerIndex || state.phase === 'finished' || state.phase === 'intro') return;
+        const scorer = turns.playerIndex;
+        victim.fallRewarded = true;
+        state.fallPoints[scorer] += 25;
+        state.effects.push({ type: 'skull', x: canvas.width / 2, y: canvas.height / 2, age: 0, duration: 2.25, owner: scorer, points: 25 });
+        playFileSound('unitKill', { volume: .5 });
+        entityTooltip.hidden = true;
+        updateHud();
+      }
+
+      function launchCurrentUnit() {
+        const unit = state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit;
+        if (!unit || !state.aimPoint || !['aiming', 'reposition'].includes(state.phase)) return;
+        const launchedFromReposition = state.phase === 'reposition';
+        if (launchedFromReposition && (!unit.relaunchAvailable || unit.relaunchUsed)) return;
+        let vx = (unit.x - state.aimPoint.x) * CONFIG.launchScale;
+        let vy = (unit.y - state.aimPoint.y) * CONFIG.launchScale;
+        const speed = Math.hypot(vx, vy);
+        if (speed < 35) return;
+        if (speed > CONFIG.maxLaunchSpeed) {
+          vx = vx / speed * CONFIG.maxLaunchSpeed;
+          vy = vy / speed * CONFIG.maxLaunchSpeed;
+        }
+        unit.launch(vx, vy);
+        playSound('launch');
+        if (launchedFromReposition) unit.relaunchUsed = true;
+        if (launchedFromReposition) state.repositionUnit = null;
+        state.aiming = false;
+        state.aimPoint = null;
+        state.aimTension = 0;
+        state.phase = 'sliding';
+        updateHud();
+      }
+
+      function updateAimFromInput(unit, point) {
+        const dx = point.x - unit.x;
+        const dy = point.y - unit.y;
+        const rawDistance = Math.hypot(dx, dy);
+        const inputRatio = Math.min(1, rawDistance / CONFIG.maxPullDistance);
+        const taperStart = .75;
+        const easedRatio = inputRatio <= taperStart
+          ? inputRatio
+          : taperStart + (1 - taperStart) * (1 - (1 - (inputRatio - taperStart) / (1 - taperStart)) ** 2);
+        const easedDistance = CONFIG.maxPullDistance * easedRatio;
+        const scale = rawDistance > 0 ? easedDistance / rawDistance : 0;
+        state.aimPoint = { x: unit.x + dx * scale, y: unit.y + dy * scale };
+        state.aimTension = easedDistance / CONFIG.maxPullDistance;
+        if (state.aimTension > .08) playSound('elasticStretch', state.aimTension);
+      }
+
+      function resolveCollisions() {
+        const active = state.units.filter(unit => unit.status === 'sliding' || unit.status === 'resting');
+        for (let i = 0; i < active.length; i += 1) {
+          for (let j = i + 1; j < active.length; j += 1) {
+            const a = active[i];
+            const b = active[j];
+            if (a.fluidTimer > 0 || b.fluidTimer > 0) continue;
+            const dx = b.x - a.x;
+            const dy = b.y - a.y;
+            const minDistance = a.radius + b.radius;
+            const distance = Math.hypot(dx, dy) || 0.001;
+            if (distance >= minDistance) continue;
+
+            const nx = dx / distance;
+            const ny = dy / distance;
+            const overlap = minDistance - distance;
+            a.x -= nx * overlap * CONFIG.separation;
+            a.y -= ny * overlap * CONFIG.separation;
+            b.x += nx * overlap * CONFIG.separation;
+            b.y += ny * overlap * CONFIG.separation;
+
+            const relativeVelocity = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
+            if (relativeVelocity >= 0) continue;
+            const impulse = -(1 + CONFIG.restitution) * relativeVelocity / 2;
+            playUnitImpactSound(impulse);
+            a.vx -= impulse * nx;
+            a.vy -= impulse * ny;
+            b.vx += impulse * nx;
+            b.vy += impulse * ny;
+            if (a.status === 'resting') a.status = 'sliding';
+            if (b.status === 'resting') b.status = 'sliding';
+          }
+        }
+      }
+
+      function resolveBrickCollisions() {
+        for (const unit of state.units) {
+          if (unit.status !== 'sliding' && unit.status !== 'resting') continue;
+          for (const brick of state.bricks) {
+            const halfW = brick.width / 2;
+            const halfH = brick.height / 2;
+            const closestX = Math.max(brick.x - halfW, Math.min(unit.x, brick.x + halfW));
+            const closestY = Math.max(brick.y - halfH, Math.min(unit.y, brick.y + halfH));
+            let nx = unit.x - closestX;
+            let ny = unit.y - closestY;
+            let distance = Math.hypot(nx, ny);
+            if (distance >= unit.radius) continue;
+            let correction;
+            if (distance < 0.001) {
+              const overlapX = halfW + unit.radius - Math.abs(unit.x - brick.x);
+              const overlapY = halfH + unit.radius - Math.abs(unit.y - brick.y);
+              if (overlapX < overlapY) { nx = unit.x < brick.x ? -1 : 1; ny = 0; correction = overlapX; }
+              else { nx = 0; ny = unit.y < brick.y ? -1 : 1; correction = overlapY; }
+            } else {
+              nx /= distance;
+              ny /= distance;
+              correction = unit.radius - distance;
+            }
+            const brickShare = 1 / (1 + brick.mass);
+            const unitShare = 1 - brickShare;
+            unit.x += nx * correction * unitShare;
+            unit.y += ny * correction * unitShare;
+            brick.x -= nx * correction * brickShare;
+            brick.y -= ny * correction * brickShare;
+            const toward = (unit.vx - brick.vx) * nx + (unit.vy - brick.vy) * ny;
+            if (toward < 0) {
+              const impulse = -(1 + brick.restitution) * toward / (1 + 1 / brick.mass);
+              playUnitImpactSound(impulse);
+              unit.vx += impulse * nx;
+              unit.vy += impulse * ny;
+              brick.vx -= impulse * nx / brick.mass;
+              brick.vy -= impulse * ny / brick.mass;
+            }
+            if (unit.status === 'resting' && Math.hypot(unit.vx, unit.vy) > CONFIG.stopSpeed) unit.status = 'sliding';
+          }
+        }
+        for (let i = 0; i < state.bricks.length; i += 1) {
+          for (let j = i + 1; j < state.bricks.length; j += 1) {
+            const a = state.bricks[i];
+            const b = state.bricks[j];
+            const overlapX = (a.width + b.width) / 2 - Math.abs(b.x - a.x);
+            const overlapY = (a.height + b.height) / 2 - Math.abs(b.y - a.y);
+            if (overlapX <= 0 || overlapY <= 0) continue;
+            const horizontal = overlapX < overlapY;
+            const nx = horizontal ? (b.x >= a.x ? 1 : -1) : 0;
+            const ny = horizontal ? 0 : (b.y >= a.y ? 1 : -1);
+            const overlap = horizontal ? overlapX : overlapY;
+            const totalMass = a.mass + b.mass;
+            a.x -= nx * overlap * b.mass / totalMass;
+            a.y -= ny * overlap * b.mass / totalMass;
+            b.x += nx * overlap * a.mass / totalMass;
+            b.y += ny * overlap * a.mass / totalMass;
+            const relative = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
+            if (relative >= 0) continue;
+            const impulse = -(1 + Math.min(a.restitution, b.restitution)) * relative / (1 / a.mass + 1 / b.mass);
+            a.vx -= impulse * nx / a.mass;
+            a.vy -= impulse * ny / a.mass;
+            b.vx += impulse * nx / b.mass;
+            b.vy += impulse * ny / b.mass;
+            playUnitImpactSound(impulse);
+          }
+        }
+      }
+
+      function update(dt, timestamp) {
+        state.bricks.forEach(brick => brick.update(dt));
+        state.units.forEach(unit => unit.update(dt));
+        resolveCollisions();
+        resolveBrickCollisions();
+        updateParticles(dt);
+        updateEffects(dt);
+
+        if (state.currentMap.walls) updateWalls(dt);
+        updateAbilityEffects(dt);
+        resolveGuardCollisions();
+        if (state.triggers.length) collectItemTriggers();
+        const objectsMoving = state.units.some(unit => unit.status === 'sliding') ||
+          state.bricks.some(brick => Math.hypot(brick.vx, brick.vy) > 5);
+        if (state.phase === 'turn-ready' && objectsMoving) state.phase = 'sliding';
+        if (state.phase === 'sliding') {
+          const moving = state.units.some(unit => unit.status === 'sliding') ||
+            state.bricks.some(brick => Math.hypot(brick.vx, brick.vy) > 5);
+          if (!moving) state.phase = turns.currentUnit?.status === 'ready' ? 'aiming' : 'turn-ready';
+        }
+        updateHud();
+      }
+
+      function useCard(cardId, owner, unit) {
+        if (!unit || unit.owner !== owner || unit.status === 'fallen' || owner !== turns.playerIndex || !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase)) return false;
+        const hand = state.hands[owner];
+        const cardIndex = hand.findIndex(card => card.instanceId === cardId);
+        if (cardIndex < 0) return false;
+        const card = hand[cardIndex];
+        if (card.id === 'brick') return false;
+        if (card.id === 'reposition' && (!['aiming', 'turn-ready'].includes(state.phase) || unit.status === 'ready' || unit.relaunchUsed)) return false;
+        if (unit.status === 'ready' && unit !== turns.currentUnit) return false;
+        if (UNIT_EFFECTS[card.id] && !applyUnitEffectStack(unit, card.id)) return false;
+        if (card.id === 'pulse') triggerPulse(unit);
+        if (card.id === 'blackhole') triggerBlackHole(unit);
+        if (card.id === 'reposition') {
+          unit.relaunchAvailable = true;
+          state.repositionUnit = unit;
+          state.phase = 'reposition';
+        }
+        if (card.id !== 'pulse' && card.id !== 'blackhole') playSound('card');
+        hand.splice(cardIndex, 1);
+        renderHands();
+        updateHud();
+        return true;
+      }
+
+      function ensureUnitAbility(unit) {
+        if (!unit.ability) unit.ability = { hardening: false, guard: false, pulse: false, guardAngle: 0, stacks: {} };
+        if (!unit.ability.stacks) unit.ability.stacks = {};
+        for (const effectId of Object.keys(UNIT_EFFECTS)) {
+          if (unit.ability[effectId] && !unit.ability.stacks[effectId]) unit.ability.stacks[effectId] = 1;
+        }
+        return unit.ability;
+      }
+
+      function getUnitEffectStacks(unit, effectId) {
+        return unit.ability?.stacks?.[effectId] ?? (unit.ability?.[effectId] ? 1 : 0);
+      }
+
+      function applyUnitEffectStack(unit, effectId) {
+        const definition = UNIT_EFFECTS[effectId];
+        if (!definition) return false;
+        const ability = ensureUnitAbility(unit);
+        const currentStacks = getUnitEffectStacks(unit, effectId);
+        if (currentStacks >= definition.maxStacks) return false;
+        ability.stacks[effectId] = currentStacks + 1;
+        ability[effectId] = true;
+        return true;
+      }
+
+      function findCardTarget(point, owner) {
+        return state.units
+          .filter(unit => unit.owner === owner && unit.status !== 'fallen' &&
+            (unit.status !== 'ready' || unit === turns.currentUnit))
+          .map(unit => ({ unit, distance: Math.hypot(point.x - unit.x, point.y - unit.y) }))
+          .filter(candidate => candidate.distance <= candidate.unit.radius + 14)
+          .sort((a, b) => a.distance - b.distance)[0]?.unit ?? null;
+      }
+
+      function brickDropLimitX() {
+        return TABLE.launchX - (TABLE.launchX - TABLE.left) * 0.35;
+      }
+
+      function canPlaceBrick(point) {
+        const halfW = 9;
+        const halfH = 32;
+        if (point.x > brickDropLimitX() || point.x < TABLE.left + halfW || point.x > TABLE.right - halfW ||
+            point.y < TABLE.top + halfH || point.y > TABLE.bottom - halfH) return false;
+        const overlapsUnit = state.units.some(unit => {
+          if (unit.status === 'fallen') return false;
+          const closestX = Math.max(point.x - halfW, Math.min(unit.x, point.x + halfW));
+          const closestY = Math.max(point.y - halfH, Math.min(unit.y, point.y + halfH));
+          return Math.hypot(unit.x - closestX, unit.y - closestY) < unit.radius;
+        });
+        if (overlapsUnit) return false;
+        return !state.bricks.some(brick => Math.abs(point.x - brick.x) < halfW + brick.width / 2 &&
+          Math.abs(point.y - brick.y) < halfH + brick.height / 2);
+      }
+
+      function beginCardDrag(event) {
+        if (state.cardDrag) return;
+        const cardElement = event.currentTarget;
+        const owner = Number(cardElement.dataset.owner);
+        if (owner !== turns.playerIndex || !canControlPlayer(owner) || !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase)) return;
+        if (!turns.currentUnit) return;
+        event.preventDefault();
+        entityTooltip.hidden = true;
+        const ghost = cardElement.cloneNode(true);
+        ghost.classList.add('card-ghost');
+        document.body.append(ghost);
+        const card = state.hands[owner].find(item => item.instanceId === cardElement.dataset.cardId);
+        state.cardDrag = { id: cardElement.dataset.cardId, type: card?.id, owner, ghost, point: null };
+        moveCardGhost(event);
+      }
+
+      function beginTriggerPlacementDrag(event) {
+        if (state.cardDrag) return;
+        const button = event.currentTarget;
+        const owner = Number(button.dataset.owner);
+        if (owner !== turns.playerIndex || !canControlPlayer(owner) || state.triggerPlacementUsed[owner] || !turns.currentUnit ||
+            !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase)) return;
+        event.preventDefault();
+        entityTooltip.hidden = true;
+        const ghost = button.cloneNode(true);
+        ghost.classList.add('card-ghost');
+        document.body.append(ghost);
+        const preview = document.createElement('div');
+        preview.className = 'trigger-placement-preview';
+        preview.textContent = '+';
+        document.body.append(preview);
+        state.cardDrag = { id: 'trigger-placement', type: 'trigger-placement', owner, ghost, preview, point: null };
+        moveCardGhost(event);
+      }
+
+      function moveCardGhost(event) {
+        if (!state.cardDrag) return;
+        state.cardDrag.ghost.style.left = `${event.clientX}px`;
+        state.cardDrag.ghost.style.top = `${event.clientY}px`;
+        const rect = canvas.getBoundingClientRect();
+        state.cardDrag.point = event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom
+          ? eventPoint(event)
+          : null;
+        if (state.cardDrag.type === 'trigger-placement') {
+          const drag = state.cardDrag;
+          const legal = Boolean(drag.point && canPlaceItemTrigger(drag.point));
+          drag.ghost.style.visibility = legal ? 'hidden' : 'visible';
+          drag.preview.style.display = legal ? 'block' : 'none';
+          if (legal) {
+            const radius = CONFIG.unitRadius * .5;
+            const diameter = radius * 2 * rect.width / canvas.width;
+            drag.preview.style.left = `${event.clientX}px`;
+            drag.preview.style.top = `${event.clientY}px`;
+            drag.preview.style.width = `${diameter}px`;
+            drag.preview.style.height = `${diameter}px`;
+            drag.preview.style.fontSize = `${Math.max(9, radius * .58 * rect.width / canvas.width)}px`;
+          }
+        }
+      }
+
+      function finishCardDrag(event) {
+        if (!state.cardDrag) return;
+        const drag = state.cardDrag;
+        const rect = canvas.getBoundingClientRect();
+        const insideCanvas = event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
+        let triggerDrop = null;
+        if (insideCanvas && drag.owner === turns.playerIndex && turns.currentUnit) {
+          const point = eventPoint(event);
+          if (drag.type === 'trigger-placement') {
+            if (!state.triggerPlacementUsed[drag.owner] && canPlaceItemTrigger(point)) triggerDrop = point;
+          } else if (drag.type === 'brick') {
+            if (canPlaceBrick(point)) {
+              if (shouldForwardOnlineAction()) sendOnlineAction({ type: 'brick', cardId: drag.id, point });
+              else {
+                state.bricks.push(new BrickUnit({ x: point.x, y: point.y, owner: drag.owner }));
+                const hand = state.hands[drag.owner];
+                hand.splice(hand.findIndex(card => card.instanceId === drag.id), 1);
+                playSound('drop');
+                renderHands();
+                updateHud();
+              }
+            }
+          } else {
+            const unit = findCardTarget(point, drag.owner);
+            if (unit) {
+              if (shouldForwardOnlineAction()) sendOnlineAction({ type: 'card', cardId: drag.id, unitId: unit.id });
+              else useCard(drag.id, drag.owner, unit);
+            }
+          }
+        }
+        drag.ghost.remove();
+        drag.preview?.remove();
+        state.cardDrag = null;
+        if (triggerDrop) openTriggerTypeSelection(triggerDrop, drag.owner);
+      }
+
+      function updateAbilityEffects(dt) {
+        for (const source of state.units) {
+          const ability = source.ability;
+          if (!ability || source.status === 'fallen') continue;
+          if (ability.guard) ability.guardAngle += dt * 1.6875;
+        }
+      }
+
+      function triggerPulse(source, range = PULSE_RANGE, impulse = PULSE_IMPULSE) {
+        playFileSound('pulseCast', { volume: .75 });
+        for (const target of [...state.units, ...state.bricks]) {
+          if (target === source || target.status === 'fallen' || target.status === 'ready') continue;
+          const dx = target.x - source.x;
+          const dy = target.y - source.y;
+          const distance = Math.hypot(dx, dy);
+          if (distance > range) continue;
+          const angle = distance > 0.001 ? Math.atan2(dy, dx) : Math.random() * Math.PI * 2;
+          target.vx += Math.cos(angle) * impulse;
+          target.vy += Math.sin(angle) * impulse;
+          if (target.unitKind !== 'brick') target.status = 'sliding';
+        }
+        state.effects.push({ type: 'pulse', x: source.x, y: source.y, age: 0, duration: 0.48, radius: range });
+        for (let i = 0; i < 28; i += 1) {
+          const angle = Math.PI * 2 * i / 28;
+          const speed = 130 + Math.random() * 260;
+          state.particles.push({
+            x: source.x, y: source.y,
+            vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+            life: .32 + Math.random() * .22, size: 4 + Math.random() * 5,
+            color: i % 2 ? '#00aaff' : '#00f5ff'
+          });
+        }
+      }
+
+      function triggerBlackHole(source, range = BLACK_HOLE.range) {
+        playFileSound('blackholeCast', { volume: .75 });
+        source.fluidTimer = BLACK_HOLE.duration;
+        state.effects.push({ type: 'blackhole', x: source.x, y: source.y, age: 0, duration: BLACK_HOLE.duration, radius: range });
+        for (const target of [...state.units, ...state.bricks]) {
+          if (target === source || target.status === 'fallen' || target.status === 'ready') continue;
+          const dx = source.x - target.x;
+          const dy = source.y - target.y;
+          const distance = Math.hypot(dx, dy);
+          if (distance > range || distance < 0.001) continue;
+          const friction = target.frictionAtPosition();
+          const falloff = .72 + .28 * (1 - distance / range);
+          const pull = BLACK_HOLE.impulse * falloff / (1 + friction * 18);
+          target.vx += dx / distance * pull;
+          target.vy += dy / distance * pull;
+          if (target.unitKind !== 'brick') target.status = 'sliding';
+        }
+        for (let i = 0; i < 36; i += 1) {
+          const angle = Math.PI * 2 * i / 36;
+          const speed = 80 + Math.random() * 180;
+          state.particles.push({
+            x: source.x + Math.cos(angle) * range,
+            y: source.y + Math.sin(angle) * range,
+            vx: -Math.cos(angle) * speed, vy: -Math.sin(angle) * speed,
+            life: .35 + Math.random() * .35, size: 3 + Math.random() * 4,
+            color: i % 2 ? '#a855f7' : '#e879f9'
+          });
+        }
+      }
+
+      function updateEffects(dt) {
+        state.effects = state.effects.filter(effect => (effect.age += dt) < effect.duration);
+      }
+
+      function triggerSpawnIsClear(point, radius) {
+        if ([...state.units].some(unit => unit.status !== 'fallen' && Math.hypot(point.x - unit.x, point.y - unit.y) < radius + unit.radius + 12)) return false;
+        if (state.bricks.some(brick => Math.abs(point.x - brick.x) < radius + brick.width / 2 + 10 &&
+            Math.abs(point.y - brick.y) < radius + brick.height / 2 + 10)) return false;
+        if (state.triggers.some(trigger => Math.hypot(point.x - trigger.x, point.y - trigger.y) < radius + trigger.radius + 14)) return false;
+        const structures = [
+          ...(state.currentMap.walls ? wallSegments() : []),
+          ...state.units.filter(unit => unit.ability?.guard && unit.status !== 'fallen').flatMap(guardSatellites)
+        ];
+        return structures.every(structure => {
+          if (structure.radius) return Math.hypot(point.x - structure.x, point.y - structure.y) >= radius + structure.radius + 10;
+          return point.x + radius + 10 <= structure.x || point.x - radius - 10 >= structure.x + structure.width ||
+            point.y + radius + 10 <= structure.y || point.y - radius - 10 >= structure.y + structure.height;
+        });
+      }
+
+      function spawnItemTrigger() {
+        const radius = CONFIG.unitRadius * .5;
+        const minX = TABLE.left + radius + 12;
+        const maxX = brickDropLimitX() - radius - 12;
+        for (let attempt = 0; attempt < 120; attempt += 1) {
+          const point = {
+            x: minX + Math.random() * (maxX - minX),
+            y: TABLE.top + radius + 12 + Math.random() * (TABLE.bottom - TABLE.top - 2 * (radius + 12))
+          };
+          if (!triggerSpawnIsClear(point, radius)) continue;
+          const type = ITEM_TRIGGERS[Math.floor(Math.random() * ITEM_TRIGGERS.length)];
+          state.triggers.push({
+            entityKind: ENTITY_KIND.TRIGGER,
+            id: `trigger-${turns.globalTurn + 1}-${Date.now()}`,
+            type, x: point.x, y: point.y, radius
+          });
+          return;
+        }
+      }
+
+      function canPlaceItemTrigger(point) {
+        const radius = CONFIG.unitRadius * .5;
+        if (point.x > brickDropLimitX() || point.x < TABLE.left + radius ||
+            point.y < TABLE.top + radius || point.y > TABLE.bottom - radius) return false;
+        return triggerSpawnIsClear(point, radius);
+      }
+
+      function renderTriggerTypeOptions() {
+        triggerTypeOptions.replaceChildren(...ITEM_TRIGGERS.map(type => {
+          const option = document.createElement('button');
+          option.type = 'button';
+          option.className = 'trigger-type-option';
+          option.setAttribute('role', 'radio');
+          option.setAttribute('aria-checked', String(state.selectedTriggerType === type.id));
+          const name = document.createElement('strong');
+          name.textContent = type.name;
+          const description = document.createElement('span');
+          description.textContent = type.description;
+          option.append(name, description);
+          option.addEventListener('click', () => {
+            state.selectedTriggerType = type.id;
+            triggerTypeOptions.querySelectorAll('[role="radio"]').forEach(item => {
+              item.setAttribute('aria-checked', String(item.dataset.triggerId === type.id));
+            });
+            confirmTriggerButton.disabled = false;
+          });
+          option.dataset.triggerId = type.id;
+          return option;
+        }));
+      }
+
+      function openTriggerTypeSelection(point, owner) {
+        state.pendingTriggerPlacement = { ...point, owner, radius: CONFIG.unitRadius * .5 };
+        state.selectedTriggerType = null;
+        state.phaseBeforeTriggerSelect = state.phase;
+        state.phase = 'trigger-select';
+        confirmTriggerButton.disabled = true;
+        renderTriggerTypeOptions();
+        triggerSelectOverlay.hidden = false;
+        updateHud();
+        triggerTypeOptions.querySelector('[role="radio"]')?.focus();
+      }
+
+      function closeTriggerTypeSelection(restoreTurn) {
+        triggerSelectOverlay.hidden = true;
+        if (restoreTurn && state.phaseBeforeTriggerSelect) state.phase = state.phaseBeforeTriggerSelect;
+        state.pendingTriggerPlacement = null;
+        state.selectedTriggerType = null;
+        state.phaseBeforeTriggerSelect = null;
+        updateHud();
+      }
+
+      function confirmItemTriggerPlacement() {
+        const pending = state.pendingTriggerPlacement;
+        const type = ITEM_TRIGGERS.find(item => item.id === state.selectedTriggerType);
+        if (state.phase !== 'trigger-select' || !pending || !type || pending.owner !== turns.playerIndex ||
+            state.triggerPlacementUsed[pending.owner] || !canPlaceItemTrigger(pending)) return;
+        if (shouldForwardOnlineAction()) {
+          sendOnlineAction({ type: 'trigger', typeId: type.id, point: { x: pending.x, y: pending.y } });
+          closeTriggerTypeSelection(true);
+          return;
+        }
+        state.triggers.push({
+          entityKind: ENTITY_KIND.TRIGGER,
+          id: `placed-trigger-${turns.globalTurn}-${Date.now()}`,
+          type, owner: pending.owner, x: pending.x, y: pending.y, radius: pending.radius
+        });
+        state.triggerPlacementUsed[pending.owner] = true;
+        closeTriggerTypeSelection(true);
+        playSound('drop');
+        updateHud();
+      }
+
+      function cancelItemTriggerPlacement() {
+        closeTriggerTypeSelection(true);
+      }
+
+      function segmentDistanceSquared(point, start, end) {
+        const dx = end.x - start.x;
+        const dy = end.y - start.y;
+        const lengthSquared = dx * dx + dy * dy;
+        const t = lengthSquared ? Math.max(0, Math.min(1, ((point.x - start.x) * dx + (point.y - start.y) * dy) / lengthSquared)) : 0;
+        const x = start.x + t * dx;
+        const y = start.y + t * dy;
+        return (point.x - x) ** 2 + (point.y - y) ** 2;
+      }
+
+      function collectItemTriggers() {
+        for (const unit of state.units) {
+          if (unit.status === 'fallen' || unit.status === 'ready') continue;
+          const start = { x: unit.previousX ?? unit.x, y: unit.previousY ?? unit.y };
+          const end = { x: unit.x, y: unit.y };
+          const index = state.triggers.findIndex(trigger => segmentDistanceSquared(trigger, start, end) <= (trigger.radius + unit.radius) ** 2);
+          if (index < 0) continue;
+          const [trigger] = state.triggers.splice(index, 1);
+          if (trigger.type.id === 'blackhole') triggerBlackHole(unit, trigger.type.range);
+          if (trigger.type.id === 'pulse') triggerPulse(unit, trigger.type.range, trigger.type.impulse);
+          if (UNIT_EFFECTS[trigger.type.id] && applyUnitEffectStack(unit, trigger.type.id)) playSound('card');
+          state.effects.push({ type: 'item', x: trigger.x, y: trigger.y, age: 0, duration: .45, color: trigger.type.color });
+        }
+      }
+
+      function guardSatellites(source) {
+        const orbitRadius = source.radius * 1.875;
+        const angularSpeed = 1.6875;
+        const count = Math.min(UNIT_EFFECTS.guard.maxStacks, getUnitEffectStacks(source, 'guard'));
+        const offsets = Array.from({ length: count * UNIT_EFFECTS.guard.satellitesPerStack }, (_, index) => index * Math.PI / count);
+        return offsets.map(offset => {
+          const angle = source.ability.guardAngle + offset;
+          return {
+            entityKind: ENTITY_KIND.STRUCTURE,
+            pushable: false,
+            x: source.x + Math.cos(angle) * orbitRadius,
+            y: source.y + Math.sin(angle) * orbitRadius,
+            vx: -Math.sin(angle) * orbitRadius * angularSpeed,
+            vy: Math.cos(angle) * orbitRadius * angularSpeed,
+            radius: source.radius * 0.35
+          };
+        });
+      }
+
+      function resolveGuardCollisions() {
+        for (const source of state.units) {
+          if (!source.ability?.guard || source.status === 'fallen') continue;
+          for (const satellite of guardSatellites(source)) {
+            for (const target of [...state.units, ...state.bricks]) {
+              if (target === source || target.status === 'fallen' || target.status === 'ready') continue;
+              const isBrick = target.unitKind === 'brick';
+              const closestX = isBrick ? Math.max(target.x - target.width / 2, Math.min(satellite.x, target.x + target.width / 2)) : target.x;
+              const closestY = isBrick ? Math.max(target.y - target.height / 2, Math.min(satellite.y, target.y + target.height / 2)) : target.y;
+              let nx = closestX - satellite.x;
+              let ny = closestY - satellite.y;
+              let distance = Math.hypot(nx, ny);
+              const minimum = satellite.radius + (isBrick ? 0 : target.radius);
+              if (distance >= minimum) continue;
+              if (distance < .001) {
+                nx = target.x < satellite.x ? -1 : 1;
+                ny = 0;
+                distance = 1;
+              }
+              nx /= distance;
+              ny /= distance;
+              const overlap = minimum - distance;
+              target.x += nx * overlap;
+              target.y += ny * overlap;
+              const toward = (target.vx - satellite.vx) * nx + (target.vy - satellite.vy) * ny;
+              if (toward < 0) {
+                playSound('guardHit', Math.min(1.4, -toward / 250));
+                target.vx -= (1 + CONFIG.restitution) * toward * nx;
+                target.vy -= (1 + CONFIG.restitution) * toward * ny;
+              }
+              if (target.status === 'resting' && Math.hypot(target.vx, target.vy) > CONFIG.stopSpeed) target.status = 'sliding';
+            }
+          }
+        }
+      }
+
+      function wallSegments() {
+        const track = (min, max, phase = 0, frequency = 0.72) => {
+          const angle = state.mapTime * frequency + phase;
+          const blend = (1 - Math.cos(angle)) / 2;
+          return {
+            value: min + (max - min) * blend,
+            velocity: (max - min) * Math.sin(angle) * frequency / 2
+          };
+        };
+        const width = 108;
+        const height = 14;
+        const centerX = (TABLE.left + TABLE.right) / 2;
+        const leftTrackMax = centerX - 142 - width;
+        const rightTrackMin = centerX + 142;
+        const leftTop = track(TABLE.left + 14, leftTrackMax);
+        const rightTop = track(TABLE.right - 14 - width, rightTrackMin, Math.PI);
+        const leftBottom = track(TABLE.left + 26, leftTrackMax - 28, Math.PI * .3);
+        const rightBottom = track(TABLE.right - 26 - width, rightTrackMin + 28, Math.PI * 1.3);
+        const centerTrack = track(TABLE.top + 132, TABLE.bottom - 132 - width, Math.PI / 2, 0.58);
+        const structure = (x, y, w, h, vx = 0, vy = 0) => ({
+          entityKind: ENTITY_KIND.STRUCTURE, pushable: false,
+          x, y, width: w, height: h, vx, vy,
+          x1: x, y1: y, x2: x + w, y2: y + h
+        });
+        return [
+          structure(leftTop.value, TABLE.top + 32, width, height, leftTop.velocity),
+          structure(rightTop.value, TABLE.top + 32, width, height, rightTop.velocity),
+          structure(leftBottom.value, TABLE.bottom - 32 - height, width, height, leftBottom.velocity),
+          structure(rightBottom.value, TABLE.bottom - 32 - height, width, height, rightBottom.velocity),
+          structure(centerX - height / 2, centerTrack.value, height, width, 0, centerTrack.velocity)
+        ];
+      }
+
+      function updateWalls(dt) {
+        state.mapTime += dt;
+        for (const wall of wallSegments()) {
+          for (const unit of state.units) {
+            if (unit.status !== 'sliding' && unit.status !== 'resting') continue;
+            const closestX = Math.max(wall.x1, Math.min(unit.x, wall.x2));
+            const closestY = Math.max(wall.y1, Math.min(unit.y, wall.y2));
+            let nx = unit.x - closestX;
+            let ny = unit.y - closestY;
+            const distance = Math.hypot(nx, ny);
+            const minimum = unit.radius + (wall.width > wall.height ? wall.height : wall.width) / 2;
+            if (distance >= minimum) continue;
+            if (distance < .001) {
+              if (wall.width > wall.height) { nx = 0; ny = unit.y < wall.y + wall.height / 2 ? -1 : 1; }
+              else { nx = unit.x < wall.x + wall.width / 2 ? -1 : 1; ny = 0; }
+            } else {
+              nx /= distance;
+              ny /= distance;
+            }
+            unit.x += nx * (minimum - distance);
+            unit.y += ny * (minimum - distance);
+            const relativeNormal = (unit.vx - wall.vx) * nx + (unit.vy - wall.vy) * ny;
+            if (relativeNormal < 0) {
+              playSound('wallHit', Math.min(1.4, Math.abs(relativeNormal) / 550));
+              unit.vx -= (1 + CONFIG.restitution) * relativeNormal * nx;
+              unit.vy -= (1 + CONFIG.restitution) * relativeNormal * ny;
+            }
+            if (unit.status === 'resting' && Math.hypot(unit.vx, unit.vy) > CONFIG.stopSpeed) unit.status = 'sliding';
+          }
+          for (const brick of state.bricks) {
+            const overlapX = (wall.width + brick.width) / 2 - Math.abs(brick.x - (wall.x + wall.width / 2));
+            const overlapY = (wall.height + brick.height) / 2 - Math.abs(brick.y - (wall.y + wall.height / 2));
+            if (overlapX <= 0 || overlapY <= 0) continue;
+            const horizontal = overlapX < overlapY;
+            const nx = horizontal ? (brick.x >= wall.x + wall.width / 2 ? 1 : -1) : 0;
+            const ny = horizontal ? 0 : (brick.y >= wall.y + wall.height / 2 ? 1 : -1);
+            brick.x += nx * (horizontal ? overlapX : 0);
+            brick.y += ny * (horizontal ? 0 : overlapY);
+            const relativeNormal = (brick.vx - wall.vx) * nx + (brick.vy - wall.vy) * ny;
+            if (relativeNormal < 0) {
+              playSound('wallHit', Math.min(1.4, Math.abs(relativeNormal) / 550));
+              brick.vx -= (1 + brick.restitution) * relativeNormal * nx;
+              brick.vy -= (1 + brick.restitution) * relativeNormal * ny;
+            }
+          }
+        }
+      }
+
+      function endTurn() {
+        if (state.phase !== 'turn-ready') return;
+        if (shouldForwardOnlineAction()) {
+          sendOnlineAction({ type: 'end-turn' });
+          return;
+        }
+        playSound('turn');
+        state.repositionUnit = null;
+        turns.finishCurrentTurn();
+        prepareTurn();
+      }
+
+      function renderMapOptions() {
+        mapOptions.replaceChildren(...MAPS.map(map => {
+          const option = document.createElement('button');
+          option.type = 'button';
+          option.className = 'map-option';
+          option.disabled = Boolean(onlineSession?.localMapConfirmed);
+          option.setAttribute('role', 'radio');
+          option.setAttribute('aria-checked', String(map.id === state.selectedMap.id));
+          const swatch = document.createElement('span');
+          swatch.className = 'map-swatch';
+          swatch.style.backgroundColor = map.color;
+          const copy = document.createElement('span');
+          const title = document.createElement('strong');
+          title.textContent = map.name;
+          const description = document.createElement('span');
+          description.textContent = map.description;
+          copy.append(title, description);
+          option.append(swatch, copy);
+          option.addEventListener('click', () => {
+            state.selectedMap = map;
+            mapOptions.querySelectorAll('[role="radio"]').forEach(item => {
+              item.setAttribute('aria-checked', String(item.dataset.mapId === map.id));
+            });
+          });
+          option.dataset.mapId = map.id;
+          return option;
+        }));
+      }
+
+      async function postOnlineRequest(path, payload) {
+        const response = await fetch(path, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || `서버 오류 (${response.status})`);
+        return data;
+      }
+
+      function updatePlayerNames() {
+        playerLabelEls.forEach((label, index) => { label.textContent = `${PLAYER[index].name} · 병뚜껑 ${CONFIG.maxTurnsPerPlayer}개`; });
+        remainingPanelEls.forEach((panel, index) => {
+          panel.firstChild.textContent = `${PLAYER[index].name} 남은 병뚜껑`;
+        });
+        updateHud();
+      }
+
+      function openOnlineLobby() {
+        state.mapSelectionOrigin = 'online';
+        state.phase = 'map-select';
+        startOverlay.hidden = true;
+        resultOverlay.hidden = true;
+        dealOverlay.hidden = true;
+        mapSelectOverlay.hidden = false;
+        mapSelectTitle.textContent = '온라인 맵 선택';
+        mapSelectDescription.textContent = '두 플레이어가 맵을 확정하면 방장, 도전자, 랜덤 맵 순으로 대전을 시작합니다.';
+        roomCodeView.hidden = false;
+        roomCodeText.textContent = onlineSession.code;
+        onlinePlayerStatus.hidden = false;
+        onlineStatus.hidden = false;
+        confirmMapButton.textContent = '이 맵 확정';
+        cancelMapButton.textContent = '방 나가기';
+        onlineSession.localMapConfirmed = false;
+        renderMapOptions();
+        updateOnlineRoomView(onlineSession.room);
+      }
+
+      function updateOnlineRoomView(room) {
+        if (!onlineSession || !room) return;
+        onlineSession.room = room;
+        if (room.seriesMaps) onlineSession.maps = room.seriesMaps;
+        if (room.status === 'playing') onlineSession.started = true;
+        if (room.status === 'complete') onlineSession.matchOver = true;
+        PLAYER[0].name = room.host.name || '방장';
+        PLAYER[1].name = room.challenger?.name || '도전자 대기 중';
+        updatePlayerNames();
+        onlinePlayerStatus.replaceChildren(...[room.host, room.challenger].map((player, index) => {
+          const status = document.createElement('span');
+          const map = player?.mapId ? MAPS.find(item => item.id === player.mapId)?.name : null;
+          status.textContent = player
+            ? `${index === 0 ? '방장' : '도전자'} · ${player.name}${map ? ` · ${map} 확정` : ' · 맵 선택 대기'}`
+            : '도전자 · 참가 대기 중';
+          return status;
+        }));
+        if (room.status === 'waiting') onlineStatus.textContent = '상대가 방 코드로 참가할 때까지 기다리는 중입니다.';
+        else if (room.status === 'choosing') onlineStatus.textContent = onlineSession.localMapConfirmed ? '맵을 확정했습니다. 상대의 선택을 기다리는 중입니다.' : '맵을 선택하고 확정하세요.';
+        else if (room.status === 'ready') onlineStatus.textContent = '양쪽 맵이 확정되었습니다. 대전을 준비합니다.';
+        else if (room.status === 'playing') onlineStatus.textContent = '3전 2선승 온라인 대전 진행 중';
+        else if (room.status === 'complete') onlineStatus.textContent = '대전이 종료되었습니다.';
+      }
+
+      function startOnlinePolling() {
+        clearInterval(onlinePollTimer);
+        onlinePollTimer = setInterval(pollOnlineRoom, 180);
+      }
+
+      async function createOnlineRoom() {
+        try {
+          const name = playerNameInput.value.trim() || '방장';
+          const result = await postOnlineRequest('/api/rooms', { name });
+          onlineSession = {
+            role: 'host', playerIndex: 0, token: result.token, code: result.code, room: result.room,
+            maps: null, roundIndex: 0, wins: [0, 0], totalScores: [0, 0], roundResults: [], snapshotRevision: 0,
+            started: false, matchOver: false, result: null
+          };
+          state.selectedMap = MAPS[0];
+          openOnlineLobby();
+          startOnlinePolling();
+        } catch (error) { startStatus.textContent = error.message; }
+      }
+
+      async function joinOnlineRoom() {
+        try {
+          const code = roomCodeInput.value.trim().toUpperCase();
+          if (!code) throw new Error('방 코드를 입력하세요.');
+          const result = await postOnlineRequest(`/api/rooms/${encodeURIComponent(code)}/join`, { name: playerNameInput.value.trim() || '도전자' });
+          onlineSession = {
+            role: 'challenger', playerIndex: 1, token: result.token, code: result.code, room: result.room,
+            maps: null, roundIndex: 0, wins: [0, 0], totalScores: [0, 0], roundResults: [], snapshotRevision: 0,
+            started: false, matchOver: false, result: null
+          };
+          state.selectedMap = MAPS[0];
+          openOnlineLobby();
+          startOnlinePolling();
+        } catch (error) { startStatus.textContent = error.message; }
+      }
+
+      async function confirmOnlineMap() {
+        if (!onlineSession || onlineSession.localMapConfirmed) return;
+        try {
+          const result = await postOnlineRequest(`/api/rooms/${onlineSession.code}/map`, {
+            token: onlineSession.token,
+            mapId: state.selectedMap.id
+          });
+          onlineSession.localMapConfirmed = true;
+          updateOnlineRoomView(result.room);
+          renderMapOptions();
+          confirmMapButton.disabled = true;
+        } catch (error) { onlineStatus.textContent = error.message; }
+      }
+
+      async function pollOnlineRoom() {
+        if (!onlineSession || onlinePollPending) return;
+        onlinePollPending = true;
+        try {
+          const session = onlineSession;
+          const snapshot = session.role === 'host' && session.started ? createOnlineSnapshot() : null;
+          const result = await postOnlineRequest(`/api/rooms/${session.code}/poll`, { token: session.token, snapshot });
+          if (onlineSession !== session) return;
+          updateOnlineRoomView(result.room);
+          if (session.role === 'host') result.actions.forEach(handleOnlineHostAction);
+          if (session.role === 'host' && result.room.status === 'ready' && !session.started && !onlineStartPending) {
+            onlineStartPending = true;
+            try {
+              const started = await postOnlineRequest(`/api/rooms/${session.code}/start`, { token: session.token });
+              session.maps = started.room.seriesMaps;
+              session.started = true;
+              session.roundIndex = 0;
+              session.wins = [0, 0];
+              session.totalScores = [0, 0];
+              session.roundResults = [];
+              startOnlineRound(0);
+            } catch (error) { onlineStatus.textContent = error.message; }
+            finally { onlineStartPending = false; }
+          }
+          if (session.role === 'challenger' && result.snapshot && result.snapshotRevision > session.snapshotRevision) {
+            if (!state.aiming && !state.cardDrag && state.phase !== 'trigger-select') {
+              applyOnlineSnapshot(result.snapshot);
+              session.snapshotRevision = result.snapshotRevision;
+            }
+          }
+          if (result.room.status === 'complete') session.matchOver = true;
+        } catch (error) {
+          if (onlineSession) onlineStatus.textContent = `연결 재시도 중 · ${error.message}`;
+        } finally { onlinePollPending = false; }
+      }
+
+      function createOnlineSnapshot() {
+        return {
+          units: state.units.map(unit => ({ ...unit, ability: unit.ability ? { ...unit.ability, stacks: { ...unit.ability.stacks } } : null })),
+          bricks: state.bricks.map(brick => ({ ...brick })),
+          triggers: state.triggers.map(trigger => ({ ...trigger, typeId: trigger.type.id, type: undefined })),
+          fallPoints: [...state.fallPoints],
+          particles: state.particles.map(particle => ({ ...particle })),
+          effects: state.effects.map(effect => ({ ...effect })),
+          phase: state.phase,
+          aiming: state.aiming,
+          aimPoint: state.aimPoint ? { ...state.aimPoint } : null,
+          aimTension: state.aimTension,
+          mapTime: state.mapTime,
+          triggerPlacementUsed: [...state.triggerPlacementUsed],
+          deck: [],
+          hands: state.hands.map((hand, owner) => hand.map(card => owner === 1
+            ? { ...card }
+            : { instanceId: card.instanceId, id: 'hidden', name: '비공개 카드' })),
+          nextCardId: state.nextCardId,
+          currentMapId: state.currentMap.id,
+          globalTurn: turns.globalTurn,
+          currentUnitId: turns.currentUnit?.id ?? null,
+          repositionUnitId: state.repositionUnit?.id ?? null,
+          dealPlayer: dealPlayer.textContent,
+          dealCard: state.dealOwner === 1 ? state.lastDealtCardName : '카드 1장',
+          dealOwner: state.dealOwner,
+          series: {
+            roundIndex: onlineSession.roundIndex,
+            wins: [...onlineSession.wins],
+            totalScores: [...onlineSession.totalScores],
+            roundResults: onlineSession.roundResults,
+            matchOver: onlineSession.matchOver,
+            result: onlineSession.result,
+            maps: onlineSession.maps
+          }
+        };
+      }
+
+      function applyOnlineSnapshot(snapshot) {
+        const currentMap = MAPS.find(map => map.id === snapshot.currentMapId) || MAPS[0];
+        state.units = snapshot.units.map(data => Object.assign(new CurlingUnit({
+          id: data.id, owner: data.owner, turnNumber: data.turnNumber, x: data.x, y: data.y
+        }), data));
+        state.bricks = snapshot.bricks.map(data => Object.assign(new BrickUnit({ x: data.x, y: data.y, owner: data.owner }), data));
+        state.triggers = snapshot.triggers.map(data => {
+          const { typeId, ...trigger } = data;
+          return { ...trigger, type: ITEM_TRIGGERS.find(type => type.id === typeId) };
+        });
+        state.fallPoints = snapshot.fallPoints;
+        state.particles = snapshot.particles;
+        state.effects = snapshot.effects;
+        state.phase = snapshot.phase;
+        state.aiming = snapshot.aiming;
+        state.aimPoint = snapshot.aimPoint;
+        state.aimTension = snapshot.aimTension;
+        state.mapTime = snapshot.mapTime;
+        state.triggerPlacementUsed = snapshot.triggerPlacementUsed;
+        state.deck = snapshot.deck;
+        state.hands = snapshot.hands;
+        state.nextCardId = snapshot.nextCardId;
+        state.currentMap = currentMap;
+        state.selectedMap = currentMap;
+        turns.globalTurn = snapshot.globalTurn;
+        turns.currentUnit = state.units.find(unit => unit.id === snapshot.currentUnitId) || null;
+        state.repositionUnit = state.units.find(unit => unit.id === snapshot.repositionUnitId) || null;
+        mapIndicator.textContent = currentMap.name;
+        dealPlayer.textContent = snapshot.dealPlayer;
+        dealCard.textContent = snapshot.dealCard;
+        state.dealOwner = snapshot.dealOwner;
+        state.lastDealtCardName = snapshot.dealCard;
+        dealOverlay.hidden = state.phase !== 'dealing';
+        mapSelectOverlay.hidden = true;
+        startOverlay.hidden = true;
+        if (snapshot.series) {
+          onlineSession.roundIndex = snapshot.series.roundIndex;
+          onlineSession.wins = snapshot.series.wins;
+          onlineSession.totalScores = snapshot.series.totalScores;
+          onlineSession.roundResults = snapshot.series.roundResults || [];
+          onlineSession.matchOver = snapshot.series.matchOver;
+          onlineSession.result = snapshot.series.result;
+          onlineSession.maps = snapshot.series.maps;
+          if (snapshot.series.result) showOnlineResult(snapshot.series.result);
+        }
+        renderHands();
+        updateHud();
+        if (state.phase === 'finished') resultOverlay.hidden = false;
+        else if (!snapshot.series?.result) resultOverlay.hidden = true;
+      }
+
+      function handleOnlineHostAction(packet) {
+        if (!onlineSession?.started || onlineSession.role !== 'host' || packet.playerIndex !== 1 || turns.playerIndex !== 1 ||
+            !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase)) return;
+        const action = packet.action;
+        if (action.type === 'launch' && ['aiming', 'reposition'].includes(state.phase) && action.aimPoint) {
+          const dx = action.aimPoint.x - (state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit)?.x;
+          const dy = action.aimPoint.y - (state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit)?.y;
+          if (!Number.isFinite(dx) || !Number.isFinite(dy) || Math.hypot(dx, dy) > CONFIG.maxPullDistance + 1) return;
+          state.aiming = true;
+          state.aimPoint = action.aimPoint;
+          launchCurrentUnit();
+        } else if (action.type === 'card') {
+          const unit = state.units.find(item => item.id === action.unitId);
+          if (unit) useCard(action.cardId, 1, unit);
+        } else if (action.type === 'end-turn') {
+          endTurn();
+        } else if (action.type === 'trigger' && !state.triggerPlacementUsed[1] && canPlaceItemTrigger(action.point)) {
+          const type = ITEM_TRIGGERS.find(item => item.id === action.typeId);
+          if (type) {
+            state.triggers.push({ entityKind: ENTITY_KIND.TRIGGER, id: `online-trigger-${Date.now()}`, type, owner: 1, x: action.point.x, y: action.point.y, radius: CONFIG.unitRadius * .5 });
+            state.triggerPlacementUsed[1] = true;
+            playSound('drop');
+            updateHud();
+          }
+        } else if (action.type === 'brick' && canPlaceBrick(action.point)) {
+          const cardIndex = state.hands[1].findIndex(card => card.instanceId === action.cardId && card.id === 'brick');
+          if (cardIndex >= 0) {
+            state.bricks.push(new BrickUnit({ x: action.point.x, y: action.point.y, owner: 1 }));
+            state.hands[1].splice(cardIndex, 1);
+            playSound('drop');
+            renderHands();
+            updateHud();
+          }
+        }
+      }
+
+      function shouldForwardOnlineAction() {
+        return onlineSession?.started && onlineSession.role === 'challenger' && turns.playerIndex === onlineSession.playerIndex;
+      }
+
+      function canControlPlayer(owner) {
+        return !onlineSession?.started || onlineSession.playerIndex === owner;
+      }
+
+      function sendOnlineAction(action) {
+        if (!onlineSession) return;
+        postOnlineRequest(`/api/rooms/${onlineSession.code}/action`, { token: onlineSession.token, action })
+          .catch(error => { onlineStatus.textContent = `행동 전송 실패 · ${error.message}`; });
+      }
+
+      function startOnlineRound(roundIndex) {
+        if (!onlineSession?.maps || onlineSession.role !== 'host') return;
+        onlineSession.roundIndex = roundIndex;
+        onlineSession.result = null;
+        const map = MAPS.find(item => item.id === onlineSession.maps[roundIndex]) || MAPS[0];
+        state.selectedMap = map;
+        state.currentMap = map;
+        state.mapTime = 0;
+        mapIndicator.textContent = `${map.name} · ${roundIndex + 1}라운드`;
+        mapSelectOverlay.hidden = true;
+        startOverlay.hidden = true;
+        resultOverlay.hidden = true;
+        replayButton.hidden = true;
+        dealOverlay.hidden = true;
+        dealCards();
+      }
+
+      function showOnlineResult(result) {
+        winnerTitle.textContent = result.title;
+        winnerTitle.classList.remove('result-title');
+        void winnerTitle.offsetWidth;
+        winnerTitle.classList.add('result-title');
+        resultMessage.textContent = result.message;
+        renderResultRows(result.rows || []);
+        replayButton.hidden = !result.matchOver;
+        replayButton.textContent = '방 나가기';
+        resultOverlay.hidden = false;
+      }
+
+      function renderResultRows(rows) {
+        resultGrid.replaceChildren(...rows.map(row => {
+          const item = document.createElement('div');
+          const label = document.createElement('span');
+          const score = document.createElement('strong');
+          const detail = document.createElement('span');
+          label.textContent = row.label;
+          score.textContent = row.score;
+          detail.textContent = row.detail;
+          item.append(label, score, detail);
+          return item;
+        }));
+      }
+
+      function openMapSelection(origin) {
+        onlineSession = null;
+        clearInterval(onlinePollTimer);
+        onlinePollTimer = null;
+        state.mapSelectionOrigin = origin;
+        state.phase = 'map-select';
+        startOverlay.hidden = true;
+        resultOverlay.hidden = true;
+        dealOverlay.hidden = true;
+        mapSelectOverlay.hidden = false;
+        mapSelectTitle.textContent = '맵 선택';
+        mapSelectDescription.textContent = '이번 판에서 플레이할 맵을 고르세요.';
+        roomCodeView.hidden = true;
+        onlinePlayerStatus.hidden = true;
+        onlineStatus.hidden = true;
+        confirmMapButton.disabled = false;
+        confirmMapButton.textContent = '선택한 맵으로 시작';
+        cancelMapButton.textContent = '취소';
+        entityTooltip.hidden = true;
+        renderMapOptions();
+        mapOptions.querySelector('[aria-checked="true"]')?.focus();
+      }
+
+      function cancelMapSelection() {
+        if (state.mapSelectionOrigin === 'online' && onlineSession) {
+          const session = onlineSession;
+          clearInterval(onlinePollTimer);
+          onlinePollTimer = null;
+          onlineSession = null;
+          postOnlineRequest(`/api/rooms/${session.code}/leave`, { token: session.token }).catch(() => {});
+          mapSelectOverlay.hidden = true;
+          startOverlay.hidden = false;
+          state.phase = 'intro';
+          return;
+        }
+        mapSelectOverlay.hidden = true;
+        if (state.mapSelectionOrigin === 'result') {
+          resultOverlay.hidden = false;
+          state.phase = 'finished';
+        } else {
+          startOverlay.hidden = false;
+          state.phase = 'intro';
+        }
+      }
+
+      function startSelectedMap() {
+        if (onlineSession && !onlineSession.started) {
+          confirmOnlineMap();
+          return;
+        }
+        initializeAudio();
+        startMusic();
+        playSound('start');
+        state.currentMap = state.selectedMap;
+        state.mapTime = 0;
+        mapIndicator.textContent = state.currentMap.name;
+        mapSelectOverlay.hidden = true;
+        dealOverlay.hidden = true;
+        dealCards();
+      }
+
+      function startLocalGame() {
+        PLAYER[0].name = playerNameInput.value.trim().slice(0, 20) || '플레이어 1';
+        PLAYER[1].name = '플레이어 2';
+        updatePlayerNames();
+        openMapSelection('start');
+      }
+
+      function dealCards() {
+        state.deck = CARDS.map(card => ({ ...card }));
+        for (let i = state.deck.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [state.deck[i], state.deck[j]] = [state.deck[j], state.deck[i]];
+        }
+        state.nextCardId = 0;
+        state.hands = [[], []];
+        state.triggerPlacementUsed = [false, false];
+        renderHands();
+        drawCardForPlayer(0, beginRound);
+      }
+
+      function renderHands() {
+        handEls.forEach((hand, owner) => {
+          hand.replaceChildren(...state.hands[owner].map(card => {
+            const element = document.createElement('div');
+            const concealed = onlineSession?.started && owner !== onlineSession.playerIndex;
+            element.className = concealed ? 'ability-card card-back' : 'ability-card usable';
+            element.textContent = concealed ? '비공개' : card.name;
+            element.dataset.cardId = card.instanceId;
+            element.dataset.owner = String(owner);
+            element.setAttribute('role', 'button');
+            element.setAttribute('aria-label', concealed ? '상대 비공개 카드' : `${card.name} 카드`);
+            if (!concealed) element.addEventListener('pointerdown', beginCardDrag);
+            return element;
+          }));
+        });
+        updateTriggerTools();
+      }
+
+      function finishGame() {
+        state.phase = 'finished';
+        entityTooltip.hidden = true;
+        playSound('win');
+        const scores = calculateScores();
+        const [one, two] = scores;
+        const winner = one.score === two.score ? null : one.score > two.score ? 0 : 1;
+        if (onlineSession?.role === 'host' && onlineSession.started) {
+          finishOnlineRound(scores, winner);
+          return;
+        }
+        turnText.textContent = winner === null ? '무승부' : `${PLAYER[winner].name} 승리`;
+        panels.forEach(panel => panel.classList.remove('current'));
+        winnerTitle.textContent = winner === null ? '무승부!' : `${PLAYER[winner].name} 승리!`;
+        winnerTitle.classList.remove('result-title');
+        void winnerTitle.offsetWidth;
+        winnerTitle.classList.add('result-title');
+        resultMessage.textContent = winner === null ? '거리 점수와 낙사 보너스를 합산한 결과 무승부입니다.' : `거리 점수와 상대 병뚜껑 낙사 보너스를 합산해 ${PLAYER[winner].name}이 승리했습니다.`;
+        renderResultRows(scores.map((result, index) => ({
+          label: PLAYER[index].name,
+          score: `${result.score}점`,
+          detail: `거리 ${Math.round(result.distance)} · 낙사 보너스 ${result.fallBonus}점`
+        })));
+        createConfetti(winner === null ? '#e5b35a' : PLAYER[winner].color);
+        resultOverlay.hidden = false;
+      }
+
+      function finishOnlineRound(scores, winner) {
+        const session = onlineSession;
+        const map = MAPS.find(item => item.id === session.maps[session.roundIndex]) || MAPS[0];
+        session.totalScores[0] += scores[0].score;
+        session.totalScores[1] += scores[1].score;
+        if (winner !== null) session.wins[winner] += 1;
+        session.roundResults.push({ mapName: map.name, winner, scores: [scores[0].score, scores[1].score] });
+
+        let matchWinner = session.wins[0] >= 2 ? 0 : session.wins[1] >= 2 ? 1 : null;
+        const finalRound = session.roundIndex >= 2;
+        const matchOver = matchWinner !== null || finalRound;
+        if (finalRound && matchWinner === null) {
+          if (session.wins[0] !== session.wins[1]) matchWinner = session.wins[0] > session.wins[1] ? 0 : 1;
+          else if (session.totalScores[0] !== session.totalScores[1]) matchWinner = session.totalScores[0] > session.totalScores[1] ? 0 : 1;
+        }
+        session.matchOver = matchOver;
+        const title = matchOver
+          ? matchWinner === null ? '대전 무승부' : `${PLAYER[matchWinner].name} 대전 승리!`
+          : `${session.roundIndex + 1}라운드 결과`;
+        const message = matchOver
+          ? `${session.roundIndex + 1}경기 전적 ${session.wins[0]}승 : ${session.wins[1]}승 · 총점 ${session.totalScores[0]} : ${session.totalScores[1]}`
+          : `${winner === null ? '이번 판은 무승부입니다.' : `${PLAYER[winner].name}이 이번 판에서 승리했습니다.`} · 현재 전적 ${session.wins[0]}승 : ${session.wins[1]}승 · 다음 맵으로 이동합니다.`;
+        const rows = session.roundResults.map((result, index) => ({
+          label: `${index + 1}라운드 · ${result.mapName}`,
+          score: result.winner === null ? '무승부' : `${PLAYER[result.winner].name} 승`,
+          detail: `${PLAYER[0].name} ${result.scores[0]}점 : ${PLAYER[1].name} ${result.scores[1]}점`
+        }));
+        session.result = { title, message, rows, matchOver };
+        state.phase = 'finished';
+        turnText.textContent = matchOver ? title : `${session.roundIndex + 1}라운드 종료`;
+        panels.forEach(panel => panel.classList.remove('current'));
+        showOnlineResult(session.result);
+        createConfetti(matchWinner === null ? PLAYER[winner ?? 0].color : PLAYER[matchWinner].color);
+        if (matchOver) {
+          postOnlineRequest(`/api/rooms/${session.code}/complete`, { token: session.token }).catch(() => {});
+        } else {
+          const nextRound = session.roundIndex + 1;
+          setTimeout(() => {
+            if (onlineSession === session && !session.matchOver) startOnlineRound(nextRound);
+          }, 2600);
+        }
+      }
+
+      function createConfetti(color) {
+        for (let i = 0; i < 90; i += 1) {
+          state.particles.push({
+            x: 600,
+            y: 230,
+            vx: (Math.random() - .5) * 820,
+            vy: -Math.random() * 420 - 80,
+            life: 1 + Math.random() * .65,
+            size: 5 + Math.random() * 6,
+            color: i % 4 === 0 ? '#f4f0e6' : color
+          });
+        }
+      }
+
+      function updateParticles(dt) {
+        state.particles = state.particles.filter(particle => {
+          particle.x += particle.vx * dt;
+          particle.y += particle.vy * dt;
+          particle.vy += 720 * dt;
+          particle.life -= dt;
+          return particle.life > 0;
+        });
+      }
+
+      function drawTable() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#243234';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#d8bf82';
+        ctx.fillRect(TABLE.left - 22, TABLE.top - 22, TABLE.right - TABLE.left + 44, TABLE.bottom - TABLE.top + 44);
+        ctx.fillStyle = state.currentMap.color;
+        ctx.fillRect(TABLE.left, TABLE.top, TABLE.right - TABLE.left, TABLE.bottom - TABLE.top);
+        ctx.fillStyle = '#efd36c';
+        ctx.fillRect(TABLE.left, TABLE.top, TABLE.right - TABLE.left, 20);
+        ctx.strokeStyle = 'rgba(255,255,255,.55)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([10, 10]);
+        ctx.beginPath();
+        ctx.moveTo(TABLE.left, 190);
+        ctx.lineTo(TABLE.right, 190);
+        ctx.moveTo(TABLE.left, 520);
+        ctx.lineTo(TABLE.right, 520);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.strokeStyle = 'rgba(255,255,255,.76)';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(TABLE.left, TABLE.top, TABLE.right - TABLE.left, TABLE.bottom - TABLE.top);
+        ctx.fillStyle = 'rgba(13, 45, 45, .72)';
+        ctx.fillRect(TABLE.left, TABLE.bottom, TABLE.right - TABLE.left, 72);
+        ctx.fillStyle = 'rgba(255,255,255,.7)';
+        ctx.font = '700 15px "Malgun Gothic", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.save();
+        ctx.translate(TABLE.goalX + 10, 355);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillText('GOAL', 0, 0);
+        ctx.restore();
+        ctx.fillStyle = 'rgba(255,255,255,.7)';
+        ctx.font = '700 14px "Malgun Gothic", sans-serif';
+        ctx.fillText('발사', TABLE.launchX, 355);
+        if (state.currentMap.walls) {
+          ctx.fillStyle = '#e3bd62';
+          wallSegments().forEach(wall => {
+            ctx.fillRect(wall.x, wall.y, wall.width, wall.height);
+            ctx.strokeStyle = 'rgba(35, 27, 12, .55)';
+            ctx.lineWidth = 2;
+            if (wall.width > wall.height) {
+              for (let x = wall.x + 8; x < wall.x + wall.width; x += 24) {
+                ctx.beginPath(); ctx.moveTo(x, wall.y + 2); ctx.lineTo(x + 12, wall.y + wall.height - 2); ctx.stroke();
+              }
+            } else {
+              for (let y = wall.y + 8; y < wall.y + wall.height; y += 24) {
+                ctx.beginPath(); ctx.moveTo(wall.x + 2, y); ctx.lineTo(wall.x + wall.width - 2, y + 12); ctx.stroke();
+              }
+            }
+          });
+        }
+      }
+
+      function drawUnit(unit) {
+        if (unit.status === 'fallen') return;
+        const image = images[unit.owner];
+        ctx.save();
+        ctx.translate(unit.x, unit.y);
+        if (unit.fluidTimer > 0) {
+          ctx.beginPath();
+          ctx.arc(0, 0, unit.radius + 8, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(168, 85, 247, .32)';
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(232, 121, 249, .9)';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+        ctx.globalAlpha = unit.fluidTimer > 0 ? .58 : 1;
+        ctx.beginPath();
+        ctx.arc(0, 0, unit.radius + 3, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0,0,0,.25)';
+        ctx.fill();
+        if (image.complete && image.naturalWidth > 0) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(0, 0, unit.radius, 0, Math.PI * 2);
+          ctx.clip();
+          ctx.drawImage(image, -unit.radius, -unit.radius, unit.radius * 2, unit.radius * 2);
+          ctx.restore();
+          ctx.beginPath();
+          ctx.arc(0, 0, unit.radius, 0, Math.PI * 2);
+          ctx.strokeStyle = PLAYER[unit.owner].color;
+          ctx.lineWidth = 3;
+          ctx.stroke();
+        } else {
+          ctx.beginPath();
+          ctx.arc(0, 0, unit.radius, 0, Math.PI * 2);
+          ctx.fillStyle = PLAYER[unit.owner].color;
+          ctx.fill();
+          ctx.fillStyle = '#fff';
+          ctx.font = '700 16px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(unit.owner + 1, 0, 1);
+        }
+        const hardeningStacks = getUnitEffectStacks(unit, 'hardening');
+        for (let stack = 0; stack < hardeningStacks; stack += 1) {
+          ctx.beginPath();
+          ctx.arc(0, 0, unit.radius * (.88 - stack * .12), 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(145, 155, 160, ${.28 + stack * .12})`;
+          ctx.fill();
+          ctx.strokeStyle = `rgba(235, 241, 243, ${.72 + Math.min(.2, stack * .1)})`;
+          ctx.lineWidth = 2 + stack;
+          ctx.stroke();
+        }
+        ctx.restore();
+        if (unit.ability?.guard) {
+          const satellites = guardSatellites(unit);
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(unit.x, unit.y, unit.radius * 1.875, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(226, 157, 102, .5)';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          satellites.forEach(satellite => {
+            ctx.beginPath();
+            ctx.arc(satellite.x, satellite.y, satellite.radius + 2, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0, 0, 0, .38)';
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(satellite.x, satellite.y, satellite.radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#b87343';
+            ctx.fill();
+            ctx.strokeStyle = '#ffd09a';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(satellite.x - satellite.radius * .25, satellite.y - satellite.radius * .25, satellite.radius * .25, 0, Math.PI * 2);
+            ctx.fillStyle = '#fff0d7';
+            ctx.fill();
+          });
+          ctx.restore();
+        }
+      }
+
+      function drawBrick(brick, alpha = 1) {
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = '#59666b';
+        ctx.fillRect(brick.x - brick.width / 2, brick.y - brick.height / 2, brick.width, brick.height);
+        ctx.strokeStyle = '#c3d0ce';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(brick.x - brick.width / 2, brick.y - brick.height / 2, brick.width, brick.height);
+        ctx.restore();
+      }
+
+      function drawEffects() {
+        for (const effect of state.effects) {
+          const progress = effect.age / effect.duration;
+          ctx.save();
+          if (effect.type === 'pulse') {
+            const radius = (effect.radius || PULSE_RANGE) * progress;
+            ctx.beginPath();
+            ctx.arc(effect.x, effect.y, radius, 0, Math.PI * 2);
+            ctx.fillStyle = '#00aaff';
+            ctx.globalAlpha = (1 - progress) * .24;
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(effect.x, effect.y, radius, 0, Math.PI * 2);
+            ctx.strokeStyle = '#00f5ff';
+            ctx.globalAlpha = 1 - progress;
+            ctx.lineWidth = 12 * (1 - progress) + 2;
+            ctx.stroke();
+          } else if (effect.type === 'item') {
+            const radius = 12 + progress * 42;
+            ctx.globalAlpha = 1 - progress;
+            ctx.beginPath();
+            ctx.arc(effect.x, effect.y, radius, 0, Math.PI * 2);
+            ctx.strokeStyle = effect.color;
+            ctx.lineWidth = 5 * (1 - progress) + 1;
+            ctx.stroke();
+          } else if (effect.type === 'blackhole') {
+            const radius = effect.radius * (1 - progress * .58);
+            ctx.translate(effect.x, effect.y);
+            ctx.rotate(progress * Math.PI * 3);
+            ctx.globalAlpha = (1 - progress) * .78;
+            for (let ring = 0; ring < 3; ring += 1) {
+              ctx.beginPath();
+              ctx.ellipse(0, 0, radius * (1 - ring * .16), radius * (1 - ring * .16) * .72, ring * .7, .2, Math.PI * 1.8);
+              ctx.strokeStyle = ring === 1 ? '#e879f9' : '#8b5cf6';
+              ctx.lineWidth = 5 - ring;
+              ctx.stroke();
+            }
+            ctx.beginPath();
+            ctx.arc(0, 0, 17 * (1 - progress * .3), 0, Math.PI * 2);
+            ctx.fillStyle = '#11051d';
+            ctx.globalAlpha = .95 * (1 - progress * .35);
+            ctx.fill();
+            ctx.strokeStyle = '#d946ef';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+      }
+
+      function drawCardPreview() {
+        const drag = state.cardDrag;
+        if (!drag?.point) return;
+        if (drag.type === 'trigger-placement') {
+          if (drag.preview?.style.display === 'block') return;
+          const legal = canPlaceItemTrigger(drag.point);
+          const radius = CONFIG.unitRadius * .5;
+          drawTriggerToken(drag.point.x, drag.point.y, radius, {
+            color: legal ? '#56e0bc' : '#ef6262',
+            id: 'preview'
+          }, { scale: 1, alpha: .72, glyph: '+' });
+          return;
+        }
+        if (drag.type === 'brick') {
+          const legal = canPlaceBrick(drag.point);
+          const preview = { ...drag.point, width: 18, height: 64 };
+          drawBrick(preview, .58);
+          ctx.save();
+          ctx.strokeStyle = legal ? '#b8f274' : '#ff4f5e';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(preview.x - preview.width / 2, preview.y - preview.height / 2, preview.width, preview.height);
+          ctx.restore();
+          return;
+        }
+        if (drag.type !== 'pulse' && drag.type !== 'blackhole') return;
+        const target = findCardTarget(drag.point, drag.owner);
+        if (!target) return;
+        const radius = drag.type === 'pulse' ? PULSE_RANGE : BLACK_HOLE.range;
+        const color = drag.type === 'pulse' ? '#00aaff' : '#8b5cf6';
+        ctx.save();
+        ctx.globalAlpha = .2;
+        ctx.beginPath();
+        ctx.arc(target.x, target.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = drag.type === 'pulse' ? '#00f5ff' : '#e879f9';
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawAim() {
+        const unit = state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit;
+        if (!state.aiming || !unit || !state.aimPoint) {
+          aimOverlay.style.display = 'none';
+          return;
+        }
+        const rect = canvas.getBoundingClientRect();
+        const screenPoint = point => ({
+          x: rect.left + point.x * rect.width / canvas.width,
+          y: rect.top + point.y * rect.height / canvas.height
+        });
+        const start = screenPoint(unit);
+        const end = screenPoint(state.aimPoint);
+        const dx = end.x - start.x;
+        const dy = end.y - start.y;
+        const length = Math.hypot(dx, dy) || 1;
+        const perpendicularX = -dy / length;
+        const perpendicularY = dx / length;
+        const shakeProgress = Math.max(0, (state.aimTension - .75) / .25);
+        const scale = rect.width / canvas.width;
+        const shake = Math.pow(shakeProgress, 2.2) * 4.5 * scale;
+        const time = performance.now();
+        const points = [`M ${start.x.toFixed(1)} ${start.y.toFixed(1)}`];
+        for (let index = 1; index <= 14; index += 1) {
+          const progress = index / 14;
+          const envelope = Math.sin(progress * Math.PI);
+          const jitter = envelope * shake * (Math.sin(time * .055 + index * 2.4) + .32 * Math.sin(time * .091 + index * 4.1));
+          points.push(`L ${(start.x + dx * progress + perpendicularX * jitter).toFixed(1)} ${(start.y + dy * progress + perpendicularY * jitter).toFixed(1)}`);
+        }
+        aimPath.setAttribute('d', points.join(' '));
+        aimPath.setAttribute('stroke', PLAYER[unit.owner].color);
+        aimPath.setAttribute('stroke-width', String(5 * scale));
+        aimPath.setAttribute('stroke-dasharray', `${10 * scale} ${8 * scale}`);
+        const tip = screenPoint({
+          x: unit.x + (unit.x - state.aimPoint.x) * .18,
+          y: unit.y + (unit.y - state.aimPoint.y) * .18
+        });
+        aimTip.setAttribute('cx', tip.x.toFixed(1));
+        aimTip.setAttribute('cy', tip.y.toFixed(1));
+        aimTip.setAttribute('r', String(6 * scale));
+        aimOverlay.style.display = 'block';
+      }
+
+      function drawParticles() {
+        state.particles.forEach(particle => {
+          ctx.globalAlpha = Math.max(0, particle.life);
+          ctx.fillStyle = particle.color;
+          ctx.fillRect(particle.x, particle.y, particle.size, particle.size);
+        });
+        ctx.globalAlpha = 1;
+      }
+
+      function draw() {
+        drawTable();
+        drawItemTriggers();
+        state.units.forEach(drawUnit);
+        state.bricks.forEach(brick => drawBrick(brick));
+        drawEffects();
+        drawAim();
+        drawCardPreview();
+        drawParticles();
+        drawSkullEffects();
+      }
+
+      function drawSkullEffects() {
+        for (const effect of state.effects.filter(item => item.type === 'skull')) {
+          const progress = effect.age / effect.duration;
+          const fade = Math.min(1, progress * 5, (1 - progress) * 3);
+          const scale = .72 + Math.sin(Math.min(1, progress * 2) * Math.PI / 2) * .48;
+          ctx.save();
+          ctx.fillStyle = `rgba(3, 8, 10, ${.78 * fade})`;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.translate(effect.x, effect.y);
+          ctx.scale(scale, scale);
+          ctx.globalAlpha = fade;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.shadowColor = PLAYER[effect.owner].color;
+          ctx.shadowBlur = 28;
+          ctx.fillStyle = '#fff';
+          ctx.font = '700 96px "Malgun Gothic", sans-serif';
+          ctx.fillText('☠', 0, -12);
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = PLAYER[effect.owner].color;
+          ctx.font = '700 26px "Malgun Gothic", sans-serif';
+          ctx.fillText(`${PLAYER[effect.owner].name} +${effect.points}`, 0, 62);
+          ctx.restore();
+        }
+      }
+
+      function getUnitTooltip(unit) {
+        const effects = [];
+        const hardeningStacks = getUnitEffectStacks(unit, 'hardening');
+        const guardStacks = getUnitEffectStacks(unit, 'guard');
+        if (hardeningStacks) effects.push(`경질화 ${hardeningStacks}중첩 · 마찰력 ${UNIT_EFFECTS.hardening.frictionPerStack ** hardeningStacks}배`);
+        if (guardStacks) effects.push(`방호벽 ${guardStacks}중첩 · 위성체 ${guardStacks * UNIT_EFFECTS.guard.satellitesPerStack}개`);
+        if (unit.fluidTimer > 0) effects.push('블랙홀 방출 · 유체 상태');
+        if (unit.relaunchAvailable && !unit.relaunchUsed) effects.push('재배치 가능');
+        return {
+          title: `${PLAYER[unit.owner].name} · ${unit.turnNumber}번째 병뚜껑`,
+          detail: effects.length ? `적용 효과: ${effects.join(', ')}` : unit.status === 'ready' ? '아직 발사 전 · 적용 효과 없음' : '적용 효과 없음'
+        };
+      }
+
+      function getTriggerTooltip(trigger) {
+        const descriptions = {
+          blackhole: `블랙홀 방출 · 범위 ${Math.round(trigger.type.range)} 안의 병뚜껑과 벽돌을 끌어당깁니다.`,
+          pulse: `방출 · 범위 ${Math.round(trigger.type.range)} 안의 병뚜껑과 벽돌을 강하게 밀쳐냅니다.`,
+          hardening: '경질화 · 중첩할 때마다 마찰력이 3배씩 곱해집니다.',
+          guard: '방호벽 · 중첩하면 위성체가 최대 네 개까지 늘어납니다.'
+        };
+        return { title: `${trigger.type.name} 트리거`, detail: descriptions[trigger.type.id] };
+      }
+
+      function updateEntityTooltip(event) {
+        if (event.pointerType === 'touch' || state.cardDrag || state.effects.some(effect => effect.type === 'skull') || ['intro', 'map-select', 'dealing', 'trigger-select', 'finished'].includes(state.phase)) {
+          entityTooltip.hidden = true;
+          return;
+        }
+        const point = eventPoint(event);
+        const candidates = [
+          ...state.units.filter(unit => unit.status !== 'fallen').map(unit => ({
+            distance: Math.hypot(point.x - unit.x, point.y - unit.y),
+            radius: unit.radius + 5,
+            content: getUnitTooltip(unit)
+          })),
+          ...state.triggers.map(trigger => ({
+            distance: Math.hypot(point.x - trigger.x, point.y - trigger.y),
+            radius: trigger.radius + 6,
+            content: getTriggerTooltip(trigger)
+          }))
+        ].filter(candidate => candidate.distance <= candidate.radius).sort((a, b) => a.distance - b.distance);
+        const target = candidates[0];
+        if (!target) {
+          entityTooltip.hidden = true;
+          return;
+        }
+        entityTooltipTitle.textContent = target.content.title;
+        entityTooltipDetail.textContent = target.content.detail;
+        entityTooltip.hidden = false;
+        const shellRect = canvas.parentElement.getBoundingClientRect();
+        const x = event.clientX - shellRect.left;
+        const y = event.clientY - shellRect.top;
+        const width = entityTooltip.offsetWidth;
+        const height = entityTooltip.offsetHeight;
+        entityTooltip.style.left = `${Math.max(8, Math.min(shellRect.width - width - 8, x + 14))}px`;
+        entityTooltip.style.top = `${Math.max(8, Math.min(shellRect.height - height - 8, y + 14))}px`;
+      }
+
+      function drawItemTriggers() {
+        for (const trigger of state.triggers) {
+          const { x, y, radius, type } = trigger;
+          const pulse = 1 + Math.sin(performance.now() / 180 + x) * .08;
+          ctx.save();
+          ctx.globalAlpha = .22;
+          ctx.beginPath();
+          ctx.arc(x, y, radius * 1.85 * pulse, 0, Math.PI * 2);
+          ctx.fillStyle = type.color;
+          ctx.fill();
+          ctx.restore();
+          drawTriggerToken(x, y, radius, type, { scale: pulse });
+        }
+      }
+
+      function drawTriggerToken(x, y, radius, type, options = {}) {
+        const scale = options.scale ?? 1;
+        const alpha = options.alpha ?? 1;
+        const color = type.color;
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.beginPath();
+        ctx.arc(x, y, radius * scale, 0, Math.PI * 2);
+        ctx.fillStyle = '#17302f';
+        ctx.fill();
+        ctx.lineWidth = Math.max(2, radius * .12);
+        ctx.strokeStyle = color;
+        ctx.stroke();
+        ctx.fillStyle = color;
+        ctx.font = `700 ${Math.max(9, radius * .58)}px "Malgun Gothic", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const glyph = options.glyph ?? (type.id === 'blackhole' ? '블' : type.id === 'pulse' ? '방' : type.id === 'hardening' ? '경' : '호');
+        ctx.fillText(glyph, x, y + 1);
+        ctx.restore();
+      }
+
+      function gameLoop(timestamp) {
+        const dt = Math.min((timestamp - state.lastTime) / 1000 || 0, 0.03) * state.gameSpeed;
+        state.lastTime = timestamp;
+        if (state.aiming && state.aimTension >= .75) playSound('strainRumble', state.aimTension);
+        if (!['intro', 'map-select', 'dealing', 'trigger-select', 'finished'].includes(state.phase)) update(dt, timestamp);
+        if (state.phase === 'finished') {
+          updateParticles(dt);
+          updateEffects(dt);
+        }
+        draw();
+        requestAnimationFrame(gameLoop);
+      }
+
+      function eventPoint(event) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: (event.clientX - rect.left) * canvas.width / rect.width,
+          y: (event.clientY - rect.top) * canvas.height / rect.height
+        };
+      }
+
+      canvas.addEventListener('pointerdown', event => {
+        if (!['aiming', 'reposition'].includes(state.phase) || !canControlPlayer(turns.playerIndex)) return;
+        const point = eventPoint(event);
+        const unit = state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit;
+        if (!unit) return;
+        if (Math.hypot(point.x - unit.x, point.y - unit.y) > unit.radius + 12) return;
+        state.aiming = true;
+        initializeAudio();
+        updateAimFromInput(unit, point);
+        canvas.setPointerCapture(event.pointerId);
+      });
+
+      canvas.addEventListener('pointermove', event => {
+        const unit = state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit;
+        if (state.aiming && unit) {
+          updateAimFromInput(unit, eventPoint(event));
+        }
+        updateEntityTooltip(event);
+      });
+
+      canvas.addEventListener('pointerleave', () => { entityTooltip.hidden = true; });
+
+      canvas.addEventListener('pointerup', event => {
+        if (!state.aiming) return;
+        const unit = state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit;
+        if (unit) updateAimFromInput(unit, eventPoint(event));
+        if (shouldForwardOnlineAction()) {
+          sendOnlineAction({ type: 'launch', aimPoint: state.aimPoint });
+          state.aiming = false;
+          state.aimPoint = null;
+          state.aimTension = 0;
+          return;
+        }
+        launchCurrentUnit();
+      });
+
+      canvas.addEventListener('pointercancel', () => {
+        state.aiming = false;
+        state.aimPoint = null;
+        state.aimTension = 0;
+      });
+
+      startButton.addEventListener('click', startLocalGame);
+      createRoomButton.addEventListener('click', createOnlineRoom);
+      joinRoomButton.addEventListener('click', joinOnlineRoom);
+      replayButton.addEventListener('click', () => {
+        if (onlineSession) {
+          const session = onlineSession;
+          clearInterval(onlinePollTimer);
+          onlinePollTimer = null;
+          onlineSession = null;
+          postOnlineRequest(`/api/rooms/${session.code}/leave`, { token: session.token }).catch(() => {});
+          PLAYER[0].name = '플레이어 1';
+          PLAYER[1].name = '플레이어 2';
+          updatePlayerNames();
+          resultOverlay.hidden = true;
+          startOverlay.hidden = false;
+          state.phase = 'intro';
+        } else openMapSelection('result');
+      });
+      confirmMapButton.addEventListener('click', startSelectedMap);
+      cancelMapButton.addEventListener('click', cancelMapSelection);
+      triggerToolButtons.forEach(button => button.addEventListener('pointerdown', beginTriggerPlacementDrag));
+      confirmTriggerButton.addEventListener('click', confirmItemTriggerPlacement);
+      cancelTriggerButton.addEventListener('click', cancelItemTriggerPlacement);
+      endTurnButton.addEventListener('click', endTurn);
+      speedToggle.addEventListener('click', () => {
+        state.speedLevel = (state.speedLevel + 1) % 3;
+        const speedModes = [1, .65, .4];
+        const speedLabels = ['100%', '65%', '40%'];
+        state.gameSpeed = speedModes[state.speedLevel];
+        const slowed = state.speedLevel > 0;
+        speedToggle.dataset.speedLevel = String(state.speedLevel);
+        speedLabel.textContent = speedLabels[state.speedLevel];
+        speedToggle.setAttribute('aria-pressed', String(slowed));
+        speedToggle.setAttribute('aria-label', `게임 속도: ${state.speedLevel === 0 ? '정상 속도' : speedLabels[state.speedLevel]}`);
+      });
+      musicToggle.addEventListener('change', () => {
+        if (musicToggle.checked) startMusic();
+        else stopMusic();
+      });
+      document.addEventListener('pointermove', moveCardGhost);
+      document.addEventListener('pointerup', finishCardDrag);
+      if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+        window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(error => console.warn('앱 오프라인 캐시 등록 실패', error)));
+      }
+      requestAnimationFrame(gameLoop);
+    })();
+  </script>
+</body>
+</html>
