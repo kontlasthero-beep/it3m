@@ -181,13 +181,18 @@
     .start-fields { display: grid; gap: 10px; margin: 16px 0; text-align: left; }
     .start-fields label { display: grid; gap: 5px; color: var(--muted); font-size: 12px; }
     .start-fields input { width: 100%; min-height: 40px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; background: #0f191b; color: var(--ink); font: inherit; }
-    .online-entry { display: grid; grid-template-columns: 1fr 1.15fr; gap: 8px; }
-    .online-entry button { padding: 9px 8px; font-size: 12px; }
     .join-entry { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 7px; }
-    .room-settings { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 8px; }
-    .room-settings button { min-height: 44px; padding: 8px 10px; font-size: 12px; }
-    .room-settings .public-toggle { display: flex; grid-column: 1 / -1; align-items: center; gap: 8px; color: var(--ink); }
-    .room-settings .public-toggle input { width: 18px; min-height: 18px; accent-color: #65d6bd; }
+    .browse-room-button { justify-self: center; min-height: 42px; padding: 8px 22px; }
+    .start-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 6px; }
+    .start-actions button { min-width: 0; min-height: 48px; padding: 9px 8px; font-size: 14px; }
+    .online-create-button { border-color: #4cae9b; background: #247667; color: #f1fffb; }
+    .online-create-button:hover { background: #318b79; }
+    .online-create-button[aria-expanded="true"] { box-shadow: inset 0 0 0 1px #a6f0dc; }
+    .create-room-panel { display: grid; gap: 10px; padding: 12px; border: 1px solid #3d6962; border-radius: 5px; background: #142b29; }
+    .create-room-panel[hidden], .join-password[hidden] { display: none; }
+    .create-room-panel .public-toggle { display: flex; align-items: center; gap: 8px; color: var(--ink); }
+    .create-room-panel .public-toggle input { width: 18px; min-height: 18px; accent-color: #65d6bd; }
+    .create-room-panel > button { min-height: 44px; border-color: #4cae9b; background: #247667; }
     .room-list { display: grid; gap: 6px; max-height: 180px; overflow-y: auto; }
     .room-list button { display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; text-align: left; }
     .room-list small { color: var(--muted); font-size: 11px; }
@@ -310,7 +315,7 @@
       .dialog p { margin-bottom: 14px; }
       .online-player-status { grid-template-columns: 1fr; gap: 6px; }
       .online-player-status span { min-height: 40px; display: flex; align-items: center; }
-      .online-entry { grid-template-columns: 1fr; }
+      .start-actions button { font-size: 12px; }
       .map-options { grid-template-columns: 1fr; gap: 7px; margin: 12px 0; }
       .map-option { min-height: 54px; padding: 9px; }
       .map-actions { position: sticky; bottom: -1px; padding: 8px 0 max(4px, env(safe-area-inset-bottom)); background: #162326; }
@@ -417,22 +422,24 @@
           <p>이름을 정하고 온라인 방을 만들거나 참가하세요.</p>
           <div class="start-fields">
             <label>내 이름<input id="playerNameInput" maxlength="20" autocomplete="nickname"></label>
-            <div class="online-entry">
-              <button id="createRoomButton">온라인 방 만들기</button>
-              <div class="join-entry"><input id="roomCodeInput" maxlength="6" autocomplete="off" placeholder="방 코드" aria-label="참가할 방 코드"><button id="joinRoomButton">참가</button></div>
-            </div>
-            <div class="room-settings">
-              <label><span>방 비밀번호 (선택)</span><input id="roomPasswordInput" type="password" maxlength="64" autocomplete="new-password"></label>
-              <button id="browseRoomsButton" type="button">공개 방 찾기</button>
-              <label class="public-toggle"><input id="publicRoomToggle" type="checkbox"><span>공개 방 목록에 표시</span></label>
-            </div>
+            <div class="join-entry"><input id="roomCodeInput" maxlength="6" autocomplete="off" placeholder="방 코드" aria-label="참가할 방 코드"><button id="joinRoomButton">참가</button></div>
+            <label class="join-password" id="joinPasswordField" hidden>참가 비밀번호<input id="joinPasswordInput" type="password" maxlength="64" autocomplete="current-password"></label>
+            <button class="browse-room-button" id="browseRoomsButton" type="button">공개 방 찾기</button>
             <div id="publicRoomPanel" hidden>
               <div class="room-list" id="publicRoomList"></div>
               <p class="room-list-status" id="publicRoomStatus" role="status"></p>
             </div>
+            <div class="start-actions">
+              <button class="primary" id="startButton">로컬 2인 플레이</button>
+              <button class="online-create-button" id="createRoomButton" type="button" aria-expanded="false" aria-controls="createRoomPanel">온라인 방 만들기</button>
+            </div>
+            <div class="create-room-panel" id="createRoomPanel" hidden>
+              <label>방 비밀번호 (선택)<input id="roomPasswordInput" type="password" maxlength="64" autocomplete="new-password"></label>
+              <label class="public-toggle"><input id="publicRoomToggle" type="checkbox"><span>공개 방 목록에 표시</span></label>
+              <button id="confirmCreateRoomButton" type="button">방 만들기</button>
+            </div>
             <p class="start-status" id="startStatus" role="status"></p>
           </div>
-          <button class="primary" id="startButton">로컬 2인 플레이</button>
         </div>
       </div>
       <div class="overlay" id="mapSelectOverlay" hidden>
@@ -522,6 +529,10 @@
       const connectionNotice = document.querySelector('#connectionNotice');
       const roomCodeInput = document.querySelector('#roomCodeInput');
       const roomPasswordInput = document.querySelector('#roomPasswordInput');
+      const joinPasswordInput = document.querySelector('#joinPasswordInput');
+      const joinPasswordField = document.querySelector('#joinPasswordField');
+      const createRoomPanel = document.querySelector('#createRoomPanel');
+      const confirmCreateRoomButton = document.querySelector('#confirmCreateRoomButton');
       const publicRoomToggle = document.querySelector('#publicRoomToggle');
       const browseRoomsButton = document.querySelector('#browseRoomsButton');
       const publicRoomPanel = document.querySelector('#publicRoomPanel');
@@ -695,6 +706,7 @@
       let onlineStartPending = false;
       let onlineInterpolation = null;
       let onlineLastSnapshotAt = null;
+      let localAimPointerId = null;
 
       const audio = { context: null, sfxBus: null, lastPlayed: new Map() };
 
@@ -1948,7 +1960,7 @@
 
       function handleOnlineRealtimeMessage(session, message, transport) {
         if (message.type === 'snapshot' && session.role === 'challenger' && Number.isSafeInteger(message.revision) && message.revision > session.snapshotRevision) {
-          if (!state.aiming && !state.cardDrag && state.phase !== 'trigger-select') {
+          if (localAimPointerId === null && !state.cardDrag && state.phase !== 'trigger-select') {
             applyOnlineSnapshot(message.snapshot);
             session.snapshotRevision = message.revision;
           }
@@ -2230,7 +2242,7 @@
           if (!code) throw new Error('방 코드를 입력하세요.');
           const result = await postOnlineRequest(`/api/rooms/${encodeURIComponent(code)}/join`, {
             name: playerNameInput.value.trim() || '도전자',
-            password: roomPasswordInput.value
+            password: joinPasswordInput.value
           });
           onlineSession = {
             role: 'challenger', playerIndex: 1, token: result.token, code: result.code, room: result.room,
@@ -2242,7 +2254,13 @@
           showConnectionNotice('초대 코드로 방에 접속했습니다');
           playSound('connected');
           startOnlineSocket(onlineSession);
-        } catch (error) { startStatus.textContent = error.message; }
+        } catch (error) {
+          if (error.message.includes('비밀번호')) {
+            joinPasswordField.hidden = false;
+            joinPasswordInput.focus();
+          }
+          startStatus.textContent = error.message;
+        }
       }
 
       async function refreshPublicRooms() {
@@ -2270,6 +2288,12 @@
             button.append(name, meta);
             button.addEventListener('click', () => {
               roomCodeInput.value = room.code;
+              if (room.locked) {
+                joinPasswordField.hidden = false;
+                joinPasswordInput.focus();
+                startStatus.textContent = '비밀번호를 입력한 뒤 참가를 누르세요.';
+                return;
+              }
               joinOnlineRoom();
             });
             return button;
@@ -3168,7 +3192,7 @@
         state.lastTime = timestamp;
         const onlineReplica = onlineSession?.started && onlineSession.role === 'challenger';
         if (onlineReplica) updateOnlineInterpolation(timestamp);
-        if (state.aiming && state.aimTension >= .75) playSound('strainRumble', state.aimTension);
+        if (state.aiming && (!onlineReplica || localAimPointerId !== null) && state.aimTension >= .75) playSound('strainRumble', state.aimTension);
         if (!onlineReplica && !['intro', 'map-select', 'dealing', 'trigger-select', 'finished'].includes(state.phase)) update(dt, timestamp);
         if (!onlineReplica && state.phase === 'finished') {
           updateParticles(dt);
@@ -3194,6 +3218,7 @@
         if (!unit) return;
         if (Math.hypot(point.x - unit.x, point.y - unit.y) > unit.radius + 12) return;
         state.aiming = true;
+        localAimPointerId = event.pointerId;
         initializeAudio();
         updateAimFromInput(unit, point);
         canvas.setPointerCapture(event.pointerId);
@@ -3201,7 +3226,7 @@
 
       canvas.addEventListener('pointermove', event => {
         const unit = state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit;
-        if (state.aiming && unit) {
+        if (state.aiming && localAimPointerId === event.pointerId && unit) {
           updateAimFromInput(unit, eventPoint(event));
         }
         updateEntityTooltip(event);
@@ -3210,7 +3235,8 @@
       canvas.addEventListener('pointerleave', () => { entityTooltip.hidden = true; });
 
       canvas.addEventListener('pointerup', event => {
-        if (!state.aiming) return;
+        if (!state.aiming || localAimPointerId !== event.pointerId) return;
+        localAimPointerId = null;
         const unit = state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit;
         if (unit) updateAimFromInput(unit, eventPoint(event));
         if (shouldForwardOnlineAction()) {
@@ -3223,14 +3249,21 @@
         launchCurrentUnit();
       });
 
-      canvas.addEventListener('pointercancel', () => {
+      canvas.addEventListener('pointercancel', event => {
+        if (localAimPointerId !== event.pointerId) return;
+        localAimPointerId = null;
         state.aiming = false;
         state.aimPoint = null;
         state.aimTension = 0;
       });
 
       startButton.addEventListener('click', startLocalGame);
-      createRoomButton.addEventListener('click', createOnlineRoom);
+      createRoomButton.addEventListener('click', () => {
+        createRoomPanel.hidden = !createRoomPanel.hidden;
+        createRoomButton.setAttribute('aria-expanded', String(!createRoomPanel.hidden));
+        if (!createRoomPanel.hidden) roomPasswordInput.focus();
+      });
+      confirmCreateRoomButton.addEventListener('click', createOnlineRoom);
       joinRoomButton.addEventListener('click', joinOnlineRoom);
       browseRoomsButton.addEventListener('click', refreshPublicRooms);
       replayButton.addEventListener('click', () => {
