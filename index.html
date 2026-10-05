@@ -706,6 +706,9 @@
           speedChange: { frequency: 720, endFrequency: 1040, duration: .12, waveform: 'sine', volume: .26 },
           deal: { frequency: 640, endFrequency: 880, duration: .11, waveform: 'triangle', volume: .28 },
           launch: { frequency: 300, endFrequency: 115, duration: .25, waveform: 'triangle', volume: .58 },
+          ammoFire: { frequency: 1500, endFrequency: 65, duration: .14, waveform: 'sawtooth', volume: .48 },
+          hardening: { frequency: 330, endFrequency: 140, duration: .23, waveform: 'triangle', volume: .48 },
+          guard: { frequency: 520, endFrequency: 1250, duration: .24, waveform: 'sine', volume: .4 },
           wallHit: { frequency: 260, endFrequency: 145, duration: .12, waveform: 'square', volume: .38, cooldown: 80 },
           guardHit: { frequency: 520, endFrequency: 250, duration: .1, waveform: 'sine', volume: .35, cooldown: 90 },
           card: { frequency: 690, endFrequency: 920, duration: .13, waveform: 'triangle', volume: .38 },
@@ -743,6 +746,7 @@
         launchScale: 5.566,
         maxPullDistance: 275,
         maxLaunchSpeed: 1392,
+        bulletSpeedMultiplier: 3,
         stopSpeed: 12,
         restitution: 0.84,
         separation: 0.52
@@ -773,7 +777,7 @@
         reposition: '필드에 있는 자신의 병뚜껑을 한 번 더 당겨 발사합니다. 재발사한 병뚜껑이 멈추거나 떨어지면 효과가 끝납니다.',
         brick: '시작선에서 충분히 떨어진 곳에 움직일 수 있는 벽돌 유닛을 배치합니다.',
         blackhole: '즉시 주변의 다른 병뚜껑과 벽돌을 끌어당깁니다.',
-        ammo: '자신의 병뚜껑에서 작은 총탄을 한 번 발사합니다. 총탄은 마찰을 무시하고, 유닛 충돌 시 소멸하며 벽돌은 파괴하고 구조물 맵의 벽에는 도탄됩니다.'
+        ammo: '자신의 병뚜껑에서 크기 25%, 속도 300%인 총탄을 한 번 발사합니다. 당김 저항과 떨림 없이 조준합니다. 총탄은 마찰을 무시하고, 유닛 충돌 시 소멸하며 벽돌은 파괴하고 구조물 맵의 벽에는 도탄됩니다.'
       };
       const TURN_LIMIT_MS = 30_000;
       const UNIT_EFFECTS = Object.freeze({
@@ -842,6 +846,9 @@
       let onlineLastSnapshotAt = null;
       let localAimPointerId = null;
       let selectedPublicRoom = null;
+      let publicRoomRefreshTimer = null;
+      let publicRoomFetchPending = false;
+      let feedbackSequence = 0;
 
       const audio = { context: null, sfxBus: null, lastPlayed: new Map() };
 
@@ -1049,7 +1056,11 @@
         for (const item of onlineInterpolation.units) {
           item.unit.x = item.fromX + (item.toX - item.fromX) * amount;
           item.unit.y = item.fromY + (item.toY - item.fromY) * amount;
+          if (item.unit.ability?.guard && item.fromAngle != null) {
+            item.unit.ability.guardAngle = item.fromAngle + (item.toAngle - item.fromAngle) * amount;
+          }
         }
+        state.mapTime = onlineInterpolation.fromMapTime + (onlineInterpolation.toMapTime - onlineInterpolation.fromMapTime) * amount;
         if (amount >= 1) onlineInterpolation = null;
       }
 
@@ -1119,7 +1130,7 @@
             if (Math.abs(this.x - brick.x) <= brick.width / 2 + this.radius &&
                 Math.abs(this.y - brick.y) <= brick.height / 2 + this.radius) multiplier += brick.frictionMultiplier - 1;
           }
-          return state.currentMap.friction * multiplier;
+          return state.currentMap.friction * multiplier * (this.openingFrictionMultiplier || 1);
         }
 
         get isOnTable() { return this.status !== 'fallen'; }
@@ -1171,13 +1182,14 @@
       class TurnManager {
         constructor() { this.reset(); }
 
-        reset() {
+        reset(startingPlayer = 0) {
           this.globalTurn = 0;
           this.currentUnit = null;
+          this.startingPlayer = startingPlayer;
         }
 
         get isComplete() { return this.globalTurn >= CONFIG.maxTurnsPerPlayer * PLAYER.length; }
-        get playerIndex() { return this.globalTurn % PLAYER.length; }
+        get playerIndex() { return (this.startingPlayer + this.globalTurn) % PLAYER.length; }
         get playerTurn() { return Math.floor(this.globalTurn / PLAYER.length) + 1; }
 
         createCurrentUnit() {
@@ -1195,6 +1207,7 @@
         }
 
         finishCurrentTurn() {
+          if (this.globalTurn === 0 && this.currentUnit) this.currentUnit.openingFrictionMultiplier = 1.25;
           this.currentUnit = null;
           this.globalTurn += 1;
         }
@@ -1203,7 +1216,8 @@
       const turns = new TurnManager();
 
       function beginRound() {
-        turns.reset();
+        turns.reset(roundStartingPlayer());
+        localAimPointerId = null;
         state.units = [];
         state.bricks = [];
         state.bullets = [];
@@ -1302,6 +1316,7 @@
         if (state.repositionUnit?.activeSpecial && !state.repositionUnit.specialFired) {
           state.repositionUnit.activeSpecial = null;
         }
+        localAimPointerId = null;
         state.aiming = false;
         state.aimPoint = null;
         state.aimTension = 0;
@@ -1422,7 +1437,7 @@
         const speed = Math.hypot(vx, vy);
         if (speed < 35) return;
         if (state.repositionMode === 'ammo') {
-          const bulletSpeed = Math.min(CONFIG.maxLaunchSpeed * 2, speed * 2);
+          const bulletSpeed = Math.min(CONFIG.maxLaunchSpeed, speed) * CONFIG.bulletSpeedMultiplier;
           state.bullets.push({
             entityKind: ENTITY_KIND.UNIT, unitKind: 'bullet', id: `bullet-${Date.now()}-${state.bullets.length}`,
             owner: unit.owner, sourceUnitId: unit.id, x: unit.x, y: unit.y,
@@ -1431,7 +1446,7 @@
           });
           unit.activeSpecial = 'ammo';
           state.repositionMode = null;
-          playSound('launch');
+          emitGameFeedback('ammoFire', unit, '격발', '#ffe58a');
         } else {
           if (speed > CONFIG.maxLaunchSpeed) {
             vx = vx / speed * CONFIG.maxLaunchSpeed;
@@ -1460,14 +1475,14 @@
         const rawDistance = Math.hypot(dx, dy);
         const inputRatio = Math.min(1, rawDistance / CONFIG.maxPullDistance);
         const taperStart = .75;
-        const easedRatio = inputRatio <= taperStart
+        const easedRatio = state.repositionMode === 'ammo' || inputRatio <= taperStart
           ? inputRatio
           : taperStart + (1 - taperStart) * (1 - (1 - (inputRatio - taperStart) / (1 - taperStart)) ** 2);
         const easedDistance = CONFIG.maxPullDistance * easedRatio;
         const scale = rawDistance > 0 ? easedDistance / rawDistance : 0;
         state.aimPoint = { x: unit.x + dx * scale, y: unit.y + dy * scale };
         state.aimTension = easedDistance / CONFIG.maxPullDistance;
-        if (state.aimTension > .08) playSound('elasticStretch', state.aimTension);
+        if (state.repositionMode !== 'ammo' && state.aimTension > .08) playSound('elasticStretch', state.aimTension);
       }
 
       function resolveCollisions() {
@@ -1639,7 +1654,7 @@
           state.repositionMode = 'ammo';
           state.phase = 'reposition';
         }
-        if (card.id !== 'pulse' && card.id !== 'blackhole') playSound('card');
+        emitGameFeedback(['hardening', 'guard'].includes(card.id) ? card.id : 'card', unit, card.name, PLAYER[owner].color);
         hand.splice(cardIndex, 1);
         renderHands();
         updateHud();
@@ -1777,7 +1792,7 @@
                 state.bricks.push(new BrickUnit({ x: point.x, y: point.y, owner: drag.owner }));
                 const hand = state.hands[drag.owner];
                 hand.splice(hand.findIndex(card => card.instanceId === drag.id), 1);
-                playSound('drop');
+                emitGameFeedback('drop', point, '구조물 투하', PLAYER[drag.owner].color);
                 renderHands();
                 updateHud();
               }
@@ -1876,6 +1891,13 @@
 
       function updateEffects(dt) {
         state.effects = state.effects.filter(effect => (effect.age += dt) < effect.duration);
+      }
+
+      function emitGameFeedback(sound, target, label, color) {
+        // Replicated effect IDs let the guest play each cue exactly once across both transports.
+        state.effects.push({ type: 'feedback', id: `feedback-${++feedbackSequence}`, sound,
+          x: target.x, y: target.y, label, color, age: 0, duration: .8 });
+        playSound(sound);
       }
 
       function triggerSpawnIsClear(point, radius) {
@@ -1983,7 +2005,7 @@
         });
         state.triggerPlacementUsed[pending.owner] = true;
         closeTriggerTypeSelection(true);
-        playSound('drop');
+        emitGameFeedback('drop', pending, '트리거 배치', PLAYER[pending.owner].color);
         updateHud();
       }
 
@@ -2309,6 +2331,10 @@
       }
 
       function showStartScreen(screenId) {
+        clearInterval(publicRoomRefreshTimer);
+        publicRoomRefreshTimer = screenId === 'browseRoomsScreen' ? setInterval(() => {
+          if (!startOverlay.hidden && !document.hidden && publicRoomPasswordOverlay.hidden) refreshPublicRooms(true);
+        }, 3000) : null;
         startScreens.forEach(screen => { screen.hidden = screen.id !== screenId; });
         publicRoomPasswordOverlay.hidden = true;
         startStatus.textContent = '';
@@ -2323,6 +2349,7 @@
       }
 
       function openOnlineLobby() {
+        clearInterval(publicRoomRefreshTimer);
         state.mapSelectionOrigin = 'online';
         state.phase = 'map-select';
         startOverlay.hidden = true;
@@ -2450,12 +2477,10 @@
           session.lastConnectionTransport = transport;
           updateConnectionStatusUI(session);
         } else if (message.type === 'snapshot' && session.role === 'challenger' && Number.isSafeInteger(message.revision) && message.revision > session.snapshotRevision) {
-          if (localAimPointerId === null && state.phase !== 'trigger-select') {
-            applyOnlineSnapshot(message.snapshot);
-            session.snapshotRevision = message.revision;
-            session.lastSnapshotReceivedAt = performance.now();
-            updateConnectionStatusUI(session);
-          }
+          applyOnlineSnapshot(message.snapshot);
+          session.snapshotRevision = message.revision;
+          session.lastSnapshotReceivedAt = performance.now();
+          updateConnectionStatusUI(session);
         } else if (message.type === 'action' && session.role === 'host') {
           const packet = message.packet;
           const sendAck = () => {
@@ -2788,10 +2813,14 @@
         return true;
       }
 
-      async function refreshPublicRooms() {
+      async function refreshPublicRooms(background = false) {
+        if (publicRoomFetchPending) return;
+        publicRoomFetchPending = true;
         publicRoomPanel.hidden = false;
-        publicRoomStatus.textContent = '방 목록을 불러오는 중';
-        publicRoomList.replaceChildren();
+        if (!background) {
+          publicRoomStatus.textContent = '방 목록을 불러오는 중';
+          publicRoomList.replaceChildren();
+        }
         refreshPublicRoomsButton.disabled = true;
         try {
           const response = await fetch('/api/rooms', { cache: 'no-store' });
@@ -2799,6 +2828,7 @@
           if (!response.ok) throw new Error(data.error || '방 목록을 불러오지 못했습니다.');
           const available = data.rooms || [];
           if (!available.length) {
+            publicRoomList.replaceChildren();
             publicRoomStatus.textContent = '참가 가능한 공개 방이 없습니다.';
             return;
           }
@@ -2833,6 +2863,7 @@
         } catch (error) {
           publicRoomStatus.textContent = error.message;
         } finally {
+          publicRoomFetchPending = false;
           refreshPublicRoomsButton.disabled = false;
         }
       }
@@ -2906,6 +2937,7 @@
           repositionMode: state.repositionMode,
           turnRemaining: state.turnDeadline == null ? null : Math.max(0, state.turnDeadline - Date.now()),
           globalTurn: turns.globalTurn,
+          startingPlayer: turns.startingPlayer,
           currentUnitId: turns.currentUnit?.id ?? null,
           repositionUnitId: state.repositionUnit?.id ?? null,
           dealPlayer: dealPlayer.textContent,
@@ -2934,7 +2966,27 @@
 
       function applyOnlineSnapshot(snapshot) {
         const snapshotTime = performance.now();
-        const previousPositions = new Map(state.units.map(unit => [unit.id, { x: unit.x, y: unit.y }]));
+        const sameRound = snapshot.series?.roundIndex === onlineSession.roundIndex && snapshot.currentMapId === state.currentMap.id;
+        const sameTurn = sameRound && snapshot.globalTurn === turns.globalTurn;
+        const inputAllowed = sameTurn && ['aiming', 'sliding', 'turn-ready', 'reposition'].includes(snapshot.phase) &&
+          ((snapshot.startingPlayer || 0) + snapshot.globalTurn) % PLAYER.length === onlineSession.playerIndex;
+        const localAimUnit = state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit;
+        const remoteAimId = snapshot.phase === 'reposition' ? snapshot.repositionUnitId : snapshot.currentUnitId;
+        const preserveAim = inputAllowed && localAimPointerId !== null && state.aiming &&
+          ['aiming', 'reposition'].includes(snapshot.phase) && localAimUnit?.id === remoteAimId &&
+          snapshot.units.some(unit => unit.id === remoteAimId && unit.status !== 'fallen');
+        const localAim = preserveAim ? { aimPoint: state.aimPoint, aimTension: state.aimTension } : null;
+        const preserveTriggerSelection = inputAllowed && state.phase === 'trigger-select' &&
+          state.pendingTriggerPlacement && !snapshot.triggerPlacementUsed[onlineSession.playerIndex];
+        if (!preserveAim) localAimPointerId = null;
+        if (!inputAllowed) cancelCardDrag();
+        if (!preserveTriggerSelection) {
+          triggerSelectOverlay.hidden = true;
+          state.pendingTriggerPlacement = null;
+          state.selectedTriggerType = null;
+          state.phaseBeforeTriggerSelect = null;
+        }
+        const previousPositions = new Map((sameRound ? state.units : []).map(unit => [unit.id, { x: unit.x, y: unit.y, angle: unit.ability?.guardAngle }]));
         const currentMap = MAPS.find(map => map.id === snapshot.currentMapId) || MAPS[0];
         state.units = snapshot.units.map(data => Object.assign(new CurlingUnit({
           id: data.id, owner: data.owner, turnNumber: data.turnNumber, x: data.x, y: data.y
@@ -2943,12 +2995,14 @@
         for (const unit of state.units) {
           const previous = previousPositions.get(unit.id);
           if (!previous) continue;
-          interpolationUnits.push({ unit, fromX: previous.x, fromY: previous.y, toX: unit.x, toY: unit.y });
+          interpolationUnits.push({ unit, fromX: previous.x, fromY: previous.y, toX: unit.x, toY: unit.y,
+            fromAngle: previous.angle, toAngle: unit.ability?.guardAngle });
           unit.x = previous.x;
           unit.y = previous.y;
         }
-        const interpolationDuration = onlineLastSnapshotAt == null ? 100 : Math.max(85, Math.min(220, snapshotTime - onlineLastSnapshotAt));
-        onlineInterpolation = { startedAt: snapshotTime, duration: interpolationDuration, units: interpolationUnits };
+        const interpolationDuration = onlineLastSnapshotAt == null ? 50 : Math.max(16, Math.min(100, snapshotTime - onlineLastSnapshotAt));
+        onlineInterpolation = { startedAt: snapshotTime, duration: interpolationDuration, units: interpolationUnits,
+          fromMapTime: sameRound ? state.mapTime : snapshot.mapTime, toMapTime: snapshot.mapTime };
         onlineLastSnapshotAt = snapshotTime;
         state.bricks = snapshot.bricks.map(data => Object.assign(new BrickUnit({ x: data.x, y: data.y, owner: data.owner }), data));
         state.bullets = (snapshot.bullets || []).map(data => ({ ...data }));
@@ -2959,11 +3013,20 @@
         state.fallPoints = snapshot.fallPoints;
         state.particles = snapshot.particles;
         state.effects = snapshot.effects;
-        if (snapshot.phase !== 'trigger-select') state.phase = snapshot.phase;
-        state.aiming = snapshot.aiming;
-        state.aimPoint = snapshot.aimPoint;
-        state.aimTension = snapshot.aimTension;
-        state.mapTime = snapshot.mapTime;
+        onlineSession.playedFeedbackIds ||= new Set();
+        for (const effect of state.effects) {
+          if (effect.type !== 'feedback' || onlineSession.playedFeedbackIds.has(effect.id)) continue;
+          onlineSession.playedFeedbackIds.add(effect.id);
+          playSound(effect.sound);
+        }
+        while (onlineSession.playedFeedbackIds.size > 256) onlineSession.playedFeedbackIds.delete(onlineSession.playedFeedbackIds.values().next().value);
+        state.phase = preserveTriggerSelection ? 'trigger-select' : snapshot.phase;
+        if (preserveTriggerSelection) state.phaseBeforeTriggerSelect = snapshot.phase;
+        // A remote aiming indicator is display-only; only a local pointer owns local input.
+        state.aiming = preserveAim || (snapshot.aiming && !inputAllowed);
+        state.aimPoint = localAim ? localAim.aimPoint : snapshot.aimPoint;
+        state.aimTension = localAim ? localAim.aimTension : snapshot.aimTension;
+        state.mapTime = onlineInterpolation.fromMapTime;
         state.repositionMode = snapshot.repositionMode || null;
         state.triggerPlacementUsed = snapshot.triggerPlacementUsed;
         state.deck = snapshot.deck;
@@ -2978,6 +3041,7 @@
           setSpeedLevel(nextSpeed, nextSpeed !== state.speedLevel && pending !== nextSpeed);
         }
         turns.globalTurn = snapshot.globalTurn;
+        turns.startingPlayer = snapshot.startingPlayer || 0;
         state.turnDeadline = Number.isFinite(snapshot.turnRemaining) ? Date.now() + snapshot.turnRemaining : null;
         turnTimer.hidden = state.turnDeadline == null;
         turns.currentUnit = state.units.find(unit => unit.id === snapshot.currentUnitId) || null;
@@ -3031,7 +3095,7 @@
           if (type) {
             state.triggers.push({ entityKind: ENTITY_KIND.TRIGGER, id: `online-trigger-${Date.now()}`, type, owner: 1, x: action.point.x, y: action.point.y, radius: CONFIG.unitRadius * .5 });
             state.triggerPlacementUsed[1] = true;
-            playSound('drop');
+            emitGameFeedback('drop', action.point, '트리거 배치', PLAYER[1].color);
             updateHud();
           }
         } else if (action.type === 'brick' && canPlaceBrick(action.point)) {
@@ -3039,7 +3103,7 @@
           if (cardIndex >= 0) {
             state.bricks.push(new BrickUnit({ x: action.point.x, y: action.point.y, owner: 1 }));
             state.hands[1].splice(cardIndex, 1);
-            playSound('drop');
+            emitGameFeedback('drop', action.point, '구조물 투하', PLAYER[1].color);
             renderHands();
             updateHud();
           }
@@ -3082,6 +3146,14 @@
         dealOverlay.hidden = true;
         updateMatchHud();
         dealCards();
+      }
+
+      function roundStartingPlayer() {
+        if (!onlineSession?.started) return 0;
+        if (onlineSession.roundIndex < 2) return onlineSession.roundIndex;
+        const previousWinner = onlineSession.roundResults[onlineSession.roundIndex - 1]?.winner;
+        // A drawn second round has no loser; alternate back to the host.
+        return previousWinner === 0 || previousWinner === 1 ? 1 - previousWinner : 0;
       }
 
       function showOnlineResult(result) {
@@ -3177,6 +3249,7 @@
       }
 
       function dealCards() {
+        turns.reset(roundStartingPlayer());
         state.deck = CARDS.map(card => ({ ...card }));
         for (let i = state.deck.length - 1; i > 0; i -= 1) {
           const j = Math.floor(Math.random() * (i + 1));
@@ -3186,7 +3259,7 @@
         state.hands = [[], []];
         state.triggerPlacementUsed = [false, false];
         renderHands();
-        drawCardForPlayer(0, beginRound);
+        drawCardForPlayer(turns.startingPlayer, beginRound);
       }
 
       function renderHands() {
@@ -3489,7 +3562,21 @@
         for (const effect of state.effects) {
           const progress = effect.age / effect.duration;
           ctx.save();
-          if (effect.type === 'pulse') {
+          if (effect.type === 'feedback') {
+            ctx.globalAlpha = Math.max(0, 1 - progress);
+            ctx.strokeStyle = effect.color;
+            ctx.lineWidth = 4 * (1 - progress) + 1;
+            ctx.beginPath();
+            ctx.arc(effect.x, effect.y, CONFIG.unitRadius + 6 + progress * 30, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.font = '700 16px "Malgun Gothic", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#101a1c';
+            ctx.strokeText(effect.label, effect.x, effect.y - 42 - progress * 24);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(effect.label, effect.x, effect.y - 42 - progress * 24);
+          } else if (effect.type === 'pulse') {
             const radius = (effect.radius || PULSE_RANGE) * progress;
             ctx.beginPath();
             ctx.arc(effect.x, effect.y, radius, 0, Math.PI * 2);
@@ -3594,7 +3681,7 @@
         const length = Math.hypot(dx, dy) || 1;
         const perpendicularX = -dy / length;
         const perpendicularY = dx / length;
-        const shakeProgress = Math.max(0, (state.aimTension - .75) / .25);
+        const shakeProgress = state.repositionMode === 'ammo' ? 0 : Math.max(0, (state.aimTension - .75) / .25);
         const scale = rect.width / canvas.width;
         const shake = Math.pow(shakeProgress, 2.2) * 4.5 * scale;
         const time = performance.now();
@@ -3671,6 +3758,7 @@
         const effects = [];
         const hardeningStacks = getUnitEffectStacks(unit, 'hardening');
         const guardStacks = getUnitEffectStacks(unit, 'guard');
+        if (unit.openingFrictionMultiplier > 1) effects.push('선공 첫 병뚜껑 · 추가 마찰력 25%');
         if (hardeningStacks) effects.push(`경질화 ${hardeningStacks}중첩 · 마찰력 ${UNIT_EFFECTS.hardening.frictionPerStack ** hardeningStacks}배`);
         if (guardStacks) effects.push(`방호벽 ${guardStacks}중첩 · 위성체 ${guardStacks * UNIT_EFFECTS.guard.satellitesPerStack}개`);
         if (unit.fluidTimer > 0) effects.push('블랙홀 방출 · 유체 상태');
@@ -3767,7 +3855,7 @@
         updateTurnTimer();
         const onlineReplica = onlineSession?.started && onlineSession.role === 'challenger';
         if (onlineReplica) updateOnlineInterpolation(timestamp);
-        if (state.aiming && (!onlineReplica || localAimPointerId !== null) && state.aimTension >= .75) playSound('strainRumble', state.aimTension);
+        if (state.aiming && state.repositionMode !== 'ammo' && (!onlineReplica || localAimPointerId !== null) && state.aimTension >= .75) playSound('strainRumble', state.aimTension);
         if (!onlineReplica && !['intro', 'map-select', 'dealing', 'trigger-select', 'finished'].includes(state.phase)) update(dt, timestamp);
         if (!onlineReplica && state.phase === 'finished') {
           updateParticles(dt);
@@ -3860,7 +3948,7 @@
       });
       confirmCreateRoomButton.addEventListener('click', createOnlineRoom);
       joinRoomButton.addEventListener('click', joinOnlineRoom);
-      refreshPublicRoomsButton.addEventListener('click', refreshPublicRooms);
+      refreshPublicRoomsButton.addEventListener('click', () => refreshPublicRooms());
       document.querySelectorAll('.backToStartMenuButton').forEach(button => {
         button.addEventListener('click', () => showStartScreen('startMenu'));
       });

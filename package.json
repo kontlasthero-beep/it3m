@@ -5,7 +5,8 @@
   "description": "Online server for Underhanded Curling Club",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node --test tests/*.test.cjs"
   },
   "engines": {
     "node": ">=18"

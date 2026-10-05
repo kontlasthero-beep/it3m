@@ -1,4 +1,4 @@
-const CACHE_NAME = 'table-curling-v21';
+const CACHE_NAME = 'table-curling-v22';
 const APP_FILES = [
   './',
   './index.html',
@@ -33,6 +33,11 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET' || new URL(event.request.url).origin !== self.location.origin) return;
+  // Room lists, health checks and credentials must never come from the offline cache.
+  if (new URL(event.request.url).pathname.startsWith('/api/')) {
+    event.respondWith(fetch(event.request, { cache: 'no-store' }));
+    return;
+  }
   event.respondWith(
     caches.match(event.request).then(cached => {
       if (cached) return cached;

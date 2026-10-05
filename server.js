@@ -292,8 +292,9 @@ async function handleApi(request, response, url) {
   room.updatedAt = Date.now();
 
   if (request.method === 'POST' && parts.length === 4 && parts[3] === 'join') {
-    if (room.status !== 'waiting' || room.challenger) return fail(response, 409, '이미 다른 도전자가 참가한 방입니다.');
     const data = await readJson(request);
+    // Recheck capacity after the asynchronous body read, before reserving the seat.
+    if (room.status !== 'waiting' || room.challenger) return fail(response, 409, '이미 다른 도전자가 참가한 방입니다.');
     if (!verifyRoomPassword(room, data.password)) return fail(response, 403, '방 비밀번호가 올바르지 않습니다.');
     const token = crypto.randomBytes(24).toString('base64url');
     room.challenger = { name: String(data.name || '도전자').trim().slice(0, 20) || '도전자', token, mapId: null };
@@ -384,7 +385,7 @@ async function handleApi(request, response, url) {
         return sendJson(response, 200, { ok: true });
       }
       room.challenger = null;
-      room.status = room.host.mapId ? 'choosing' : 'waiting';
+      room.status = 'waiting';
       room.seriesMaps = null;
       room.actions = [];
       room.pendingActions.clear();
@@ -412,7 +413,7 @@ const server = http.createServer(async (request, response) => {
     if (!stat?.isFile()) return fail(response, 404, 'Not found');
     response.writeHead(200, {
       'Content-Type': mimeTypes[path.extname(file).toLowerCase()] || 'application/octet-stream',
-      'Cache-Control': path.basename(file) === 'index.html' ? 'no-cache' : 'public, max-age=3600'
+      'Cache-Control': ['index.html', 'sw.js'].includes(path.basename(file)) ? 'no-cache' : 'public, max-age=3600'
     });
     if (request.method === 'HEAD') return response.end();
     fs.createReadStream(file).pipe(response);
