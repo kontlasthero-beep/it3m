@@ -68,7 +68,7 @@
 
     h1 {
       margin: 0;
-      font-size: clamp(24px, 4vw, 38px);
+      font-size: 30px;
       letter-spacing: 0;
     }
 
@@ -150,10 +150,14 @@
     .entity-tooltip span { display: block; color: #c2cecb; }
 
     .overlay {
-      position: absolute;
+      position: fixed;
+      z-index: 40;
       inset: 0;
-      display: grid;
-      place-items: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow-y: auto;
+      overscroll-behavior: contain;
       padding: 24px;
       background: rgba(8, 15, 16, .74);
     }
@@ -162,6 +166,11 @@
 
     .dialog {
       width: min(440px, 100%);
+      max-height: calc(100vh - 32px);
+      max-height: calc(100dvh - 32px);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      margin: auto 0;
       padding: 26px;
       border: 1px solid #607777;
       border-radius: 6px;
@@ -180,6 +189,13 @@
     .room-code-view strong { display: block; margin-top: 3px; color: var(--accent); font-size: 24px; letter-spacing: 2px; }
     .online-player-status { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
     .online-player-status span { padding: 8px; background: #0f191b; color: var(--muted); font-size: 12px; }
+    .match-hud { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 12px; padding: 9px 13px; border: 1px solid #526864; border-left: 4px solid var(--accent); border-radius: 4px; background: #172421; color: var(--muted); font-size: 13px; }
+    .match-hud strong { color: var(--ink); font-size: 14px; }
+    .match-hud[hidden] { display: none; }
+    .connection-notice { position: fixed; z-index: 60; top: max(16px, env(safe-area-inset-top)); left: 50%; max-width: calc(100vw - 24px); padding: 11px 18px; border: 1px solid #69e2c0; border-radius: 6px; background: rgba(15, 44, 39, .96); color: #dffff6; font-weight: 800; text-align: center; pointer-events: none; transform: translate(-50%, -18px) scale(.94); opacity: 0; }
+    .connection-notice[hidden] { display: none; }
+    .connection-notice.visible { animation: connection-arrive 850ms cubic-bezier(.2, .85, .25, 1.2) both; }
+    @keyframes connection-arrive { 0% { opacity: 0; transform: translate(-50%, -18px) scale(.92); } 35% { opacity: 1; transform: translate(-50%, 0) scale(1.03); } 100% { opacity: 1; transform: translate(-50%, 0) scale(1); } }
 
     .dialog h2 { margin: 0 0 8px; font-size: 29px; }
     .dialog p { margin: 0 0 20px; color: var(--muted); line-height: 1.55; }
@@ -256,7 +272,7 @@
     .trigger-placement-preview { position: fixed; z-index: 21; display: none; box-sizing: border-box; pointer-events: none; transform: translate(-50%, -50%); border: 3px solid #c1fff0; border-radius: 50%; background: #17302f; color: #56e0bc; opacity: .9; text-align: center; font-weight: 700; line-height: 1; }
     .deal-player { margin: 16px 0 6px; color: var(--muted); font-size: 14px; }
     .deal-card { min-height: 42px; color: var(--accent); font-size: 24px; font-weight: 800; }
-    .trigger-select-overlay { position: fixed; z-index: 30; inset: 0; background: rgba(3, 8, 10, .78); }
+    .trigger-select-overlay { position: fixed; z-index: 50; inset: 0; background: rgba(3, 8, 10, .78); }
     .trigger-select-overlay[hidden] { display: none; }
     .trigger-type-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 16px 0; text-align: left; }
     .trigger-type-option { min-width: 0; padding: 10px; background: #101a1c; text-align: left; }
@@ -264,17 +280,29 @@
     .trigger-type-option strong, .trigger-type-option span { display: block; }
     .trigger-type-option span { margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 1.4; white-space: normal; }
 
-    @media (max-width: 620px) {
-      .app { padding: max(12px, env(safe-area-inset-top)) 10px max(18px, env(safe-area-inset-bottom)); }
+    @media (max-width: 700px), (pointer: coarse) {
+      body[data-device="mobile"] { overflow-x: hidden; }
+      .app { padding: max(10px, env(safe-area-inset-top)) 10px max(18px, env(safe-area-inset-bottom)); }
       .topbar { display: block; }
       .turn-status { margin-top: 14px; min-width: 0; }
+      h1 { font-size: 24px; }
       .scoreboard { gap: 6px; }
       .player-panel { padding: 10px; }
       .player-score { font-size: 17px; }
-      .dialog { padding: 20px 16px; }
+      .overlay { align-items: flex-start; padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)); }
+      .dialog { width: min(520px, 100%); max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); margin: auto 0; padding: 20px 16px; }
+      .dialog h2 { font-size: 23px; }
+      .dialog p { margin-bottom: 14px; }
+      .online-player-status { grid-template-columns: 1fr; gap: 6px; }
+      .online-player-status span { min-height: 40px; display: flex; align-items: center; }
       .online-entry { grid-template-columns: 1fr; }
       .map-options { grid-template-columns: 1fr; gap: 7px; margin: 12px 0; }
-      .map-option { padding: 8px; }
+      .map-option { min-height: 54px; padding: 9px; }
+      .map-actions { position: sticky; bottom: -1px; padding: 8px 0 max(4px, env(safe-area-inset-bottom)); background: #162326; }
+      .map-actions button, .start-fields button, .join-entry button { min-height: 44px; }
+      .room-code-view strong { font-size: 22px; }
+      .match-hud { align-items: flex-start; flex-direction: column; gap: 4px; }
+      .connection-notice { top: max(10px, env(safe-area-inset-top)); width: max-content; }
       .bottom-bar { align-items: stretch; flex-direction: column; }
       .remaining-ui { display: grid; grid-template-columns: 1fr 1fr; }
       .remaining-player { min-width: 0; }
@@ -283,6 +311,11 @@
       .hands { grid-template-columns: 1fr; }
       .hand-row { flex-wrap: wrap; }
       .trigger-type-list { grid-template-columns: 1fr; }
+    }
+
+    @media (max-height: 520px) and (pointer: coarse) {
+      .overlay { align-items: flex-start; }
+      .dialog { max-height: calc(100vh - 16px); max-height: calc(100dvh - 16px); }
     }
   </style>
 </head>
@@ -319,6 +352,7 @@
         <div class="player-score" id="score1">거리 0 · 점수 0</div>
       </div>
     </section>
+    <div class="match-hud" id="matchHud" hidden aria-live="polite"><span>매치 전적</span><strong id="matchHudScore"></strong></div>
 
     <section class="game-shell" aria-label="컬링 테이블">
       <canvas id="game" width="1200" height="700" aria-label="Underhanded Curling Club 게임"></canvas>
@@ -331,7 +365,7 @@
           <h2>Underhanded Curling Club</h2>
           <p>이름을 정하고 온라인 방을 만들거나 참가하세요.</p>
           <div class="start-fields">
-            <label>내 이름<input id="playerNameInput" maxlength="20" autocomplete="nickname" value="플레이어 1"></label>
+            <label>내 이름<input id="playerNameInput" maxlength="20" autocomplete="nickname"></label>
             <div class="online-entry">
               <button id="createRoomButton">온라인 방 만들기</button>
               <div class="join-entry"><input id="roomCodeInput" maxlength="6" autocomplete="off" placeholder="방 코드" aria-label="참가할 방 코드"><button id="joinRoomButton">참가</button></div>
@@ -387,6 +421,8 @@
     </section>
   </main>
 
+  <div class="connection-notice" id="connectionNotice" role="status" aria-live="polite" hidden></div>
+
   <div class="overlay trigger-select-overlay" id="triggerSelectOverlay" hidden>
     <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="triggerSelectTitle">
       <h2 id="triggerSelectTitle">트리거 선택</h2>
@@ -419,6 +455,9 @@
       const dealOverlay = document.querySelector('#dealOverlay');
       const startButton = document.querySelector('#startButton');
       const playerNameInput = document.querySelector('#playerNameInput');
+      const matchHud = document.querySelector('#matchHud');
+      const matchHudScore = document.querySelector('#matchHudScore');
+      const connectionNotice = document.querySelector('#connectionNotice');
       const roomCodeInput = document.querySelector('#roomCodeInput');
       const createRoomButton = document.querySelector('#createRoomButton');
       const joinRoomButton = document.querySelector('#joinRoomButton');
@@ -458,12 +497,18 @@
       const musicToggle = document.querySelector('#musicToggle');
       const speedToggle = document.querySelector('#speedToggle');
       const speedLabel = document.querySelector('#speedLabel');
+      const mobileLayoutQuery = window.matchMedia('(max-width: 700px), (pointer: coarse)');
+      let connectionNoticeTimer = null;
+      playerNameInput.value = createRandomNickname();
+      updateDeviceLayout();
+      mobileLayoutQuery.addEventListener('change', updateDeviceLayout);
 
       // Synthesized interface cues remain configurable here; gameplay impacts use the WAV files below.
       const AUDIO_CONFIG = {
         sfxVolume: 0.34,
         sounds: {
           start: { frequency: 523, endFrequency: 784, duration: .2, waveform: 'sine', volume: .45 },
+          connected: { frequency: 587, endFrequency: 988, duration: .28, waveform: 'sine', volume: .5 },
           deal: { frequency: 640, endFrequency: 880, duration: .11, waveform: 'triangle', volume: .28 },
           launch: { frequency: 300, endFrequency: 115, duration: .25, waveform: 'triangle', volume: .58 },
           wallHit: { frequency: 260, endFrequency: 145, duration: .12, waveform: 'square', volume: .38, cooldown: 80 },
@@ -597,6 +642,30 @@
         audio.sfxBus.connect(audio.context.destination);
         audio.context.resume();
         return true;
+      }
+
+      function createRandomNickname() {
+        const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        let suffix = '';
+        for (let index = 0; index < 4; index += 1) suffix += alphabet[Math.floor(Math.random() * alphabet.length)];
+        return `컬링-${suffix}`;
+      }
+
+      function updateDeviceLayout() {
+        document.body.dataset.device = mobileLayoutQuery.matches ? 'mobile' : 'desktop';
+      }
+
+      function showConnectionNotice(message) {
+        connectionNotice.textContent = message;
+        connectionNotice.hidden = false;
+        connectionNotice.classList.remove('visible');
+        void connectionNotice.offsetWidth;
+        connectionNotice.classList.add('visible');
+        clearTimeout(connectionNoticeTimer);
+        connectionNoticeTimer = setTimeout(() => {
+          connectionNotice.hidden = true;
+          connectionNotice.classList.remove('visible');
+        }, 2800);
       }
 
       function scheduleTone(frequency, endFrequency, time, duration, waveform, volume, bus) {
@@ -887,8 +956,21 @@
         actionHint.textContent = state.phase === 'sliding' ? '병뚜껑이 움직이는 중' : state.phase === 'turn-ready' ? '턴을 마치거나 재배치 카드를 사용하세요' : state.phase === 'reposition' ? '재배치: 병뚜껑을 다시 당겨 발사하세요' : state.phase === 'trigger-select' ? '트리거 종류를 선택하세요' : '병뚜껑을 당겨 발사하세요';
         handPanels.forEach((panel, index) => panel.classList.toggle('current', !turns.isComplete && index === turns.playerIndex));
         updateTriggerTools();
+        updateMatchHud();
         if (turns.isComplete) return;
         turnText.textContent = `${PLAYER[turns.playerIndex].name} · ${turns.playerTurn}번째 병뚜껑`;
+      }
+
+      function updateMatchHud() {
+        if (!onlineSession?.started) {
+          matchHud.hidden = true;
+          return;
+        }
+        const scores = onlineSession.wins;
+        const leader = scores[0] === scores[1] ? '동률' : scores[0] > scores[1] ? `${PLAYER[0].name} 리드` : `${PLAYER[1].name} 리드`;
+        const map = MAPS.find(item => item.id === onlineSession.maps?.[onlineSession.roundIndex]) || MAPS[0];
+        matchHudScore.textContent = `${PLAYER[0].name} ${scores[0]}승 : ${PLAYER[1].name} ${scores[1]}승 · ${leader} · ${onlineSession.roundIndex + 1}/3라운드 ${map.name}`;
+        matchHud.hidden = false;
       }
 
       function calculateScores() {
@@ -1674,6 +1756,7 @@
         onlinePlayerStatus.hidden = false;
         onlineStatus.hidden = false;
         confirmMapButton.textContent = '이 맵 확정';
+        confirmMapButton.disabled = false;
         cancelMapButton.textContent = '방 나가기';
         onlineSession.localMapConfirmed = false;
         renderMapOptions();
@@ -1682,13 +1765,23 @@
 
       function updateOnlineRoomView(room) {
         if (!onlineSession || !room) return;
+        const previousChallenger = onlineSession.room?.challenger;
         onlineSession.room = room;
         if (room.seriesMaps) onlineSession.maps = room.seriesMaps;
         if (room.status === 'playing') onlineSession.started = true;
         if (room.status === 'complete') onlineSession.matchOver = true;
+        const ownPlayer = onlineSession.playerIndex === 0 ? room.host : room.challenger;
+        if (ownPlayer?.mapId) onlineSession.localMapConfirmed = true;
+        confirmMapButton.disabled = Boolean(onlineSession.localMapConfirmed);
+        mapOptions.querySelectorAll('.map-option').forEach(option => { option.disabled = Boolean(onlineSession.localMapConfirmed); });
+        confirmMapButton.textContent = onlineSession.localMapConfirmed ? '맵 확정 완료' : '이 맵 확정';
         PLAYER[0].name = room.host.name || '방장';
         PLAYER[1].name = room.challenger?.name || '도전자 대기 중';
         updatePlayerNames();
+        if (onlineSession.role === 'host' && !previousChallenger && room.challenger) {
+          showConnectionNotice(`${room.challenger.name} 님이 참가했습니다`);
+          playSound('connected');
+        }
         onlinePlayerStatus.replaceChildren(...[room.host, room.challenger].map((player, index) => {
           const status = document.createElement('span');
           const map = player?.mapId ? MAPS.find(item => item.id === player.mapId)?.name : null;
@@ -1711,6 +1804,7 @@
 
       async function createOnlineRoom() {
         try {
+          initializeAudio();
           const name = playerNameInput.value.trim() || '방장';
           const result = await postOnlineRequest('/api/rooms', { name });
           onlineSession = {
@@ -1720,12 +1814,15 @@
           };
           state.selectedMap = MAPS[0];
           openOnlineLobby();
+          showConnectionNotice('온라인 방이 열렸습니다');
+          playSound('connected');
           startOnlinePolling();
         } catch (error) { startStatus.textContent = error.message; }
       }
 
       async function joinOnlineRoom() {
         try {
+          initializeAudio();
           const code = roomCodeInput.value.trim().toUpperCase();
           if (!code) throw new Error('방 코드를 입력하세요.');
           const result = await postOnlineRequest(`/api/rooms/${encodeURIComponent(code)}/join`, { name: playerNameInput.value.trim() || '도전자' });
@@ -1736,22 +1833,50 @@
           };
           state.selectedMap = MAPS[0];
           openOnlineLobby();
+          showConnectionNotice('초대 코드로 방에 접속했습니다');
+          playSound('connected');
           startOnlinePolling();
         } catch (error) { startStatus.textContent = error.message; }
       }
 
       async function confirmOnlineMap() {
         if (!onlineSession || onlineSession.localMapConfirmed) return;
+        const session = onlineSession;
+        confirmMapButton.disabled = true;
+        onlineStatus.textContent = '맵 선택을 서버에 저장하는 중입니다.';
         try {
-          const result = await postOnlineRequest(`/api/rooms/${onlineSession.code}/map`, {
-            token: onlineSession.token,
+          const result = await postOnlineRequest(`/api/rooms/${session.code}/map`, {
+            token: session.token,
             mapId: state.selectedMap.id
           });
-          onlineSession.localMapConfirmed = true;
+          session.localMapConfirmed = true;
           updateOnlineRoomView(result.room);
           renderMapOptions();
-          confirmMapButton.disabled = true;
-        } catch (error) { onlineStatus.textContent = error.message; }
+          await startOnlineMatchIfReady(session, result.room);
+        } catch (error) {
+          if (onlineSession === session) {
+            onlineStatus.textContent = `맵 확정 실패 · ${error.message}`;
+            confirmMapButton.disabled = false;
+          }
+        }
+      }
+
+      async function startOnlineMatchIfReady(session, room) {
+        if (onlineSession !== session || session.role !== 'host' || room?.status !== 'ready' || session.started || onlineStartPending) return;
+        onlineStartPending = true;
+        try {
+          const started = await postOnlineRequest(`/api/rooms/${session.code}/start`, { token: session.token });
+          if (onlineSession !== session) return;
+          session.maps = started.room.seriesMaps;
+          session.started = true;
+          session.roundIndex = 0;
+          session.wins = [0, 0];
+          session.totalScores = [0, 0];
+          session.roundResults = [];
+          startOnlineRound(0);
+        } catch (error) {
+          if (onlineSession === session) onlineStatus.textContent = `대전 시작 실패 · 다시 연결 중 · ${error.message}`;
+        } finally { onlineStartPending = false; }
       }
 
       async function pollOnlineRoom() {
@@ -1764,20 +1889,7 @@
           if (onlineSession !== session) return;
           updateOnlineRoomView(result.room);
           if (session.role === 'host') result.actions.forEach(handleOnlineHostAction);
-          if (session.role === 'host' && result.room.status === 'ready' && !session.started && !onlineStartPending) {
-            onlineStartPending = true;
-            try {
-              const started = await postOnlineRequest(`/api/rooms/${session.code}/start`, { token: session.token });
-              session.maps = started.room.seriesMaps;
-              session.started = true;
-              session.roundIndex = 0;
-              session.wins = [0, 0];
-              session.totalScores = [0, 0];
-              session.roundResults = [];
-              startOnlineRound(0);
-            } catch (error) { onlineStatus.textContent = error.message; }
-            finally { onlineStartPending = false; }
-          }
+          if (session.role === 'host') await startOnlineMatchIfReady(session, result.room);
           if (session.role === 'challenger' && result.snapshot && result.snapshotRevision > session.snapshotRevision) {
             if (!state.aiming && !state.cardDrag && state.phase !== 'trigger-select') {
               applyOnlineSnapshot(result.snapshot);
@@ -1943,6 +2055,7 @@
         resultOverlay.hidden = true;
         replayButton.hidden = true;
         dealOverlay.hidden = true;
+        updateMatchHud();
         dealCards();
       }
 
@@ -2126,6 +2239,7 @@
           detail: `${PLAYER[0].name} ${result.scores[0]}점 : ${PLAYER[1].name} ${result.scores[1]}점`
         }));
         session.result = { title, message, rows, matchOver };
+        updateMatchHud();
         state.phase = 'finished';
         turnText.textContent = matchOver ? title : `${session.roundIndex + 1}라운드 종료`;
         panels.forEach(panel => panel.classList.remove('current'));

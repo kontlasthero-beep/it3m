@@ -1,4 +1,4 @@
-const CACHE_NAME = 'table-curling-v10';
+const CACHE_NAME = 'table-curling-v11';
 const APP_FILES = [
   './',
   './index.html',
