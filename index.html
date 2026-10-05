@@ -669,8 +669,6 @@
       };
 
       let onlineSession = null;
-      let onlinePollTimer = null;
-      let onlinePollPending = false;
       let onlineStartPending = false;
       let onlineInterpolation = null;
       let onlineLastSnapshotAt = null;
@@ -1875,9 +1873,108 @@
         else if (room.status === 'complete') onlineStatus.textContent = '대전이 종료되었습니다.';
       }
 
-      function startOnlinePolling() {
-        clearInterval(onlinePollTimer);
-        onlinePollTimer = setInterval(pollOnlineRoom, 100);
+      function sendOnlineSocketMessage(session, message) {
+        if (session?.socket?.readyState !== WebSocket.OPEN) return false;
+        if (session.socket.bufferedAmount > 512 * 1024 && message.type === 'snapshot') return false;
+        session.socket.send(JSON.stringify(message));
+        return true;
+      }
+
+      function closeOnlineSocket(session) {
+        if (!session) return;
+        session.keepSocket = false;
+        clearTimeout(session.reconnectTimer);
+        if (session.socket && session.socket.readyState < WebSocket.CLOSING) session.socket.close(1000, 'Leaving room');
+        session.socket = null;
+      }
+
+      function connectOnlineSocket(session) {
+        if (onlineSession !== session || !session.keepSocket || session.socket) return;
+        const scheme = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const address = `${scheme}//${location.host}/api/socket?code=${encodeURIComponent(session.code)}&token=${encodeURIComponent(session.token)}`;
+        let socket;
+        try { socket = new WebSocket(address); }
+        catch { scheduleOnlineSocketReconnect(session); return; }
+        session.socket = socket;
+
+        socket.addEventListener('open', () => {
+          if (onlineSession !== session || session.socket !== socket) return socket.close();
+          const reconnected = session.reconnectCount > 0;
+          session.reconnectCount = 0;
+          session.reconnectDelay = 500;
+          if (reconnected) showConnectionNotice('실시간 연결 복구');
+          session.pendingActions.forEach((action, actionId) => sendOnlineSocketMessage(session, { type: 'action', actionId, action }));
+        });
+
+        socket.addEventListener('message', event => {
+          if (onlineSession !== session || session.socket !== socket) return;
+          let message;
+          try { message = JSON.parse(event.data); }
+          catch { return; }
+          if (message.type === 'welcome' || message.type === 'room') {
+            updateOnlineRoomView(message.room);
+            if (session.role === 'host') startOnlineMatchIfReady(session, message.room);
+            if (message.type === 'welcome' && session.role === 'challenger' && message.snapshot) {
+              session.snapshotRevision = message.snapshotRevision || 0;
+              applyOnlineSnapshot(message.snapshot);
+            }
+          } else if (message.type === 'snapshot' && session.role === 'challenger' && message.revision > session.snapshotRevision) {
+            if (!state.aiming && !state.cardDrag && state.phase !== 'trigger-select') {
+              applyOnlineSnapshot(message.snapshot);
+              session.snapshotRevision = message.revision;
+            }
+          } else if (message.type === 'action' && session.role === 'host') {
+            const packet = message.packet;
+            if (packet?.id && !session.handledActionIds.has(packet.id)) {
+              session.handledActionIds.add(packet.id);
+              if (session.handledActionIds.size > 512) session.handledActionIds.delete(session.handledActionIds.values().next().value);
+              try { handleOnlineHostAction(packet); }
+              finally { sendOnlineSocketMessage(session, { type: 'action-ack', id: packet.id }); }
+            } else if (packet?.id) sendOnlineSocketMessage(session, { type: 'action-ack', id: packet.id });
+          } else if (message.type === 'action-ack' && session.role === 'challenger') {
+            session.pendingActions.delete(message.id);
+          } else if (message.type === 'peer-connection' && message.role === 'challenger' && session.role === 'host') {
+            showConnectionNotice(message.connected ? '상대 연결됨' : '상대 연결이 끊겼습니다');
+          } else if (message.type === 'room-closed') {
+            onlineStatus.textContent = message.message;
+            showConnectionNotice(message.message);
+            closeOnlineSocket(session);
+          } else if (message.type === 'server-restarting') {
+            showConnectionNotice('서버 업데이트 중 · 연결을 다시 시도합니다');
+          } else if (message.type === 'error') onlineStatus.textContent = message.message;
+        });
+
+        socket.addEventListener('close', () => {
+          if (onlineSession !== session || session.socket !== socket) return;
+          session.socket = null;
+          scheduleOnlineSocketReconnect(session);
+        });
+      }
+
+      function scheduleOnlineSocketReconnect(session) {
+        if (onlineSession !== session || !session.keepSocket || session.reconnectTimer) return;
+        session.reconnectCount += 1;
+        onlineStatus.textContent = '실시간 연결 재시도 중입니다.';
+        if (session.reconnectCount === 1) showConnectionNotice('실시간 연결이 끊겨 재접속 중');
+        if (session.reconnectCount === 6) showConnectionNotice('방 서버가 재시작되었을 수 있습니다. 새로고침 후 다시 참가해 주세요');
+        const delay = Math.min(8000, session.reconnectDelay) + Math.random() * 250;
+        session.reconnectDelay = Math.min(8000, session.reconnectDelay * 1.8);
+        session.reconnectTimer = setTimeout(() => {
+          session.reconnectTimer = null;
+          connectOnlineSocket(session);
+        }, delay);
+      }
+
+      function startOnlineSocket(session) {
+        session.keepSocket = true;
+        session.socket = null;
+        session.reconnectTimer = null;
+        session.reconnectDelay = 500;
+        session.reconnectCount = 0;
+        session.pendingActions = new Map();
+        session.handledActionIds = new Set();
+        session.lastSnapshotSentAt = 0;
+        connectOnlineSocket(session);
       }
 
       async function createOnlineRoom() {
@@ -1894,7 +1991,7 @@
           openOnlineLobby();
           showConnectionNotice('온라인 방이 열렸습니다');
           playSound('connected');
-          startOnlinePolling();
+          startOnlineSocket(onlineSession);
         } catch (error) { startStatus.textContent = error.message; }
       }
 
@@ -1913,7 +2010,7 @@
           openOnlineLobby();
           showConnectionNotice('초대 코드로 방에 접속했습니다');
           playSound('connected');
-          startOnlinePolling();
+          startOnlineSocket(onlineSession);
         } catch (error) { startStatus.textContent = error.message; }
       }
 
@@ -1959,29 +2056,6 @@
         } finally { onlineStartPending = false; }
       }
 
-      async function pollOnlineRoom() {
-        if (!onlineSession || onlinePollPending) return;
-        onlinePollPending = true;
-        try {
-          const session = onlineSession;
-          const snapshot = session.role === 'host' && session.started ? createOnlineSnapshot() : null;
-          const result = await postOnlineRequest(`/api/rooms/${session.code}/poll`, { token: session.token, snapshot });
-          if (onlineSession !== session) return;
-          updateOnlineRoomView(result.room);
-          if (session.role === 'host') result.actions.forEach(handleOnlineHostAction);
-          if (session.role === 'host') await startOnlineMatchIfReady(session, result.room);
-          if (session.role === 'challenger' && result.snapshot && result.snapshotRevision > session.snapshotRevision) {
-            if (!state.aiming && !state.cardDrag && state.phase !== 'trigger-select') {
-              applyOnlineSnapshot(result.snapshot);
-              session.snapshotRevision = result.snapshotRevision;
-            }
-          }
-          if (result.room.status === 'complete') session.matchOver = true;
-        } catch (error) {
-          if (onlineSession) onlineStatus.textContent = `연결 재시도 중 · ${error.message}`;
-        } finally { onlinePollPending = false; }
-      }
-
       function createOnlineSnapshot() {
         return {
           units: state.units.map(unit => ({ ...unit, ability: unit.ability ? { ...unit.ability, stacks: { ...unit.ability.stacks } } : null })),
@@ -2019,6 +2093,13 @@
             maps: onlineSession.maps
           }
         };
+      }
+
+      function publishOnlineSnapshot(timestamp) {
+        const session = onlineSession;
+        if (!session?.started || session.role !== 'host' || timestamp - session.lastSnapshotSentAt < 50) return;
+        const sent = sendOnlineSocketMessage(session, { type: 'snapshot', snapshot: createOnlineSnapshot() });
+        if (sent) session.lastSnapshotSentAt = timestamp;
       }
 
       function applyOnlineSnapshot(snapshot) {
@@ -2140,9 +2221,15 @@
       }
 
       function sendOnlineAction(action) {
-        if (!onlineSession) return;
-        postOnlineRequest(`/api/rooms/${onlineSession.code}/action`, { token: onlineSession.token, action })
-          .catch(error => { onlineStatus.textContent = `행동 전송 실패 · ${error.message}`; });
+        const session = onlineSession;
+        if (!session?.started || session.role !== 'challenger') return;
+        if (session.pendingActions.size >= 100) {
+          onlineStatus.textContent = '입력이 연결 대기열을 초과했습니다. 연결 상태를 확인하세요.';
+          return;
+        }
+        const actionId = crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        session.pendingActions.set(actionId, action);
+        sendOnlineSocketMessage(session, { type: 'action', actionId, action });
       }
 
       function startOnlineRound(roundIndex) {
@@ -2190,9 +2277,8 @@
       }
 
       function openMapSelection(origin) {
+        closeOnlineSocket(onlineSession);
         onlineSession = null;
-        clearInterval(onlinePollTimer);
-        onlinePollTimer = null;
         state.mapSelectionOrigin = origin;
         state.phase = 'map-select';
         startOverlay.hidden = true;
@@ -2215,8 +2301,7 @@
       function cancelMapSelection() {
         if (state.mapSelectionOrigin === 'online' && onlineSession) {
           const session = onlineSession;
-          clearInterval(onlinePollTimer);
-          onlinePollTimer = null;
+          closeOnlineSocket(session);
           onlineSession = null;
           postOnlineRequest(`/api/rooms/${session.code}/leave`, { token: session.token }).catch(() => {});
           mapSelectOverlay.hidden = true;
@@ -2820,6 +2905,7 @@
           updateEffects(dt);
         }
         draw();
+        publishOnlineSnapshot(timestamp);
         requestAnimationFrame(gameLoop);
       }
 
@@ -2879,8 +2965,7 @@
       replayButton.addEventListener('click', () => {
         if (onlineSession) {
           const session = onlineSession;
-          clearInterval(onlinePollTimer);
-          onlinePollTimer = null;
+          closeOnlineSocket(session);
           onlineSession = null;
           postOnlineRequest(`/api/rooms/${session.code}/leave`, { token: session.token }).catch(() => {});
           PLAYER[0].name = '플레이어 1';

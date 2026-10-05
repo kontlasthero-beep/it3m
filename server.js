@@ -2,12 +2,14 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const { WebSocket, WebSocketServer } = require('ws');
 
 const ROOT = __dirname;
 const PORT = Number(process.env.PORT) || 4173;
 const ROOM_CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const MAP_IDS = ['classic', 'ice', 'moving-walls', 'items'];
 const rooms = new Map();
+const webSocketServer = new WebSocketServer({ noServer: true, maxPayload: 2 * 1024 * 1024, perMessageDeflate: false });
 const mimeTypes = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript; charset=utf-8',
@@ -68,6 +70,107 @@ function fail(response, status, message) {
   sendJson(response, status, { error: message });
 }
 
+function sendSocketJson(socket, message) {
+  if (socket?.readyState !== WebSocket.OPEN) return false;
+  if (socket.bufferedAmount > 512 * 1024 && message.type === 'snapshot') return false;
+  socket.send(JSON.stringify(message));
+  return true;
+}
+
+function sendToRoomRole(room, role, message) {
+  return sendSocketJson(room.sockets.get(role), message);
+}
+
+function broadcastRoom(room) {
+  const message = { type: 'room', room: roomView(room) };
+  for (const socket of room.sockets.values()) sendSocketJson(socket, message);
+}
+
+function dispatchPendingActions(room) {
+  const hostSocket = room.sockets.get('host');
+  if (hostSocket?.readyState !== WebSocket.OPEN) return;
+  for (const pending of room.pendingActions.values()) {
+    if (pending.delivered) continue;
+    pending.delivered = sendSocketJson(hostSocket, { type: 'action', packet: pending.packet });
+  }
+}
+
+function receiveRoomSocketMessage(room, member, socket, raw) {
+  let message;
+  try { message = JSON.parse(raw.toString()); }
+  catch {
+    socket.close(1007, 'Invalid JSON');
+    return;
+  }
+  room.updatedAt = Date.now();
+
+  if (message.type === 'snapshot' && member.role === 'host' && ['playing', 'complete'].includes(room.status) && message.snapshot && typeof message.snapshot === 'object') {
+    room.snapshot = message.snapshot;
+    room.snapshotRevision += 1;
+    sendToRoomRole(room, 'challenger', { type: 'snapshot', revision: room.snapshotRevision, snapshot: room.snapshot });
+    return;
+  }
+
+  if (message.type === 'action' && member.role === 'challenger' && room.status === 'playing' &&
+      typeof message.actionId === 'string' && message.actionId.length <= 80 && message.action && typeof message.action.type === 'string') {
+    if (room.processedActionIds.has(message.actionId)) {
+      sendSocketJson(socket, { type: 'action-ack', id: message.actionId });
+      return;
+    }
+    if (room.pendingActions.has(message.actionId)) return;
+    if (room.pendingActions.size >= 100) {
+      sendSocketJson(socket, { type: 'error', message: '행동 전송 대기열이 가득 찼습니다.' });
+      return;
+    }
+    const packet = { id: message.actionId, playerIndex: member.index, action: message.action };
+    room.pendingActions.set(message.actionId, { packet, delivered: false });
+    dispatchPendingActions(room);
+    return;
+  }
+
+  if (message.type === 'action-ack' && member.role === 'host' && typeof message.id === 'string') {
+    if (room.pendingActions.delete(message.id)) {
+      room.processedActionIds.add(message.id);
+      if (room.processedActionIds.size > 512) room.processedActionIds.delete(room.processedActionIds.values().next().value);
+      sendToRoomRole(room, 'challenger', { type: 'action-ack', id: message.id });
+    }
+  }
+}
+
+function attachRoomSocket(socket, room, member) {
+  const previous = room.sockets.get(member.role);
+  if (previous && previous !== socket && previous.readyState === WebSocket.OPEN) previous.close(4001, 'Reconnected');
+  room.sockets.set(member.role, socket);
+  room.updatedAt = Date.now();
+  socket.isAlive = true;
+  socket.on('pong', () => { socket.isAlive = true; });
+  socket.on('message', data => receiveRoomSocketMessage(room, member, socket, data));
+  socket.on('close', () => {
+    if (room.sockets.get(member.role) !== socket) return;
+    room.sockets.delete(member.role);
+    if (member.role === 'host') {
+      for (const pending of room.pendingActions.values()) pending.delivered = false;
+    }
+    sendToRoomRole(room, member.role === 'host' ? 'challenger' : 'host', { type: 'peer-connection', role: member.role, connected: false });
+  });
+  socket.on('error', error => console.warn(`WebSocket ${room.code} ${member.role}: ${error.message}`));
+
+  sendSocketJson(socket, {
+    type: 'welcome',
+    role: member.role,
+    room: roomView(room),
+    snapshotRevision: room.snapshotRevision,
+    snapshot: member.role === 'challenger' ? room.snapshot : null
+  });
+  sendToRoomRole(room, member.role === 'host' ? 'challenger' : 'host', { type: 'peer-connection', role: member.role, connected: true });
+  if (member.role === 'host') dispatchPendingActions(room);
+}
+
+function rejectUpgrade(socket, status, message) {
+  socket.write(`HTTP/1.1 ${status} ${message}\r\nConnection: close\r\nContent-Length: 0\r\n\r\n`);
+  socket.destroy();
+}
+
 async function handleApi(request, response, url) {
   const parts = url.pathname.split('/').filter(Boolean);
   if (request.method === 'GET' && url.pathname === '/api/health') return sendJson(response, 200, { ok: true });
@@ -83,6 +186,9 @@ async function handleApi(request, response, url) {
       status: 'waiting',
       seriesMaps: null,
       actions: [],
+      sockets: new Map(),
+      pendingActions: new Map(),
+      processedActionIds: new Set(),
       snapshot: null,
       snapshotRevision: 0,
       updatedAt: Date.now()
@@ -102,6 +208,7 @@ async function handleApi(request, response, url) {
     const token = crypto.randomBytes(24).toString('base64url');
     room.challenger = { name: String(data.name || '도전자').trim().slice(0, 20) || '도전자', token, mapId: null };
     room.status = 'choosing';
+    broadcastRoom(room);
     return sendJson(response, 200, { code: room.code, token, role: 'challenger', room: roomView(room) });
   }
 
@@ -118,6 +225,7 @@ async function handleApi(request, response, url) {
       room.seriesMaps = [room.host.mapId, room.challenger.mapId, randomMap];
       room.status = 'ready';
     } else if (room.challenger) room.status = 'choosing';
+    broadcastRoom(room);
     return sendJson(response, 200, { room: roomView(room) });
   }
 
@@ -127,12 +235,16 @@ async function handleApi(request, response, url) {
     room.status = 'playing';
     room.snapshot = null;
     room.snapshotRevision = 0;
+    room.pendingActions.clear();
+    room.processedActionIds.clear();
+    broadcastRoom(room);
     return sendJson(response, 200, { room: roomView(room) });
   }
 
   if (request.method === 'POST' && parts.length === 4 && parts[3] === 'complete') {
     if (member.role !== 'host') return fail(response, 403, '방장만 대전을 종료할 수 있습니다.');
     room.status = 'complete';
+    broadcastRoom(room);
     return sendJson(response, 200, { room: roomView(room) });
   }
 
@@ -159,12 +271,19 @@ async function handleApi(request, response, url) {
   }
 
   if (request.method === 'POST' && parts.length === 4 && parts[3] === 'leave') {
-    if (member.role === 'host') rooms.delete(room.code);
+    if (member.role === 'host') {
+      sendToRoomRole(room, 'challenger', { type: 'room-closed', message: '방장이 방을 종료했습니다.' });
+      for (const socket of room.sockets.values()) socket.close(1000, 'Room closed');
+      rooms.delete(room.code);
+    }
     else {
       room.challenger = null;
       room.status = room.host.mapId ? 'choosing' : 'waiting';
       room.seriesMaps = null;
       room.actions = [];
+      room.pendingActions.clear();
+      room.processedActionIds.clear();
+      broadcastRoom(room);
     }
     return sendJson(response, 200, { ok: true });
   }
@@ -198,9 +317,41 @@ const server = http.createServer(async (request, response) => {
   }
 });
 
+server.on('upgrade', (request, socket, head) => {
+  const url = new URL(request.url, `http://${request.headers.host || 'localhost'}`);
+  if (url.pathname !== '/api/socket') return rejectUpgrade(socket, 404, 'Not Found');
+  const room = rooms.get((url.searchParams.get('code') || '').toUpperCase());
+  if (!room) return rejectUpgrade(socket, 404, 'Room Not Found');
+  const member = playerForToken(room, url.searchParams.get('token'));
+  if (!member) return rejectUpgrade(socket, 403, 'Forbidden');
+  webSocketServer.handleUpgrade(request, socket, head, client => attachRoomSocket(client, room, member));
+});
+
+const heartbeatTimer = setInterval(() => {
+  for (const socket of webSocketServer.clients) {
+    if (socket.isAlive === false) {
+      socket.terminate();
+      continue;
+    }
+    socket.isAlive = false;
+    socket.ping();
+  }
+}, 25_000);
+heartbeatTimer.unref();
+
 setInterval(() => {
   const cutoff = Date.now() - 3 * 60 * 60 * 1000;
   for (const [code, room] of rooms) if (room.updatedAt < cutoff) rooms.delete(code);
 }, 10 * 60 * 1000).unref();
 
 server.listen(PORT, '0.0.0.0', () => console.log(`Underhanded Curling Club listening on port ${PORT}`));
+
+process.once('SIGTERM', () => {
+  for (const socket of webSocketServer.clients) {
+    sendSocketJson(socket, { type: 'server-restarting' });
+    socket.close(1012, 'Service restart');
+  }
+  const forceExitTimer = setTimeout(() => process.exit(0), 25_000);
+  forceExitTimer.unref();
+  server.close(() => process.exit(0));
+});
