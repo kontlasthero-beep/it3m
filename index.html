@@ -181,18 +181,27 @@
     .start-fields { display: grid; gap: 10px; margin: 16px 0; text-align: left; }
     .start-fields label { display: grid; gap: 5px; color: var(--muted); font-size: 12px; }
     .start-fields input { width: 100%; min-height: 40px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; background: #0f191b; color: var(--ink); font: inherit; }
+    .start-menu-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin: 18px 0 4px; }
+    .start-menu-grid button { min-width: 0; min-height: 92px; padding: 10px 8px; border-radius: 4px; font-size: 14px; }
+    .start-menu-grid .menu-local { border-color: #d59e4d; background: #b47522; color: #18110a; }
+    .start-menu-grid .menu-online { border-color: #4cae9b; background: #247667; color: #f1fffb; }
+    .start-menu-grid .menu-browse { border-color: #76908c; background: #243936; }
+    .start-screen[hidden] { display: none; }
+    .start-screen h3 { margin: 16px 0 10px; font-size: 17px; }
+    .start-form { display: grid; gap: 10px; margin: 14px 0 4px; text-align: left; }
+    .start-form label { display: grid; gap: 5px; color: var(--muted); font-size: 12px; }
+    .start-form input { width: 100%; min-height: 42px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; background: #0f191b; color: var(--ink); font: inherit; }
+    .start-form input:disabled { opacity: .48; cursor: not-allowed; }
+    .start-form [hidden] { display: none; }
     .join-entry { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 7px; }
-    .browse-room-button { justify-self: center; min-height: 42px; padding: 8px 22px; }
-    .start-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 6px; }
-    .start-actions button { min-width: 0; min-height: 48px; padding: 9px 8px; font-size: 14px; }
-    .online-create-button { border-color: #4cae9b; background: #247667; color: #f1fffb; }
-    .online-create-button:hover { background: #318b79; }
-    .online-create-button[aria-expanded="true"] { box-shadow: inset 0 0 0 1px #a6f0dc; }
-    .create-room-panel { display: grid; gap: 10px; padding: 12px; border: 1px solid #3d6962; border-radius: 5px; background: #142b29; }
-    .create-room-panel[hidden], .join-password[hidden] { display: none; }
-    .create-room-panel .public-toggle { display: flex; align-items: center; gap: 8px; color: var(--ink); }
-    .create-room-panel .public-toggle input { width: 18px; min-height: 18px; accent-color: #65d6bd; }
-    .create-room-panel > button { min-height: 44px; border-color: #4cae9b; background: #247667; }
+    .start-form-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+    .start-form-actions button:only-child { grid-column: 1 / -1; }
+    .start-form-actions button { min-width: 0; min-height: 44px; padding: 8px; }
+    .start-form > button { min-height: 44px; }
+    .start-form .private-toggle { display: flex; grid-template-columns: auto 1fr; align-items: center; gap: 8px; color: var(--ink); }
+    .start-form .private-toggle input { width: 18px; min-height: 18px; accent-color: #65d6bd; }
+    .start-form .primary { width: 100%; min-height: 46px; }
+    .room-password-title { color: var(--muted); font-size: 13px; text-align: left; }
     .room-list { display: grid; gap: 6px; max-height: 180px; overflow-y: auto; }
     .room-list button { display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; text-align: left; }
     .room-list small { color: var(--muted); font-size: 11px; }
@@ -315,7 +324,7 @@
       .dialog p { margin-bottom: 14px; }
       .online-player-status { grid-template-columns: 1fr; gap: 6px; }
       .online-player-status span { min-height: 40px; display: flex; align-items: center; }
-      .start-actions button { font-size: 12px; }
+      .start-menu-grid button { min-height: 82px; font-size: 12px; }
       .map-options { grid-template-columns: 1fr; gap: 7px; margin: 12px 0; }
       .map-option { min-height: 54px; padding: 9px; }
       .map-actions { position: sticky; bottom: -1px; padding: 8px 0 max(4px, env(safe-area-inset-bottom)); background: #162326; }
@@ -419,26 +428,68 @@
       <div class="overlay" id="startOverlay">
         <div class="dialog">
           <h2>Underhanded Curling Club</h2>
-          <p>이름을 정하고 온라인 방을 만들거나 참가하세요.</p>
-          <div class="start-fields">
-            <label>내 이름<input id="playerNameInput" maxlength="20" autocomplete="nickname"></label>
-            <div class="join-entry"><input id="roomCodeInput" maxlength="6" autocomplete="off" placeholder="방 코드" aria-label="참가할 방 코드"><button id="joinRoomButton">참가</button></div>
-            <label class="join-password" id="joinPasswordField" hidden>참가 비밀번호<input id="joinPasswordInput" type="password" maxlength="64" autocomplete="current-password"></label>
-            <button class="browse-room-button" id="browseRoomsButton" type="button">공개 방 찾기</button>
-            <div id="publicRoomPanel" hidden>
-              <div class="room-list" id="publicRoomList"></div>
-              <p class="room-list-status" id="publicRoomStatus" role="status"></p>
+          <p id="startScreenDescription">플레이 방식을 선택하세요.</p>
+          <div class="start-screen" id="startMenu">
+            <div class="start-menu-grid">
+              <button class="menu-browse" id="browseRoomsButton" type="button">공개 방 찾기</button>
+              <button id="openJoinScreenButton" type="button">방 코드 입력하기</button>
+              <button class="menu-local" id="openLocalScreenButton" type="button">로컬 2인 플레이</button>
+              <button class="menu-online" id="createRoomButton" type="button">온라인 방 만들기</button>
             </div>
-            <div class="start-actions">
-              <button class="primary" id="startButton">로컬 2인 플레이</button>
-              <button class="online-create-button" id="createRoomButton" type="button" aria-expanded="false" aria-controls="createRoomPanel">온라인 방 만들기</button>
+          </div>
+          <div class="start-screen" id="browseRoomsScreen" hidden>
+            <h3>공개 방 찾기</h3>
+            <div class="start-form">
+              <label>내 닉네임<input id="browsePlayerNameInput" maxlength="20" autocomplete="nickname"></label>
+              <div id="publicRoomPanel">
+                <div class="room-list" id="publicRoomList"></div>
+                <p class="room-list-status" id="publicRoomStatus" role="status"></p>
+              </div>
+              <button id="refreshPublicRoomsButton" type="button">목록 새로고침</button>
+              <div class="start-form-actions"><button class="backToStartMenuButton" type="button">뒤로</button></div>
             </div>
-            <div class="create-room-panel" id="createRoomPanel" hidden>
-              <label>방 비밀번호 (선택)<input id="roomPasswordInput" type="password" maxlength="64" autocomplete="new-password"></label>
-              <label class="public-toggle"><input id="publicRoomToggle" type="checkbox"><span>공개 방 목록에 표시</span></label>
+          </div>
+          <div class="start-screen" id="joinRoomScreen" hidden>
+            <h3>방 코드로 참가</h3>
+            <div class="start-form">
+              <label>내 닉네임<input id="playerNameInput" maxlength="20" autocomplete="nickname"></label>
+              <label>방 코드<input id="roomCodeInput" maxlength="6" autocomplete="off" placeholder="초대 코드"></label>
+              <label id="joinPasswordField" hidden>방 비밀번호<input id="joinPasswordInput" type="password" maxlength="64" autocomplete="current-password"></label>
+              <button id="joinRoomButton" type="button">참가</button>
+              <div class="start-form-actions"><button class="backToStartMenuButton" type="button">뒤로</button></div>
+            </div>
+          </div>
+          <div class="start-screen" id="localPlayScreen" hidden>
+            <h3>로컬 2인 플레이</h3>
+            <div class="start-form">
+              <label>플레이어 1 닉네임<input id="localPlayer1NameInput" maxlength="20" value="플레이어 1" autocomplete="off"></label>
+              <label>플레이어 2 닉네임<input id="localPlayer2NameInput" maxlength="20" value="플레이어 2" autocomplete="off"></label>
+              <button class="primary" id="startButton" type="button">맵 선택</button>
+              <div class="start-form-actions"><button class="backToStartMenuButton" type="button">뒤로</button></div>
+            </div>
+          </div>
+          <div class="start-screen" id="createRoomScreen" hidden>
+            <h3>온라인 방 만들기</h3>
+            <div class="start-form">
+              <label>내 닉네임<input id="createPlayerNameInput" maxlength="20" autocomplete="nickname"></label>
+              <label class="private-toggle"><input id="privateRoomToggle" type="checkbox"><span>사설 방으로 설정</span></label>
+              <label>방 비밀번호<input id="roomPasswordInput" type="password" maxlength="64" autocomplete="new-password" disabled></label>
               <button id="confirmCreateRoomButton" type="button">방 만들기</button>
+              <div class="start-form-actions"><button class="backToStartMenuButton" type="button">뒤로</button></div>
             </div>
-            <p class="start-status" id="startStatus" role="status"></p>
+          </div>
+          <p class="start-status" id="startStatus" role="status"></p>
+        </div>
+      </div>
+      <div class="overlay" id="publicRoomPasswordOverlay" hidden>
+        <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="publicRoomPasswordTitle">
+          <h2 id="publicRoomPasswordTitle">사설 방 참가</h2>
+          <p id="selectedPublicRoomName"></p>
+          <div class="start-form">
+            <label>방 비밀번호<input id="publicRoomPasswordInput" type="password" maxlength="64" autocomplete="current-password"></label>
+            <button class="primary" id="joinSelectedPublicRoomButton" type="button">참가</button>
+            <p class="start-status" id="publicRoomPasswordStatus" role="status"></p>
+            <button id="cancelPublicRoomPasswordButton" type="button">취소</button>
           </div>
         </div>
       </div>
@@ -522,6 +573,14 @@
       const dealOverlay = document.querySelector('#dealOverlay');
       const startButton = document.querySelector('#startButton');
       const playerNameInput = document.querySelector('#playerNameInput');
+      const browsePlayerNameInput = document.querySelector('#browsePlayerNameInput');
+      const createPlayerNameInput = document.querySelector('#createPlayerNameInput');
+      const localPlayerNameInputs = [document.querySelector('#localPlayer1NameInput'), document.querySelector('#localPlayer2NameInput')];
+      const startScreens = [...document.querySelectorAll('.start-screen')];
+      const startScreenDescription = document.querySelector('#startScreenDescription');
+      const localPlayScreenButton = document.querySelector('#openLocalScreenButton');
+      const joinScreenButton = document.querySelector('#openJoinScreenButton');
+      const refreshPublicRoomsButton = document.querySelector('#refreshPublicRoomsButton');
       const matchHud = document.querySelector('#matchHud');
       const matchPlayerEls = [document.querySelector('#matchPlayer0'), document.querySelector('#matchPlayer1')];
       const matchScoreEls = [document.querySelector('#matchScore0'), document.querySelector('#matchScore1')];
@@ -531,9 +590,14 @@
       const roomPasswordInput = document.querySelector('#roomPasswordInput');
       const joinPasswordInput = document.querySelector('#joinPasswordInput');
       const joinPasswordField = document.querySelector('#joinPasswordField');
-      const createRoomPanel = document.querySelector('#createRoomPanel');
+      const privateRoomToggle = document.querySelector('#privateRoomToggle');
       const confirmCreateRoomButton = document.querySelector('#confirmCreateRoomButton');
-      const publicRoomToggle = document.querySelector('#publicRoomToggle');
+      const publicRoomPasswordOverlay = document.querySelector('#publicRoomPasswordOverlay');
+      const selectedPublicRoomName = document.querySelector('#selectedPublicRoomName');
+      const publicRoomPasswordInput = document.querySelector('#publicRoomPasswordInput');
+      const publicRoomPasswordStatus = document.querySelector('#publicRoomPasswordStatus');
+      const joinSelectedPublicRoomButton = document.querySelector('#joinSelectedPublicRoomButton');
+      const cancelPublicRoomPasswordButton = document.querySelector('#cancelPublicRoomPasswordButton');
       const browseRoomsButton = document.querySelector('#browseRoomsButton');
       const publicRoomPanel = document.querySelector('#publicRoomPanel');
       const publicRoomList = document.querySelector('#publicRoomList');
@@ -579,6 +643,8 @@
       const mobileLayoutQuery = window.matchMedia('(max-width: 700px), (pointer: coarse)');
       let connectionNoticeTimer = null;
       playerNameInput.value = createRandomNickname();
+      browsePlayerNameInput.value = createRandomNickname();
+      createPlayerNameInput.value = createRandomNickname();
       updateDeviceLayout();
       mobileLayoutQuery.addEventListener('change', updateDeviceLayout);
 
@@ -707,6 +773,7 @@
       let onlineInterpolation = null;
       let onlineLastSnapshotAt = null;
       let localAimPointerId = null;
+      let selectedPublicRoom = null;
 
       const audio = { context: null, sfxBus: null, lastPlayed: new Map() };
 
@@ -1853,10 +1920,25 @@
         updateHud();
       }
 
+      function showStartScreen(screenId) {
+        startScreens.forEach(screen => { screen.hidden = screen.id !== screenId; });
+        publicRoomPasswordOverlay.hidden = true;
+        startStatus.textContent = '';
+        const descriptions = {
+          startMenu: '플레이 방식을 선택하세요.',
+          browseRoomsScreen: '참가할 공개 방을 선택하세요.',
+          joinRoomScreen: '닉네임과 초대 코드를 입력하세요.',
+          localPlayScreen: '두 플레이어의 이름을 정하세요.',
+          createRoomScreen: '방 공개 여부와 비밀번호를 설정하세요.'
+        };
+        startScreenDescription.textContent = descriptions[screenId] || '';
+      }
+
       function openOnlineLobby() {
         state.mapSelectionOrigin = 'online';
         state.phase = 'map-select';
         startOverlay.hidden = true;
+        publicRoomPasswordOverlay.hidden = true;
         resultOverlay.hidden = true;
         dealOverlay.hidden = true;
         mapSelectOverlay.hidden = false;
@@ -2216,11 +2298,14 @@
       async function createOnlineRoom() {
         try {
           initializeAudio();
-          const name = playerNameInput.value.trim() || '방장';
+          const isPrivate = privateRoomToggle.checked;
+          const password = isPrivate ? roomPasswordInput.value : '';
+          if (isPrivate && !password) throw new Error('사설 방 비밀번호를 입력하세요.');
+          const name = createPlayerNameInput.value.trim() || '방장';
           const result = await postOnlineRequest('/api/rooms', {
             name,
-            isPublic: publicRoomToggle.checked,
-            password: roomPasswordInput.value
+            isPublic: !isPrivate,
+            password
           });
           onlineSession = {
             role: 'host', playerIndex: 0, token: result.token, code: result.code, room: result.room,
@@ -2229,20 +2314,20 @@
           };
           state.selectedMap = MAPS[0];
           openOnlineLobby();
-          showConnectionNotice(publicRoomToggle.checked ? '공개 방이 열렸습니다' : '온라인 방이 열렸습니다');
+          showConnectionNotice(isPrivate ? '사설 방이 열렸습니다' : '공개 방이 열렸습니다');
           playSound('connected');
           startOnlineSocket(onlineSession);
         } catch (error) { startStatus.textContent = error.message; }
       }
 
-      async function joinOnlineRoom() {
+      async function joinOnlineRoom(options = {}) {
         try {
           initializeAudio();
-          const code = roomCodeInput.value.trim().toUpperCase();
+          const code = String(options.roomCode ?? roomCodeInput.value).trim().toUpperCase();
           if (!code) throw new Error('방 코드를 입력하세요.');
           const result = await postOnlineRequest(`/api/rooms/${encodeURIComponent(code)}/join`, {
-            name: playerNameInput.value.trim() || '도전자',
-            password: joinPasswordInput.value
+            name: String(options.playerName ?? playerNameInput.value).trim() || '도전자',
+            password: options.password ?? joinPasswordInput.value
           });
           onlineSession = {
             role: 'challenger', playerIndex: 1, token: result.token, code: result.code, room: result.room,
@@ -2255,19 +2340,21 @@
           playSound('connected');
           startOnlineSocket(onlineSession);
         } catch (error) {
-          if (error.message.includes('비밀번호')) {
+          if (error.message.includes('비밀번호') && options.revealJoinPassword !== false) {
             joinPasswordField.hidden = false;
             joinPasswordInput.focus();
           }
-          startStatus.textContent = error.message;
+          (options.statusElement || startStatus).textContent = error.message;
+          return false;
         }
+        return true;
       }
 
       async function refreshPublicRooms() {
         publicRoomPanel.hidden = false;
         publicRoomStatus.textContent = '방 목록을 불러오는 중';
         publicRoomList.replaceChildren();
-        browseRoomsButton.disabled = true;
+        refreshPublicRoomsButton.disabled = true;
         try {
           const response = await fetch('/api/rooms', { cache: 'no-store' });
           const data = await response.json();
@@ -2287,21 +2374,28 @@
             meta.textContent = `${room.locked ? '비밀번호 필요' : '바로 참가'} · ${room.code}`;
             button.append(name, meta);
             button.addEventListener('click', () => {
-              roomCodeInput.value = room.code;
               if (room.locked) {
-                joinPasswordField.hidden = false;
-                joinPasswordInput.focus();
-                startStatus.textContent = '비밀번호를 입력한 뒤 참가를 누르세요.';
+                selectedPublicRoom = room;
+                selectedPublicRoomName.textContent = `${room.name} · ${room.code}`;
+                publicRoomPasswordInput.value = '';
+                publicRoomPasswordStatus.textContent = '';
+                publicRoomPasswordOverlay.hidden = false;
+                publicRoomPasswordInput.focus();
                 return;
               }
-              joinOnlineRoom();
+              joinOnlineRoom({
+                roomCode: room.code,
+                playerName: browsePlayerNameInput.value,
+                password: '',
+                revealJoinPassword: false
+              });
             });
             return button;
           }));
         } catch (error) {
           publicRoomStatus.textContent = error.message;
         } finally {
-          browseRoomsButton.disabled = false;
+          refreshPublicRoomsButton.disabled = false;
         }
       }
 
@@ -2630,8 +2724,8 @@
       }
 
       function startLocalGame() {
-        PLAYER[0].name = playerNameInput.value.trim().slice(0, 20) || '플레이어 1';
-        PLAYER[1].name = '플레이어 2';
+        PLAYER[0].name = localPlayerNameInputs[0].value.trim().slice(0, 20) || '플레이어 1';
+        PLAYER[1].name = localPlayerNameInputs[1].value.trim().slice(0, 20) || '플레이어 2';
         updatePlayerNames();
         openMapSelection('start');
       }
@@ -3258,14 +3352,51 @@
       });
 
       startButton.addEventListener('click', startLocalGame);
+      browseRoomsButton.addEventListener('click', () => {
+        showStartScreen('browseRoomsScreen');
+        refreshPublicRooms();
+      });
+      joinScreenButton.addEventListener('click', () => {
+        joinPasswordField.hidden = true;
+        joinPasswordInput.value = '';
+        showStartScreen('joinRoomScreen');
+        playerNameInput.focus();
+      });
+      localPlayScreenButton.addEventListener('click', () => {
+        showStartScreen('localPlayScreen');
+        localPlayerNameInputs[0].focus();
+      });
       createRoomButton.addEventListener('click', () => {
-        createRoomPanel.hidden = !createRoomPanel.hidden;
-        createRoomButton.setAttribute('aria-expanded', String(!createRoomPanel.hidden));
-        if (!createRoomPanel.hidden) roomPasswordInput.focus();
+        showStartScreen('createRoomScreen');
+        privateRoomToggle.checked = false;
+        roomPasswordInput.value = '';
+        roomPasswordInput.disabled = true;
+        createPlayerNameInput.focus();
+      });
+      privateRoomToggle.addEventListener('change', () => {
+        roomPasswordInput.disabled = !privateRoomToggle.checked;
+        if (!privateRoomToggle.checked) roomPasswordInput.value = '';
       });
       confirmCreateRoomButton.addEventListener('click', createOnlineRoom);
       joinRoomButton.addEventListener('click', joinOnlineRoom);
-      browseRoomsButton.addEventListener('click', refreshPublicRooms);
+      refreshPublicRoomsButton.addEventListener('click', refreshPublicRooms);
+      document.querySelectorAll('.backToStartMenuButton').forEach(button => {
+        button.addEventListener('click', () => showStartScreen('startMenu'));
+      });
+      joinSelectedPublicRoomButton.addEventListener('click', () => {
+        if (!selectedPublicRoom) return;
+        joinOnlineRoom({
+          roomCode: selectedPublicRoom.code,
+          playerName: browsePlayerNameInput.value,
+          password: publicRoomPasswordInput.value,
+          revealJoinPassword: false,
+          statusElement: publicRoomPasswordStatus
+        });
+      });
+      cancelPublicRoomPasswordButton.addEventListener('click', () => {
+        publicRoomPasswordOverlay.hidden = true;
+        selectedPublicRoom = null;
+      });
       replayButton.addEventListener('click', () => {
         if (onlineSession) {
           const session = onlineSession;
