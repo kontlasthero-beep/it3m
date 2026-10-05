@@ -189,9 +189,16 @@
     .room-code-view strong { display: block; margin-top: 3px; color: var(--accent); font-size: 24px; letter-spacing: 2px; }
     .online-player-status { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
     .online-player-status span { padding: 8px; background: #0f191b; color: var(--muted); font-size: 12px; }
-    .match-hud { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 12px; padding: 9px 13px; border: 1px solid #526864; border-left: 4px solid var(--accent); border-radius: 4px; background: #172421; color: var(--muted); font-size: 13px; }
-    .match-hud strong { color: var(--ink); font-size: 14px; }
+    .match-hud { display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 42px; margin: 0 0 10px; padding: 6px 12px; border: 1px solid #405451; border-radius: 4px; background: #14201e; color: var(--muted); font-size: 12px; }
+    .match-hud strong { color: var(--ink); font-size: 13px; font-variant-numeric: tabular-nums; }
     .match-hud[hidden] { display: none; }
+    .match-player { display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 150px; overflow: hidden; color: var(--ink); text-overflow: ellipsis; white-space: nowrap; }
+    .match-player::before { width: 9px; height: 9px; flex: 0 0 9px; border-radius: 50%; background: var(--p1); content: ''; }
+    .match-player.p2::before { background: var(--p2); }
+    .match-separator { color: #6d7d79; }
+    .match-round { padding: 4px 7px; border-radius: 3px; background: #263431; color: #d5e0dc; white-space: nowrap; }
+    .speed-toggle.speed-changed { animation: speed-pop 380ms ease-out; }
+    @keyframes speed-pop { 45% { transform: scale(1.12); box-shadow: 0 0 0 3px rgba(101, 214, 189, .23); } }
     .connection-notice { position: fixed; z-index: 60; top: max(16px, env(safe-area-inset-top)); left: 50%; max-width: calc(100vw - 24px); padding: 11px 18px; border: 1px solid #69e2c0; border-radius: 6px; background: rgba(15, 44, 39, .96); color: #dffff6; font-weight: 800; text-align: center; pointer-events: none; transform: translate(-50%, -18px) scale(.94); opacity: 0; }
     .connection-notice[hidden] { display: none; }
     .connection-notice.visible { animation: connection-arrive 850ms cubic-bezier(.2, .85, .25, 1.2) both; }
@@ -317,6 +324,42 @@
       .overlay { align-items: flex-start; }
       .dialog { max-height: calc(100vh - 16px); max-height: calc(100dvh - 16px); }
     }
+
+    @media (orientation: landscape) and (max-height: 560px) and (pointer: coarse) {
+      .app { width: 100%; padding: max(4px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); }
+      .topbar { display: flex; align-items: center; gap: 8px; margin: 0 0 5px; }
+      h1 { font-size: 16px; }
+      .subtitle { display: none; }
+      .turn-status { display: flex; align-items: center; gap: 8px; min-width: 0; margin: 0; padding: 3px 6px; border-left-width: 2px; font-size: 11px; }
+      .status-topline { gap: 5px; }
+      .turn-status strong { margin: 0; font-size: 12px; }
+      .audio-controls { gap: 6px; margin: 0; }
+      .audio-controls label { font-size: 10px; }
+      .audio-controls input { width: 13px; height: 13px; margin: 0; }
+      .speed-toggle { min-height: 28px; padding: 3px 5px; }
+      .scoreboard { gap: 5px; margin-bottom: 5px; }
+      .player-panel { min-height: 0; padding: 4px 8px; }
+      .player-label { font-size: 10px; }
+      .player-score { margin-top: 0; font-size: 13px; }
+      .match-hud { align-items: center; flex-direction: row; min-height: 30px; gap: 7px; margin-bottom: 5px; padding: 3px 7px; font-size: 10px; }
+      .match-hud strong { font-size: 11px; }
+      .game-shell { width: fit-content; max-width: 100%; margin: 0 auto; }
+      canvas { width: auto; height: min(58vh, 360px); max-width: 100%; aspect-ratio: 12 / 7; }
+      canvas { height: min(58svh, 360px); }
+      .bottom-bar { gap: 5px; margin-top: 5px; }
+      .remaining-ui { gap: 5px; }
+      .remaining-player { min-width: 0; padding: 4px 7px; font-size: 10px; }
+      .remaining-player strong { display: inline; margin: 0 0 0 4px; font-size: 11px; }
+      .turn-actions { gap: 6px; }
+      .turn-actions button { min-height: 32px; padding: 5px 10px; }
+      #actionHint { font-size: 10px; }
+      .hands { grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 5px; }
+      .hand-panel { padding: 5px; }
+      .hand-title { margin-bottom: 3px; font-size: 10px; }
+      .hand-cards { gap: 4px; min-height: 26px; }
+      .ability-card, .trigger-tool { min-height: 26px; padding: 4px 6px; font-size: 10px; }
+      .trigger-tool { min-width: 0; }
+    }
   </style>
 </head>
 <body>
@@ -352,7 +395,7 @@
         <div class="player-score" id="score1">거리 0 · 점수 0</div>
       </div>
     </section>
-    <div class="match-hud" id="matchHud" hidden aria-live="polite"><span>매치 전적</span><strong id="matchHudScore"></strong></div>
+    <div class="match-hud" id="matchHud" hidden aria-live="polite"><span class="match-player" id="matchPlayer0"></span><strong id="matchScore0"></strong><span class="match-separator" aria-hidden="true">:</span><strong id="matchScore1"></strong><span class="match-player p2" id="matchPlayer1"></span><span class="match-round" id="matchRound"></span></div>
 
     <section class="game-shell" aria-label="컬링 테이블">
       <canvas id="game" width="1200" height="700" aria-label="Underhanded Curling Club 게임"></canvas>
@@ -456,7 +499,9 @@
       const startButton = document.querySelector('#startButton');
       const playerNameInput = document.querySelector('#playerNameInput');
       const matchHud = document.querySelector('#matchHud');
-      const matchHudScore = document.querySelector('#matchHudScore');
+      const matchPlayerEls = [document.querySelector('#matchPlayer0'), document.querySelector('#matchPlayer1')];
+      const matchScoreEls = [document.querySelector('#matchScore0'), document.querySelector('#matchScore1')];
+      const matchRound = document.querySelector('#matchRound');
       const connectionNotice = document.querySelector('#connectionNotice');
       const roomCodeInput = document.querySelector('#roomCodeInput');
       const createRoomButton = document.querySelector('#createRoomButton');
@@ -509,6 +554,7 @@
         sounds: {
           start: { frequency: 523, endFrequency: 784, duration: .2, waveform: 'sine', volume: .45 },
           connected: { frequency: 587, endFrequency: 988, duration: .28, waveform: 'sine', volume: .5 },
+          speedChange: { frequency: 720, endFrequency: 1040, duration: .12, waveform: 'sine', volume: .26 },
           deal: { frequency: 640, endFrequency: 880, duration: .11, waveform: 'triangle', volume: .28 },
           launch: { frequency: 300, endFrequency: 115, duration: .25, waveform: 'triangle', volume: .58 },
           wallHit: { frequency: 260, endFrequency: 145, duration: .12, waveform: 'square', volume: .38, cooldown: 80 },
@@ -626,6 +672,8 @@
       let onlinePollTimer = null;
       let onlinePollPending = false;
       let onlineStartPending = false;
+      let onlineInterpolation = null;
+      let onlineLastSnapshotAt = null;
 
       const audio = { context: null, sfxBus: null, lastPlayed: new Map() };
 
@@ -648,7 +696,7 @@
         const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
         let suffix = '';
         for (let index = 0; index < 4; index += 1) suffix += alphabet[Math.floor(Math.random() * alphabet.length)];
-        return `컬링-${suffix}`;
+        return suffix;
       }
 
       function updateDeviceLayout() {
@@ -722,6 +770,35 @@
       function stopMusic() {
         AUDIO_FILES.music.pause();
         AUDIO_FILES.music.currentTime = 0;
+      }
+
+      function setSpeedLevel(level, announce = false) {
+        const nextLevel = Math.max(0, Math.min(2, Number(level) | 0));
+        if (nextLevel === state.speedLevel) return false;
+        state.speedLevel = nextLevel;
+        state.gameSpeed = [1, .65, .4][nextLevel];
+        speedToggle.dataset.speedLevel = String(nextLevel);
+        speedLabel.textContent = ['100%', '65%', '40%'][nextLevel];
+        speedToggle.setAttribute('aria-pressed', String(nextLevel > 0));
+        speedToggle.setAttribute('aria-label', `게임 속도: ${nextLevel === 0 ? '정상 속도' : speedLabel.textContent}`);
+        speedToggle.classList.remove('speed-changed');
+        void speedToggle.offsetWidth;
+        speedToggle.classList.add('speed-changed');
+        if (announce) {
+          playSound('speedChange');
+          showConnectionNotice(`게임 속도 ${speedLabel.textContent}`);
+        }
+        return true;
+      }
+
+      function updateOnlineInterpolation(timestamp) {
+        if (!onlineInterpolation) return;
+        const amount = Math.min(1, (timestamp - onlineInterpolation.startedAt) / onlineInterpolation.duration);
+        for (const item of onlineInterpolation.units) {
+          item.unit.x = item.fromX + (item.toX - item.fromX) * amount;
+          item.unit.y = item.fromY + (item.toY - item.fromY) * amount;
+        }
+        if (amount >= 1) onlineInterpolation = null;
       }
 
       // Units are intentionally self-contained so future abilities can hook into turns or collisions.
@@ -967,9 +1044,10 @@
           return;
         }
         const scores = onlineSession.wins;
-        const leader = scores[0] === scores[1] ? '동률' : scores[0] > scores[1] ? `${PLAYER[0].name} 리드` : `${PLAYER[1].name} 리드`;
         const map = MAPS.find(item => item.id === onlineSession.maps?.[onlineSession.roundIndex]) || MAPS[0];
-        matchHudScore.textContent = `${PLAYER[0].name} ${scores[0]}승 : ${PLAYER[1].name} ${scores[1]}승 · ${leader} · ${onlineSession.roundIndex + 1}/3라운드 ${map.name}`;
+        matchPlayerEls.forEach((element, index) => { element.textContent = PLAYER[index].name; });
+        matchScoreEls.forEach((element, index) => { element.textContent = `${scores[index]}승`; });
+        matchRound.textContent = `${onlineSession.roundIndex + 1}/3 · ${map.name}`;
         matchHud.hidden = false;
       }
 
@@ -1799,7 +1877,7 @@
 
       function startOnlinePolling() {
         clearInterval(onlinePollTimer);
-        onlinePollTimer = setInterval(pollOnlineRoom, 180);
+        onlinePollTimer = setInterval(pollOnlineRoom, 100);
       }
 
       async function createOnlineRoom() {
@@ -1810,7 +1888,7 @@
           onlineSession = {
             role: 'host', playerIndex: 0, token: result.token, code: result.code, room: result.room,
             maps: null, roundIndex: 0, wins: [0, 0], totalScores: [0, 0], roundResults: [], snapshotRevision: 0,
-            started: false, matchOver: false, result: null
+            started: false, matchOver: false, result: null, pendingSpeedLevel: null
           };
           state.selectedMap = MAPS[0];
           openOnlineLobby();
@@ -1829,7 +1907,7 @@
           onlineSession = {
             role: 'challenger', playerIndex: 1, token: result.token, code: result.code, room: result.room,
             maps: null, roundIndex: 0, wins: [0, 0], totalScores: [0, 0], roundResults: [], snapshotRevision: 0,
-            started: false, matchOver: false, result: null
+            started: false, matchOver: false, result: null, pendingSpeedLevel: null
           };
           state.selectedMap = MAPS[0];
           openOnlineLobby();
@@ -1841,6 +1919,8 @@
 
       async function confirmOnlineMap() {
         if (!onlineSession || onlineSession.localMapConfirmed) return;
+        initializeAudio();
+        startMusic();
         const session = onlineSession;
         confirmMapButton.disabled = true;
         onlineStatus.textContent = '맵 선택을 서버에 저장하는 중입니다.';
@@ -1922,6 +2002,7 @@
             : { instanceId: card.instanceId, id: 'hidden', name: '비공개 카드' })),
           nextCardId: state.nextCardId,
           currentMapId: state.currentMap.id,
+          speedLevel: state.speedLevel,
           globalTurn: turns.globalTurn,
           currentUnitId: turns.currentUnit?.id ?? null,
           repositionUnitId: state.repositionUnit?.id ?? null,
@@ -1941,10 +2022,23 @@
       }
 
       function applyOnlineSnapshot(snapshot) {
+        const snapshotTime = performance.now();
+        const previousPositions = new Map(state.units.map(unit => [unit.id, { x: unit.x, y: unit.y }]));
         const currentMap = MAPS.find(map => map.id === snapshot.currentMapId) || MAPS[0];
         state.units = snapshot.units.map(data => Object.assign(new CurlingUnit({
           id: data.id, owner: data.owner, turnNumber: data.turnNumber, x: data.x, y: data.y
         }), data));
+        const interpolationUnits = [];
+        for (const unit of state.units) {
+          const previous = previousPositions.get(unit.id);
+          if (!previous) continue;
+          interpolationUnits.push({ unit, fromX: previous.x, fromY: previous.y, toX: unit.x, toY: unit.y });
+          unit.x = previous.x;
+          unit.y = previous.y;
+        }
+        const interpolationDuration = onlineLastSnapshotAt == null ? 100 : Math.max(85, Math.min(220, snapshotTime - onlineLastSnapshotAt));
+        onlineInterpolation = { startedAt: snapshotTime, duration: interpolationDuration, units: interpolationUnits };
+        onlineLastSnapshotAt = snapshotTime;
         state.bricks = snapshot.bricks.map(data => Object.assign(new BrickUnit({ x: data.x, y: data.y, owner: data.owner }), data));
         state.triggers = snapshot.triggers.map(data => {
           const { typeId, ...trigger } = data;
@@ -1964,6 +2058,12 @@
         state.nextCardId = snapshot.nextCardId;
         state.currentMap = currentMap;
         state.selectedMap = currentMap;
+        if (Number.isInteger(snapshot.speedLevel)) {
+          const pending = onlineSession.pendingSpeedLevel;
+          const nextSpeed = pending == null || snapshot.speedLevel === pending ? snapshot.speedLevel : pending;
+          if (pending != null && snapshot.speedLevel === pending) onlineSession.pendingSpeedLevel = null;
+          setSpeedLevel(nextSpeed, nextSpeed !== state.speedLevel && pending !== nextSpeed);
+        }
         turns.globalTurn = snapshot.globalTurn;
         turns.currentUnit = state.units.find(unit => unit.id === snapshot.currentUnitId) || null;
         state.repositionUnit = state.units.find(unit => unit.id === snapshot.repositionUnitId) || null;
@@ -1992,6 +2092,10 @@
       }
 
       function handleOnlineHostAction(packet) {
+        if (packet.action.type === 'speed' && onlineSession?.role === 'host' && Number.isInteger(packet.action.level)) {
+          setSpeedLevel(packet.action.level, true);
+          return;
+        }
         if (!onlineSession?.started || onlineSession.role !== 'host' || packet.playerIndex !== 1 || turns.playerIndex !== 1 ||
             !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase)) return;
         const action = packet.action;
@@ -2707,9 +2811,11 @@
       function gameLoop(timestamp) {
         const dt = Math.min((timestamp - state.lastTime) / 1000 || 0, 0.03) * state.gameSpeed;
         state.lastTime = timestamp;
+        const onlineReplica = onlineSession?.started && onlineSession.role === 'challenger';
+        if (onlineReplica) updateOnlineInterpolation(timestamp);
         if (state.aiming && state.aimTension >= .75) playSound('strainRumble', state.aimTension);
-        if (!['intro', 'map-select', 'dealing', 'trigger-select', 'finished'].includes(state.phase)) update(dt, timestamp);
-        if (state.phase === 'finished') {
+        if (!onlineReplica && !['intro', 'map-select', 'dealing', 'trigger-select', 'finished'].includes(state.phase)) update(dt, timestamp);
+        if (!onlineReplica && state.phase === 'finished') {
           updateParticles(dt);
           updateEffects(dt);
         }
@@ -2792,15 +2898,12 @@
       cancelTriggerButton.addEventListener('click', cancelItemTriggerPlacement);
       endTurnButton.addEventListener('click', endTurn);
       speedToggle.addEventListener('click', () => {
-        state.speedLevel = (state.speedLevel + 1) % 3;
-        const speedModes = [1, .65, .4];
-        const speedLabels = ['100%', '65%', '40%'];
-        state.gameSpeed = speedModes[state.speedLevel];
-        const slowed = state.speedLevel > 0;
-        speedToggle.dataset.speedLevel = String(state.speedLevel);
-        speedLabel.textContent = speedLabels[state.speedLevel];
-        speedToggle.setAttribute('aria-pressed', String(slowed));
-        speedToggle.setAttribute('aria-label', `게임 속도: ${state.speedLevel === 0 ? '정상 속도' : speedLabels[state.speedLevel]}`);
+        const nextLevel = (state.speedLevel + 1) % 3;
+        setSpeedLevel(nextLevel, true);
+        if (onlineSession?.started && onlineSession.role === 'challenger') {
+          onlineSession.pendingSpeedLevel = nextLevel;
+          sendOnlineAction({ type: 'speed', level: nextLevel });
+        }
       });
       musicToggle.addEventListener('change', () => {
         if (musicToggle.checked) startMusic();
