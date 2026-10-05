@@ -288,6 +288,11 @@
     .turn-actions { display: flex; align-items: center; gap: 12px; }
     #actionHint { color: var(--muted); font-size: 13px; }
     #endTurnButton:disabled { opacity: .42; cursor: not-allowed; }
+    .turn-timer { min-width: 74px; padding: 5px 9px; border: 1px solid #55716c; border-radius: 4px; background: #142522; color: #e5f2ed; font-variant-numeric: tabular-nums; font-size: 17px; font-weight: 800; text-align: center; }
+    .turn-timer.urgent { border-color: #ff6d5e; background: #492a27; color: #fff1ed; animation: timer-pulse .55s ease-in-out infinite alternate; }
+    @keyframes timer-pulse { to { box-shadow: 0 0 16px rgba(255, 92, 76, .75); transform: scale(1.06); } }
+    body.timer-flash::after { content: ""; position: fixed; z-index: 80; inset: 0; pointer-events: none; border: 9px solid rgba(255, 81, 66, .72); animation: timer-flash .32s ease-out forwards; }
+    @keyframes timer-flash { from { opacity: .72; } to { opacity: 0; } }
     .roulette-name { color: var(--accent); font-size: 30px !important; }
     .map-indicator { color: var(--accent); font-weight: 700; }
     .map-dialog { width: min(700px, 100%); }
@@ -308,7 +313,11 @@
     .hand-row .hand-cards { flex: 1; }
     .trigger-tool { min-width: 116px; min-height: 38px; padding: 7px 9px; border-color: #54756f; background: #183b37; font-size: 12px; white-space: nowrap; touch-action: none; user-select: none; }
     .trigger-tool[disabled] { opacity: .42; cursor: not-allowed; }
-    .ability-card { padding: 8px 10px; border: 1px solid #70817a; border-radius: 4px; background: #283b34; color: var(--ink); font-size: 13px; touch-action: none; user-select: none; }
+    .ability-card { position: relative; padding: 8px 10px; border: 1px solid #70817a; border-radius: 4px; background: #283b34; color: var(--ink); font-size: 13px; touch-action: none; user-select: none; }
+    .ability-card[data-description]:hover, .trigger-tool[data-description]:hover { z-index: 30; }
+    .ability-card[data-description]::after, .trigger-tool[data-description]::after { content: attr(data-description); position: absolute; z-index: 31; left: 0; bottom: calc(100% + 8px); display: none; width: min(250px, 70vw); padding: 9px 11px; border: 1px solid #71847d; border-radius: 4px; background: #101a1c; color: #edf4ef; box-shadow: 0 8px 22px rgba(0,0,0,.4); font-size: 12px; font-weight: 400; line-height: 1.45; white-space: normal; pointer-events: none; }
+    .ability-card[data-description]:hover::after, .trigger-tool[data-description]:hover::after { display: block; }
+    .trigger-tool { position: relative; }
     .ability-card.usable { cursor: grab; }
     .ability-card.usable:active { cursor: grabbing; }
     .ability-card.card-back { border-style: dashed; background: #1b2925; color: #a3b0ab; cursor: default; touch-action: auto; }
@@ -411,6 +420,7 @@
         <div class="status-topline">
           <span>현재 턴</span>
           <div class="status-controls">
+            <div class="turn-timer" id="turnTimer" aria-label="남은 턴 시간" hidden>30</div>
             <button class="connection-status-button" id="connectionStatusButton" type="button" data-state="idle" aria-expanded="false" aria-controls="connectionDetails" title="실시간 연결 상태" hidden>
               <span class="connection-dot" aria-hidden="true"></span><span id="connectionStatusLabel">연결 대기</span>
             </button>
@@ -670,6 +680,7 @@
       const musicToggle = document.querySelector('#musicToggle');
       const speedToggle = document.querySelector('#speedToggle');
       const speedLabel = document.querySelector('#speedLabel');
+      const turnTimer = document.querySelector('#turnTimer');
       const connectionStatusButton = document.querySelector('#connectionStatusButton');
       const connectionStatusLabel = document.querySelector('#connectionStatusLabel');
       const connectionDetails = document.querySelector('#connectionDetails');
@@ -699,6 +710,8 @@
           guardHit: { frequency: 520, endFrequency: 250, duration: .1, waveform: 'sine', volume: .35, cooldown: 90 },
           card: { frequency: 690, endFrequency: 920, duration: .13, waveform: 'triangle', volume: .38 },
           pulse: { frequency: 180, endFrequency: 720, duration: .32, waveform: 'sawtooth', volume: .52 },
+          timerWarning: { frequency: 880, endFrequency: 1040, duration: .1, waveform: 'sine', volume: .28 },
+          timerTick: { frequency: 1040, endFrequency: 820, duration: .075, waveform: 'square', volume: .2 },
           blackhole: { frequency: 210, endFrequency: 620, duration: .46, waveform: 'sine', volume: .5 },
           elasticStretch: { frequency: 150, endFrequency: 430, duration: .095, waveform: 'sawtooth', volume: .16, cooldown: 75 },
           strainRumble: { frequency: 54, endFrequency: 76, duration: .12, waveform: 'square', volume: .12, cooldown: 145 },
@@ -728,7 +741,7 @@
         unitRadius: 29,
         maxTurnsPerPlayer: 4,
         launchScale: 5.566,
-        maxPullDistance: 250,
+        maxPullDistance: 275,
         maxLaunchSpeed: 1392,
         stopSpeed: 12,
         restitution: 0.84,
@@ -750,8 +763,19 @@
         { id: 'pulse', name: '방출' }, { id: 'pulse', name: '방출' },
         { id: 'reposition', name: '재배치' }, { id: 'reposition', name: '재배치' },
         { id: 'brick', name: '구조물 투하' }, { id: 'brick', name: '구조물 투하' },
-        { id: 'blackhole', name: '블랙홀 방출' }, { id: 'blackhole', name: '블랙홀 방출' }
+        { id: 'blackhole', name: '블랙홀 방출' }, { id: 'blackhole', name: '블랙홀 방출' },
+        { id: 'ammo', name: '총알 장전' }, { id: 'ammo', name: '총알 장전' }
       ];
+      const CARD_DESCRIPTIONS = {
+        hardening: '병뚜껑의 마찰력이 3배가 됩니다. 같은 카드 효과는 중첩되어 마찰력과 회색 코팅이 더 강해집니다.',
+        guard: '병뚜껑 주위를 도는 위성 방호벽 2개를 추가합니다. 최대 4개까지 중첩되며 충돌로 유닛을 밀어냅니다.',
+        pulse: '사용한 병뚜껑이 4초마다 충격파를 발산해 주변의 다른 병뚜껑과 벽돌을 밀쳐냅니다. 발동 직전 병뚜껑이 빛나며 시점을 알려줍니다.',
+        reposition: '필드에 있는 자신의 병뚜껑을 한 번 더 당겨 발사합니다. 재발사한 병뚜껑이 멈추거나 떨어지면 효과가 끝납니다.',
+        brick: '시작선에서 충분히 떨어진 곳에 움직일 수 있는 벽돌 유닛을 배치합니다.',
+        blackhole: '즉시 주변의 다른 병뚜껑과 벽돌을 끌어당깁니다.',
+        ammo: '자신의 병뚜껑에서 작은 총탄을 한 번 발사합니다. 총탄은 마찰을 무시하고, 유닛 충돌 시 소멸하며 벽돌은 파괴하고 구조물 맵의 벽에는 도탄됩니다.'
+      };
+      const TURN_LIMIT_MS = 30_000;
       const UNIT_EFFECTS = Object.freeze({
         hardening: { maxStacks: Infinity, frictionPerStack: 3 },
         guard: { maxStacks: 2, satellitesPerStack: 2 }
@@ -776,6 +800,7 @@
       const state = {
         units: [],
         bricks: [],
+        bullets: [],
         triggers: [],
         fallPoints: [0, 0],
         particles: [],
@@ -803,7 +828,12 @@
         triggerPlacementUsed: [false, false],
         pendingTriggerPlacement: null,
         selectedTriggerType: null,
-        phaseBeforeTriggerSelect: null
+        phaseBeforeTriggerSelect: null,
+        turnDeadline: null,
+        repositionMode: null,
+        timerTurn: -1,
+        timerTenPlayed: false,
+        timerLastBeepSecond: null
       };
 
       let onlineSession = null;
@@ -1037,11 +1067,13 @@
           this.vy = 0;
           this.radius = CONFIG.unitRadius;
           this.status = 'ready'; // ready, sliding, resting, fallen
+          this.hasLaunched = false;
           this.score = 0;
           this.distance = 0;
           this.ability = null;
           this.relaunchAvailable = false;
           this.relaunchUsed = false;
+          this.activeSpecial = null;
           this.fluidTimer = 0;
           this.fallRewarded = false;
           this.previousX = x;
@@ -1051,6 +1083,7 @@
         launch(vx, vy) {
           this.vx = vx;
           this.vy = vy;
+          this.hasLaunched = true;
           this.status = 'sliding';
         }
 
@@ -1173,6 +1206,7 @@
         turns.reset();
         state.units = [];
         state.bricks = [];
+        state.bullets = [];
         state.triggers = [];
         state.fallPoints = [0, 0];
         state.particles = [];
@@ -1181,10 +1215,15 @@
         state.aimPoint = null;
         state.aimTension = 0;
         state.repositionUnit = null;
+        state.repositionMode = null;
         state.triggerPlacementUsed = [false, false];
         state.pendingTriggerPlacement = null;
         state.selectedTriggerType = null;
         state.phaseBeforeTriggerSelect = null;
+        state.turnDeadline = null;
+        state.timerTurn = -1;
+        state.timerTenPlayed = false;
+        state.timerLastBeepSecond = null;
         state.mapTime = 0;
         state.phase = 'aiming';
         state.advanceAt = 0;
@@ -1204,8 +1243,79 @@
           turns.createCurrentUnit();
           if (state.currentMap.items) spawnItemTrigger();
           state.phase = 'aiming';
+          startTurnTimer();
           updateHud();
         });
+      }
+
+      function startTurnTimer() {
+        state.turnDeadline = Date.now() + TURN_LIMIT_MS;
+        state.timerTurn = turns.globalTurn;
+        state.timerTenPlayed = false;
+        state.timerLastBeepSecond = null;
+        document.body.classList.remove('timer-flash');
+      }
+
+      function flashTimerScreen() {
+        document.body.classList.remove('timer-flash');
+        void document.body.offsetWidth;
+        document.body.classList.add('timer-flash');
+        setTimeout(() => document.body.classList.remove('timer-flash'), 360);
+      }
+
+      function updateTurnTimer() {
+        const active = state.turnDeadline != null && !['intro', 'map-select', 'dealing', 'finished'].includes(state.phase);
+        turnTimer.hidden = !active;
+        if (!active) return;
+        const remaining = Math.max(0, state.turnDeadline - Date.now());
+        const seconds = Math.ceil(remaining / 1000);
+        turnTimer.textContent = String(seconds).padStart(2, '0');
+        turnTimer.classList.toggle('urgent', seconds <= 5);
+        if (state.timerTurn !== turns.globalTurn) {
+          state.timerTurn = turns.globalTurn;
+          state.timerTenPlayed = false;
+          state.timerLastBeepSecond = null;
+        }
+        if (seconds <= 10 && seconds > 5 && !state.timerTenPlayed) {
+          state.timerTenPlayed = true;
+          playSound('timerWarning');
+          flashTimerScreen();
+        }
+        if (seconds <= 5 && seconds > 0 && state.timerLastBeepSecond !== seconds) {
+          state.timerLastBeepSecond = seconds;
+          playSound('timerTick');
+          flashTimerScreen();
+        }
+        const hostAuthority = !onlineSession?.started || onlineSession.role === 'host';
+        if (remaining <= 0 && hostAuthority) expireCurrentTurn();
+      }
+
+      function expireCurrentTurn() {
+        if (turns.isComplete || state.turnDeadline == null) return;
+        const unit = turns.currentUnit;
+        if (unit && !unit.hasLaunched) {
+          if (unit.status !== 'fallen') playFileSound('unitDeath', { volume: .5 });
+          unit.status = 'fallen';
+          unit.vx = 0;
+          unit.vy = 0;
+        }
+        if (state.repositionUnit?.activeSpecial && !state.repositionUnit.specialFired) {
+          state.repositionUnit.activeSpecial = null;
+        }
+        state.aiming = false;
+        state.aimPoint = null;
+        state.aimTension = 0;
+        state.repositionUnit = null;
+        state.pendingTriggerPlacement = null;
+        state.selectedTriggerType = null;
+        state.phaseBeforeTriggerSelect = null;
+        triggerSelectOverlay.hidden = true;
+        cancelCardDrag();
+        state.turnDeadline = null;
+        state.repositionMode = null;
+        playSound('turn');
+        turns.finishCurrentTurn();
+        prepareTurn();
       }
 
       function drawCardForPlayer(owner, onComplete) {
@@ -1236,6 +1346,8 @@
         triggerToolButtons.forEach(button => {
           const owner = Number(button.dataset.owner);
           const spent = state.triggerPlacementUsed[owner];
+          button.dataset.description = '원하는 위치에 병뚜껑과 상호작용하는 특수 함정을 설치합니다.';
+          button.title = button.dataset.description;
           button.disabled = spent || owner !== turns.playerIndex || !canControlPlayer(owner) || !turns.currentUnit ||
             !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase);
           button.textContent = spent ? '트리거 배치 · 사용 완료' : '트리거 배치 · 1회';
@@ -1251,8 +1363,8 @@
           const used = state.units.filter(unit => unit.owner === index).length;
           remainingEls[index].textContent = `${CONFIG.maxTurnsPerPlayer - used}개`;
         });
-        endTurnButton.disabled = state.phase !== 'turn-ready' || !canControlPlayer(turns.playerIndex);
-        actionHint.textContent = state.phase === 'sliding' ? '병뚜껑이 움직이는 중' : state.phase === 'turn-ready' ? '턴을 마치거나 재배치 카드를 사용하세요' : state.phase === 'reposition' ? '재배치: 병뚜껑을 다시 당겨 발사하세요' : state.phase === 'trigger-select' ? '트리거 종류를 선택하세요' : '병뚜껑을 당겨 발사하세요';
+        endTurnButton.disabled = state.phase !== 'turn-ready' || state.bullets.length > 0 || !canControlPlayer(turns.playerIndex);
+        actionHint.textContent = state.phase === 'sliding' ? '병뚜껑이 움직이는 중' : state.phase === 'turn-ready' ? '턴을 마치거나 카드를 사용하세요' : state.phase === 'reposition' ? (state.repositionMode === 'ammo' ? '총알 장전: 방향을 정해 총탄을 발사하세요' : '재배치: 병뚜껑을 다시 당겨 발사하세요') : state.phase === 'trigger-select' ? '트리거 종류를 선택하세요' : '병뚜껑을 당겨 발사하세요';
         handPanels.forEach((panel, index) => panel.classList.toggle('current', !turns.isComplete && index === turns.playerIndex));
         updateTriggerTools();
         updateMatchHud();
@@ -1304,23 +1416,41 @@
         const unit = state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit;
         if (!unit || !state.aimPoint || !['aiming', 'reposition'].includes(state.phase)) return;
         const launchedFromReposition = state.phase === 'reposition';
-        if (launchedFromReposition && (!unit.relaunchAvailable || unit.relaunchUsed)) return;
+        if (launchedFromReposition && !unit.relaunchAvailable) return;
         let vx = (unit.x - state.aimPoint.x) * CONFIG.launchScale;
         let vy = (unit.y - state.aimPoint.y) * CONFIG.launchScale;
         const speed = Math.hypot(vx, vy);
         if (speed < 35) return;
-        if (speed > CONFIG.maxLaunchSpeed) {
-          vx = vx / speed * CONFIG.maxLaunchSpeed;
-          vy = vy / speed * CONFIG.maxLaunchSpeed;
+        if (state.repositionMode === 'ammo') {
+          const bulletSpeed = Math.min(CONFIG.maxLaunchSpeed * 2, speed * 2);
+          state.bullets.push({
+            entityKind: ENTITY_KIND.UNIT, unitKind: 'bullet', id: `bullet-${Date.now()}-${state.bullets.length}`,
+            owner: unit.owner, sourceUnitId: unit.id, x: unit.x, y: unit.y,
+            vx: vx / speed * bulletSpeed, vy: vy / speed * bulletSpeed,
+            radius: unit.radius * .25, mass: .12
+          });
+          unit.activeSpecial = 'ammo';
+          state.repositionMode = null;
+          playSound('launch');
+        } else {
+          if (speed > CONFIG.maxLaunchSpeed) {
+            vx = vx / speed * CONFIG.maxLaunchSpeed;
+            vy = vy / speed * CONFIG.maxLaunchSpeed;
+          }
+          unit.launch(vx, vy);
+          playSound('launch');
+          if (launchedFromReposition) {
+            unit.relaunchUsed = true;
+            unit.activeSpecial = 'reposition';
+            unit.specialFired = true;
+          }
         }
-        unit.launch(vx, vy);
-        playSound('launch');
-        if (launchedFromReposition) unit.relaunchUsed = true;
         if (launchedFromReposition) state.repositionUnit = null;
         state.aiming = false;
         state.aimPoint = null;
         state.aimTension = 0;
         state.phase = 'sliding';
+        if (launchedFromReposition) state.repositionMode = null;
         updateHud();
       }
 
@@ -1453,16 +1583,23 @@
         updateEffects(dt);
 
         if (state.currentMap.walls) updateWalls(dt);
+        updateBullets(dt);
         updateAbilityEffects(dt);
         resolveGuardCollisions();
         if (state.triggers.length) collectItemTriggers();
-        const objectsMoving = state.units.some(unit => unit.status === 'sliding') ||
+        const objectsMoving = state.units.some(unit => unit.status === 'sliding') || state.bullets.length > 0 ||
           state.bricks.some(brick => Math.hypot(brick.vx, brick.vy) > 5);
         if (state.phase === 'turn-ready' && objectsMoving) state.phase = 'sliding';
         if (state.phase === 'sliding') {
-          const moving = state.units.some(unit => unit.status === 'sliding') ||
+          const moving = state.units.some(unit => unit.status === 'sliding') || state.bullets.length > 0 ||
             state.bricks.some(brick => Math.hypot(brick.vx, brick.vy) > 5);
           if (!moving) state.phase = turns.currentUnit?.status === 'ready' ? 'aiming' : 'turn-ready';
+        }
+        for (const unit of state.units) {
+          if (unit.activeSpecial === 'reposition' && unit.specialFired && unit.status !== 'sliding') {
+            unit.activeSpecial = null;
+            unit.specialFired = false;
+          }
         }
         updateHud();
       }
@@ -1474,14 +1611,32 @@
         if (cardIndex < 0) return false;
         const card = hand[cardIndex];
         if (card.id === 'brick') return false;
-        if (card.id === 'reposition' && (!['aiming', 'turn-ready'].includes(state.phase) || unit.status === 'ready' || unit.relaunchUsed)) return false;
+        if (['reposition', 'ammo'].includes(card.id) && state.units.some(item => item.activeSpecial)) return false;
+        if (card.id === 'pulse' && unit.ability?.pulse) return false;
+        if (['reposition', 'ammo'].includes(card.id) && unit.status === 'ready') return false;
+        if (['reposition', 'ammo'].includes(card.id) && unit.activeSpecial) return false;
+        if (card.id === 'reposition' && !['aiming', 'turn-ready'].includes(state.phase)) return false;
+        if (card.id === 'ammo' && !['aiming', 'sliding', 'turn-ready'].includes(state.phase)) return false;
         if (unit.status === 'ready' && unit !== turns.currentUnit) return false;
         if (UNIT_EFFECTS[card.id] && !applyUnitEffectStack(unit, card.id)) return false;
-        if (card.id === 'pulse') triggerPulse(unit);
         if (card.id === 'blackhole') triggerBlackHole(unit);
+        if (card.id === 'pulse') {
+          const ability = ensureUnitAbility(unit);
+          ability.pulse = true;
+          ability.pulseTimer = 4;
+        }
         if (card.id === 'reposition') {
           unit.relaunchAvailable = true;
           state.repositionUnit = unit;
+          unit.activeSpecial = 'reposition';
+          state.repositionMode = 'reposition';
+          state.phase = 'reposition';
+        }
+        if (card.id === 'ammo') {
+          unit.relaunchAvailable = true;
+          state.repositionUnit = unit;
+          unit.activeSpecial = 'ammo';
+          state.repositionMode = 'ammo';
           state.phase = 'reposition';
         }
         if (card.id !== 'pulse' && card.id !== 'blackhole') playSound('card');
@@ -1492,8 +1647,9 @@
       }
 
       function ensureUnitAbility(unit) {
-        if (!unit.ability) unit.ability = { hardening: false, guard: false, pulse: false, guardAngle: 0, stacks: {} };
+        if (!unit.ability) unit.ability = { hardening: false, guard: false, pulse: false, guardAngle: 0, stacks: {}, destroyedGuardSatellites: [] };
         if (!unit.ability.stacks) unit.ability.stacks = {};
+        if (!unit.ability.destroyedGuardSatellites) unit.ability.destroyedGuardSatellites = [];
         for (const effectId of Object.keys(UNIT_EFFECTS)) {
           if (unit.ability[effectId] && !unit.ability.stacks[effectId]) unit.ability.stacks[effectId] = 1;
         }
@@ -1652,6 +1808,13 @@
           const ability = source.ability;
           if (!ability || source.status === 'fallen') continue;
           if (ability.guard) ability.guardAngle += dt * 1.6875;
+          if (ability.pulse) {
+            ability.pulseTimer = (ability.pulseTimer ?? 4) - dt;
+            if (ability.pulseTimer <= 0) {
+              triggerPulse(source);
+              ability.pulseTimer = 4;
+            }
+          }
         }
       }
 
@@ -1858,18 +2021,112 @@
         const angularSpeed = 1.6875;
         const count = Math.min(UNIT_EFFECTS.guard.maxStacks, getUnitEffectStacks(source, 'guard'));
         const offsets = Array.from({ length: count * UNIT_EFFECTS.guard.satellitesPerStack }, (_, index) => index * Math.PI / count);
-        return offsets.map(offset => {
+        return offsets.map((offset, index) => {
           const angle = source.ability.guardAngle + offset;
           return {
             entityKind: ENTITY_KIND.STRUCTURE,
             pushable: false,
+            satelliteIndex: index,
             x: source.x + Math.cos(angle) * orbitRadius,
             y: source.y + Math.sin(angle) * orbitRadius,
             vx: -Math.sin(angle) * orbitRadius * angularSpeed,
             vy: Math.cos(angle) * orbitRadius * angularSpeed,
             radius: source.radius * 0.35
           };
-        });
+        }).filter(satellite => !source.ability.destroyedGuardSatellites?.includes(satellite.satelliteIndex));
+      }
+
+      function updateBullets(dt) {
+        if (!state.bullets.length) return;
+        const walls = state.currentMap.walls ? wallSegments() : [];
+        const removeBullet = (bullet, index) => {
+          state.bullets.splice(index, 1);
+          const source = state.units.find(unit => unit.id === bullet.sourceUnitId);
+          if (source?.activeSpecial === 'ammo') source.activeSpecial = null;
+        };
+        for (let index = state.bullets.length - 1; index >= 0; index -= 1) {
+          const bullet = state.bullets[index];
+          let consumed = false;
+          const steps = Math.max(1, Math.ceil(Math.hypot(bullet.vx, bullet.vy) * dt / Math.max(4, bullet.radius)));
+          for (let step = 0; step < steps && !consumed; step += 1) {
+            const stepDt = dt / steps;
+            bullet.x += bullet.vx * stepDt;
+            bullet.y += bullet.vy * stepDt;
+            if (bullet.x < TABLE.left || bullet.x > TABLE.right || bullet.y < TABLE.top || bullet.y > TABLE.bottom) {
+              removeBullet(bullet, index);
+              consumed = true;
+              break;
+            }
+
+            for (const wall of walls) {
+              const closestX = Math.max(wall.x1, Math.min(bullet.x, wall.x2));
+              const closestY = Math.max(wall.y1, Math.min(bullet.y, wall.y2));
+              let nx = bullet.x - closestX;
+              let ny = bullet.y - closestY;
+              let distance = Math.hypot(nx, ny);
+              let penetration = bullet.radius - distance;
+              if (distance >= bullet.radius) continue;
+              if (distance < .001) {
+                const overlapX = bullet.radius + wall.width / 2 - Math.abs(bullet.x - (wall.x + wall.width / 2));
+                const overlapY = bullet.radius + wall.height / 2 - Math.abs(bullet.y - (wall.y + wall.height / 2));
+                if (overlapX < overlapY) { nx = bullet.x < wall.x + wall.width / 2 ? -1 : 1; ny = 0; penetration = overlapX; }
+                else { nx = 0; ny = bullet.y < wall.y + wall.height / 2 ? -1 : 1; penetration = overlapY; }
+              } else { nx /= distance; ny /= distance; }
+              bullet.x += nx * (penetration + .5);
+              bullet.y += ny * (penetration + .5);
+              const relativeNormal = (bullet.vx - wall.vx) * nx + (bullet.vy - wall.vy) * ny;
+              if (relativeNormal < 0) {
+                bullet.vx -= 1.82 * relativeNormal * nx;
+                bullet.vy -= 1.82 * relativeNormal * ny;
+                playSound('wallHit', Math.min(1.2, Math.abs(relativeNormal) / 800));
+              }
+            }
+
+            for (const source of state.units) {
+              if (!source.ability?.guard || source.status === 'fallen') continue;
+              const satellite = guardSatellites(source).find(item => Math.hypot(bullet.x - item.x, bullet.y - item.y) < bullet.radius + item.radius);
+              if (!satellite) continue;
+              (source.ability.destroyedGuardSatellites ||= []).push(satellite.satelliteIndex);
+              state.effects.push({ type: 'item', x: satellite.x, y: satellite.y, age: 0, duration: .35, color: '#f4b167' });
+              removeBullet(bullet, index);
+              consumed = true;
+              break;
+            }
+            if (consumed) break;
+            for (let brickIndex = state.bricks.length - 1; brickIndex >= 0; brickIndex -= 1) {
+              const brick = state.bricks[brickIndex];
+              const closestX = Math.max(brick.x - brick.width / 2, Math.min(bullet.x, brick.x + brick.width / 2));
+              const closestY = Math.max(brick.y - brick.height / 2, Math.min(bullet.y, brick.y + brick.height / 2));
+              if (Math.hypot(bullet.x - closestX, bullet.y - closestY) >= bullet.radius) continue;
+              state.bricks.splice(brickIndex, 1);
+              state.effects.push({ type: 'item', x: brick.x, y: brick.y, age: 0, duration: .42, color: '#c5d2d0' });
+              removeBullet(bullet, index);
+              consumed = true;
+              break;
+            }
+            if (consumed) break;
+            for (const target of state.units) {
+              if (target.id === bullet.sourceUnitId || target.status === 'fallen' || target.fluidTimer > 0) continue;
+              const dx = target.x - bullet.x;
+              const dy = target.y - bullet.y;
+              const distance = Math.hypot(dx, dy);
+              if (distance >= bullet.radius + target.radius) continue;
+              const nx = distance > .001 ? dx / distance : 1;
+              const ny = distance > .001 ? dy / distance : 0;
+              const relative = (target.vx - bullet.vx) * nx + (target.vy - bullet.vy) * ny;
+              if (relative < 0) {
+                const impulse = -1.72 * relative / (1 + 1 / bullet.mass);
+                target.vx += impulse * nx;
+                target.vy += impulse * ny;
+                if (Math.hypot(target.vx, target.vy) > CONFIG.stopSpeed) target.status = 'sliding';
+                playUnitImpactSound(impulse);
+              }
+              removeBullet(bullet, index);
+              consumed = true;
+              break;
+            }
+          }
+        }
       }
 
       function resolveGuardCollisions() {
@@ -1990,13 +2247,15 @@
       }
 
       function endTurn() {
-        if (state.phase !== 'turn-ready') return;
+        if (state.phase !== 'turn-ready' || state.bullets.length > 0) return;
         if (shouldForwardOnlineAction()) {
           sendOnlineAction({ type: 'end-turn' });
           return;
         }
         playSound('turn');
         state.repositionUnit = null;
+        state.repositionMode = null;
+        state.turnDeadline = null;
         turns.finishCurrentTurn();
         prepareTurn();
       }
@@ -2624,8 +2883,9 @@
 
       function createOnlineSnapshot() {
         return {
-          units: state.units.map(unit => ({ ...unit, ability: unit.ability ? { ...unit.ability, stacks: { ...unit.ability.stacks } } : null })),
+          units: state.units.map(unit => ({ ...unit, ability: unit.ability ? { ...unit.ability, stacks: { ...unit.ability.stacks }, destroyedGuardSatellites: [...(unit.ability.destroyedGuardSatellites || [])] } : null })),
           bricks: state.bricks.map(brick => ({ ...brick })),
+          bullets: state.bullets.map(bullet => ({ ...bullet })),
           triggers: state.triggers.map(trigger => ({ ...trigger, typeId: trigger.type.id, type: undefined })),
           fallPoints: [...state.fallPoints],
           particles: state.particles.map(particle => ({ ...particle })),
@@ -2643,6 +2903,8 @@
           nextCardId: state.nextCardId,
           currentMapId: state.currentMap.id,
           speedLevel: state.speedLevel,
+          repositionMode: state.repositionMode,
+          turnRemaining: state.turnDeadline == null ? null : Math.max(0, state.turnDeadline - Date.now()),
           globalTurn: turns.globalTurn,
           currentUnitId: turns.currentUnit?.id ?? null,
           repositionUnitId: state.repositionUnit?.id ?? null,
@@ -2689,6 +2951,7 @@
         onlineInterpolation = { startedAt: snapshotTime, duration: interpolationDuration, units: interpolationUnits };
         onlineLastSnapshotAt = snapshotTime;
         state.bricks = snapshot.bricks.map(data => Object.assign(new BrickUnit({ x: data.x, y: data.y, owner: data.owner }), data));
+        state.bullets = (snapshot.bullets || []).map(data => ({ ...data }));
         state.triggers = snapshot.triggers.map(data => {
           const { typeId, ...trigger } = data;
           return { ...trigger, type: ITEM_TRIGGERS.find(type => type.id === typeId) };
@@ -2701,6 +2964,7 @@
         state.aimPoint = snapshot.aimPoint;
         state.aimTension = snapshot.aimTension;
         state.mapTime = snapshot.mapTime;
+        state.repositionMode = snapshot.repositionMode || null;
         state.triggerPlacementUsed = snapshot.triggerPlacementUsed;
         state.deck = snapshot.deck;
         state.hands = snapshot.hands;
@@ -2714,6 +2978,8 @@
           setSpeedLevel(nextSpeed, nextSpeed !== state.speedLevel && pending !== nextSpeed);
         }
         turns.globalTurn = snapshot.globalTurn;
+        state.turnDeadline = Number.isFinite(snapshot.turnRemaining) ? Date.now() + snapshot.turnRemaining : null;
+        turnTimer.hidden = state.turnDeadline == null;
         turns.currentUnit = state.units.find(unit => unit.id === snapshot.currentUnitId) || null;
         state.repositionUnit = state.units.find(unit => unit.id === snapshot.repositionUnitId) || null;
         mapIndicator.textContent = currentMap.name;
@@ -2932,6 +3198,10 @@
             element.textContent = concealed ? '비공개' : card.name;
             element.dataset.cardId = card.instanceId;
             element.dataset.owner = String(owner);
+            if (!concealed) {
+              element.dataset.description = CARD_DESCRIPTIONS[card.id] || '게임에 영향을 주는 능력 카드입니다.';
+              element.title = element.dataset.description;
+            }
             element.setAttribute('role', 'button');
             element.setAttribute('aria-label', concealed ? '상대 비공개 카드' : `${card.name} 카드`);
             if (!concealed) element.addEventListener('pointerdown', beginCardDrag);
@@ -2943,6 +3213,8 @@
 
       function finishGame() {
         state.phase = 'finished';
+        state.turnDeadline = null;
+        state.bullets = [];
         entityTooltip.hidden = true;
         playSound('win');
         const scores = calculateScores();
@@ -3143,6 +3415,18 @@
           ctx.lineWidth = 2 + stack;
           ctx.stroke();
         }
+        if (unit.ability?.pulse && unit.ability.pulseTimer <= .7) {
+          const urgency = 1 - Math.max(0, unit.ability.pulseTimer) / .7;
+          const pulse = .5 + .5 * Math.sin(performance.now() / 55);
+          ctx.beginPath();
+          ctx.arc(0, 0, unit.radius + 7 + urgency * 7, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(0, 245, 255, ${.42 + pulse * .5})`;
+          ctx.lineWidth = 3 + pulse * 2;
+          ctx.shadowColor = '#00e5ff';
+          ctx.shadowBlur = 12 + urgency * 12;
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+        }
         ctx.restore();
         if (unit.ability?.guard) {
           const satellites = guardSatellites(unit);
@@ -3181,6 +3465,23 @@
         ctx.strokeStyle = '#c3d0ce';
         ctx.lineWidth = 2;
         ctx.strokeRect(brick.x - brick.width / 2, brick.y - brick.height / 2, brick.width, brick.height);
+        ctx.restore();
+      }
+
+      function drawBullet(bullet) {
+        ctx.save();
+        ctx.translate(bullet.x, bullet.y);
+        ctx.rotate(Math.atan2(bullet.vy, bullet.vx));
+        ctx.shadowColor = '#ffe58a';
+        ctx.shadowBlur = 12;
+        ctx.fillStyle = '#fff3b0';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, bullet.radius * 1.8, bullet.radius, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = '#d18d2c';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
         ctx.restore();
       }
 
@@ -3332,6 +3633,7 @@
         drawItemTriggers();
         state.units.forEach(drawUnit);
         state.bricks.forEach(brick => drawBrick(brick));
+        state.bullets.forEach(drawBullet);
         drawEffects();
         drawAim();
         drawCardPreview();
@@ -3452,18 +3754,17 @@
         ctx.lineWidth = Math.max(2, radius * .12);
         ctx.strokeStyle = color;
         ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(x, y, Math.max(2, radius * .1), 0, Math.PI * 2);
         ctx.fillStyle = color;
-        ctx.font = `700 ${Math.max(9, radius * .58)}px "Malgun Gothic", sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        const glyph = options.glyph ?? (type.id === 'blackhole' ? '블' : type.id === 'pulse' ? '방' : type.id === 'hardening' ? '경' : '호');
-        ctx.fillText(glyph, x, y + 1);
+        ctx.fill();
         ctx.restore();
       }
 
       function gameLoop(timestamp) {
         const dt = Math.min((timestamp - state.lastTime) / 1000 || 0, 0.03) * state.gameSpeed;
         state.lastTime = timestamp;
+        updateTurnTimer();
         const onlineReplica = onlineSession?.started && onlineSession.role === 'challenger';
         if (onlineReplica) updateOnlineInterpolation(timestamp);
         if (state.aiming && (!onlineReplica || localAimPointerId !== null) && state.aimTension >= .75) playSound('strainRumble', state.aimTension);
