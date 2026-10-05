@@ -2630,7 +2630,7 @@
           fallPoints: [...state.fallPoints],
           particles: state.particles.map(particle => ({ ...particle })),
           effects: state.effects.map(effect => ({ ...effect })),
-          phase: state.phase,
+          phase: state.phase === 'trigger-select' ? (state.phaseBeforeTriggerSelect || 'turn-ready') : state.phase,
           aiming: state.aiming,
           aimPoint: state.aimPoint ? { ...state.aimPoint } : null,
           aimTension: state.aimTension,
@@ -2696,7 +2696,7 @@
         state.fallPoints = snapshot.fallPoints;
         state.particles = snapshot.particles;
         state.effects = snapshot.effects;
-        state.phase = snapshot.phase;
+        if (snapshot.phase !== 'trigger-select') state.phase = snapshot.phase;
         state.aiming = snapshot.aiming;
         state.aimPoint = snapshot.aimPoint;
         state.aimTension = snapshot.aimTension;
