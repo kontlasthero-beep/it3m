@@ -1518,6 +1518,13 @@
         if (triggerDrop) openTriggerTypeSelection(triggerDrop, drag.owner);
       }
 
+      function cancelCardDrag() {
+        if (!state.cardDrag) return;
+        state.cardDrag.ghost.remove();
+        state.cardDrag.preview?.remove();
+        state.cardDrag = null;
+      }
+
       function updateAbilityEffects(dt) {
         for (const source of state.units) {
           const ability = source.ability;
@@ -2042,7 +2049,7 @@
 
       function handleOnlineRealtimeMessage(session, message, transport) {
         if (message.type === 'snapshot' && session.role === 'challenger' && Number.isSafeInteger(message.revision) && message.revision > session.snapshotRevision) {
-          if (localAimPointerId === null && !state.cardDrag && state.phase !== 'trigger-select') {
+          if (localAimPointerId === null && state.phase !== 'trigger-select') {
             applyOnlineSnapshot(message.snapshot);
             session.snapshotRevision = message.revision;
           }
@@ -3431,6 +3438,8 @@
       });
       document.addEventListener('pointermove', moveCardGhost);
       document.addEventListener('pointerup', finishCardDrag);
+      document.addEventListener('pointercancel', cancelCardDrag);
+      window.addEventListener('blur', cancelCardDrag);
       if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
         let refreshingForWorkerUpdate = false;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
