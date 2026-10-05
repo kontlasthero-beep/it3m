@@ -184,6 +184,14 @@
     .online-entry { display: grid; grid-template-columns: 1fr 1.15fr; gap: 8px; }
     .online-entry button { padding: 9px 8px; font-size: 12px; }
     .join-entry { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 7px; }
+    .room-settings { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 8px; }
+    .room-settings button { min-height: 44px; padding: 8px 10px; font-size: 12px; }
+    .room-settings .public-toggle { display: flex; grid-column: 1 / -1; align-items: center; gap: 8px; color: var(--ink); }
+    .room-settings .public-toggle input { width: 18px; min-height: 18px; accent-color: #65d6bd; }
+    .room-list { display: grid; gap: 6px; max-height: 180px; overflow-y: auto; }
+    .room-list button { display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; text-align: left; }
+    .room-list small { color: var(--muted); font-size: 11px; }
+    .room-list-status { margin: 5px 0 0 !important; font-size: 12px; }
     .start-status, .online-status { min-height: 20px; color: var(--muted); font-size: 12px; line-height: 1.5; }
     .room-code-view { margin: 10px 0; padding: 10px; background: #0f191b; color: var(--muted); }
     .room-code-view strong { display: block; margin-top: 3px; color: var(--accent); font-size: 24px; letter-spacing: 2px; }
@@ -413,6 +421,15 @@
               <button id="createRoomButton">온라인 방 만들기</button>
               <div class="join-entry"><input id="roomCodeInput" maxlength="6" autocomplete="off" placeholder="방 코드" aria-label="참가할 방 코드"><button id="joinRoomButton">참가</button></div>
             </div>
+            <div class="room-settings">
+              <label><span>방 비밀번호 (선택)</span><input id="roomPasswordInput" type="password" maxlength="64" autocomplete="new-password"></label>
+              <button id="browseRoomsButton" type="button">공개 방 찾기</button>
+              <label class="public-toggle"><input id="publicRoomToggle" type="checkbox"><span>공개 방 목록에 표시</span></label>
+            </div>
+            <div id="publicRoomPanel" hidden>
+              <div class="room-list" id="publicRoomList"></div>
+              <p class="room-list-status" id="publicRoomStatus" role="status"></p>
+            </div>
             <p class="start-status" id="startStatus" role="status"></p>
           </div>
           <button class="primary" id="startButton">로컬 2인 플레이</button>
@@ -504,6 +521,12 @@
       const matchRound = document.querySelector('#matchRound');
       const connectionNotice = document.querySelector('#connectionNotice');
       const roomCodeInput = document.querySelector('#roomCodeInput');
+      const roomPasswordInput = document.querySelector('#roomPasswordInput');
+      const publicRoomToggle = document.querySelector('#publicRoomToggle');
+      const browseRoomsButton = document.querySelector('#browseRoomsButton');
+      const publicRoomPanel = document.querySelector('#publicRoomPanel');
+      const publicRoomList = document.querySelector('#publicRoomList');
+      const publicRoomStatus = document.querySelector('#publicRoomStatus');
       const createRoomButton = document.querySelector('#createRoomButton');
       const joinRoomButton = document.querySelector('#joinRoomButton');
       const startStatus = document.querySelector('#startStatus');
@@ -1871,6 +1894,35 @@
         else if (room.status === 'ready') onlineStatus.textContent = '양쪽 맵이 확정되었습니다. 대전을 준비합니다.';
         else if (room.status === 'playing') onlineStatus.textContent = '3전 2선승 온라인 대전 진행 중';
         else if (room.status === 'complete') onlineStatus.textContent = '대전이 종료되었습니다.';
+        if (room.status === 'playing') ensureOnlinePeerConnection(onlineSession);
+        if (Number.isInteger(room.forfeitWinner)) showOnlineForfeitResult(room.forfeitWinner);
+      }
+
+      function showOnlineForfeitResult(winner) {
+        const session = onlineSession;
+        if (!session || session.forfeitShown) return;
+        session.forfeitShown = true;
+        session.matchOver = true;
+        session.result = {
+          title: winner === session.playerIndex ? `${PLAYER[winner].name} 승리!` : `${PLAYER[winner].name} 승리`,
+          message: `${PLAYER[1 - winner].name}의 연결이 끊겨 몰수승으로 대전이 종료되었습니다.`,
+          rows: [0, 1].map(index => ({
+            label: PLAYER[index].name,
+            score: index === winner ? '승리' : '패배',
+            detail: index === winner ? '상대 연결 종료' : '연결 종료'
+          })),
+          matchOver: true
+        };
+        state.phase = 'finished';
+        state.aiming = false;
+        state.aimPoint = null;
+        panels.forEach(panel => panel.classList.remove('current'));
+        turnText.textContent = session.result.title;
+        updateMatchHud();
+        showOnlineResult(session.result);
+        if (winner === session.playerIndex) createConfetti(PLAYER[winner].color);
+        closeOnlineSocket(session);
+        showConnectionNotice(session.result.message);
       }
 
       function sendOnlineSocketMessage(session, message) {
@@ -1880,12 +1932,179 @@
         return true;
       }
 
+      function sendOnlineRealtimeMessage(session, message) {
+        const channel = session?.dataChannel;
+        if (channel?.readyState === 'open' && channel.bufferedAmount < 512 * 1024) {
+          try {
+            const directMessage = message.type === 'action' && !message.packet
+              ? { type: 'action', packet: { id: message.actionId, playerIndex: 1, action: message.action } }
+              : message;
+            channel.send(JSON.stringify(directMessage));
+            return true;
+          } catch {}
+        }
+        return sendOnlineSocketMessage(session, message);
+      }
+
+      function handleOnlineRealtimeMessage(session, message, transport) {
+        if (message.type === 'snapshot' && session.role === 'challenger' && Number.isSafeInteger(message.revision) && message.revision > session.snapshotRevision) {
+          if (!state.aiming && !state.cardDrag && state.phase !== 'trigger-select') {
+            applyOnlineSnapshot(message.snapshot);
+            session.snapshotRevision = message.revision;
+          }
+        } else if (message.type === 'action' && session.role === 'host') {
+          const packet = message.packet;
+          const sendAck = () => {
+            const ack = { type: 'action-ack', id: packet.id };
+            if (transport === 'datachannel') {
+              try { session.dataChannel?.send(JSON.stringify(ack)); } catch {}
+            } else sendOnlineSocketMessage(session, ack);
+          };
+          if (packet?.id && !session.handledActionIds.has(packet.id)) {
+            session.handledActionIds.add(packet.id);
+            if (session.handledActionIds.size > 512) session.handledActionIds.delete(session.handledActionIds.values().next().value);
+            try { handleOnlineHostAction(packet); }
+            finally { sendAck(); }
+          } else if (packet?.id) sendAck();
+        } else if (message.type === 'action-ack' && session.role === 'challenger') {
+          session.pendingActions.delete(message.id);
+        }
+      }
+
+      function signalOnlinePeer(session, signal) {
+        if (!sendOnlineSocketMessage(session, { type: 'rtc-signal', signal })) {
+          session.pendingRtcOutgoingSignals ||= [];
+          session.pendingRtcOutgoingSignals.push(signal);
+        }
+      }
+
+      async function ensureOnlinePeerConnection(session) {
+        if (onlineSession !== session || !session.started || session.peerConnection || session.rtcSetupPromise) return session.rtcSetupPromise;
+        if (!window.RTCPeerConnection) {
+          showConnectionNotice('이 브라우저는 WebRTC를 지원하지 않아 서버 연결로 진행합니다');
+          return null;
+        }
+        session.rtcSetupPromise = (async () => {
+          let iceServers = [{ urls: 'stun:stun.cloudflare.com:3478' }];
+          try {
+            const credentials = await postOnlineRequest(`/api/rooms/${session.code}/turn-credentials`, { token: session.token });
+            if (Array.isArray(credentials.iceServers) && credentials.iceServers.length) iceServers = credentials.iceServers;
+          } catch (error) {
+            showConnectionNotice('TURN 설정을 확인할 수 없어 기본 연결로 시도합니다');
+          }
+          if (onlineSession !== session || !session.started) return null;
+          const peer = new RTCPeerConnection({ iceServers, bundlePolicy: 'max-bundle' });
+          session.peerConnection = peer;
+          peer.onicecandidate = event => {
+            if (event.candidate) signalOnlinePeer(session, { type: 'candidate', ...event.candidate.toJSON() });
+          };
+          peer.ondatachannel = event => attachOnlineDataChannel(session, event.channel);
+          peer.onconnectionstatechange = () => {
+            if (onlineSession !== session) return;
+            if (peer.connectionState === 'connected') showConnectionNotice('P2P 데이터 연결됨');
+            else if (peer.connectionState === 'failed' || peer.connectionState === 'closed') {
+              session.dataChannelReady = false;
+              session.pendingActions?.forEach((action, id) => sendOnlineSocketMessage(session, { type: 'action', actionId: id, action }));
+              showConnectionNotice('직접 연결이 안 되어 서버 연결로 계속합니다');
+            }
+          };
+          peer.oniceconnectionstatechange = () => {
+            if (peer.iceConnectionState === 'failed') showConnectionNotice('P2P 연결 실패 · 서버 연결로 계속합니다');
+          };
+          if (session.role === 'host') {
+            attachOnlineDataChannel(session, peer.createDataChannel('game', { ordered: true }));
+            const offer = await peer.createOffer();
+            await peer.setLocalDescription(offer);
+            signalOnlinePeer(session, peer.localDescription.toJSON());
+          }
+          const queued = session.pendingRtcSignals?.splice(0) || [];
+          queued.forEach(signal => queueOnlineRtcSignal(session, signal));
+          return peer;
+        })().catch(error => {
+          session.rtcSetupPromise = null;
+          showConnectionNotice('P2P 연결을 시작하지 못해 서버 연결로 진행합니다');
+          console.warn('WebRTC setup failed:', error);
+          return null;
+        });
+        return session.rtcSetupPromise;
+      }
+
+      function attachOnlineDataChannel(session, channel) {
+        session.dataChannel = channel;
+        channel.onopen = () => {
+          if (onlineSession !== session) return;
+          session.dataChannelReady = true;
+          session.pendingActions.forEach((action, id) => {
+            channel.send(JSON.stringify({ type: 'action', packet: { id, playerIndex: 1, action } }));
+          });
+          showConnectionNotice('게임 데이터 직접 연결됨');
+        };
+        channel.onmessage = event => {
+          if (onlineSession !== session) return;
+          try { handleOnlineRealtimeMessage(session, JSON.parse(event.data), 'datachannel'); }
+          catch (error) { console.warn('Invalid WebRTC game packet:', error); }
+        };
+        channel.onclose = () => {
+          session.dataChannelReady = false;
+          session.pendingActions?.forEach((action, id) => sendOnlineSocketMessage(session, { type: 'action', actionId: id, action }));
+          if (onlineSession === session && session.started) showConnectionNotice('직접 연결 종료 · 서버 연결로 계속합니다');
+        };
+        channel.onerror = () => { session.dataChannelReady = false; };
+      }
+
+      function queueOnlineRtcSignal(session, signal) {
+        session.pendingRtcSignals ||= [];
+        session.pendingRtcSignals.push(signal);
+        if (session.rtcProcessing) return;
+        session.rtcProcessing = true;
+        (async () => {
+          try {
+            const peer = await ensureOnlinePeerConnection(session);
+            if (!peer) return;
+            while (session.pendingRtcSignals.length) {
+              const next = session.pendingRtcSignals.shift();
+              if (next.type === 'offer') {
+                await peer.setRemoteDescription(next);
+                while (session.pendingIceCandidates?.length) await peer.addIceCandidate(session.pendingIceCandidates.shift());
+                const answer = await peer.createAnswer();
+                await peer.setLocalDescription(answer);
+                signalOnlinePeer(session, peer.localDescription.toJSON());
+              } else if (next.type === 'answer') {
+                await peer.setRemoteDescription(next);
+                while (session.pendingIceCandidates?.length) await peer.addIceCandidate(session.pendingIceCandidates.shift());
+              } else if (next.type === 'candidate') {
+                const { type, ...candidateInit } = next;
+                const candidate = new RTCIceCandidate(candidateInit);
+                if (peer.remoteDescription) await peer.addIceCandidate(candidate);
+                else {
+                  session.pendingIceCandidates ||= [];
+                  session.pendingIceCandidates.push(candidate);
+                }
+              }
+            }
+          } catch (error) {
+            console.warn('WebRTC signaling failed:', error);
+            showConnectionNotice('P2P 협상 실패 · 서버 연결로 계속합니다');
+          } finally {
+            session.rtcProcessing = false;
+            if (session.pendingRtcSignals?.length && session.peerConnection && onlineSession === session) {
+              queueOnlineRtcSignal(session, session.pendingRtcSignals.shift());
+            }
+          }
+        })();
+      }
+
       function closeOnlineSocket(session) {
         if (!session) return;
         session.keepSocket = false;
         clearTimeout(session.reconnectTimer);
         if (session.socket && session.socket.readyState < WebSocket.CLOSING) session.socket.close(1000, 'Leaving room');
         session.socket = null;
+        session.dataChannelReady = false;
+        session.dataChannel?.close();
+        session.peerConnection?.close();
+        session.dataChannel = null;
+        session.peerConnection = null;
       }
 
       function connectOnlineSocket(session) {
@@ -1903,7 +2122,8 @@
           session.reconnectCount = 0;
           session.reconnectDelay = 500;
           if (reconnected) showConnectionNotice('실시간 연결 복구');
-          session.pendingActions.forEach((action, actionId) => sendOnlineSocketMessage(session, { type: 'action', actionId, action }));
+          session.pendingActions.forEach((action, actionId) => sendOnlineRealtimeMessage(session, { type: 'action', actionId, action }));
+          session.pendingRtcOutgoingSignals?.splice(0).forEach(signal => sendOnlineSocketMessage(session, { type: 'rtc-signal', signal }));
         });
 
         socket.addEventListener('message', event => {
@@ -1918,23 +2138,18 @@
               session.snapshotRevision = message.snapshotRevision || 0;
               applyOnlineSnapshot(message.snapshot);
             }
-          } else if (message.type === 'snapshot' && session.role === 'challenger' && message.revision > session.snapshotRevision) {
-            if (!state.aiming && !state.cardDrag && state.phase !== 'trigger-select') {
-              applyOnlineSnapshot(message.snapshot);
-              session.snapshotRevision = message.revision;
-            }
+          } else if (message.type === 'snapshot') {
+            handleOnlineRealtimeMessage(session, message, 'websocket');
           } else if (message.type === 'action' && session.role === 'host') {
-            const packet = message.packet;
-            if (packet?.id && !session.handledActionIds.has(packet.id)) {
-              session.handledActionIds.add(packet.id);
-              if (session.handledActionIds.size > 512) session.handledActionIds.delete(session.handledActionIds.values().next().value);
-              try { handleOnlineHostAction(packet); }
-              finally { sendOnlineSocketMessage(session, { type: 'action-ack', id: packet.id }); }
-            } else if (packet?.id) sendOnlineSocketMessage(session, { type: 'action-ack', id: packet.id });
+            handleOnlineRealtimeMessage(session, message, 'websocket');
           } else if (message.type === 'action-ack' && session.role === 'challenger') {
-            session.pendingActions.delete(message.id);
+            handleOnlineRealtimeMessage(session, message, 'websocket');
+          } else if (message.type === 'rtc-signal') {
+            queueOnlineRtcSignal(session, message.signal);
           } else if (message.type === 'peer-connection' && message.role === 'challenger' && session.role === 'host') {
             showConnectionNotice(message.connected ? '상대 연결됨' : '상대 연결이 끊겼습니다');
+          } else if (message.type === 'forfeit') {
+            showOnlineForfeitResult(message.winner);
           } else if (message.type === 'room-closed') {
             onlineStatus.textContent = message.message;
             showConnectionNotice(message.message);
@@ -1974,6 +2189,15 @@
         session.pendingActions = new Map();
         session.handledActionIds = new Set();
         session.lastSnapshotSentAt = 0;
+        session.snapshotRevision = 0;
+        session.pendingRtcSignals = [];
+        session.pendingRtcOutgoingSignals = [];
+        session.pendingIceCandidates = [];
+        session.rtcProcessing = false;
+        session.rtcSetupPromise = null;
+        session.peerConnection = null;
+        session.dataChannel = null;
+        session.dataChannelReady = false;
         connectOnlineSocket(session);
       }
 
@@ -1981,7 +2205,11 @@
         try {
           initializeAudio();
           const name = playerNameInput.value.trim() || '방장';
-          const result = await postOnlineRequest('/api/rooms', { name });
+          const result = await postOnlineRequest('/api/rooms', {
+            name,
+            isPublic: publicRoomToggle.checked,
+            password: roomPasswordInput.value
+          });
           onlineSession = {
             role: 'host', playerIndex: 0, token: result.token, code: result.code, room: result.room,
             maps: null, roundIndex: 0, wins: [0, 0], totalScores: [0, 0], roundResults: [], snapshotRevision: 0,
@@ -1989,7 +2217,7 @@
           };
           state.selectedMap = MAPS[0];
           openOnlineLobby();
-          showConnectionNotice('온라인 방이 열렸습니다');
+          showConnectionNotice(publicRoomToggle.checked ? '공개 방이 열렸습니다' : '온라인 방이 열렸습니다');
           playSound('connected');
           startOnlineSocket(onlineSession);
         } catch (error) { startStatus.textContent = error.message; }
@@ -2000,7 +2228,10 @@
           initializeAudio();
           const code = roomCodeInput.value.trim().toUpperCase();
           if (!code) throw new Error('방 코드를 입력하세요.');
-          const result = await postOnlineRequest(`/api/rooms/${encodeURIComponent(code)}/join`, { name: playerNameInput.value.trim() || '도전자' });
+          const result = await postOnlineRequest(`/api/rooms/${encodeURIComponent(code)}/join`, {
+            name: playerNameInput.value.trim() || '도전자',
+            password: roomPasswordInput.value
+          });
           onlineSession = {
             role: 'challenger', playerIndex: 1, token: result.token, code: result.code, room: result.room,
             maps: null, roundIndex: 0, wins: [0, 0], totalScores: [0, 0], roundResults: [], snapshotRevision: 0,
@@ -2012,6 +2243,42 @@
           playSound('connected');
           startOnlineSocket(onlineSession);
         } catch (error) { startStatus.textContent = error.message; }
+      }
+
+      async function refreshPublicRooms() {
+        publicRoomPanel.hidden = false;
+        publicRoomStatus.textContent = '방 목록을 불러오는 중';
+        publicRoomList.replaceChildren();
+        browseRoomsButton.disabled = true;
+        try {
+          const response = await fetch('/api/rooms', { cache: 'no-store' });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || '방 목록을 불러오지 못했습니다.');
+          const available = data.rooms || [];
+          if (!available.length) {
+            publicRoomStatus.textContent = '참가 가능한 공개 방이 없습니다.';
+            return;
+          }
+          publicRoomStatus.textContent = '';
+          publicRoomList.replaceChildren(...available.map(room => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            const name = document.createElement('strong');
+            name.textContent = room.name;
+            const meta = document.createElement('small');
+            meta.textContent = `${room.locked ? '비밀번호 필요' : '바로 참가'} · ${room.code}`;
+            button.append(name, meta);
+            button.addEventListener('click', () => {
+              roomCodeInput.value = room.code;
+              joinOnlineRoom();
+            });
+            return button;
+          }));
+        } catch (error) {
+          publicRoomStatus.textContent = error.message;
+        } finally {
+          browseRoomsButton.disabled = false;
+        }
       }
 
       async function confirmOnlineMap() {
@@ -2051,6 +2318,7 @@
           session.totalScores = [0, 0];
           session.roundResults = [];
           startOnlineRound(0);
+          ensureOnlinePeerConnection(session);
         } catch (error) {
           if (onlineSession === session) onlineStatus.textContent = `대전 시작 실패 · 다시 연결 중 · ${error.message}`;
         } finally { onlineStartPending = false; }
@@ -2098,7 +2366,9 @@
       function publishOnlineSnapshot(timestamp) {
         const session = onlineSession;
         if (!session?.started || session.role !== 'host' || timestamp - session.lastSnapshotSentAt < 50) return;
-        const sent = sendOnlineSocketMessage(session, { type: 'snapshot', snapshot: createOnlineSnapshot() });
+        const revision = (session.snapshotRevision || 0) + 1;
+        const sent = sendOnlineRealtimeMessage(session, { type: 'snapshot', revision, snapshot: createOnlineSnapshot() });
+        if (sent) session.snapshotRevision = revision;
         if (sent) session.lastSnapshotSentAt = timestamp;
       }
 
@@ -2229,7 +2499,7 @@
         }
         const actionId = crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
         session.pendingActions.set(actionId, action);
-        sendOnlineSocketMessage(session, { type: 'action', actionId, action });
+        sendOnlineRealtimeMessage(session, { type: 'action', actionId, action });
       }
 
       function startOnlineRound(roundIndex) {
@@ -2962,6 +3232,7 @@
       startButton.addEventListener('click', startLocalGame);
       createRoomButton.addEventListener('click', createOnlineRoom);
       joinRoomButton.addEventListener('click', joinOnlineRoom);
+      browseRoomsButton.addEventListener('click', refreshPublicRooms);
       replayButton.addEventListener('click', () => {
         if (onlineSession) {
           const session = onlineSession;

@@ -49,6 +49,30 @@ function createRoomCode() {
   return code;
 }
 
+function createPasswordHash(password) {
+  if (!password) return null;
+  const salt = crypto.randomBytes(16);
+  const hash = crypto.scryptSync(password, salt, 32);
+  return { salt: salt.toString('hex'), hash: hash.toString('hex') };
+}
+
+function verifyRoomPassword(room, password) {
+  if (!room.passwordHash) return true;
+  if (typeof password !== 'string') return false;
+  const supplied = crypto.scryptSync(password, Buffer.from(room.passwordHash.salt, 'hex'), 32);
+  return crypto.timingSafeEqual(supplied, Buffer.from(room.passwordHash.hash, 'hex'));
+}
+
+function recordForfeit(room, disconnectedRole) {
+  if (room.status !== 'playing' || room.forfeitWinner != null) return;
+  room.forfeitWinner = disconnectedRole === 'host' ? 1 : 0;
+  room.status = 'complete';
+  sendToRoomRole(room, disconnectedRole === 'host' ? 'challenger' : 'host', {
+    type: 'forfeit', winner: room.forfeitWinner, disconnectedRole
+  });
+  broadcastRoom(room);
+}
+
 function playerForToken(room, token) {
   if (room.host.token === token) return { player: room.host, role: 'host', index: 0 };
   if (room.challenger?.token === token) return { player: room.challenger, role: 'challenger', index: 1 };
@@ -62,7 +86,8 @@ function roomView(room) {
     host: { name: room.host.name, mapId: room.host.mapId },
     challenger: room.challenger ? { name: room.challenger.name, mapId: room.challenger.mapId } : null,
     seriesMaps: room.seriesMaps,
-    snapshotRevision: room.snapshotRevision
+    snapshotRevision: room.snapshotRevision,
+    forfeitWinner: room.forfeitWinner ?? null
   };
 }
 
@@ -79,6 +104,32 @@ function sendSocketJson(socket, message) {
 
 function sendToRoomRole(room, role, message) {
   return sendSocketJson(room.sockets.get(role), message);
+}
+
+async function getTurnIceServers(room, role) {
+  const cached = room.turnCredentials.get(role);
+  if (cached && cached.expiresAt > Date.now() + 60_000) return cached.iceServers;
+
+  const keyId = process.env.CLOUDFLARE_TURN_KEY_ID;
+  const apiToken = process.env.CLOUDFLARE_TURN_API_TOKEN;
+  if (!keyId || !apiToken) throw new Error('TURN is not configured');
+
+  const response = await fetch(`https://rtc.live.cloudflare.com/v1/turn/keys/${encodeURIComponent(keyId)}/credentials/generate-ice-servers`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ ttl: 86_400 })
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !Array.isArray(data.iceServers)) {
+    console.warn(`Cloudflare TURN credential request failed: ${response.status}`);
+    throw new Error('TURN credentials could not be generated');
+  }
+
+  room.turnCredentials.set(role, { iceServers: data.iceServers, expiresAt: Date.now() + 86_400_000 });
+  return data.iceServers;
 }
 
 function broadcastRoom(room) {
@@ -105,8 +156,9 @@ function receiveRoomSocketMessage(room, member, socket, raw) {
   room.updatedAt = Date.now();
 
   if (message.type === 'snapshot' && member.role === 'host' && ['playing', 'complete'].includes(room.status) && message.snapshot && typeof message.snapshot === 'object') {
+    if (Number.isSafeInteger(message.revision) && message.revision <= room.snapshotRevision) return;
     room.snapshot = message.snapshot;
-    room.snapshotRevision += 1;
+    room.snapshotRevision = Number.isSafeInteger(message.revision) ? message.revision : room.snapshotRevision + 1;
     sendToRoomRole(room, 'challenger', { type: 'snapshot', revision: room.snapshotRevision, snapshot: room.snapshot });
     return;
   }
@@ -134,6 +186,20 @@ function receiveRoomSocketMessage(room, member, socket, raw) {
       if (room.processedActionIds.size > 512) room.processedActionIds.delete(room.processedActionIds.values().next().value);
       sendToRoomRole(room, 'challenger', { type: 'action-ack', id: message.id });
     }
+    return;
+  }
+
+  if (message.type === 'rtc-signal' && room.status === 'playing' && room.challenger) {
+    const signal = message.signal;
+    if (!signal || !['offer', 'answer', 'candidate'].includes(signal.type)) return;
+    if (signal.type === 'candidate') {
+      if (signal.candidate != null && (typeof signal.candidate !== 'string' || signal.candidate.length > 4096)) return;
+      if (signal.sdpMid != null && (typeof signal.sdpMid !== 'string' || signal.sdpMid.length > 128)) return;
+      if (signal.sdpMLineIndex != null && !Number.isInteger(signal.sdpMLineIndex)) return;
+    } else if (typeof signal.sdp !== 'string' || signal.sdp.length > 128_000) return;
+    sendToRoomRole(room, member.role === 'host' ? 'challenger' : 'host', {
+      type: 'rtc-signal', from: member.role, signal
+    });
   }
 }
 
@@ -151,6 +217,7 @@ function attachRoomSocket(socket, room, member) {
     if (member.role === 'host') {
       for (const pending of room.pendingActions.values()) pending.delivered = false;
     }
+    recordForfeit(room, member.role);
     sendToRoomRole(room, member.role === 'host' ? 'challenger' : 'host', { type: 'peer-connection', role: member.role, connected: false });
   });
   socket.on('error', error => console.warn(`WebSocket ${room.code} ${member.role}: ${error.message}`));
@@ -173,15 +240,26 @@ function rejectUpgrade(socket, status, message) {
 
 async function handleApi(request, response, url) {
   const parts = url.pathname.split('/').filter(Boolean);
+  if (request.method === 'GET' && url.pathname === '/api/rooms') {
+    const publicRooms = [...rooms.values()]
+      .filter(room => room.isPublic && room.status === 'waiting' && !room.challenger)
+      .map(room => ({ code: room.code, name: room.host.name, locked: Boolean(room.passwordHash), createdAt: room.createdAt }));
+    return sendJson(response, 200, { rooms: publicRooms });
+  }
   if (request.method === 'GET' && url.pathname === '/api/health') return sendJson(response, 200, { ok: true });
 
   if (request.method === 'POST' && url.pathname === '/api/rooms') {
     const data = await readJson(request);
+    const password = typeof data.password === 'string' ? data.password : '';
+    if (password.length > 64) return fail(response, 400, '비밀번호는 64자 이하여야 합니다.');
     const code = createRoomCode();
     const token = crypto.randomBytes(24).toString('base64url');
     const room = {
       code,
       host: { name: String(data.name || '방장').trim().slice(0, 20) || '방장', token, mapId: null },
+      isPublic: data.isPublic === true,
+      passwordHash: createPasswordHash(password),
+      createdAt: Date.now(),
       challenger: null,
       status: 'waiting',
       seriesMaps: null,
@@ -189,8 +267,10 @@ async function handleApi(request, response, url) {
       sockets: new Map(),
       pendingActions: new Map(),
       processedActionIds: new Set(),
+      turnCredentials: new Map(),
       snapshot: null,
       snapshotRevision: 0,
+      forfeitWinner: null,
       updatedAt: Date.now()
     };
     rooms.set(code, room);
@@ -205,6 +285,7 @@ async function handleApi(request, response, url) {
   if (request.method === 'POST' && parts.length === 4 && parts[3] === 'join') {
     if (room.status !== 'waiting' || room.challenger) return fail(response, 409, '이미 다른 도전자가 참가한 방입니다.');
     const data = await readJson(request);
+    if (!verifyRoomPassword(room, data.password)) return fail(response, 403, '방 비밀번호가 올바르지 않습니다.');
     const token = crypto.randomBytes(24).toString('base64url');
     room.challenger = { name: String(data.name || '도전자').trim().slice(0, 20) || '도전자', token, mapId: null };
     room.status = 'choosing';
@@ -215,6 +296,17 @@ async function handleApi(request, response, url) {
   const data = await readJson(request);
   const member = playerForToken(room, data.token);
   if (!member) return fail(response, 403, '방 참가 권한이 없습니다.');
+
+  if (request.method === 'POST' && parts.length === 4 && parts[3] === 'turn-credentials') {
+    if (room.status !== 'playing') return fail(response, 409, 'TURN 자격 증명은 대전 중에만 발급할 수 있습니다.');
+    try {
+      const iceServers = await getTurnIceServers(room, member.role);
+      return sendJson(response, 200, { iceServers });
+    } catch (error) {
+      const status = error.message === 'TURN is not configured' ? 503 : 502;
+      return fail(response, status, error.message);
+    }
+  }
 
   if (request.method === 'POST' && parts.length === 4 && parts[3] === 'map') {
     if (['playing', 'complete'].includes(room.status)) return fail(response, 409, '맵을 선택할 수 없는 상태입니다.');
@@ -272,11 +364,16 @@ async function handleApi(request, response, url) {
 
   if (request.method === 'POST' && parts.length === 4 && parts[3] === 'leave') {
     if (member.role === 'host') {
+      recordForfeit(room, member.role);
       sendToRoomRole(room, 'challenger', { type: 'room-closed', message: '방장이 방을 종료했습니다.' });
       for (const socket of room.sockets.values()) socket.close(1000, 'Room closed');
       rooms.delete(room.code);
     }
     else {
+      if (room.status === 'playing') {
+        recordForfeit(room, member.role);
+        return sendJson(response, 200, { ok: true });
+      }
       room.challenger = null;
       room.status = room.host.mapId ? 'choosing' : 'waiting';
       room.seriesMaps = null;
@@ -336,7 +433,7 @@ const heartbeatTimer = setInterval(() => {
     socket.isAlive = false;
     socket.ping();
   }
-}, 25_000);
+}, 5_000);
 heartbeatTimer.unref();
 
 setInterval(() => {
