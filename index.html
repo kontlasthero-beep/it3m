@@ -288,6 +288,8 @@
     .turn-actions { display: flex; align-items: center; gap: 12px; }
     #actionHint { color: var(--muted); font-size: 13px; }
     #endTurnButton:disabled { opacity: .42; cursor: not-allowed; }
+    #endTurnButton.tutorial-highlight { animation: tutorial-button-pulse 1.25s ease-in-out infinite; }
+    @keyframes tutorial-button-pulse { 50% { box-shadow: 0 0 0 4px rgba(101, 214, 189, .4), 0 0 18px rgba(101, 214, 189, .6); transform: translateY(-2px); } }
     .turn-timer { min-width: 74px; padding: 5px 9px; border: 1px solid #55716c; border-radius: 4px; background: #142522; color: #e5f2ed; font-variant-numeric: tabular-nums; font-size: 17px; font-weight: 800; text-align: center; }
     .turn-timer.urgent { border-color: #ff6d5e; background: #492a27; color: #fff1ed; animation: timer-pulse .55s ease-in-out infinite alternate; }
     @keyframes timer-pulse { to { box-shadow: 0 0 16px rgba(255, 92, 76, .75); transform: scale(1.06); } }
@@ -333,6 +335,42 @@
     .trigger-type-option[aria-checked="true"] { border-color: var(--accent); background: #263331; }
     .trigger-type-option strong, .trigger-type-option span { display: block; }
     .trigger-type-option span { margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 1.4; white-space: normal; }
+
+    .home-caps { display: flex; justify-content: center; gap: 18px; margin: 14px 0 22px; }
+    .home-caps img { width: 66px; height: 66px; border-radius: 50%; object-fit: cover; }
+    .home-menu { display: grid; gap: 10px; }
+    .home-menu button { min-height: 52px; font-size: 17px; }
+    .home-return { width: 100%; margin-top: 16px; }
+    .icon-button { width: 34px; height: 34px; padding: 0; font-size: 22px; line-height: 1; }
+    [hidden] { display: none !important; }
+    .catalog-dialog { width: min(920px, 100%); text-align: left; }
+    .catalog-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .catalog-header h2 { margin: 0; }
+    .catalog-tabs { display: flex; gap: 6px; margin: 18px 0; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+    .catalog-tabs button[aria-selected="true"] { border-color: #65d6bd; background: #247667; }
+    .catalog-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .catalog-entry { border: 1px solid var(--line); border-radius: 5px; padding: 14px; min-width: 0; }
+    .catalog-entry header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .catalog-entry canvas { width: 96px; height: 72px; flex: 0 0 96px; touch-action: auto; }
+    .catalog-entry h3 { margin: 0; font-size: 17px; overflow-wrap: anywhere; }
+    .catalog-entry p { font-size: 13px; margin: 8px 0 0; overflow-wrap: anywhere; }
+    .catalog-entry .strategy-tip { color: #b7e3d4; }
+    .tutorial-panel { border-top: 2px solid #65d6bd; border-bottom: 1px solid var(--line); padding: 12px 0; margin-bottom: 12px; }
+    .tutorial-heading, .tutorial-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .tutorial-heading { justify-content: space-between; }
+    .tutorial-heading strong { font-size: 17px; }
+    .tutorial-heading select { max-width: 100%; min-height: 38px; padding: 6px; background: #162326; color: var(--ink); border: 1px solid var(--line); font: inherit; }
+    .tutorial-panel p { margin: 8px 0; font-size: 14px; line-height: 1.5; color: #c4d8d2; }
+    .tutorial-actions span { flex: 1; min-width: 160px; font-size: 13px; color: var(--accent); }
+    .tutorial-actions button { min-height: 40px; }
+    .tutorial-completion { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid #78e2bb; border-radius: 4px; background: #173d34; color: #caffdf; opacity: 0; transform: translateY(6px) scale(.85); }
+    .tutorial-completion.visible { animation: tutorial-success 720ms cubic-bezier(.2, .8, .2, 1.2) both; }
+    @keyframes tutorial-success { 35% { opacity: 1; transform: translateY(-2px) scale(1.08); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+    .tutorial-highlight { position: relative; z-index: 2; animation: tutorial-highlight-pulse 1.7s ease-in-out infinite; }
+    @keyframes tutorial-highlight-pulse { 50% { filter: brightness(1.55) drop-shadow(0 0 8px rgba(255, 225, 117, .9)); box-shadow: 0 0 0 3px rgba(255, 225, 117, .5); } }
+    .settings-actions { display: grid; gap: 10px; }
+    @media (max-width: 600px) { .catalog-list { grid-template-columns: 1fr; } .catalog-header { flex-wrap: wrap; } }
+    @media (orientation: landscape) and (max-height: 560px) { .tutorial-panel { padding: 6px 0; } .tutorial-panel p { font-size: 12px; } }
 
     @media (max-width: 700px), (pointer: coarse) {
       body[data-device="mobile"] { overflow-x: hidden; }
@@ -428,6 +466,7 @@
               <svg viewBox="0 0 20 16" aria-hidden="true"><path data-speed-arrow="1" d="M0 2v12l7-6z"/><path data-speed-arrow="2" d="M6 2v12l7-6z"/><path data-speed-arrow="3" d="M12 2v12l7-6z"/></svg>
               <span id="speedLabel">100%</span>
             </button>
+            <button class="icon-button" id="tutorialSettingsButton" type="button" aria-label="튜토리얼 설정" title="튜토리얼 설정" hidden>⚙</button>
           </div>
         </div>
         <div class="connection-details" id="connectionDetails" hidden>
@@ -459,6 +498,11 @@
     </section>
     <div class="match-hud" id="matchHud" hidden aria-live="polite"><span class="match-player" id="matchPlayer0"></span><strong id="matchScore0"></strong><span class="match-separator" aria-hidden="true">:</span><strong id="matchScore1"></strong><span class="match-player p2" id="matchPlayer1"></span><span class="match-round" id="matchRound"></span></div>
 
+    <section class="tutorial-panel" id="tutorialPanel" aria-label="튜토리얼 안내" hidden>
+      <div class="tutorial-heading"><strong id="tutorialTitle"></strong><span id="tutorialCompletion" class="tutorial-completion" hidden>✓ 연습 완료</span><select id="tutorialLessonSelect" aria-label="연습할 항목"></select></div>
+      <p id="tutorialInstruction"></p>
+      <div class="tutorial-actions"><span id="tutorialObjective" role="status" aria-live="polite"></span><button id="tutorialRetryButton" type="button">다시 연습</button><button id="tutorialNextButton" type="button">다음 연습 →</button></div>
+    </section>
     <section class="game-shell" aria-label="컬링 테이블">
       <canvas id="game" width="1200" height="700" aria-label="Underhanded Curling Club 게임"></canvas>
       <div class="entity-tooltip" id="entityTooltip" role="tooltip" hidden>
@@ -468,14 +512,19 @@
       <div class="overlay" id="startOverlay">
         <div class="dialog">
           <h2>Underhanded Curling Club</h2>
-          <p id="startScreenDescription">플레이 방식을 선택하세요.</p>
-          <div class="start-screen" id="startMenu">
+          <p id="startScreenDescription">한 수 앞선 한 판.</p>
+          <div class="start-screen" id="homeScreen">
+            <div class="home-caps" aria-hidden="true"><img src="병뚜껑 1.png" alt=""><img src="병뚜껑 2.png" alt=""></div>
+            <div class="home-menu"><button class="primary" id="openPlayMenuButton" type="button">게임 시작</button><button id="openTutorialButton" type="button">튜토리얼</button><button id="openCatalogButton" type="button">도감</button></div>
+          </div>
+          <div class="start-screen" id="startMenu" hidden>
             <div class="start-menu-grid">
               <button class="menu-browse" id="browseRoomsButton" type="button">공개 방 찾기</button>
               <button id="openJoinScreenButton" type="button">방 코드 입력하기</button>
               <button class="menu-local" id="openLocalScreenButton" type="button">로컬 2인 플레이</button>
               <button class="menu-online" id="createRoomButton" type="button">온라인 방 만들기</button>
             </div>
+            <button class="home-return" id="playMenuHomeButton" type="button">← 시작 화면으로 돌아가기</button>
           </div>
           <div class="start-screen" id="browseRoomsScreen" hidden>
             <h3>공개 방 찾기</h3>
@@ -580,6 +629,19 @@
   </main>
 
   <div class="connection-notice" id="connectionNotice" role="status" aria-live="polite" hidden></div>
+  <div class="overlay" id="catalogOverlay" hidden>
+    <div class="dialog catalog-dialog" role="dialog" aria-modal="true" aria-labelledby="catalogTitle">
+      <div class="catalog-header"><h2 id="catalogTitle">도감</h2><button id="catalogHomeButton" type="button">← 시작 화면으로 돌아가기</button></div>
+      <div class="catalog-tabs" role="tablist" aria-label="도감 종류"><button id="cardCatalogTab" type="button" role="tab" aria-selected="true" aria-controls="catalogList">카드 도감</button><button id="triggerCatalogTab" type="button" role="tab" aria-selected="false" aria-controls="catalogList">트리거 도감</button></div>
+      <div class="catalog-list" id="catalogList" role="tabpanel" aria-labelledby="cardCatalogTab"></div>
+    </div>
+  </div>
+  <div class="overlay" id="tutorialSettingsOverlay" hidden>
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="tutorialSettingsTitle">
+      <h2 id="tutorialSettingsTitle">튜토리얼 설정</h2>
+      <div class="settings-actions"><button id="tutorialResumeButton" type="button">계속 연습</button><button id="tutorialRestartButton" type="button">현재 연습 다시 시작</button><button id="tutorialHomeButton" type="button">시작 화면으로 돌아가기</button></div>
+    </div>
+  </div>
 
   <div class="overlay trigger-select-overlay" id="triggerSelectOverlay" hidden>
     <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="triggerSelectTitle">
@@ -601,6 +663,11 @@
     (() => {
       const canvas = document.querySelector('#game');
       const ctx = canvas.getContext('2d');
+      const learningUI = Object.fromEntries([
+        'tutorialPanel', 'tutorialTitle', 'tutorialLessonSelect', 'tutorialInstruction', 'tutorialObjective', 'tutorialCompletion',
+        'tutorialSettingsButton', 'tutorialSettingsOverlay', 'tutorialNextButton', 'catalogOverlay', 'catalogList',
+        'cardCatalogTab', 'triggerCatalogTab'
+      ].map(id => [id, document.getElementById(id)]));
       const aimOverlay = document.querySelector('#aimOverlay');
       const aimPath = document.querySelector('#aimPath');
       const aimTip = document.querySelector('#aimTip');
@@ -757,7 +824,7 @@
       const ENTITY_KIND = Object.freeze({ UNIT: 'unit', STRUCTURE: 'structure', TRIGGER: 'trigger' });
       const ITEM_TRIGGERS = [
         { id: 'blackhole', name: '블랙홀 방출', description: '범위 내 유닛을 끌어당깁니다.', color: '#bd75f5', range: BLACK_HOLE.range * 1.35 },
-        { id: 'pulse', name: '방출', description: '넓은 범위의 유닛을 강하게 밀쳐냅니다.', color: '#00d9ff', range: PULSE_RANGE * 1.15 * 1.35, impulse: PULSE_IMPULSE * 1.35 },
+        { id: 'pulse', name: '방출', description: '획득 후 유닛에 부딪히거나 0.5초가 지나면 넓은 범위의 유닛을 강하게 밀쳐냅니다.', color: '#00d9ff', range: PULSE_RANGE * 1.15 * 1.35, impulse: PULSE_IMPULSE * 1.35 },
         { id: 'hardening', name: '경질화', description: '중첩할 때마다 마찰력이 3배씩 곱해집니다.', color: '#aeb8bc' },
         { id: 'guard', name: '방호벽', description: '중첩하면 위성체가 최대 네 개까지 늘어납니다.', color: '#f1b66e' }
       ];
@@ -772,18 +839,51 @@
       ];
       const CARD_DESCRIPTIONS = {
         hardening: '병뚜껑의 마찰력이 3배가 됩니다. 같은 카드 효과는 중첩되어 마찰력과 회색 코팅이 더 강해집니다.',
-        guard: '병뚜껑 주위를 도는 위성 방호벽 2개를 추가합니다. 최대 4개까지 중첩되며 충돌로 유닛을 밀어냅니다.',
-        pulse: '사용한 병뚜껑이 4초마다 충격파를 발산해 주변의 다른 병뚜껑과 벽돌을 밀쳐냅니다. 발동 직전 병뚜껑이 빛나며 시점을 알려줍니다.',
-        reposition: '필드에 있는 자신의 병뚜껑을 한 번 더 당겨 발사합니다. 재발사한 병뚜껑이 멈추거나 떨어지면 효과가 끝납니다.',
+        guard: '병뚜껑 주위를 도는 위성 방호벽 2개를 추가합니다. 최대 4개까지 중첩되며 충돌로 유닛을 밀어냅니다. 위성체가 지나가는 위치와 타이밍을 확인하세요. 1번 더 중첩해서 사용하면 위성체가 두 방향을 방어합니다.',
+        pulse: '사용한 병뚜껑이 4초마다 충격파를 발산해 주변의 다른 병뚜껑과 벽돌을 밀쳐냅니다. 발동 직전 병뚜껑이 빛나며 시점을 알려줍니다. 상대 가까이에 멈춘 뒤 사용하면 4초마다 밀어낼 수 있습니다.',
+        reposition: '필드에 있는 자신의 병뚜껑을 한 번 더 당겨 발사할 수 있게됩니다.',
         brick: '시작선에서 충분히 떨어진 곳에 움직일 수 있는 벽돌 유닛을 배치합니다.',
         blackhole: '즉시 주변의 다른 병뚜껑과 벽돌을 끌어당깁니다.',
-        ammo: '자신의 병뚜껑에서 크기 25%, 속도 300%인 총탄을 한 번 발사합니다. 당김 저항과 떨림 없이 조준합니다. 총탄은 마찰을 무시하고, 유닛 충돌 시 소멸하며 벽돌은 파괴하고 구조물 맵의 벽에는 도탄됩니다.'
+        ammo: '자신의 병뚜껑에 사용하면 해당 병뚜껑을 드래그하여 총알을 발사할 수 있습니다. 총알은 강한 충돌 판정을 가지며 방호벽과 벽돌을 파괴합니다.'
       };
       const TURN_LIMIT_MS = 30_000;
       const UNIT_EFFECTS = Object.freeze({
         hardening: { maxStacks: Infinity, frictionPerStack: 3 },
         guard: { maxStacks: 2, satellitesPerStack: 2 }
       });
+      const LEARNING_DETAILS = {
+        hardening: { color: '#aeb8bc', tip: '목표 지점에 도착한 병뚜껑에 쓰면 위치를 지키기 좋습니다. 발사 전에 쓰면 이동 거리가 크게 줄어듭니다.' },
+        guard: { color: '#f1b66e', tip: '위성체 위치와 회전 타이밍을 살펴 병뚜껑을 효과적으로 보호하세요.' },
+        pulse: { color: '#00d9ff', tip: '상대 가까이에 멈춘 뒤 사용하면 4초마다 밀어낼 수 있습니다. 아군과 벽돌도 밀리므로 거리를 확인하세요.' },
+        reposition: { color: '#79dfc2', tip: '점수가 낮은 병뚜껑을 구하거나 다른 방향에서 공격할 수 있습니다. 재발사가 끝날 때까지 총알 장전과 함께 사용할 수 없습니다.' },
+        brick: { color: '#c3d0ce', tip: '왼쪽 배치 가능 구역에서 경로를 막거나 충돌 각도를 만드세요. 벽돌도 밀려나고 총탄에 파괴됩니다. 점수는 없습니다.' },
+        blackhole: { color: '#bd75f5', tip: '주변 아군도 함께 끌려옵니다. 시전한 병뚜껑은 잠시 유체 상태가 되어 다른 병뚜껑이 통과합니다.' },
+        ammo: { color: '#ffe58a', tip: '빠른 총탄으로 방호벽 위성체나 벽돌을 제거하세요. 총탄은 마찰을 무시하며 구조물 맵의 벽에서 도탄됩니다.' }
+      };
+
+      // Card and trigger lessons/catalog entries follow the gameplay registries automatically.
+      function cardDefinitions() { return [...new Map(CARDS.map(card => [card.id, card])).values()]; }
+      function tutorialLessons() {
+        return [
+          { id: 'launch', title: '발사와 힘 조절', text: '파란 병뚜껑을 오른쪽으로 당겼다가 놓으면 왼쪽으로 발사됩니다. 길게 당길수록 강하게 발사되며, 상한선에 가까워지면 저항과 떨림이 생깁니다.', objective: '파란 병뚜껑을 발사하세요.', event: 'launch' },
+          { id: 'score', title: '거리 점수와 낙사', text: '왼쪽 끝선에 가까울수록 높은 점수입니다. 짧게 당겨 안전하게 멈춰보세요. 네 방향 어디로든 테이블 밖으로 나가면 해당 병뚜껑의 거리 점수는 사라집니다.', objective: '병뚜껑을 테이블 위에 멈추세요.', event: 'rest' },
+          { id: 'collision', title: '상대 밀어내기', text: '빨간 병뚜껑을 맞혀 위치를 바꿔보세요. 정면 충돌과 비스듬한 충돌의 결과가 다릅니다. 자신의 턴에 상대가 떨어지면 25점을 얻습니다.', objective: '빨간 병뚜껑과 충돌하세요.', event: 'collision', targets: true },
+          { id: 'turn', title: '턴과 타이머', text: '턴마다 30초가 주어집니다. 시간이 끝나면 이 연습에서는 턴을 넘기지 않고 타이머만 다시 시작합니다. 병뚜껑을 발사하고 완전히 멈춘 다음 아래의 강조된 턴 종료 버튼을 눌러야 턴이 끝납니다.', objective: '발사한 병뚜껑이 멈추면 강조된 턴 종료 버튼을 누르세요.', event: 'end-turn', timed: true },
+          ...cardDefinitions().map(card => ({ id: `card-${card.id}`, title: `${card.name} 카드`, kind: 'card', elementId: card.id,
+            text: `${CARD_DESCRIPTIONS[card.id] || card.name} ${LEARNING_DETAILS[card.id]?.tip || ''}`,
+            objective: card.id === 'brick' ? '구조물 투하 카드를 왼쪽 테이블에 놓으세요.' : ['ammo', 'reposition'].includes(card.id) ? '카드를 파란 병뚜껑에 놓고 다시 당겨 발사하세요.' : ['hardening', 'guard'].includes(card.id) ? '같은 카드를 두 번 사용해 중첩을 확인하세요.' : '카드를 파란 병뚜껑에 드래그해 사용하세요.',
+            event: card.id === 'ammo' ? 'ammo' : card.id === 'reposition' ? 'launch' : 'card', targets: true,
+            requiredUses: ['hardening', 'guard'].includes(card.id) ? 2 : 1 })),
+          { id: 'speed-card', title: '게임 속도 조절', kind: 'speed-card', elementId: 'blackhole', cardId: 'blackhole', targets: true,
+            text: '우측 상단의 속도 버튼으로 게임 속도를 바꿔보세요. 병뚜껑을 발사한 뒤 움직이는 동안에도 카드를 병뚜껑에 드래그해 사용할 수 있습니다. 발사 도중 블랙홀 방출 카드를 사용해 보세요.',
+            objective: '속도를 한 번 바꾸고, 발사 도중 블랙홀 방출 카드를 사용해 보세요.', event: 'speed-card' },
+          ...ITEM_TRIGGERS.map(trigger => ({ id: `trigger-${trigger.id}`, title: `${trigger.name} 트리거`, kind: 'trigger', elementId: trigger.id,
+            text: `${trigger.description} 트리거는 병뚜껑에 닿으면 소모되어 효과를 부여하는 아이템입니다.`, objective: '발사해 앞에 놓인 트리거를 획득하세요.', event: 'trigger', targets: true })),
+          { id: 'placement', title: '나만의 트리거 배치', text: '각 플레이어는 게임당 한 번 트리거를 설치할 수 있습니다. 하단의 트리거 배치를 왼쪽 구역으로 끌어놓고 종류를 고르세요. 시작 위치에서 35% 이상 지난 곳에만 놓을 수 있으며 유닛이나 구조물 옆은 피해야 합니다.', objective: '트리거를 직접 배치하세요.', event: 'placement' },
+          { id: 'ice', title: '얼음판의 이동 거리', mapId: 'ice', text: '얼음판은 마찰력이 낮아 같은 힘으로도 더 멀리 갑니다. 힘을 줄여 발사하고 경질화로 이동 거리를 조절해보세요.', objective: '얼음판에서 병뚜껑을 발사하세요.', event: 'launch', cardId: 'hardening' },
+          { id: 'walls', title: '움직이는 구조물', mapId: 'moving-walls', text: '구조물은 정해진 경로를 왕복합니다. 벽의 위치와 진행 방향을 보며 발사 시점을 고르세요. 벽 자체는 밀려나지 않고 총탄은 벽에 튕깁니다.', objective: '움직이는 벽 사이로 발사하세요.', event: 'launch' }
+        ];
+      }
       const MAPS = [
         { id: 'classic', name: '기본 맵', description: '적당한 마찰력의 표준 테이블', friction: 0.020625, color: '#1f7770', walls: false },
         { id: 'ice', name: '얼음판 맵', description: '낮은 마찰력으로 더 길게 미끄러집니다', friction: 0.007115625, color: '#8edaf2', walls: false },
@@ -802,6 +902,7 @@
       });
 
       const state = {
+        tutorial: null,
         units: [],
         bricks: [],
         bullets: [],
@@ -876,6 +977,228 @@
 
       function updateDeviceLayout() {
         document.body.dataset.device = mobileLayoutQuery.matches ? 'mobile' : 'desktop';
+      }
+
+      function clearPracticeBoard() {
+        clearTimeout(state.cardDrawTimer);
+        state.cardDrawTimer = null;
+        cancelCardDrag();
+        if (localAimPointerId !== null && canvas.hasPointerCapture?.(localAimPointerId)) canvas.releasePointerCapture(localAimPointerId);
+        localAimPointerId = null;
+        onlineInterpolation = null;
+        onlineLastSnapshotAt = null;
+        Object.assign(state, { units: [], bricks: [], bullets: [], triggers: [], particles: [], effects: [],
+          hands: [[], []], deck: [], fallPoints: [0, 0], triggerPlacementUsed: [false, false],
+          aiming: false, aimPoint: null, aimTension: 0, repositionUnit: null, repositionMode: null,
+          pendingTriggerPlacement: null, selectedTriggerType: null, phaseBeforeTriggerSelect: null,
+          turnDeadline: null, timerTurn: -1, mapTime: 0 });
+        turns.reset();
+        for (const overlay of [resultOverlay, mapSelectOverlay, dealOverlay, triggerSelectOverlay,
+          publicRoomPasswordOverlay, learningUI.catalogOverlay, learningUI.tutorialSettingsOverlay]) overlay.hidden = true;
+        entityTooltip.hidden = true;
+        turnTimer.hidden = true;
+        aimOverlay.style.display = 'none';
+        document.body.classList.remove('timer-flash');
+      }
+
+      function returnToHome() {
+        const previous = state.tutorial?.previous;
+        clearPracticeBoard();
+        state.tutorial = null;
+        state.phase = 'intro';
+        document.body.dataset.tutorial = 'false';
+        learningUI.tutorialPanel.hidden = true;
+        learningUI.tutorialSettingsButton.hidden = true;
+        if (previous) {
+          PLAYER.forEach((player, index) => { player.name = previous.names[index]; });
+          setSpeedLevel(previous.speedLevel);
+          state.currentMap = previous.map;
+        }
+        updatePlayerNames();
+        renderHands();
+        updateHud();
+        panels.forEach(panel => panel.classList.remove('current'));
+        handPanels.forEach(panel => panel.classList.remove('current'));
+        turnText.textContent = '게임 시작 대기';
+        mapIndicator.textContent = '맵 선택 대기';
+        startOverlay.hidden = false;
+        showStartScreen('homeScreen');
+        document.querySelector('#openPlayMenuButton').focus();
+      }
+
+      function startTutorial() {
+        state.tutorial = { previous: { names: PLAYER.map(player => player.name), speedLevel: state.speedLevel, map: state.currentMap } };
+        PLAYER[0].name = '연습 플레이어';
+        PLAYER[1].name = '연습 상대';
+        updatePlayerNames();
+        learningUI.tutorialLessonSelect.replaceChildren(...tutorialLessons().map((lesson, index) => {
+          const option = document.createElement('option');
+          option.value = String(index);
+          option.textContent = `${index + 1}. ${lesson.title}`;
+          return option;
+        }));
+        initializeAudio();
+        startMusic();
+        setSpeedLevel(1);
+        loadTutorialLesson(0);
+      }
+
+      function loadTutorialLesson(index) {
+        const lessons = tutorialLessons();
+        const lesson = lessons[index];
+        if (!state.tutorial || !lesson) return;
+        clearPracticeBoard();
+        Object.assign(state.tutorial, { index, lesson, complete: false, speedChanged: false, launched: false,
+          usedCardInFlight: false, promptedEndTurn: false, uses: 0, highlightKey: null });
+        document.body.dataset.tutorial = 'true';
+        startOverlay.hidden = true;
+        learningUI.tutorialPanel.hidden = false;
+        learningUI.tutorialSettingsButton.hidden = false;
+        state.currentMap = MAPS.find(map => map.id === lesson.mapId) || MAPS[0];
+        state.phase = 'aiming';
+        const unit = turns.createCurrentUnit();
+        if (lesson.kind === 'card' && lesson.elementId !== 'brick') {
+          unit.x = 860;
+          unit.previousX = unit.x;
+          unit.status = 'resting';
+          unit.hasLaunched = true;
+          state.phase = 'turn-ready';
+        }
+        const cardId = lesson.kind === 'card' ? lesson.elementId : lesson.cardId;
+        if (cardId) {
+          const card = cardDefinitions().find(item => item.id === cardId);
+          const copies = lesson.requiredUses || 1;
+          if (card) state.hands[0] = Array.from({ length: copies }, (_, copy) => ({ ...card, instanceId: `practice-${card.id}-${copy}` }));
+        }
+        if (lesson.targets) {
+          const target = new CurlingUnit({ id: 'practice-target', owner: 1, turnNumber: 1,
+            x: lesson.kind === 'card' ? 740 : 550, y: 355 });
+          target.status = 'resting';
+          target.hasLaunched = true;
+          state.units.push(target);
+        }
+        if (lesson.kind === 'trigger') {
+          const type = ITEM_TRIGGERS.find(item => item.id === lesson.elementId);
+          state.triggers.push({ entityKind: ENTITY_KIND.TRIGGER, id: `practice-${type.id}`, type,
+            x: 680, y: 355, radius: CONFIG.unitRadius * .5 });
+        }
+        learningUI.tutorialLessonSelect.value = String(index);
+        learningUI.tutorialCompletion.hidden = true;
+        learningUI.tutorialCompletion.classList.remove('visible');
+        learningUI.tutorialTitle.textContent = `${index + 1} / ${lessons.length} · ${lesson.title}`;
+        learningUI.tutorialInstruction.textContent = lesson.text;
+        learningUI.tutorialObjective.textContent = lesson.objective;
+        learningUI.tutorialNextButton.textContent = index === lessons.length - 1 ? '연습 마치기' : '다음 연습 →';
+        mapIndicator.textContent = `튜토리얼 · ${state.currentMap.name}`;
+        renderHands();
+        startTurnTimer();
+        updateHud();
+      }
+
+      function recordTutorialEvent(event, elementId) {
+        const tutorial = state.tutorial;
+        if (!tutorial || tutorial.complete) return;
+        if (tutorial.lesson.id === 'speed-card') {
+          if (!['speed', 'launch', 'card'].includes(event)) return;
+          if (event === 'speed') tutorial.speedChanged = true;
+          if (event === 'launch') tutorial.launched = true;
+          if (event === 'card' && elementId === 'blackhole' && state.phase === 'sliding') tutorial.usedCardInFlight = true;
+          if (!(tutorial.speedChanged && tutorial.launched && tutorial.usedCardInFlight)) {
+            const remaining = [!tutorial.speedChanged && '속도를 바꾸고', !tutorial.launched && '병뚜껑을 발사하고', !tutorial.usedCardInFlight && '움직이는 중에 블랙홀 방출 카드를 사용하세요'].filter(Boolean);
+            learningUI.tutorialObjective.textContent = remaining.join(' · ');
+            return;
+          }
+        } else {
+          if (tutorial.lesson.event !== event) return;
+          if (['card', 'trigger'].includes(event) && tutorial.lesson.elementId !== elementId) return;
+          if (event === 'card') {
+            tutorial.uses = (tutorial.uses || 0) + 1;
+            const needed = tutorial.lesson.requiredUses || 1;
+            if (tutorial.uses < needed) {
+              learningUI.tutorialObjective.textContent = `한 번 더 사용하세요. (${tutorial.uses}/${needed})`;
+              return;
+            }
+          }
+        }
+        tutorial.complete = true;
+        if (tutorial.lesson.timed) state.turnDeadline = null;
+        learningUI.tutorialObjective.textContent = '완료! 다시 연습하거나 다음 항목으로 이동하세요.';
+        learningUI.tutorialCompletion.hidden = false;
+        learningUI.tutorialCompletion.classList.remove('visible');
+        void learningUI.tutorialCompletion.offsetWidth;
+        learningUI.tutorialCompletion.classList.add('visible');
+        document.body.classList.remove('timer-flash');
+        playSound('connected');
+      }
+
+      function drawCatalogArt(surface, entry, isTrigger) {
+        const painter = surface.getContext('2d');
+        const color = entry.color || LEARNING_DETAILS[entry.id]?.color || '#65d6bd';
+        painter.fillStyle = '#102427';
+        painter.fillRect(0, 0, 192, 144);
+        const circle = (x, y, r, fill) => {
+          painter.beginPath(); painter.arc(x, y, r, 0, Math.PI * 2);
+          painter.fillStyle = fill; painter.fill();
+        };
+        if (isTrigger) {
+          circle(96, 72, 48, `${color}33`);
+          circle(96, 72, 28, color);
+          circle(96, 72, 23, '#17302f');
+          circle(96, 72, 4, color);
+          return;
+        }
+        circle(96, 72, 30, PLAYER[0].color);
+        const image = images[0];
+        if (image.complete && image.naturalWidth) painter.drawImage(image, 68, 44, 56, 56);
+        if (entry.id === 'hardening') circle(96, 72, 28, '#aeb8bc99');
+        if (entry.id === 'guard') { circle(96, 23, 12, color); circle(96, 121, 12, color); }
+        if (['pulse', 'blackhole'].includes(entry.id)) {
+          painter.strokeStyle = color; painter.lineWidth = 4;
+          [42, 55].forEach(r => { painter.beginPath(); painter.arc(96, 72, r, 0, Math.PI * 2); painter.stroke(); });
+          if (entry.id === 'blackhole') circle(96, 72, 16, '#170b24');
+        }
+        if (entry.id === 'brick') { painter.fillStyle = color; painter.fillRect(43, 38, 18, 68); }
+        if (entry.id === 'ammo') { circle(35, 72, 8, color); painter.fillStyle = color; painter.fillRect(45, 70, 18, 4); }
+        if (entry.id === 'reposition') {
+          painter.strokeStyle = color; painter.lineWidth = 3; painter.setLineDash([5, 4]);
+          painter.beginPath(); painter.moveTo(16, 72); painter.lineTo(62, 72); painter.stroke();
+        }
+      }
+
+      function renderCatalog(category = 'cards') {
+        const isTrigger = category === 'triggers';
+        const definitions = isTrigger ? ITEM_TRIGGERS : cardDefinitions();
+        learningUI.cardCatalogTab.setAttribute('aria-selected', String(!isTrigger));
+        learningUI.triggerCatalogTab.setAttribute('aria-selected', String(isTrigger));
+        learningUI.cardCatalogTab.tabIndex = isTrigger ? -1 : 0;
+        learningUI.triggerCatalogTab.tabIndex = isTrigger ? 0 : -1;
+        learningUI.catalogList.setAttribute('aria-labelledby', isTrigger ? 'triggerCatalogTab' : 'cardCatalogTab');
+        learningUI.catalogList.replaceChildren(...definitions.map(entry => {
+          const article = document.createElement('article'); article.className = 'catalog-entry';
+          const header = document.createElement('header');
+          const preview = document.createElement('canvas'); preview.width = 192; preview.height = 144;
+          preview.setAttribute('aria-hidden', 'true');
+          const title = document.createElement('h3'); title.textContent = entry.name;
+          header.append(preview, title);
+          const description = document.createElement('p');
+          description.textContent = isTrigger ? getTriggerTooltip({ type: entry }).detail || entry.description : CARD_DESCRIPTIONS[entry.id] || entry.description || entry.name;
+          const tip = document.createElement('p'); tip.className = 'strategy-tip';
+          tip.textContent = isTrigger ? entry.id === 'pulse'
+            ? '닿는 즉시 한 번 발동합니다. 카드의 반복 방출과 달리 획득 타이밍에 맞춰 상대를 밀어내세요.'
+            : LEARNING_DETAILS[entry.id]?.tip || entry.description
+            : LEARNING_DETAILS[entry.id]?.tip || '자신의 턴에 사용합니다.';
+          article.append(header, description, tip);
+          drawCatalogArt(preview, entry, isTrigger);
+          return article;
+        }));
+      }
+
+      function openCatalog() {
+        showStartScreen('homeScreen');
+        startOverlay.hidden = true;
+        learningUI.catalogOverlay.hidden = false;
+        renderCatalog();
+        learningUI.cardCatalogTab.focus();
       }
 
       function showConnectionNotice(message) {
@@ -1043,6 +1366,7 @@
         speedToggle.classList.remove('speed-changed');
         void speedToggle.offsetWidth;
         speedToggle.classList.add('speed-changed');
+        if (state.tutorial?.lesson?.id === 'speed-card') recordTutorialEvent('speed');
         if (announce) {
           playSound('speedChange');
           showConnectionNotice(`게임 속도 ${speedLabel.textContent}`);
@@ -1087,6 +1411,7 @@
           this.activeSpecial = null;
           this.fluidTimer = 0;
           this.fallRewarded = false;
+          this.pendingPulseTriggers = [];
           this.previousX = x;
           this.previousY = y;
         }
@@ -1216,6 +1541,10 @@
       const turns = new TurnManager();
 
       function beginRound() {
+        state.tutorial = null;
+        learningUI.tutorialPanel.hidden = true;
+        learningUI.tutorialSettingsButton.hidden = true;
+        document.body.dataset.tutorial = 'false';
         turns.reset(roundStartingPlayer());
         localAimPointerId = null;
         state.units = [];
@@ -1263,6 +1592,7 @@
       }
 
       function startTurnTimer() {
+        if (state.tutorial && !state.tutorial.lesson?.timed) { state.turnDeadline = null; return; }
         state.turnDeadline = Date.now() + TURN_LIMIT_MS;
         state.timerTurn = turns.globalTurn;
         state.timerTenPlayed = false;
@@ -1301,7 +1631,12 @@
           flashTimerScreen();
         }
         const hostAuthority = !onlineSession?.started || onlineSession.role === 'host';
-        if (remaining <= 0 && hostAuthority) expireCurrentTurn();
+        if (remaining <= 0 && hostAuthority) {
+          if (state.tutorial?.lesson?.timed) {
+            startTurnTimer();
+            playSound('timerWarning');
+          } else expireCurrentTurn();
+        }
       }
 
       function expireCurrentTurn() {
@@ -1385,6 +1720,39 @@
         updateMatchHud();
         if (turns.isComplete) return;
         turnText.textContent = `${PLAYER[turns.playerIndex].name} · ${turns.playerTurn}번째 병뚜껑`;
+        if (state.tutorial) {
+          turnText.textContent = '튜토리얼 · 자유 연습';
+          remainingEls.forEach(element => { element.textContent = '연습'; });
+          if (state.tutorial.complete) actionHint.textContent = '반복해서 연습할 수 있습니다';
+          updateTutorialHighlights();
+        }
+      }
+
+      function updateTutorialHighlights() {
+        const lesson = state.tutorial?.lesson;
+        if (!lesson) return;
+        const unit = turns.currentUnit;
+        const canEndTurn = lesson.timed && unit?.hasLaunched && unit.status === 'resting' && state.phase === 'turn-ready' && state.bullets.length === 0;
+        const key = `${lesson.id}:${state.tutorial.complete}:${canEndTurn}`;
+        if (state.tutorial.highlightKey === key) return;
+        state.tutorial.highlightKey = key;
+        for (const element of [endTurnButton, speedToggle, turnTimer, ...triggerToolButtons]) element.classList.remove('tutorial-highlight');
+        for (const card of handEls.flatMap(hand => [...hand.children])) card.classList.remove('tutorial-highlight');
+        if (state.tutorial.complete) return;
+        const highlightedCard = lesson.elementId || lesson.cardId;
+        if (highlightedCard) {
+          for (const card of handEls[0].children) if (card.dataset.kind === highlightedCard) card.classList.add('tutorial-highlight');
+        }
+        if (lesson.id === 'speed-card') speedToggle.classList.add('tutorial-highlight');
+        if (lesson.timed) turnTimer.classList.add('tutorial-highlight');
+        if (lesson.id === 'placement') triggerToolButtons[0].classList.add('tutorial-highlight');
+        if (canEndTurn) {
+          endTurnButton.classList.add('tutorial-highlight');
+          if (!state.tutorial.promptedEndTurn) {
+            state.tutorial.promptedEndTurn = true;
+            playSound('turn');
+          }
+        }
       }
 
       function updateMatchHud() {
@@ -1431,18 +1799,31 @@
         const unit = state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit;
         if (!unit || !state.aimPoint || !['aiming', 'reposition'].includes(state.phase)) return;
         const launchedFromReposition = state.phase === 'reposition';
-        if (launchedFromReposition && !unit.relaunchAvailable) return;
+        const firingAmmo = state.repositionMode === 'ammo';
+        if (launchedFromReposition && !unit.relaunchAvailable) {
+          state.aiming = false;
+          state.aimPoint = null;
+          state.aimTension = 0;
+          aimOverlay.style.display = 'none';
+          return;
+        }
         let vx = (unit.x - state.aimPoint.x) * CONFIG.launchScale;
         let vy = (unit.y - state.aimPoint.y) * CONFIG.launchScale;
         const speed = Math.hypot(vx, vy);
-        if (speed < 35) return;
-        if (state.repositionMode === 'ammo') {
+        if (speed < 35) {
+          state.aiming = false;
+          state.aimPoint = null;
+          state.aimTension = 0;
+          aimOverlay.style.display = 'none';
+          return;
+        }
+        if (firingAmmo) {
           const bulletSpeed = Math.min(CONFIG.maxLaunchSpeed, speed) * CONFIG.bulletSpeedMultiplier;
           state.bullets.push({
             entityKind: ENTITY_KIND.UNIT, unitKind: 'bullet', id: `bullet-${Date.now()}-${state.bullets.length}`,
             owner: unit.owner, sourceUnitId: unit.id, x: unit.x, y: unit.y,
             vx: vx / speed * bulletSpeed, vy: vy / speed * bulletSpeed,
-            radius: unit.radius * .25, mass: .12
+            radius: unit.radius * .25, mass: .12, outsideTime: 0
           });
           unit.activeSpecial = 'ammo';
           state.repositionMode = null;
@@ -1464,8 +1845,10 @@
         state.aiming = false;
         state.aimPoint = null;
         state.aimTension = 0;
+        aimOverlay.style.display = 'none';
         state.phase = 'sliding';
         if (launchedFromReposition) state.repositionMode = null;
+        recordTutorialEvent(firingAmmo ? 'ammo' : 'launch');
         updateHud();
       }
 
@@ -1509,6 +1892,7 @@
             const relativeVelocity = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
             if (relativeVelocity >= 0) continue;
             const impulse = -(1 + CONFIG.restitution) * relativeVelocity / 2;
+            if (a.owner !== b.owner) recordTutorialEvent('collision');
             playUnitImpactSound(impulse);
             a.vx -= impulse * nx;
             a.vy -= impulse * ny;
@@ -1516,6 +1900,8 @@
             b.vy += impulse * ny;
             if (a.status === 'resting') a.status = 'sliding';
             if (b.status === 'resting') b.status = 'sliding';
+            detonatePendingPulseTriggers(a);
+            detonatePendingPulseTriggers(b);
           }
         }
       }
@@ -1557,6 +1943,7 @@
               unit.vy += impulse * ny;
               brick.vx -= impulse * nx / brick.mass;
               brick.vy -= impulse * ny / brick.mass;
+              detonatePendingPulseTriggers(unit);
             }
             if (unit.status === 'resting' && Math.hypot(unit.vx, unit.vy) > CONFIG.stopSpeed) unit.status = 'sliding';
           }
@@ -1592,8 +1979,10 @@
       function update(dt, timestamp) {
         state.bricks.forEach(brick => brick.update(dt));
         state.units.forEach(unit => unit.update(dt));
+        if (state.triggers.length) collectItemTriggers();
         resolveCollisions();
         resolveBrickCollisions();
+        updatePendingPulseTriggers(dt);
         updateParticles(dt);
         updateEffects(dt);
 
@@ -1601,7 +1990,6 @@
         updateBullets(dt);
         updateAbilityEffects(dt);
         resolveGuardCollisions();
-        if (state.triggers.length) collectItemTriggers();
         const objectsMoving = state.units.some(unit => unit.status === 'sliding') || state.bullets.length > 0 ||
           state.bricks.some(brick => Math.hypot(brick.vx, brick.vy) > 5);
         if (state.phase === 'turn-ready' && objectsMoving) state.phase = 'sliding';
@@ -1617,6 +2005,7 @@
           }
         }
         updateHud();
+        if (turns.currentUnit?.hasLaunched && turns.currentUnit.status === 'resting') recordTutorialEvent('rest');
       }
 
       function useCard(cardId, owner, unit) {
@@ -1655,6 +2044,7 @@
           state.phase = 'reposition';
         }
         emitGameFeedback(['hardening', 'guard'].includes(card.id) ? card.id : 'card', unit, card.name, PLAYER[owner].color);
+        recordTutorialEvent('card', card.id);
         hand.splice(cardIndex, 1);
         renderHands();
         updateHud();
@@ -1697,6 +2087,11 @@
 
       function brickDropLimitX() {
         return TABLE.launchX - (TABLE.launchX - TABLE.left) * 0.35;
+      }
+
+      function tutorialShowsPlacementLimit() {
+        const lesson = state.tutorial?.lesson;
+        return lesson?.id === 'card-brick' || lesson?.id === 'placement' || lesson?.kind === 'trigger';
       }
 
       function canPlaceBrick(point) {
@@ -1793,6 +2188,7 @@
                 const hand = state.hands[drag.owner];
                 hand.splice(hand.findIndex(card => card.instanceId === drag.id), 1);
                 emitGameFeedback('drop', point, '구조물 투하', PLAYER[drag.owner].color);
+                recordTutorialEvent('card', 'brick');
                 renderHands();
                 updateHud();
               }
@@ -1856,6 +2252,21 @@
             life: .32 + Math.random() * .22, size: 4 + Math.random() * 5,
             color: i % 2 ? '#00aaff' : '#00f5ff'
           });
+        }
+      }
+
+      function detonatePendingPulseTriggers(unit) {
+        const pending = unit.pendingPulseTriggers?.splice(0) || [];
+        for (const pulse of pending) triggerPulse(unit, pulse.range, pulse.impulse);
+      }
+
+      function updatePendingPulseTriggers(dt) {
+        for (const unit of state.units) {
+          if (!unit.pendingPulseTriggers?.length) continue;
+          for (const pulse of unit.pendingPulseTriggers) pulse.remaining -= dt;
+          const expired = unit.pendingPulseTriggers.filter(pulse => pulse.remaining <= 1e-9);
+          unit.pendingPulseTriggers = unit.pendingPulseTriggers.filter(pulse => pulse.remaining > 1e-9);
+          for (const pulse of expired) triggerPulse(unit, pulse.range, pulse.impulse);
         }
       }
 
@@ -2006,6 +2417,7 @@
         state.triggerPlacementUsed[pending.owner] = true;
         closeTriggerTypeSelection(true);
         emitGameFeedback('drop', pending, '트리거 배치', PLAYER[pending.owner].color);
+        recordTutorialEvent('placement');
         updateHud();
       }
 
@@ -2031,8 +2443,9 @@
           const index = state.triggers.findIndex(trigger => segmentDistanceSquared(trigger, start, end) <= (trigger.radius + unit.radius) ** 2);
           if (index < 0) continue;
           const [trigger] = state.triggers.splice(index, 1);
+          if (unit.owner === 0) recordTutorialEvent('trigger', trigger.type.id);
           if (trigger.type.id === 'blackhole') triggerBlackHole(unit, trigger.type.range);
-          if (trigger.type.id === 'pulse') triggerPulse(unit, trigger.type.range, trigger.type.impulse);
+          if (trigger.type.id === 'pulse') unit.pendingPulseTriggers.push({ remaining: .5, range: trigger.type.range, impulse: trigger.type.impulse });
           if (UNIT_EFFECTS[trigger.type.id] && applyUnitEffectStack(unit, trigger.type.id)) playSound('card');
           state.effects.push({ type: 'item', x: trigger.x, y: trigger.y, age: 0, duration: .45, color: trigger.type.color });
         }
@@ -2074,7 +2487,9 @@
             const stepDt = dt / steps;
             bullet.x += bullet.vx * stepDt;
             bullet.y += bullet.vy * stepDt;
-            if (bullet.x < TABLE.left || bullet.x > TABLE.right || bullet.y < TABLE.top || bullet.y > TABLE.bottom) {
+            const outside = bullet.x < TABLE.left || bullet.x > TABLE.right || bullet.y < TABLE.top || bullet.y > TABLE.bottom;
+            bullet.outsideTime = outside ? (bullet.outsideTime || 0) + stepDt : 0;
+            if (bullet.outsideTime >= 1) {
               removeBullet(bullet, index);
               consumed = true;
               break;
@@ -2270,6 +2685,11 @@
 
       function endTurn() {
         if (state.phase !== 'turn-ready' || state.bullets.length > 0) return;
+        if (state.tutorial) {
+          if (!turns.currentUnit?.hasLaunched || turns.currentUnit.status !== 'resting') return;
+          recordTutorialEvent('end-turn');
+          return;
+        }
         if (shouldForwardOnlineAction()) {
           sendOnlineAction({ type: 'end-turn' });
           return;
@@ -2339,6 +2759,7 @@
         publicRoomPasswordOverlay.hidden = true;
         startStatus.textContent = '';
         const descriptions = {
+          homeScreen: '한 수 앞선 한 판.',
           startMenu: '플레이 방식을 선택하세요.',
           browseRoomsScreen: '참가할 공개 방을 선택하세요.',
           joinRoomScreen: '닉네임과 초대 코드를 입력하세요.',
@@ -3270,6 +3691,7 @@
             element.className = concealed ? 'ability-card card-back' : 'ability-card usable';
             element.textContent = concealed ? '비공개' : card.name;
             element.dataset.cardId = card.instanceId;
+            element.dataset.kind = card.id;
             element.dataset.owner = String(owner);
             if (!concealed) {
               element.dataset.description = CARD_DESCRIPTIONS[card.id] || '게임에 영향을 주는 능력 카드입니다.';
@@ -3389,6 +3811,23 @@
         ctx.fillRect(TABLE.left - 22, TABLE.top - 22, TABLE.right - TABLE.left + 44, TABLE.bottom - TABLE.top + 44);
         ctx.fillStyle = state.currentMap.color;
         ctx.fillRect(TABLE.left, TABLE.top, TABLE.right - TABLE.left, TABLE.bottom - TABLE.top);
+        if (tutorialShowsPlacementLimit()) {
+          const limitX = brickDropLimitX();
+          ctx.save();
+          ctx.fillStyle = 'rgba(237, 54, 65, .18)';
+          ctx.fillRect(limitX, TABLE.top + 20, TABLE.right - limitX, TABLE.bottom - TABLE.top - 20);
+          const emphasis = .5 + .5 * Math.sin(performance.now() / 360);
+          ctx.strokeStyle = `rgba(255, 91, 96, ${.68 + emphasis * .3})`;
+          ctx.lineWidth = 3 + emphasis * 1.5;
+          ctx.setLineDash([12, 9]);
+          ctx.beginPath(); ctx.moveTo(limitX, TABLE.top); ctx.lineTo(limitX, TABLE.bottom); ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle = '#ffd1cf';
+          ctx.font = '700 13px "Malgun Gothic", sans-serif';
+          ctx.textAlign = 'left';
+          ctx.fillText('배치 불가 · 35%', limitX + 10, TABLE.top + 40);
+          ctx.restore();
+        }
         ctx.fillStyle = '#efd36c';
         ctx.fillRect(TABLE.left, TABLE.top, TABLE.right - TABLE.left, 20);
         ctx.strokeStyle = 'rgba(255,255,255,.55)';
@@ -3420,7 +3859,13 @@
         if (state.currentMap.walls) {
           ctx.fillStyle = '#e3bd62';
           wallSegments().forEach(wall => {
+            if (state.tutorial?.lesson?.id === 'walls') {
+              ctx.save();
+              ctx.shadowColor = '#fff1a8';
+              ctx.shadowBlur = 7 + 5 * (1 + Math.sin(performance.now() / 420));
+            }
             ctx.fillRect(wall.x, wall.y, wall.width, wall.height);
+            if (state.tutorial?.lesson?.id === 'walls') ctx.restore();
             ctx.strokeStyle = 'rgba(35, 27, 12, .55)';
             ctx.lineWidth = 2;
             if (wall.width > wall.height) {
@@ -3501,6 +3946,22 @@
           ctx.shadowBlur = 0;
         }
         ctx.restore();
+        const lesson = state.tutorial?.lesson;
+        const emphasize = lesson && !state.tutorial.complete && (
+          unit === turns.currentUnit || lesson.id === 'collision' && unit.owner === 1
+        );
+        if (emphasize) {
+          const phase = .5 + .5 * Math.sin(performance.now() / 360);
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(unit.x, unit.y, unit.radius + 8 + phase * 4, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(255, 231, 130, ${.55 + phase * .4})`;
+          ctx.lineWidth = 3;
+          ctx.shadowColor = '#ffe782';
+          ctx.shadowBlur = 7 + phase * 12;
+          ctx.stroke();
+          ctx.restore();
+        }
         if (unit.ability?.guard) {
           const satellites = guardSatellites(unit);
           ctx.save();
@@ -3533,6 +3994,10 @@
       function drawBrick(brick, alpha = 1) {
         ctx.save();
         ctx.globalAlpha = alpha;
+        if (state.tutorial?.lesson?.id === 'card-brick' && !state.tutorial.complete) {
+          ctx.shadowColor = '#ffe782';
+          ctx.shadowBlur = 9 + 7 * (1 + Math.sin(performance.now() / 360));
+        }
         ctx.fillStyle = '#59666b';
         ctx.fillRect(brick.x - brick.width / 2, brick.y - brick.height / 2, brick.width, brick.height);
         ctx.strokeStyle = '#c3d0ce';
@@ -3776,7 +4241,7 @@
           hardening: '경질화 · 중첩할 때마다 마찰력이 3배씩 곱해집니다.',
           guard: '방호벽 · 중첩하면 위성체가 최대 네 개까지 늘어납니다.'
         };
-        return { title: `${trigger.type.name} 트리거`, detail: descriptions[trigger.type.id] };
+        return { title: `${trigger.type.name} 트리거`, detail: `트리거는 병뚜껑에 닿으면 즉시 발동되며 소모되는 아이템입니다. ${descriptions[trigger.type.id]}` };
       }
 
       function updateEntityTooltip(event) {
@@ -3797,7 +4262,12 @@
             content: getTriggerTooltip(trigger)
           }))
         ].filter(candidate => candidate.distance <= candidate.radius).sort((a, b) => a.distance - b.distance);
-        const target = candidates[0];
+        const restricted = tutorialShowsPlacementLimit() && point.x >= brickDropLimitX() && point.x <= TABLE.right &&
+          point.y >= TABLE.top && point.y <= TABLE.bottom;
+        const target = candidates[0] || (restricted ? { content: {
+          title: '배치 제한 구역',
+          detail: '발사선에서 35% 지점까지는 구조물과 트리거를 배치할 수 없습니다.'
+        } } : null);
         if (!target) {
           entityTooltip.hidden = true;
           return;
@@ -3825,6 +4295,16 @@
           ctx.fillStyle = type.color;
           ctx.fill();
           ctx.restore();
+          if (state.tutorial?.lesson?.id === `trigger-${type.id}` && !state.tutorial.complete) {
+            ctx.beginPath();
+            ctx.arc(x, y, radius * (2.1 + .2 * Math.sin(performance.now() / 300)), 0, Math.PI * 2);
+            ctx.strokeStyle = type.color;
+            ctx.lineWidth = 3;
+            ctx.shadowColor = type.color;
+            ctx.shadowBlur = 14;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+          }
           drawTriggerToken(x, y, radius, type, { scale: pulse });
         }
       }
@@ -3856,7 +4336,8 @@
         const onlineReplica = onlineSession?.started && onlineSession.role === 'challenger';
         if (onlineReplica) updateOnlineInterpolation(timestamp);
         if (state.aiming && state.repositionMode !== 'ammo' && (!onlineReplica || localAimPointerId !== null) && state.aimTension >= .75) playSound('strainRumble', state.aimTension);
-        if (!onlineReplica && !['intro', 'map-select', 'dealing', 'trigger-select', 'finished'].includes(state.phase)) update(dt, timestamp);
+        const tutorialPaused = state.tutorial && !learningUI.tutorialSettingsOverlay.hidden;
+        if (!onlineReplica && !tutorialPaused && !['intro', 'map-select', 'dealing', 'trigger-select', 'finished'].includes(state.phase)) update(dt, timestamp);
         if (!onlineReplica && state.phase === 'finished') {
           updateParticles(dt);
           updateEffects(dt);
@@ -3920,6 +4401,55 @@
         state.aimTension = 0;
       });
 
+      document.querySelector('#openPlayMenuButton').addEventListener('click', () => showStartScreen('startMenu'));
+      document.querySelector('#openTutorialButton').addEventListener('click', startTutorial);
+      document.querySelector('#openCatalogButton').addEventListener('click', openCatalog);
+      for (const id of ['playMenuHomeButton', 'catalogHomeButton', 'tutorialHomeButton']) {
+        document.getElementById(id).addEventListener('click', returnToHome);
+      }
+      learningUI.cardCatalogTab.addEventListener('click', () => renderCatalog('cards'));
+      learningUI.triggerCatalogTab.addEventListener('click', () => renderCatalog('triggers'));
+      for (const tab of [learningUI.cardCatalogTab, learningUI.triggerCatalogTab]) {
+        tab.addEventListener('keydown', event => {
+          if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+          event.preventDefault();
+          const other = tab === learningUI.cardCatalogTab ? learningUI.triggerCatalogTab : learningUI.cardCatalogTab;
+          renderCatalog(other === learningUI.cardCatalogTab ? 'cards' : 'triggers');
+          other.focus();
+        });
+      }
+      learningUI.tutorialLessonSelect.addEventListener('change', event => loadTutorialLesson(Number(event.target.value)));
+      for (const id of ['tutorialRetryButton', 'tutorialRestartButton']) {
+        document.getElementById(id).addEventListener('click', () => {
+          if (state.tutorial) loadTutorialLesson(state.tutorial.index);
+        });
+      }
+      learningUI.tutorialNextButton.addEventListener('click', () => {
+        if (!state.tutorial) return;
+        if (state.tutorial.index === tutorialLessons().length - 1) returnToHome();
+        else loadTutorialLesson(state.tutorial.index + 1);
+      });
+      learningUI.tutorialSettingsButton.addEventListener('click', () => {
+        if (!state.tutorial) return;
+        cancelCardDrag();
+        localAimPointerId = null;
+        state.aiming = false;
+        state.aimPoint = null;
+        learningUI.tutorialSettingsOverlay.hidden = false;
+        document.querySelector('#tutorialResumeButton').focus();
+      });
+      document.querySelector('#tutorialResumeButton').addEventListener('click', () => {
+        learningUI.tutorialSettingsOverlay.hidden = true;
+        learningUI.tutorialSettingsButton.focus();
+      });
+      document.addEventListener('keydown', event => {
+        if (event.key !== 'Escape') return;
+        if (!learningUI.catalogOverlay.hidden) returnToHome();
+        else if (state.tutorial && !learningUI.tutorialSettingsOverlay.hidden) {
+          learningUI.tutorialSettingsOverlay.hidden = true;
+          learningUI.tutorialSettingsButton.focus();
+        }
+      });
       startButton.addEventListener('click', startLocalGame);
       browseRoomsButton.addEventListener('click', () => {
         showStartScreen('browseRoomsScreen');
