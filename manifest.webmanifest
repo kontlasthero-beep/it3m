@@ -2,7 +2,7 @@
   "id": "./",
   "name": "Underhanded Curling Club",
   "short_name": "Underhanded Curling Club",
-  "description": "두 플레이어가 병뚜껑과 카드로 겨루는 턴제 컬링 게임",
+  "description": "두 플레이어가 스톤과 카드로 겨루는 턴제 컬링 게임",
   "lang": "ko-KR",
   "start_url": "./index.html",
   "scope": "./",

@@ -130,6 +130,7 @@
     .player-panel.p1 { border-left: 5px solid var(--p1); }
     .player-panel.p2 { border-left: 5px solid var(--p2); }
     .player-label { color: var(--muted); font-size: 13px; }
+    .hero-badge { display: inline-block; margin-top: 5px; color: #8fe3d0; font-size: 12px; }
     .player-score { margin-top: 4px; font-size: 21px; font-weight: 800; }
 
     .game-shell {
@@ -306,6 +307,20 @@
     .map-option strong { margin-bottom: 3px; font-size: 14px; }
     .map-option span { color: var(--muted); font-size: 11px; line-height: 1.4; }
     .map-actions { display: flex; justify-content: center; gap: 9px; }
+    .hero-dialog { width: min(760px, 100%); text-align: left; }
+    .hero-selection-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 12px 0; color: var(--muted); font-size: 14px; }
+    .hero-selection-meta strong { color: var(--accent); font-variant-numeric: tabular-nums; font-size: 20px; }
+    .hero-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .hero-option { display: flex; flex-direction: column; min-width: 0; padding: 0; overflow: hidden; border-color: #5d7874; background: #111b1d; text-align: left; }
+    .hero-option:hover, .hero-option:focus-visible { border-color: #8ce6cf; background: #1d3331; }
+    .hero-option.selected { border-color: #f3d487; background: #2b3831; animation: hero-selected .55s ease-out both; }
+    .hero-option:disabled { cursor: default; }
+    .hero-portrait { display: block; width: 100%; height: clamp(150px, 23dvh, 216px); object-fit: cover; object-position: center top; }
+    .hero-option-copy { display: grid; align-content: start; gap: 6px; padding: 12px 13px 14px; }
+    .hero-option-name { font-size: 19px; font-weight: 800; line-height: 1.2; }
+    .hero-option-detail { color: #c6d9d4; font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }
+    .hero-selection-status { min-height: 22px; color: #f3d487; font-size: 13px; }
+    @keyframes hero-selected { 40% { transform: scale(1.04); box-shadow: 0 0 0 5px rgba(243, 212, 135, .25); } 100% { transform: scale(1); box-shadow: none; } }
     .hands { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
     .hand-panel { min-width: 0; padding: 10px; border: 1px solid var(--line); border-radius: 5px; background: var(--panel); }
     .hand-panel.current { border-color: var(--accent); }
@@ -336,8 +351,8 @@
     .trigger-type-option strong, .trigger-type-option span { display: block; }
     .trigger-type-option span { margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 1.4; white-space: normal; }
 
-    .home-caps { display: flex; justify-content: center; gap: 18px; margin: 14px 0 22px; }
-    .home-caps img { width: 66px; height: 66px; border-radius: 50%; object-fit: cover; }
+    .home-stones { display: flex; justify-content: center; gap: 18px; margin: 14px 0 22px; }
+    .home-stones img { width: 66px; height: 66px; border-radius: 50%; object-fit: cover; }
     .home-menu { display: grid; gap: 10px; }
     .home-menu button { min-height: 52px; font-size: 17px; }
     .home-return { width: 100%; margin-top: 16px; }
@@ -348,10 +363,13 @@
     .catalog-header h2 { margin: 0; }
     .catalog-tabs { display: flex; gap: 6px; margin: 18px 0; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
     .catalog-tabs button[aria-selected="true"] { border-color: #65d6bd; background: #247667; }
+    .catalog-tabs { flex-wrap: wrap; }
     .catalog-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
     .catalog-entry { border: 1px solid var(--line); border-radius: 5px; padding: 14px; min-width: 0; }
     .catalog-entry header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
     .catalog-entry canvas { width: 96px; height: 72px; flex: 0 0 96px; touch-action: auto; }
+    .catalog-entry.hero-catalog-entry header { display: block; }
+    .catalog-entry .catalog-portrait { display: block; width: 100%; height: clamp(160px, 20vw, 230px); margin-bottom: 10px; border: 1px solid var(--line); border-radius: 3px; object-fit: cover; object-position: center top; }
     .catalog-entry h3 { margin: 0; font-size: 17px; overflow-wrap: anywhere; }
     .catalog-entry p { font-size: 13px; margin: 8px 0 0; overflow-wrap: anywhere; }
     .catalog-entry .strategy-tip { color: #b7e3d4; }
@@ -369,8 +387,27 @@
     .tutorial-highlight { position: relative; z-index: 2; animation: tutorial-highlight-pulse 1.7s ease-in-out infinite; }
     @keyframes tutorial-highlight-pulse { 50% { filter: brightness(1.55) drop-shadow(0 0 8px rgba(255, 225, 117, .9)); box-shadow: 0 0 0 3px rgba(255, 225, 117, .5); } }
     .settings-actions { display: grid; gap: 10px; }
-    @media (max-width: 600px) { .catalog-list { grid-template-columns: 1fr; } .catalog-header { flex-wrap: wrap; } }
+    @media (max-width: 600px) {
+      .catalog-list, .hero-options { grid-template-columns: 1fr; }
+      .catalog-header { flex-wrap: wrap; }
+      .hero-option { display: grid; grid-template-columns: clamp(90px, 26vw, 112px) minmax(0, 1fr); }
+      .hero-portrait { height: 100%; min-height: 112px; }
+      .hero-option-copy { padding: 10px; }
+      .hero-option-name { font-size: 16px; }
+      .hero-option-detail { font-size: 12px; }
+    }
     @media (orientation: landscape) and (max-height: 560px) { .tutorial-panel { padding: 6px 0; } .tutorial-panel p { font-size: 12px; } }
+    @media (orientation: landscape) and (max-height: 560px) {
+      .hero-dialog { padding: 14px; }
+      .hero-dialog h2 { font-size: 20px; }
+      .hero-selection-meta { margin: 6px 0; }
+      .hero-options { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+      .hero-option { display: grid; grid-template-columns: min(12vw, 88px) minmax(0, 1fr); }
+      .hero-portrait { height: 100%; min-height: 100px; }
+      .hero-option-copy { padding: 8px; }
+      .hero-option-name { font-size: 15px; }
+      .hero-option-detail { font-size: 11px; line-height: 1.3; }
+    }
 
     @media (max-width: 700px), (pointer: coarse) {
       body[data-device="mobile"] { overflow-x: hidden; }
@@ -488,11 +525,13 @@
 
     <section class="scoreboard" aria-label="점수판">
       <div class="player-panel p1" id="panel0">
-        <div class="player-label">플레이어 1 · 병뚜껑 4개</div>
+        <div class="player-label">플레이어 1 · 스톤 4개</div>
+        <span class="hero-badge" id="heroBadge0" hidden></span>
         <div class="player-score" id="score0">거리 0 · 점수 0</div>
       </div>
       <div class="player-panel p2" id="panel1">
-        <div class="player-label">플레이어 2 · 병뚜껑 4개</div>
+        <div class="player-label">플레이어 2 · 스톤 4개</div>
+        <span class="hero-badge" id="heroBadge1" hidden></span>
         <div class="player-score" id="score1">거리 0 · 점수 0</div>
       </div>
     </section>
@@ -514,7 +553,7 @@
           <h2>Underhanded Curling Club</h2>
           <p id="startScreenDescription">한 수 앞선 한 판.</p>
           <div class="start-screen" id="homeScreen">
-            <div class="home-caps" aria-hidden="true"><img src="병뚜껑 1.png" alt=""><img src="병뚜껑 2.png" alt=""></div>
+            <div class="home-stones" aria-hidden="true"><img src="stone-blue.png" alt=""><img src="stone-red.png" alt=""></div>
             <div class="home-menu"><button class="primary" id="openPlayMenuButton" type="button">게임 시작</button><button id="openTutorialButton" type="button">튜토리얼</button><button id="openCatalogButton" type="button">도감</button></div>
           </div>
           <div class="start-screen" id="startMenu" hidden>
@@ -592,8 +631,16 @@
           <div class="map-options" id="mapOptions" role="radiogroup" aria-label="플레이 맵 선택"></div>
           <div class="map-actions">
             <button id="cancelMapButton">취소</button>
-            <button class="primary" id="confirmMapButton">선택한 맵으로 시작</button>
+            <button class="primary" id="confirmMapButton">이 맵 확정</button>
           </div>
+        </div>
+      </div>
+      <div class="overlay" id="heroSelectOverlay" hidden>
+        <div class="dialog hero-dialog" role="dialog" aria-modal="true" aria-labelledby="heroSelectTitle">
+          <h2 id="heroSelectTitle">영웅 능력 선택</h2>
+          <div class="hero-selection-meta"><span id="heroSelectPlayer"></span><strong id="heroSelectTimer">15초</strong></div>
+          <div class="hero-options" id="heroOptions" role="group" aria-label="영웅 능력 선택지"></div>
+          <p class="hero-selection-status" id="heroSelectionStatus" role="status" aria-live="polite"></p>
         </div>
       </div>
       <div class="overlay" id="dealOverlay" hidden>
@@ -612,13 +659,13 @@
         </div>
       </div>
     </section>
-    <section class="bottom-bar" aria-label="남은 병뚜껑과 턴 조작">
+    <section class="bottom-bar" aria-label="남은 스톤과 턴 조작">
       <div class="remaining-ui">
-        <div class="remaining-player p1">플레이어 1 남은 병뚜껑<strong id="remaining0">4개</strong></div>
-        <div class="remaining-player p2">플레이어 2 남은 병뚜껑<strong id="remaining1">4개</strong></div>
+        <div class="remaining-player p1">플레이어 1 남은 스톤<strong id="remaining0">4개</strong></div>
+        <div class="remaining-player p2">플레이어 2 남은 스톤<strong id="remaining1">4개</strong></div>
       </div>
       <div class="turn-actions">
-        <span id="actionHint">병뚜껑을 당겨 발사하세요</span>
+        <span id="actionHint">스톤을 당겨 발사하세요</span>
         <button id="endTurnButton" disabled>턴 종료</button>
       </div>
     </section>
@@ -632,7 +679,7 @@
   <div class="overlay" id="catalogOverlay" hidden>
     <div class="dialog catalog-dialog" role="dialog" aria-modal="true" aria-labelledby="catalogTitle">
       <div class="catalog-header"><h2 id="catalogTitle">도감</h2><button id="catalogHomeButton" type="button">← 시작 화면으로 돌아가기</button></div>
-      <div class="catalog-tabs" role="tablist" aria-label="도감 종류"><button id="cardCatalogTab" type="button" role="tab" aria-selected="true" aria-controls="catalogList">카드 도감</button><button id="triggerCatalogTab" type="button" role="tab" aria-selected="false" aria-controls="catalogList">트리거 도감</button></div>
+      <div class="catalog-tabs" role="tablist" aria-label="도감 종류"><button id="cardCatalogTab" type="button" role="tab" aria-selected="true" aria-controls="catalogList">카드 도감</button><button id="triggerCatalogTab" type="button" role="tab" aria-selected="false" aria-controls="catalogList">트리거 도감</button><button id="heroCatalogTab" type="button" role="tab" aria-selected="false" aria-controls="catalogList">영웅 능력 도감</button></div>
       <div class="catalog-list" id="catalogList" role="tabpanel" aria-labelledby="cardCatalogTab"></div>
     </div>
   </div>
@@ -666,7 +713,7 @@
       const learningUI = Object.fromEntries([
         'tutorialPanel', 'tutorialTitle', 'tutorialLessonSelect', 'tutorialInstruction', 'tutorialObjective', 'tutorialCompletion',
         'tutorialSettingsButton', 'tutorialSettingsOverlay', 'tutorialNextButton', 'catalogOverlay', 'catalogList',
-        'cardCatalogTab', 'triggerCatalogTab'
+        'cardCatalogTab', 'triggerCatalogTab', 'heroCatalogTab'
       ].map(id => [id, document.getElementById(id)]));
       const aimOverlay = document.querySelector('#aimOverlay');
       const aimPath = document.querySelector('#aimPath');
@@ -677,6 +724,12 @@
       const startOverlay = document.querySelector('#startOverlay');
       const resultOverlay = document.querySelector('#resultOverlay');
       const mapSelectOverlay = document.querySelector('#mapSelectOverlay');
+      const heroSelectOverlay = document.querySelector('#heroSelectOverlay');
+      const heroSelectPlayer = document.querySelector('#heroSelectPlayer');
+      const heroSelectTimer = document.querySelector('#heroSelectTimer');
+      const heroOptions = document.querySelector('#heroOptions');
+      const heroSelectionStatus = document.querySelector('#heroSelectionStatus');
+      const heroBadges = [document.querySelector('#heroBadge0'), document.querySelector('#heroBadge1')];
       const dealOverlay = document.querySelector('#dealOverlay');
       const startButton = document.querySelector('#startButton');
       const playerNameInput = document.querySelector('#playerNameInput');
@@ -782,6 +835,7 @@
           pulse: { frequency: 180, endFrequency: 720, duration: .32, waveform: 'sawtooth', volume: .52 },
           timerWarning: { frequency: 880, endFrequency: 1040, duration: .1, waveform: 'sine', volume: .28 },
           timerTick: { frequency: 1040, endFrequency: 820, duration: .075, waveform: 'square', volume: .2 },
+          heroSelect: { frequency: 510, endFrequency: 880, duration: .22, waveform: 'triangle', volume: .38 },
           blackhole: { frequency: 210, endFrequency: 620, duration: .46, waveform: 'sine', volume: .5 },
           elasticStretch: { frequency: 150, endFrequency: 430, duration: .095, waveform: 'sawtooth', volume: .16, cooldown: 75 },
           strainRumble: { frequency: 54, endFrequency: 76, duration: .12, waveform: 'square', volume: .12, cooldown: 145 },
@@ -838,26 +892,33 @@
         { id: 'ammo', name: '총알 장전' }, { id: 'ammo', name: '총알 장전' }
       ];
       const CARD_DESCRIPTIONS = {
-        hardening: '병뚜껑의 마찰력이 3배가 됩니다. 같은 카드 효과는 중첩되어 마찰력과 회색 코팅이 더 강해집니다.',
-        guard: '병뚜껑 주위를 도는 위성 방호벽 2개를 추가합니다. 최대 4개까지 중첩되며 충돌로 유닛을 밀어냅니다. 위성체가 지나가는 위치와 타이밍을 확인하세요. 1번 더 중첩해서 사용하면 위성체가 두 방향을 방어합니다.',
-        pulse: '사용한 병뚜껑이 4초마다 충격파를 발산해 주변의 다른 병뚜껑과 벽돌을 밀쳐냅니다. 발동 직전 병뚜껑이 빛나며 시점을 알려줍니다. 상대 가까이에 멈춘 뒤 사용하면 4초마다 밀어낼 수 있습니다.',
-        reposition: '필드에 있는 자신의 병뚜껑을 한 번 더 당겨 발사할 수 있게됩니다.',
+        hardening: '스톤의 마찰력이 3배가 됩니다. 같은 카드 효과는 중첩되어 마찰력과 회색 코팅이 더 강해집니다.',
+        guard: '스톤 주위를 도는 위성 방호벽 2개를 추가합니다. 최대 4개까지 중첩되며 충돌로 유닛을 밀어냅니다. 위성체가 지나가는 위치와 타이밍을 확인하세요. 1번 더 중첩해서 사용하면 위성체가 두 방향을 방어합니다.',
+        pulse: '사용한 스톤이 4초마다 충격파를 발산해 주변의 다른 스톤과 벽돌을 밀쳐냅니다. 발동 직전 스톤이 빛나며 시점을 알려줍니다. 상대 가까이에 멈춘 뒤 사용하면 4초마다 밀어낼 수 있습니다.',
+        reposition: '필드에 있는 자신의 스톤을 한 번 더 당겨 발사할 수 있게됩니다.',
         brick: '시작선에서 충분히 떨어진 곳에 움직일 수 있는 벽돌 유닛을 배치합니다.',
-        blackhole: '즉시 주변의 다른 병뚜껑과 벽돌을 끌어당깁니다.',
-        ammo: '자신의 병뚜껑에 사용하면 해당 병뚜껑을 드래그하여 총알을 발사할 수 있습니다. 총알은 강한 충돌 판정을 가지며 방호벽과 벽돌을 파괴합니다.'
+        blackhole: '즉시 주변의 다른 스톤과 벽돌을 끌어당깁니다.',
+        ammo: '자신의 스톤에 사용하면 해당 스톤을 드래그하여 총알을 발사할 수 있습니다. 총알은 강한 충돌 판정을 가지며 방호벽과 벽돌을 파괴합니다.'
       };
       const TURN_LIMIT_MS = 30_000;
       const UNIT_EFFECTS = Object.freeze({
         hardening: { maxStacks: Infinity, frictionPerStack: 3 },
         guard: { maxStacks: 2, satellitesPerStack: 2 }
       });
+      const HERO_SELECTION_MS = 15_000;
+      const HEROES = [
+        { id: 'trap-master', name: '트랩 마스터', portrait: '영웅 초상화/trap master.png', description: '트리거를 게임당 두 번까지 설치할 수 있습니다.', color: '#71dbbf', trapLimit: 2 },
+        { id: 'hunter', name: '헌터', portrait: '영웅 초상화/hunter.png', description: '첫 카드와 마지막 차례의 카드를 총알 장전으로 받습니다. 이 카드들은 카드 풀을 소모하지 않습니다.', color: '#f1c275', firstCard: 'ammo', lastCard: 'ammo' },
+        { id: 'big-boy', name: '빅 보이', portrait: '영웅 초상화/big boy.png', description: '자신의 스톤 크기가 20% 커지고 기본 마찰 계수가 35% 증가합니다.', color: '#92b6f7', capScale: 1.2, frictionScale: 1.35 },
+        { id: 'joker', name: '조커', portrait: '영웅 초상화/joker.png', description: '상대 스톤을 떨어뜨리면 40점을 얻지만 자신의 스톤이 떨어지면 10점을 잃습니다.', color: '#ef9bc6', knockoutPoints: 40, fallPenalty: 10 }
+      ];
       const LEARNING_DETAILS = {
-        hardening: { color: '#aeb8bc', tip: '목표 지점에 도착한 병뚜껑에 쓰면 위치를 지키기 좋습니다. 발사 전에 쓰면 이동 거리가 크게 줄어듭니다.' },
-        guard: { color: '#f1b66e', tip: '위성체 위치와 회전 타이밍을 살펴 병뚜껑을 효과적으로 보호하세요.' },
+        hardening: { color: '#aeb8bc', tip: '목표 지점에 도착한 스톤에 쓰면 위치를 지키기 좋습니다. 발사 전에 쓰면 이동 거리가 크게 줄어듭니다.' },
+        guard: { color: '#f1b66e', tip: '위성체 위치와 회전 타이밍을 살펴 스톤을 효과적으로 보호하세요.' },
         pulse: { color: '#00d9ff', tip: '상대 가까이에 멈춘 뒤 사용하면 4초마다 밀어낼 수 있습니다. 아군과 벽돌도 밀리므로 거리를 확인하세요.' },
-        reposition: { color: '#79dfc2', tip: '점수가 낮은 병뚜껑을 구하거나 다른 방향에서 공격할 수 있습니다. 재발사가 끝날 때까지 총알 장전과 함께 사용할 수 없습니다.' },
+        reposition: { color: '#79dfc2', tip: '점수가 낮은 스톤을 구하거나 다른 방향에서 공격할 수 있습니다. 재발사가 끝날 때까지 총알 장전과 함께 사용할 수 없습니다.' },
         brick: { color: '#c3d0ce', tip: '왼쪽 배치 가능 구역에서 경로를 막거나 충돌 각도를 만드세요. 벽돌도 밀려나고 총탄에 파괴됩니다. 점수는 없습니다.' },
-        blackhole: { color: '#bd75f5', tip: '주변 아군도 함께 끌려옵니다. 시전한 병뚜껑은 잠시 유체 상태가 되어 다른 병뚜껑이 통과합니다.' },
+        blackhole: { color: '#bd75f5', tip: '주변 아군도 함께 끌려옵니다. 시전한 스톤은 잠시 유체 상태가 되어 다른 스톤이 통과합니다.' },
         ammo: { color: '#ffe58a', tip: '빠른 총탄으로 방호벽 위성체나 벽돌을 제거하세요. 총탄은 마찰을 무시하며 구조물 맵의 벽에서 도탄됩니다.' }
       };
 
@@ -865,22 +926,23 @@
       function cardDefinitions() { return [...new Map(CARDS.map(card => [card.id, card])).values()]; }
       function tutorialLessons() {
         return [
-          { id: 'launch', title: '발사와 힘 조절', text: '파란 병뚜껑을 오른쪽으로 당겼다가 놓으면 왼쪽으로 발사됩니다. 길게 당길수록 강하게 발사되며, 상한선에 가까워지면 저항과 떨림이 생깁니다.', objective: '파란 병뚜껑을 발사하세요.', event: 'launch' },
-          { id: 'score', title: '거리 점수와 낙사', text: '왼쪽 끝선에 가까울수록 높은 점수입니다. 짧게 당겨 안전하게 멈춰보세요. 네 방향 어디로든 테이블 밖으로 나가면 해당 병뚜껑의 거리 점수는 사라집니다.', objective: '병뚜껑을 테이블 위에 멈추세요.', event: 'rest' },
-          { id: 'collision', title: '상대 밀어내기', text: '빨간 병뚜껑을 맞혀 위치를 바꿔보세요. 정면 충돌과 비스듬한 충돌의 결과가 다릅니다. 자신의 턴에 상대가 떨어지면 25점을 얻습니다.', objective: '빨간 병뚜껑과 충돌하세요.', event: 'collision', targets: true },
-          { id: 'turn', title: '턴과 타이머', text: '턴마다 30초가 주어집니다. 시간이 끝나면 이 연습에서는 턴을 넘기지 않고 타이머만 다시 시작합니다. 병뚜껑을 발사하고 완전히 멈춘 다음 아래의 강조된 턴 종료 버튼을 눌러야 턴이 끝납니다.', objective: '발사한 병뚜껑이 멈추면 강조된 턴 종료 버튼을 누르세요.', event: 'end-turn', timed: true },
+          { id: 'launch', title: '발사와 힘 조절', text: '파란 스톤을 오른쪽으로 당겼다가 놓으면 왼쪽으로 발사됩니다. 길게 당길수록 강하게 발사되며, 상한선에 가까워지면 저항과 떨림이 생깁니다.', objective: '파란 스톤을 발사하세요.', event: 'launch' },
+          { id: 'score', title: '거리 점수와 낙사', text: '왼쪽 끝선에 가까울수록 높은 점수입니다. 짧게 당겨 안전하게 멈춰보세요. 네 방향 어디로든 테이블 밖으로 나가면 해당 스톤의 거리 점수는 사라집니다.', objective: '스톤을 테이블 위에 멈추세요.', event: 'rest' },
+          { id: 'collision', title: '상대 밀어내기', text: '빨간 스톤을 맞혀 위치를 바꿔보세요. 정면 충돌과 비스듬한 충돌의 결과가 다릅니다. 자신의 턴에 상대가 떨어지면 25점을 얻습니다.', objective: '빨간 스톤과 충돌하세요.', event: 'collision', targets: true },
+          { id: 'turn', title: '턴과 타이머', text: '턴마다 30초가 주어집니다. 시간이 끝나면 이 연습에서는 턴을 넘기지 않고 타이머만 다시 시작합니다. 스톤을 발사하고 완전히 멈춘 다음 아래의 강조된 턴 종료 버튼을 눌러야 턴이 끝납니다.', objective: '발사한 스톤이 멈추면 강조된 턴 종료 버튼을 누르세요.', event: 'end-turn', timed: true },
+          { id: 'hero-selection', title: '영웅 능력 선택', kind: 'hero', text: '맵을 고른 뒤 두 가지 영웅 능력 중 하나를 선택합니다. 15초 안에 선택하지 않으면 무작위로 정해집니다. 선택한 능력은 대전이 끝날 때까지 유지됩니다.', objective: '제시된 두 영웅 능력 중 하나를 선택하세요.', event: 'hero' },
           ...cardDefinitions().map(card => ({ id: `card-${card.id}`, title: `${card.name} 카드`, kind: 'card', elementId: card.id,
             text: `${CARD_DESCRIPTIONS[card.id] || card.name} ${LEARNING_DETAILS[card.id]?.tip || ''}`,
-            objective: card.id === 'brick' ? '구조물 투하 카드를 왼쪽 테이블에 놓으세요.' : ['ammo', 'reposition'].includes(card.id) ? '카드를 파란 병뚜껑에 놓고 다시 당겨 발사하세요.' : ['hardening', 'guard'].includes(card.id) ? '같은 카드를 두 번 사용해 중첩을 확인하세요.' : '카드를 파란 병뚜껑에 드래그해 사용하세요.',
+            objective: card.id === 'brick' ? '구조물 투하 카드를 왼쪽 테이블에 놓으세요.' : ['ammo', 'reposition'].includes(card.id) ? '카드를 파란 스톤에 놓고 다시 당겨 발사하세요.' : ['hardening', 'guard'].includes(card.id) ? '같은 카드를 두 번 사용해 중첩을 확인하세요.' : '카드를 파란 스톤에 드래그해 사용하세요.',
             event: card.id === 'ammo' ? 'ammo' : card.id === 'reposition' ? 'launch' : 'card', targets: true,
             requiredUses: ['hardening', 'guard'].includes(card.id) ? 2 : 1 })),
           { id: 'speed-card', title: '게임 속도 조절', kind: 'speed-card', elementId: 'blackhole', cardId: 'blackhole', targets: true,
-            text: '우측 상단의 속도 버튼으로 게임 속도를 바꿔보세요. 병뚜껑을 발사한 뒤 움직이는 동안에도 카드를 병뚜껑에 드래그해 사용할 수 있습니다. 발사 도중 블랙홀 방출 카드를 사용해 보세요.',
+            text: '우측 상단의 속도 버튼으로 게임 속도를 바꿔보세요. 스톤을 발사한 뒤 움직이는 동안에도 카드를 스톤에 드래그해 사용할 수 있습니다. 발사 도중 블랙홀 방출 카드를 사용해 보세요.',
             objective: '속도를 한 번 바꾸고, 발사 도중 블랙홀 방출 카드를 사용해 보세요.', event: 'speed-card' },
           ...ITEM_TRIGGERS.map(trigger => ({ id: `trigger-${trigger.id}`, title: `${trigger.name} 트리거`, kind: 'trigger', elementId: trigger.id,
-            text: `${trigger.description} 트리거는 병뚜껑에 닿으면 소모되어 효과를 부여하는 아이템입니다.`, objective: '발사해 앞에 놓인 트리거를 획득하세요.', event: 'trigger', targets: true })),
+            text: `${trigger.description} 트리거는 스톤에 닿으면 소모되어 효과를 부여하는 아이템입니다.`, objective: '발사해 앞에 놓인 트리거를 획득하세요.', event: 'trigger', targets: true })),
           { id: 'placement', title: '나만의 트리거 배치', text: '각 플레이어는 게임당 한 번 트리거를 설치할 수 있습니다. 하단의 트리거 배치를 왼쪽 구역으로 끌어놓고 종류를 고르세요. 시작 위치에서 35% 이상 지난 곳에만 놓을 수 있으며 유닛이나 구조물 옆은 피해야 합니다.', objective: '트리거를 직접 배치하세요.', event: 'placement' },
-          { id: 'ice', title: '얼음판의 이동 거리', mapId: 'ice', text: '얼음판은 마찰력이 낮아 같은 힘으로도 더 멀리 갑니다. 힘을 줄여 발사하고 경질화로 이동 거리를 조절해보세요.', objective: '얼음판에서 병뚜껑을 발사하세요.', event: 'launch', cardId: 'hardening' },
+          { id: 'ice', title: '얼음판의 이동 거리', mapId: 'ice', text: '얼음판은 마찰력이 낮아 같은 힘으로도 더 멀리 갑니다. 힘을 줄여 발사하고 경질화로 이동 거리를 조절해보세요.', objective: '얼음판에서 스톤을 발사하세요.', event: 'launch', cardId: 'hardening' },
           { id: 'walls', title: '움직이는 구조물', mapId: 'moving-walls', text: '구조물은 정해진 경로를 왕복합니다. 벽의 위치와 진행 방향을 보며 발사 시점을 고르세요. 벽 자체는 밀려나지 않고 총탄은 벽에 튕깁니다.', objective: '움직이는 벽 사이로 발사하세요.', event: 'launch' }
         ];
       }
@@ -891,8 +953,8 @@
         { id: 'items', name: '아이템 맵', description: '턴마다 생성되는 트리거를 획득합니다', friction: 0.020625, color: '#356b58', walls: false, items: true }
       ];
       const PLAYER = [
-        { name: '플레이어 1', color: '#4287ff', imagePath: '병뚜껑 1.png' },
-        { name: '플레이어 2', color: '#f05252', imagePath: '병뚜껑 2.png' }
+        { name: '플레이어 1', color: '#4287ff', imagePath: 'stone-blue.png' },
+        { name: '플레이어 2', color: '#f05252', imagePath: 'stone-red.png' }
       ];
 
       const images = PLAYER.map(player => {
@@ -931,6 +993,15 @@
         cardDrag: null,
         repositionUnit: null,
         triggerPlacementUsed: [false, false],
+        triggerPlacementCount: [0, 0],
+        heroOffers: [[], []],
+        heroChoices: [null, null],
+        heroDeadline: null,
+        heroSelectionOwner: 0,
+        heroSelectionMode: null,
+        heroTransitionTimer: null,
+        heroPendingChoice: null,
+        heroCardDraws: [0, 0],
         pendingTriggerPlacement: null,
         selectedTriggerType: null,
         phaseBeforeTriggerSelect: null,
@@ -979,8 +1050,154 @@
         document.body.dataset.device = mobileLayoutQuery.matches ? 'mobile' : 'desktop';
       }
 
+      function heroFor(owner) {
+        return HEROES.find(hero => hero.id === state.heroChoices[owner]) || null;
+      }
+
+      function heroRule(owner, rule, fallback) {
+        return heroFor(owner)?.[rule] ?? fallback;
+      }
+
+      function randomHeroOptions() {
+        const pool = [...HEROES];
+        for (let index = 0; index < 2; index += 1) {
+          const pick = index + Math.floor(Math.random() * (pool.length - index));
+          [pool[index], pool[pick]] = [pool[pick], pool[index]];
+        }
+        return pool.slice(0, 2).map(hero => hero.id);
+      }
+
+      function renderHeroSelection() {
+        if (state.phase !== 'hero-select') { heroSelectOverlay.hidden = true; return; }
+        const owner = state.heroSelectionMode === 'online' ? onlineSession?.playerIndex ?? 0 : state.heroSelectionOwner;
+        const chosen = state.heroChoices[owner];
+        heroSelectPlayer.textContent = `${PLAYER[owner].name} · 영웅 능력 선택`;
+        heroSelectionStatus.textContent = chosen
+          ? state.heroSelectionMode === 'online' && !state.heroChoices.every(Boolean) ? '상대의 선택을 기다리는 중' : '선택 완료'
+          : state.heroPendingChoice ? '선택을 전달하는 중' : '';
+        heroOptions.replaceChildren(...state.heroOffers[owner].map(id => {
+          const hero = HEROES.find(item => item.id === id);
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = `hero-option${chosen === id ? ' selected' : ''}`;
+          button.title = hero.description;
+          button.disabled = Boolean(chosen || state.heroPendingChoice);
+          const portrait = document.createElement('img');
+          portrait.className = 'hero-portrait';
+          portrait.src = hero.portrait;
+          portrait.alt = '';
+          portrait.decoding = 'async';
+          const copy = document.createElement('span');
+          copy.className = 'hero-option-copy';
+          const name = document.createElement('strong');
+          name.className = 'hero-option-name';
+          name.style.color = hero.color;
+          name.textContent = hero.name;
+          const detail = document.createElement('span');
+          detail.className = 'hero-option-detail';
+          detail.textContent = hero.description;
+          copy.append(name, detail);
+          button.append(portrait, copy);
+          button.addEventListener('click', () => chooseHero(owner, id));
+          return button;
+        }));
+        heroSelectOverlay.hidden = false;
+        updateHeroSelectionTimer();
+      }
+
+      function updateHeroSelectionTimer() {
+        if (state.phase !== 'hero-select') return;
+        heroSelectTimer.textContent = `${Math.ceil(Math.max(0, (state.heroDeadline || Date.now()) - Date.now()) / 1000)}초`;
+      }
+
+      function startHeroSelection(mode) {
+        clearTimeout(state.heroTransitionTimer);
+        state.heroTransitionTimer = null;
+        state.heroSelectionMode = mode;
+        state.heroSelectionOwner = 0;
+        state.heroOffers = PLAYER.map(() => randomHeroOptions());
+        state.heroChoices = [null, null];
+        state.heroPendingChoice = null;
+        state.heroDeadline = Date.now() + HERO_SELECTION_MS;
+        state.phase = 'hero-select';
+        mapSelectOverlay.hidden = true;
+        resultOverlay.hidden = true;
+        dealOverlay.hidden = true;
+        renderHeroSelection();
+        updateHud();
+      }
+
+      function finishHeroSelection() {
+        if (state.phase !== 'hero-select') return;
+        state.heroTransitionTimer = null;
+        state.heroDeadline = null;
+        heroSelectOverlay.hidden = true;
+        if (state.heroSelectionMode === 'tutorial') {
+          const unit = turns.currentUnit;
+          if (unit) unit.radius = CONFIG.unitRadius * heroRule(unit.owner, 'capScale', 1);
+          state.phase = 'aiming';
+          recordTutorialEvent('hero');
+          updateHud();
+          return;
+        }
+        state.heroSelectionMode = null;
+        dealCards();
+      }
+
+      function chooseHero(owner, id) {
+        if (state.phase !== 'hero-select' || state.heroChoices[owner] || !state.heroOffers[owner].includes(id)) return false;
+        if (state.heroSelectionMode === 'online' && onlineSession?.role === 'challenger') {
+          if (owner !== onlineSession.playerIndex || state.heroPendingChoice) return false;
+          state.heroPendingChoice = id;
+          sendOnlineAction({ type: 'hero', heroId: id });
+          renderHeroSelection();
+          return true;
+        }
+        state.heroChoices[owner] = id;
+        playSound('heroSelect');
+        renderHeroSelection();
+        updateHud();
+        if (state.heroSelectionMode === 'local' && owner === 0) {
+          state.heroTransitionTimer = setTimeout(() => {
+            if (state.phase !== 'hero-select') return;
+            state.heroSelectionOwner = 1;
+            state.heroTransitionTimer = null;
+            renderHeroSelection();
+          }, 550);
+        } else if (state.heroSelectionMode === 'tutorial' || state.heroChoices.every(Boolean)) {
+          if (!state.heroTransitionTimer) state.heroTransitionTimer = setTimeout(finishHeroSelection, 550);
+        }
+        return true;
+      }
+
+      function updateHeroSelection() {
+        if (state.phase !== 'hero-select') return;
+        updateHeroSelectionTimer();
+        if (onlineSession?.started && onlineSession.role === 'challenger') return;
+        if (Date.now() < state.heroDeadline) return;
+        if (state.heroSelectionMode === 'local') {
+          if (state.heroChoices.every(Boolean)) return;
+          for (const owner of [0, 1]) {
+            if (!state.heroChoices[owner]) {
+              state.heroChoices[owner] = state.heroOffers[owner][Math.floor(Math.random() * 2)];
+              playSound('heroSelect');
+            }
+          }
+          clearTimeout(state.heroTransitionTimer);
+          state.heroSelectionOwner = 1;
+          renderHeroSelection();
+          state.heroTransitionTimer = setTimeout(finishHeroSelection, 550);
+          return;
+        }
+        const owners = state.heroSelectionMode === 'online' ? [0, 1] : [state.heroSelectionOwner];
+        for (const owner of owners) {
+          if (!state.heroChoices[owner]) chooseHero(owner, state.heroOffers[owner][Math.floor(Math.random() * 2)]);
+        }
+      }
+
       function clearPracticeBoard() {
         clearTimeout(state.cardDrawTimer);
+        clearTimeout(state.heroTransitionTimer);
         state.cardDrawTimer = null;
         cancelCardDrag();
         if (localAimPointerId !== null && canvas.hasPointerCapture?.(localAimPointerId)) canvas.releasePointerCapture(localAimPointerId);
@@ -988,12 +1205,14 @@
         onlineInterpolation = null;
         onlineLastSnapshotAt = null;
         Object.assign(state, { units: [], bricks: [], bullets: [], triggers: [], particles: [], effects: [],
-          hands: [[], []], deck: [], fallPoints: [0, 0], triggerPlacementUsed: [false, false],
+          hands: [[], []], deck: [], fallPoints: [0, 0], triggerPlacementUsed: [false, false], triggerPlacementCount: [0, 0],
+          heroOffers: [[], []], heroChoices: [null, null], heroDeadline: null, heroSelectionMode: null,
+          heroSelectionOwner: 0, heroTransitionTimer: null, heroPendingChoice: null, heroCardDraws: [0, 0],
           aiming: false, aimPoint: null, aimTension: 0, repositionUnit: null, repositionMode: null,
           pendingTriggerPlacement: null, selectedTriggerType: null, phaseBeforeTriggerSelect: null,
           turnDeadline: null, timerTurn: -1, mapTime: 0 });
         turns.reset();
-        for (const overlay of [resultOverlay, mapSelectOverlay, dealOverlay, triggerSelectOverlay,
+        for (const overlay of [resultOverlay, mapSelectOverlay, heroSelectOverlay, dealOverlay, triggerSelectOverlay,
           publicRoomPasswordOverlay, learningUI.catalogOverlay, learningUI.tutorialSettingsOverlay]) overlay.hidden = true;
         entityTooltip.hidden = true;
         turnTimer.hidden = true;
@@ -1093,6 +1312,7 @@
         renderHands();
         startTurnTimer();
         updateHud();
+        if (lesson.kind === 'hero') startHeroSelection('tutorial');
       }
 
       function recordTutorialEvent(event, elementId) {
@@ -1104,7 +1324,7 @@
           if (event === 'launch') tutorial.launched = true;
           if (event === 'card' && elementId === 'blackhole' && state.phase === 'sliding') tutorial.usedCardInFlight = true;
           if (!(tutorial.speedChanged && tutorial.launched && tutorial.usedCardInFlight)) {
-            const remaining = [!tutorial.speedChanged && '속도를 바꾸고', !tutorial.launched && '병뚜껑을 발사하고', !tutorial.usedCardInFlight && '움직이는 중에 블랙홀 방출 카드를 사용하세요'].filter(Boolean);
+            const remaining = [!tutorial.speedChanged && '속도를 바꾸고', !tutorial.launched && '스톤을 발사하고', !tutorial.usedCardInFlight && '움직이는 중에 블랙홀 방출 카드를 사용하세요'].filter(Boolean);
             learningUI.tutorialObjective.textContent = remaining.join(' · ');
             return;
           }
@@ -1167,28 +1387,37 @@
 
       function renderCatalog(category = 'cards') {
         const isTrigger = category === 'triggers';
-        const definitions = isTrigger ? ITEM_TRIGGERS : cardDefinitions();
-        learningUI.cardCatalogTab.setAttribute('aria-selected', String(!isTrigger));
+        const isHero = category === 'heroes';
+        const definitions = isHero ? HEROES : isTrigger ? ITEM_TRIGGERS : cardDefinitions();
+        learningUI.cardCatalogTab.setAttribute('aria-selected', String(category === 'cards'));
         learningUI.triggerCatalogTab.setAttribute('aria-selected', String(isTrigger));
-        learningUI.cardCatalogTab.tabIndex = isTrigger ? -1 : 0;
+        learningUI.heroCatalogTab.setAttribute('aria-selected', String(isHero));
+        learningUI.cardCatalogTab.tabIndex = category === 'cards' ? 0 : -1;
         learningUI.triggerCatalogTab.tabIndex = isTrigger ? 0 : -1;
-        learningUI.catalogList.setAttribute('aria-labelledby', isTrigger ? 'triggerCatalogTab' : 'cardCatalogTab');
+        learningUI.heroCatalogTab.tabIndex = isHero ? 0 : -1;
+        learningUI.catalogList.setAttribute('aria-labelledby', isHero ? 'heroCatalogTab' : isTrigger ? 'triggerCatalogTab' : 'cardCatalogTab');
         learningUI.catalogList.replaceChildren(...definitions.map(entry => {
-          const article = document.createElement('article'); article.className = 'catalog-entry';
+          const article = document.createElement('article'); article.className = `catalog-entry${isHero ? ' hero-catalog-entry' : ''}`;
           const header = document.createElement('header');
-          const preview = document.createElement('canvas'); preview.width = 192; preview.height = 144;
+          const preview = document.createElement(isHero ? 'img' : 'canvas');
+          if (isHero) {
+            preview.className = 'catalog-portrait';
+            preview.src = entry.portrait;
+            preview.alt = '';
+            preview.loading = 'lazy';
+          } else { preview.width = 192; preview.height = 144; }
           preview.setAttribute('aria-hidden', 'true');
           const title = document.createElement('h3'); title.textContent = entry.name;
           header.append(preview, title);
           const description = document.createElement('p');
-          description.textContent = isTrigger ? getTriggerTooltip({ type: entry }).detail || entry.description : CARD_DESCRIPTIONS[entry.id] || entry.description || entry.name;
+          description.textContent = isHero ? entry.description : isTrigger ? getTriggerTooltip({ type: entry }).detail || entry.description : CARD_DESCRIPTIONS[entry.id] || entry.description || entry.name;
           const tip = document.createElement('p'); tip.className = 'strategy-tip';
-          tip.textContent = isTrigger ? entry.id === 'pulse'
-            ? '닿는 즉시 한 번 발동합니다. 카드의 반복 방출과 달리 획득 타이밍에 맞춰 상대를 밀어내세요.'
+          tip.textContent = isHero ? '맵 선택 후 두 가지 선택지 중 하나를 고르며 대전 내내 유지됩니다.' : isTrigger ? entry.id === 'pulse'
+            ? '닿은 뒤 유닛 충돌 또는 0.5초 경과 중 먼저 일어난 순간 한 번 발동합니다.'
             : LEARNING_DETAILS[entry.id]?.tip || entry.description
             : LEARNING_DETAILS[entry.id]?.tip || '자신의 턴에 사용합니다.';
           article.append(header, description, tip);
-          drawCatalogArt(preview, entry, isTrigger);
+          if (!isHero) drawCatalogArt(preview, entry, isTrigger);
           return article;
         }));
       }
@@ -1392,7 +1621,7 @@
       class CurlingUnit {
         constructor({ id, owner, turnNumber, x, y }) {
           this.entityKind = ENTITY_KIND.UNIT;
-          this.unitKind = 'cap';
+          this.unitKind = 'stone';
           this.id = id;
           this.owner = owner;
           this.turnNumber = turnNumber;
@@ -1400,7 +1629,7 @@
           this.y = y;
           this.vx = 0;
           this.vy = 0;
-          this.radius = CONFIG.unitRadius;
+          this.radius = CONFIG.unitRadius * heroRule(owner, 'capScale', 1);
           this.status = 'ready'; // ready, sliding, resting, fallen
           this.hasLaunched = false;
           this.score = 0;
@@ -1411,6 +1640,7 @@
           this.activeSpecial = null;
           this.fluidTimer = 0;
           this.fallRewarded = false;
+          this.fallResolved = false;
           this.pendingPulseTriggers = [];
           this.previousX = x;
           this.previousY = y;
@@ -1444,7 +1674,7 @@
             this.vx = 0;
             this.vy = 0;
             playFileSound('unitDeath', { volume: .5 });
-            awardKnockoutPoints(this);
+            settleFallenUnit(this);
           }
         }
 
@@ -1455,7 +1685,7 @@
             if (Math.abs(this.x - brick.x) <= brick.width / 2 + this.radius &&
                 Math.abs(this.y - brick.y) <= brick.height / 2 + this.radius) multiplier += brick.frictionMultiplier - 1;
           }
-          return state.currentMap.friction * multiplier * (this.openingFrictionMultiplier || 1);
+          return state.currentMap.friction * multiplier * heroRule(this.owner, 'frictionScale', 1) * (this.openingFrictionMultiplier || 1);
         }
 
         get isOnTable() { return this.status !== 'fallen'; }
@@ -1560,6 +1790,7 @@
         state.repositionUnit = null;
         state.repositionMode = null;
         state.triggerPlacementUsed = [false, false];
+        state.triggerPlacementCount = [0, 0];
         state.pendingTriggerPlacement = null;
         state.selectedTriggerType = null;
         state.phaseBeforeTriggerSelect = null;
@@ -1608,7 +1839,7 @@
       }
 
       function updateTurnTimer() {
-        const active = state.turnDeadline != null && !['intro', 'map-select', 'dealing', 'finished'].includes(state.phase);
+        const active = state.turnDeadline != null && !['intro', 'map-select', 'hero-select', 'dealing', 'finished'].includes(state.phase);
         turnTimer.hidden = !active;
         if (!active) return;
         const remaining = Math.max(0, state.turnDeadline - Date.now());
@@ -1647,6 +1878,7 @@
           unit.status = 'fallen';
           unit.vx = 0;
           unit.vy = 0;
+          settleFallenUnit(unit);
         }
         if (state.repositionUnit?.activeSpecial && !state.repositionUnit.specialFired) {
           state.repositionUnit.activeSpecial = null;
@@ -1669,7 +1901,11 @@
       }
 
       function drawCardForPlayer(owner, onComplete) {
-        const card = state.deck.pop();
+        const drawNumber = state.heroCardDraws[owner]++;
+        const hero = heroFor(owner);
+        const forcedId = drawNumber === 0 ? hero?.firstCard :
+          turns.playerIndex === owner && turns.playerTurn === CONFIG.maxTurnsPerPlayer ? hero?.lastCard : null;
+        const card = forcedId ? { ...cardDefinitions().find(item => item.id === forcedId) } : state.deck.pop();
         if (!card) {
           onComplete();
           return;
@@ -1692,34 +1928,48 @@
         }, 560);
       }
 
+      function remainingTriggerPlacements(owner) {
+        return Math.max(0, heroRule(owner, 'trapLimit', 1) - state.triggerPlacementCount[owner]);
+      }
+
+      function spendTriggerPlacement(owner) {
+        state.triggerPlacementCount[owner] += 1;
+        state.triggerPlacementUsed[owner] = remainingTriggerPlacements(owner) === 0;
+      }
+
       function updateTriggerTools() {
         triggerToolButtons.forEach(button => {
           const owner = Number(button.dataset.owner);
-          const spent = state.triggerPlacementUsed[owner];
-          button.dataset.description = '원하는 위치에 병뚜껑과 상호작용하는 특수 함정을 설치합니다.';
+          const remaining = remainingTriggerPlacements(owner);
+          const spent = remaining <= 0;
+          button.dataset.description = '원하는 위치에 스톤과 상호작용하는 특수 함정을 설치합니다.';
           button.title = button.dataset.description;
           button.disabled = spent || owner !== turns.playerIndex || !canControlPlayer(owner) || !turns.currentUnit ||
             !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase);
-          button.textContent = spent ? '트리거 배치 · 사용 완료' : '트리거 배치 · 1회';
+          button.textContent = spent ? '트리거 배치 · 사용 완료' : `트리거 배치 · ${remaining}회`;
         });
       }
 
       function updateHud() {
         const scores = calculateScores();
         scores.forEach((result, index) => {
-          const bonus = result.fallBonus ? ` (+${result.fallBonus} 낙사)` : '';
+          const bonus = result.fallBonus ? ` (${result.fallBonus > 0 ? '+' : ''}${result.fallBonus} 낙사)` : '';
           scoreEls[index].textContent = `거리 ${Math.round(result.distance)} · 점수 ${result.score}${bonus}`;
+          const hero = heroFor(index);
+          heroBadges[index].hidden = !hero;
+          heroBadges[index].textContent = hero ? `영웅 · ${hero.name}` : '';
+          heroBadges[index].title = hero?.description || '';
           panels[index].classList.toggle('current', !turns.isComplete && index === turns.playerIndex);
           const used = state.units.filter(unit => unit.owner === index).length;
           remainingEls[index].textContent = `${CONFIG.maxTurnsPerPlayer - used}개`;
         });
         endTurnButton.disabled = state.phase !== 'turn-ready' || state.bullets.length > 0 || !canControlPlayer(turns.playerIndex);
-        actionHint.textContent = state.phase === 'sliding' ? '병뚜껑이 움직이는 중' : state.phase === 'turn-ready' ? '턴을 마치거나 카드를 사용하세요' : state.phase === 'reposition' ? (state.repositionMode === 'ammo' ? '총알 장전: 방향을 정해 총탄을 발사하세요' : '재배치: 병뚜껑을 다시 당겨 발사하세요') : state.phase === 'trigger-select' ? '트리거 종류를 선택하세요' : '병뚜껑을 당겨 발사하세요';
+        actionHint.textContent = state.phase === 'sliding' ? '스톤이 움직이는 중' : state.phase === 'turn-ready' ? '턴을 마치거나 카드를 사용하세요' : state.phase === 'reposition' ? (state.repositionMode === 'ammo' ? '총알 장전: 방향을 정해 총탄을 발사하세요' : '재배치: 스톤을 다시 당겨 발사하세요') : state.phase === 'trigger-select' ? '트리거 종류를 선택하세요' : '스톤을 당겨 발사하세요';
         handPanels.forEach((panel, index) => panel.classList.toggle('current', !turns.isComplete && index === turns.playerIndex));
         updateTriggerTools();
         updateMatchHud();
         if (turns.isComplete) return;
-        turnText.textContent = `${PLAYER[turns.playerIndex].name} · ${turns.playerTurn}번째 병뚜껑`;
+        turnText.textContent = `${PLAYER[turns.playerIndex].name} · ${turns.playerTurn}번째 스톤`;
         if (state.tutorial) {
           turnText.textContent = '튜토리얼 · 자유 연습';
           remainingEls.forEach(element => { element.textContent = '연습'; });
@@ -1784,12 +2034,21 @@
         });
       }
 
+      function settleFallenUnit(victim) {
+        if (victim.fallResolved) return;
+        victim.fallResolved = true;
+        state.fallPoints[victim.owner] -= heroRule(victim.owner, 'fallPenalty', 0);
+        awardKnockoutPoints(victim);
+        updateHud();
+      }
+
       function awardKnockoutPoints(victim) {
         if (victim.fallRewarded || victim.owner === turns.playerIndex || state.phase === 'finished' || state.phase === 'intro') return;
         const scorer = turns.playerIndex;
         victim.fallRewarded = true;
-        state.fallPoints[scorer] += 25;
-        state.effects.push({ type: 'skull', x: canvas.width / 2, y: canvas.height / 2, age: 0, duration: 2.25, owner: scorer, points: 25 });
+        const points = heroRule(scorer, 'knockoutPoints', 25);
+        state.fallPoints[scorer] += points;
+        state.effects.push({ type: 'skull', x: canvas.width / 2, y: canvas.height / 2, age: 0, duration: 2.25, owner: scorer, points });
         playFileSound('unitKill', { volume: .5 });
         entityTooltip.hidden = true;
         updateHud();
@@ -2130,7 +2389,7 @@
         if (state.cardDrag) return;
         const button = event.currentTarget;
         const owner = Number(button.dataset.owner);
-        if (owner !== turns.playerIndex || !canControlPlayer(owner) || state.triggerPlacementUsed[owner] || !turns.currentUnit ||
+        if (owner !== turns.playerIndex || !canControlPlayer(owner) || remainingTriggerPlacements(owner) <= 0 || !turns.currentUnit ||
             !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase)) return;
         event.preventDefault();
         entityTooltip.hidden = true;
@@ -2179,7 +2438,7 @@
         if (insideCanvas && drag.owner === turns.playerIndex && turns.currentUnit) {
           const point = eventPoint(event);
           if (drag.type === 'trigger-placement') {
-            if (!state.triggerPlacementUsed[drag.owner] && canPlaceItemTrigger(point)) triggerDrop = point;
+            if (remainingTriggerPlacements(drag.owner) > 0 && canPlaceItemTrigger(point)) triggerDrop = point;
           } else if (drag.type === 'brick') {
             if (canPlaceBrick(point)) {
               if (shouldForwardOnlineAction()) sendOnlineAction({ type: 'brick', cardId: drag.id, point });
@@ -2403,7 +2662,7 @@
         const pending = state.pendingTriggerPlacement;
         const type = ITEM_TRIGGERS.find(item => item.id === state.selectedTriggerType);
         if (state.phase !== 'trigger-select' || !pending || !type || pending.owner !== turns.playerIndex ||
-            state.triggerPlacementUsed[pending.owner] || !canPlaceItemTrigger(pending)) return;
+            remainingTriggerPlacements(pending.owner) <= 0 || !canPlaceItemTrigger(pending)) return;
         if (shouldForwardOnlineAction()) {
           sendOnlineAction({ type: 'trigger', typeId: type.id, point: { x: pending.x, y: pending.y } });
           closeTriggerTypeSelection(true);
@@ -2414,7 +2673,7 @@
           id: `placed-trigger-${turns.globalTurn}-${Date.now()}`,
           type, owner: pending.owner, x: pending.x, y: pending.y, radius: pending.radius
         });
-        state.triggerPlacementUsed[pending.owner] = true;
+        spendTriggerPlacement(pending.owner);
         closeTriggerTypeSelection(true);
         emitGameFeedback('drop', pending, '트리거 배치', PLAYER[pending.owner].color);
         recordTutorialEvent('placement');
@@ -2743,9 +3002,9 @@
       }
 
       function updatePlayerNames() {
-        playerLabelEls.forEach((label, index) => { label.textContent = `${PLAYER[index].name} · 병뚜껑 ${CONFIG.maxTurnsPerPlayer}개`; });
+        playerLabelEls.forEach((label, index) => { label.textContent = `${PLAYER[index].name} · 스톤 ${CONFIG.maxTurnsPerPlayer}개`; });
         remainingPanelEls.forEach((panel, index) => {
-          panel.firstChild.textContent = `${PLAYER[index].name} 남은 병뚜껑`;
+          panel.firstChild.textContent = `${PLAYER[index].name} 남은 스톤`;
         });
         updateHud();
       }
@@ -2777,6 +3036,7 @@
         publicRoomPasswordOverlay.hidden = true;
         resultOverlay.hidden = true;
         dealOverlay.hidden = true;
+        heroSelectOverlay.hidden = true;
         mapSelectOverlay.hidden = false;
         mapSelectTitle.textContent = '온라인 맵 선택';
         mapSelectDescription.textContent = '두 플레이어가 맵을 확정하면 방장, 도전자, 랜덤 맵 순으로 대전을 시작합니다.';
@@ -2833,6 +3093,8 @@
       }
 
       function showOnlineForfeitResult(winner) {
+        clearTimeout(state.heroTransitionTimer);
+        heroSelectOverlay.hidden = true;
         const session = onlineSession;
         if (!session || session.forfeitShown) return;
         session.forfeitShown = true;
@@ -3326,6 +3588,7 @@
           session.wins = [0, 0];
           session.totalScores = [0, 0];
           session.roundResults = [];
+          state.heroChoices = [null, null];
           startOnlineRound(0);
           ensureOnlinePeerConnection(session);
         } catch (error) {
@@ -3348,6 +3611,13 @@
           aimTension: state.aimTension,
           mapTime: state.mapTime,
           triggerPlacementUsed: [...state.triggerPlacementUsed],
+          triggerPlacementCount: [...state.triggerPlacementCount],
+          hero: {
+            offers: state.heroOffers.map(options => [...options]),
+            choices: [...state.heroChoices],
+            owner: state.heroSelectionOwner,
+            remaining: state.heroDeadline == null ? null : Math.max(0, state.heroDeadline - Date.now())
+          },
           deck: [],
           hands: state.hands.map((hand, owner) => hand.map(card => owner === 1
             ? { ...card }
@@ -3387,6 +3657,8 @@
 
       function applyOnlineSnapshot(snapshot) {
         const snapshotTime = performance.now();
+        const previousHeroChoice = state.heroChoices[onlineSession.playerIndex];
+        const previousHeroOffers = state.heroOffers[onlineSession.playerIndex]?.join(',');
         const sameRound = snapshot.series?.roundIndex === onlineSession.roundIndex && snapshot.currentMapId === state.currentMap.id;
         const sameTurn = sameRound && snapshot.globalTurn === turns.globalTurn;
         const inputAllowed = sameTurn && ['aiming', 'sliding', 'turn-ready', 'reposition'].includes(snapshot.phase) &&
@@ -3398,7 +3670,8 @@
           snapshot.units.some(unit => unit.id === remoteAimId && unit.status !== 'fallen');
         const localAim = preserveAim ? { aimPoint: state.aimPoint, aimTension: state.aimTension } : null;
         const preserveTriggerSelection = inputAllowed && state.phase === 'trigger-select' &&
-          state.pendingTriggerPlacement && !snapshot.triggerPlacementUsed[onlineSession.playerIndex];
+          state.pendingTriggerPlacement && snapshot.triggerPlacementCount[onlineSession.playerIndex] <
+            (HEROES.find(hero => hero.id === snapshot.hero?.choices[onlineSession.playerIndex])?.trapLimit ?? 1);
         if (!preserveAim) localAimPointerId = null;
         if (!inputAllowed) cancelCardDrag();
         if (!preserveTriggerSelection) {
@@ -3450,6 +3723,14 @@
         state.mapTime = onlineInterpolation.fromMapTime;
         state.repositionMode = snapshot.repositionMode || null;
         state.triggerPlacementUsed = snapshot.triggerPlacementUsed;
+        state.triggerPlacementCount = snapshot.triggerPlacementCount;
+        if (snapshot.hero) {
+          state.heroOffers = snapshot.hero.offers;
+          state.heroChoices = snapshot.hero.choices;
+          state.heroSelectionOwner = snapshot.hero.owner;
+          state.heroDeadline = snapshot.hero.remaining == null ? null : Date.now() + snapshot.hero.remaining;
+          if (state.heroChoices[onlineSession.playerIndex]) state.heroPendingChoice = null;
+        }
         state.deck = snapshot.deck;
         state.hands = snapshot.hands;
         state.nextCardId = snapshot.nextCardId;
@@ -3475,6 +3756,12 @@
         dealOverlay.hidden = state.phase !== 'dealing';
         mapSelectOverlay.hidden = true;
         startOverlay.hidden = true;
+        if (state.phase === 'hero-select') {
+          state.heroSelectionMode = 'online';
+          if (heroSelectOverlay.hidden || previousHeroChoice !== state.heroChoices[onlineSession.playerIndex] ||
+              previousHeroOffers !== state.heroOffers[onlineSession.playerIndex]?.join(',')) renderHeroSelection();
+          if (!previousHeroChoice && state.heroChoices[onlineSession.playerIndex]) playSound('heroSelect');
+        } else heroSelectOverlay.hidden = true;
         if (snapshot.series) {
           onlineSession.roundIndex = snapshot.series.roundIndex;
           onlineSession.wins = snapshot.series.wins;
@@ -3492,6 +3779,10 @@
       }
 
       function handleOnlineHostAction(packet) {
+        if (packet.action.type === 'hero' && onlineSession?.role === 'host' && packet.playerIndex === 1 && state.phase === 'hero-select') {
+          chooseHero(1, packet.action.heroId);
+          return;
+        }
         if (packet.action.type === 'speed' && onlineSession?.role === 'host' && Number.isInteger(packet.action.level)) {
           setSpeedLevel(packet.action.level, true);
           return;
@@ -3511,11 +3802,11 @@
           if (unit) useCard(action.cardId, 1, unit);
         } else if (action.type === 'end-turn') {
           endTurn();
-        } else if (action.type === 'trigger' && !state.triggerPlacementUsed[1] && canPlaceItemTrigger(action.point)) {
+        } else if (action.type === 'trigger' && remainingTriggerPlacements(1) > 0 && canPlaceItemTrigger(action.point)) {
           const type = ITEM_TRIGGERS.find(item => item.id === action.typeId);
           if (type) {
             state.triggers.push({ entityKind: ENTITY_KIND.TRIGGER, id: `online-trigger-${Date.now()}`, type, owner: 1, x: action.point.x, y: action.point.y, radius: CONFIG.unitRadius * .5 });
-            state.triggerPlacementUsed[1] = true;
+            spendTriggerPlacement(1);
             emitGameFeedback('drop', action.point, '트리거 배치', PLAYER[1].color);
             updateHud();
           }
@@ -3566,7 +3857,8 @@
         replayButton.hidden = true;
         dealOverlay.hidden = true;
         updateMatchHud();
-        dealCards();
+        if (roundIndex === 0 && !state.heroChoices.every(Boolean)) startHeroSelection('online');
+        else dealCards();
       }
 
       function roundStartingPlayer() {
@@ -3578,6 +3870,7 @@
       }
 
       function showOnlineResult(result) {
+        heroSelectOverlay.hidden = true;
         winnerTitle.textContent = result.title;
         winnerTitle.classList.remove('result-title');
         void winnerTitle.offsetWidth;
@@ -3611,6 +3904,7 @@
         startOverlay.hidden = true;
         resultOverlay.hidden = true;
         dealOverlay.hidden = true;
+        heroSelectOverlay.hidden = true;
         mapSelectOverlay.hidden = false;
         mapSelectTitle.textContent = '맵 선택';
         mapSelectDescription.textContent = '이번 판에서 플레이할 맵을 고르세요.';
@@ -3618,7 +3912,7 @@
         onlinePlayerStatus.hidden = true;
         onlineStatus.hidden = true;
         confirmMapButton.disabled = false;
-        confirmMapButton.textContent = '선택한 맵으로 시작';
+        confirmMapButton.textContent = '이 맵 확정';
         cancelMapButton.textContent = '취소';
         entityTooltip.hidden = true;
         renderMapOptions();
@@ -3659,7 +3953,7 @@
         mapIndicator.textContent = state.currentMap.name;
         mapSelectOverlay.hidden = true;
         dealOverlay.hidden = true;
-        dealCards();
+        startHeroSelection('local');
       }
 
       function startLocalGame() {
@@ -3671,6 +3965,7 @@
 
       function dealCards() {
         turns.reset(roundStartingPlayer());
+        state.heroCardDraws = [0, 0];
         state.deck = CARDS.map(card => ({ ...card }));
         for (let i = state.deck.length - 1; i > 0; i -= 1) {
           const j = Math.floor(Math.random() * (i + 1));
@@ -3679,6 +3974,7 @@
         state.nextCardId = 0;
         state.hands = [[], []];
         state.triggerPlacementUsed = [false, false];
+        state.triggerPlacementCount = [0, 0];
         renderHands();
         drawCardForPlayer(turns.startingPlayer, beginRound);
       }
@@ -3725,11 +4021,11 @@
         winnerTitle.classList.remove('result-title');
         void winnerTitle.offsetWidth;
         winnerTitle.classList.add('result-title');
-        resultMessage.textContent = winner === null ? '거리 점수와 낙사 보너스를 합산한 결과 무승부입니다.' : `거리 점수와 상대 병뚜껑 낙사 보너스를 합산해 ${PLAYER[winner].name}이 승리했습니다.`;
+        resultMessage.textContent = winner === null ? '거리 점수와 낙사 보너스를 합산한 결과 무승부입니다.' : `거리 점수와 상대 스톤 낙사 보너스를 합산해 ${PLAYER[winner].name}이 승리했습니다.`;
         renderResultRows(scores.map((result, index) => ({
           label: PLAYER[index].name,
           score: `${result.score}점`,
-          detail: `거리 ${Math.round(result.distance)} · 낙사 보너스 ${result.fallBonus}점`
+          detail: `거리 ${Math.round(result.distance)} · 낙사 점수 ${result.fallBonus}점`
         })));
         createConfetti(winner === null ? '#e5b35a' : PLAYER[winner].color);
         resultOverlay.hidden = false;
@@ -3908,9 +4204,9 @@
           ctx.drawImage(image, -unit.radius, -unit.radius, unit.radius * 2, unit.radius * 2);
           ctx.restore();
           ctx.beginPath();
-          ctx.arc(0, 0, unit.radius, 0, Math.PI * 2);
-          ctx.strokeStyle = PLAYER[unit.owner].color;
-          ctx.lineWidth = 3;
+          ctx.arc(0, 0, unit.radius - .75, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(220, 232, 230, .28)';
+          ctx.lineWidth = 1.5;
           ctx.stroke();
         } else {
           ctx.beginPath();
@@ -4221,31 +4517,33 @@
 
       function getUnitTooltip(unit) {
         const effects = [];
+        const hero = heroFor(unit.owner);
+        if (hero) effects.push(`영웅 · ${hero.name}`);
         const hardeningStacks = getUnitEffectStacks(unit, 'hardening');
         const guardStacks = getUnitEffectStacks(unit, 'guard');
-        if (unit.openingFrictionMultiplier > 1) effects.push('선공 첫 병뚜껑 · 추가 마찰력 25%');
+        if (unit.openingFrictionMultiplier > 1) effects.push('선공 첫 스톤 · 추가 마찰력 25%');
         if (hardeningStacks) effects.push(`경질화 ${hardeningStacks}중첩 · 마찰력 ${UNIT_EFFECTS.hardening.frictionPerStack ** hardeningStacks}배`);
         if (guardStacks) effects.push(`방호벽 ${guardStacks}중첩 · 위성체 ${guardStacks * UNIT_EFFECTS.guard.satellitesPerStack}개`);
         if (unit.fluidTimer > 0) effects.push('블랙홀 방출 · 유체 상태');
         if (unit.relaunchAvailable && !unit.relaunchUsed) effects.push('재배치 가능');
         return {
-          title: `${PLAYER[unit.owner].name} · ${unit.turnNumber}번째 병뚜껑`,
+          title: `${PLAYER[unit.owner].name} · ${unit.turnNumber}번째 스톤`,
           detail: effects.length ? `적용 효과: ${effects.join(', ')}` : unit.status === 'ready' ? '아직 발사 전 · 적용 효과 없음' : '적용 효과 없음'
         };
       }
 
       function getTriggerTooltip(trigger) {
         const descriptions = {
-          blackhole: `블랙홀 방출 · 범위 ${Math.round(trigger.type.range)} 안의 병뚜껑과 벽돌을 끌어당깁니다.`,
-          pulse: `방출 · 범위 ${Math.round(trigger.type.range)} 안의 병뚜껑과 벽돌을 강하게 밀쳐냅니다.`,
+          blackhole: `블랙홀 방출 · 범위 ${Math.round(trigger.type.range)} 안의 스톤과 벽돌을 끌어당깁니다.`,
+          pulse: `방출 · 획득 후 유닛과 충돌하거나 0.5초가 지나면 범위 ${Math.round(trigger.type.range)} 안의 스톤과 벽돌을 강하게 밀쳐냅니다.`,
           hardening: '경질화 · 중첩할 때마다 마찰력이 3배씩 곱해집니다.',
           guard: '방호벽 · 중첩하면 위성체가 최대 네 개까지 늘어납니다.'
         };
-        return { title: `${trigger.type.name} 트리거`, detail: `트리거는 병뚜껑에 닿으면 즉시 발동되며 소모되는 아이템입니다. ${descriptions[trigger.type.id]}` };
+        return { title: `${trigger.type.name} 트리거`, detail: `트리거는 스톤에 닿으면 소모되어 효과를 부여하는 아이템입니다. ${descriptions[trigger.type.id]}` };
       }
 
       function updateEntityTooltip(event) {
-        if (event.pointerType === 'touch' || state.cardDrag || state.effects.some(effect => effect.type === 'skull') || ['intro', 'map-select', 'dealing', 'trigger-select', 'finished'].includes(state.phase)) {
+        if (event.pointerType === 'touch' || state.cardDrag || state.effects.some(effect => effect.type === 'skull') || ['intro', 'map-select', 'hero-select', 'dealing', 'trigger-select', 'finished'].includes(state.phase)) {
           entityTooltip.hidden = true;
           return;
         }
@@ -4333,11 +4631,12 @@
         const dt = Math.min((timestamp - state.lastTime) / 1000 || 0, 0.03) * state.gameSpeed;
         state.lastTime = timestamp;
         updateTurnTimer();
+        updateHeroSelection();
         const onlineReplica = onlineSession?.started && onlineSession.role === 'challenger';
         if (onlineReplica) updateOnlineInterpolation(timestamp);
         if (state.aiming && state.repositionMode !== 'ammo' && (!onlineReplica || localAimPointerId !== null) && state.aimTension >= .75) playSound('strainRumble', state.aimTension);
         const tutorialPaused = state.tutorial && !learningUI.tutorialSettingsOverlay.hidden;
-        if (!onlineReplica && !tutorialPaused && !['intro', 'map-select', 'dealing', 'trigger-select', 'finished'].includes(state.phase)) update(dt, timestamp);
+        if (!onlineReplica && !tutorialPaused && !['intro', 'map-select', 'hero-select', 'dealing', 'trigger-select', 'finished'].includes(state.phase)) update(dt, timestamp);
         if (!onlineReplica && state.phase === 'finished') {
           updateParticles(dt);
           updateEffects(dt);
@@ -4409,13 +4708,17 @@
       }
       learningUI.cardCatalogTab.addEventListener('click', () => renderCatalog('cards'));
       learningUI.triggerCatalogTab.addEventListener('click', () => renderCatalog('triggers'));
-      for (const tab of [learningUI.cardCatalogTab, learningUI.triggerCatalogTab]) {
+      learningUI.heroCatalogTab.addEventListener('click', () => renderCatalog('heroes'));
+      const catalogTabs = [learningUI.cardCatalogTab, learningUI.triggerCatalogTab, learningUI.heroCatalogTab];
+      const catalogCategories = ['cards', 'triggers', 'heroes'];
+      for (const tab of catalogTabs) {
         tab.addEventListener('keydown', event => {
           if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
           event.preventDefault();
-          const other = tab === learningUI.cardCatalogTab ? learningUI.triggerCatalogTab : learningUI.cardCatalogTab;
-          renderCatalog(other === learningUI.cardCatalogTab ? 'cards' : 'triggers');
-          other.focus();
+          const offset = event.key === 'ArrowRight' ? 1 : -1;
+          const next = (catalogTabs.indexOf(tab) + offset + catalogTabs.length) % catalogTabs.length;
+          renderCatalog(catalogCategories[next]);
+          catalogTabs[next].focus();
         });
       }
       learningUI.tutorialLessonSelect.addEventListener('change', event => loadTutorialLesson(Number(event.target.value)));

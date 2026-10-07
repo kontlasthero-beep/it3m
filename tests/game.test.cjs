@@ -237,7 +237,7 @@ test('basic tutorial objectives follow real launches, collisions, resting and tu
 test('tutorial navigation restores instructions, retry resets practice, and launch clears the aim overlay', () => {
   const g=game();
   g.run(`startTutorial();
-    assert.match(learningUI.tutorialInstruction.textContent,/병뚜껑을 오른쪽으로/);
+    assert.match(learningUI.tutorialInstruction.textContent,/스톤을 오른쪽으로/);
     assert.equal(tutorialShowsPlacementLimit(),false);
     const guardIndex=tutorialLessons().findIndex(lesson=>lesson.id==='card-guard');
     learningUI.tutorialLessonSelect.listeners.change({target:{value:String(guardIndex)}});
@@ -342,4 +342,150 @@ test('pulse trigger fires on a cap-brick impact before its delay expires', () =>
     update(.01,1000); assert.equal(cap.pendingPulseTriggers.length,0);
     assert.equal(sounds.filter(sound=>sound==='pulseCast').length,1);
     update(.6,1600); assert.equal(sounds.filter(sound=>sound==='pulseCast').length,1);`);
+});
+
+test('map confirmation opens two-option hero selection before cards are dealt', () => {
+  const g = game();
+  g.run(`startLocalGame(); startSelectedMap();
+    assert.equal(state.phase,'hero-select'); assert.equal(mapSelectOverlay.hidden,true);
+    assert.equal(heroSelectOverlay.hidden,false); assert.equal(state.heroOffers[0].length,2);
+    assert.equal(state.heroOffers[1].length,2); assert.equal(state.hands[0].length,0);
+    assert.ok(state.heroDeadline>Date.now());
+    chooseHero(0,state.heroOffers[0][0]); assert.equal(state.heroChoices[0],state.heroOffers[0][0]);`);
+  g.flush();
+  g.run(`assert.equal(state.heroSelectionOwner,1); chooseHero(1,state.heroOffers[1][1]);`);
+  g.flush();
+  g.run(`assert.equal(state.phase,'dealing'); assert.equal(heroSelectOverlay.hidden,true);
+    assert.equal(state.heroChoices.filter(Boolean).length,2);`);
+  g.flush(); g.flush();
+  g.run(`assert.equal(state.phase,'aiming'); assert.ok(turns.currentUnit);`);
+});
+
+test('hero selection times out to one of the offered abilities', () => {
+  const g = game();
+  const deadline = g.run(`startHeroSelection('local'); chooseHero(0,state.heroOffers[0][0]); state.heroDeadline;`);
+  g.flush();
+  assert.equal(g.run('state.heroDeadline'), deadline);
+  g.run(`assert.equal(state.heroSelectionOwner,1);
+    state.heroDeadline=Date.now()-1; updateHeroSelection();
+    assert.ok(state.heroOffers[1].includes(state.heroChoices[1]));`);
+  assert.ok(deadline > Date.now());
+  g.flush();
+  g.run(`assert.equal(state.phase,'dealing');`);
+});
+
+test('hunter gets extra ammo as first and last-turn cards without consuming the deck', () => {
+  const g = game();
+  g.run(`state.heroChoices[0]='hunter'; turns.reset(0); state.deck=CARDS.map(card=>({...card}));
+    drawCardForPlayer(0,()=>{});`);
+  g.flush();
+  g.run(`assert.equal(state.hands[0][0].id,'ammo'); assert.equal(state.deck.length,CARDS.length);
+    turns.globalTurn=6; drawCardForPlayer(0,()=>{});`);
+  g.flush();
+  g.run(`assert.equal(state.hands[0][1].id,'ammo'); assert.equal(state.deck.length,CARDS.length);
+    assert.equal(state.heroCardDraws[0],2);`);
+});
+
+test('trap master gets two placements, big boy changes radius and friction, joker changes fall scoring', () => {
+  const g = game();
+  g.run(`state.heroChoices=['trap-master','big-boy'];
+    assert.equal(remainingTriggerPlacements(0),2); spendTriggerPlacement(0);
+    assert.equal(remainingTriggerPlacements(0),1); assert.equal(state.triggerPlacementUsed[0],false);
+    spendTriggerPlacement(0); assert.equal(remainingTriggerPlacements(0),0);
+    assert.equal(state.triggerPlacementUsed[0],true);
+    const cap=new CurlingUnit({id:'big',owner:1,turnNumber:1,x:700,y:355});
+    assert.equal(cap.radius,CONFIG.unitRadius*1.2);
+    assert.ok(Math.abs(cap.frictionAtPosition()-state.currentMap.friction*1.35)<1e-10);
+    state.heroChoices[0]='joker'; turns.reset(0); state.phase='sliding';
+    const enemy=new CurlingUnit({id:'enemy',owner:1,turnNumber:1,x:700,y:355});
+    settleFallenUnit(enemy); assert.equal(state.fallPoints[0],40);
+    const own=new CurlingUnit({id:'own',owner:0,turnNumber:1,x:700,y:355});
+    settleFallenUnit(own); settleFallenUnit(own);
+    assert.equal(state.fallPoints[0],30); assert.equal(calculateScores()[0].score,30);`);
+});
+
+test('online hero offers and host-validated challenger choice arrive in snapshots', () => {
+  const {host,guest,send} = onlinePair();
+  host.run(`startHeroSelection('online');`); send(2);
+  guest.run(`assert.equal(state.phase,'hero-select'); assert.equal(heroSelectOverlay.hidden,false);
+    assert.equal(state.heroOffers[1].length,2); onlineSession.pendingActions=new Map();
+    onlineSession.socket={readyState:1,bufferedAmount:0,send(){}};
+    assert.equal(chooseHero(1,state.heroOffers[1][0]),true);
+    assert.equal(state.heroChoices[1],null); assert.equal(state.heroPendingChoice,state.heroOffers[1][0]);`);
+  host.run(`handleOnlineHostAction({playerIndex:1,action:{type:'hero',heroId:'invalid'}});
+    assert.equal(state.heroChoices[1],null);
+    handleOnlineHostAction({playerIndex:1,action:{type:'hero',heroId:state.heroOffers[1][0]}});
+    chooseHero(0,state.heroOffers[0][0]);`);
+  send(3);
+  guest.run(`assert.equal(state.heroChoices[1],state.heroOffers[1][0]); assert.equal(state.heroPendingChoice,null);`);
+  host.flush(); send(4);
+  guest.run(`assert.equal(state.phase,'dealing'); assert.equal(heroSelectOverlay.hidden,true);`);
+});
+
+test('host auto-selects both online heroes after the shared deadline', () => {
+  const {host,guest,send} = onlinePair();
+  host.run(`startHeroSelection('online'); state.heroDeadline=Date.now()-1; updateHeroSelection();
+    assert.ok(state.heroOffers[0].includes(state.heroChoices[0]));
+    assert.ok(state.heroOffers[1].includes(state.heroChoices[1]));`);
+  send(2);
+  guest.run(`assert.equal(state.phase,'hero-select'); assert.equal(state.heroChoices.filter(Boolean).length,2);`);
+  host.flush(); send(3);
+  guest.run(`assert.equal(state.phase,'dealing');`);
+});
+
+test('trap master can place twice through the normal trigger flow and not a third time', () => {
+  const g = game();
+  g.run(`state.heroChoices[0]='trap-master'; turns.createCurrentUnit(); state.phase='aiming';
+    openTriggerTypeSelection({x:400,y:300},0); state.selectedTriggerType='guard'; confirmItemTriggerPlacement();
+    assert.equal(state.triggers.length,1); assert.equal(remainingTriggerPlacements(0),1);
+    openTriggerTypeSelection({x:500,y:300},0); state.selectedTriggerType='pulse'; confirmItemTriggerPlacement();
+    assert.equal(state.triggers.length,2); assert.equal(remainingTriggerPlacements(0),0);
+    openTriggerTypeSelection({x:600,y:300},0); state.selectedTriggerType='blackhole'; confirmItemTriggerPlacement();
+    assert.equal(state.triggers.length,2); assert.equal(state.triggerPlacementCount[0],2);`);
+});
+
+test('hero choices remain active through the second online round', () => {
+  const {host} = onlinePair();
+  host.run(`state.heroChoices=['hunter','trap-master']; onlineSession.roundIndex=1;
+    startOnlineRound(1); assert.equal(state.phase,'dealing');
+    assert.equal(state.heroChoices[0],'hunter'); assert.equal(state.heroChoices[1],'trap-master');
+    assert.equal(remainingTriggerPlacements(1),2);`);
+  host.flush(); host.flush();
+  host.run(`assert.equal(turns.startingPlayer,1); assert.equal(state.heroChoices[0],'hunter');`);
+});
+
+test('joker pays the fall penalty on an expired unlaunched turn', () => {
+  const g = game();
+  g.run(`state.heroChoices[0]='joker'; turns.createCurrentUnit(); state.phase='aiming';
+    state.turnDeadline=Date.now()-1; expireCurrentTurn();
+    assert.equal(state.units[0].status,'fallen'); assert.equal(state.fallPoints[0],-10);`);
+});
+
+test('hero tutorial opens the selector and catalog lists all abilities', () => {
+  const g = game();
+  g.run(`startTutorial(); loadTutorialLesson(tutorialLessons().findIndex(lesson=>lesson.id==='hero-selection'));
+    assert.equal(state.phase,'hero-select'); assert.equal(heroSelectOverlay.hidden,false);
+    chooseHero(0,state.heroOffers[0][0]);`);
+  g.flush();
+  g.run(`assert.equal(state.tutorial.complete,true); assert.equal(state.phase,'aiming');
+    renderCatalog('heroes'); assert.equal(learningUI.catalogList.children.length,HEROES.length);
+    assert.equal(learningUI.heroCatalogTab.getAttribute('aria-selected'),'true');`);
+});
+
+test('hero portraits appear on the matching selection cards and catalog entries', () => {
+  const g = game();
+  const portraits = g.run('HEROES.map(hero => hero.portrait)');
+  portraits.forEach(portrait => assert.ok(fs.existsSync(path.join(__dirname, '..', portrait))));
+  g.run(`startHeroSelection('local'); state.heroOffers[0]=['trap-master','hunter']; renderHeroSelection();`);
+  const options = g.elements.get('#heroOptions').children;
+  assert.equal(options.length, 2);
+  assert.equal(options[0].children[0].src, '영웅 초상화/trap master.png');
+  assert.equal(options[0].children[1].children[0].textContent, '트랩 마스터');
+  assert.equal(options[1].children[0].src, '영웅 초상화/hunter.png');
+  options[0].listeners.click();
+  assert.equal(g.run('state.heroChoices[0]'), 'trap-master');
+  g.run(`renderCatalog('heroes');`);
+  const entries = g.elements.get('#catalogList').children;
+  assert.equal(entries.length, portraits.length);
+  entries.forEach((entry, index) => assert.equal(entry.children[0].children[0].src, portraits[index]));
 });

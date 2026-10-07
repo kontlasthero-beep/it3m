@@ -1,4 +1,4 @@
-const CACHE_NAME = 'table-curling-v22';
+const CACHE_NAME = 'table-curling-v24';
 const APP_FILES = [
   './',
   './index.html',
@@ -7,8 +7,12 @@ const APP_FILES = [
   './apple-touch-icon.png',
   './icon-192.png',
   './icon-512.png',
-  './병뚜껑 1.png',
-  './병뚜껑 2.png',
+  './stone-blue.png',
+  './stone-red.png',
+  './영웅 초상화/trap master.png',
+  './영웅 초상화/hunter.png',
+  './영웅 초상화/big boy.png',
+  './영웅 초상화/joker.png',
   './효과음/Midhit_1.wav',
   './효과음/Stronghit_1.wav',
   './효과음/Unit_death_sound_for_1.wav',
