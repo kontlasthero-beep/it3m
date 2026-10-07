@@ -8,6 +8,7 @@ function game() {
   const elements = new Map();
   const timeouts = [];
   let time = 1000;
+  let wallOffset = 0;
   function element() {
     const attrs = {};
     return {
@@ -15,11 +16,14 @@ function game() {
       classList: { add() {}, remove() {}, toggle() {} }, listeners: {}, children: [],
       addEventListener(type, callback) { this.listeners[type] = callback; },
       setAttribute(key, value) { attrs[key] = value; }, getAttribute(key) { return attrs[key]; },
-      append(...items) { this.children.push(...items); }, replaceChildren(...items) { this.children = items; },
+      append(...items) { for (const item of items) { item.remove(); item.parentNode = this; this.children.push(item); } },
+      replaceChildren(...items) { for (const item of this.children) item.parentNode = null; this.children = []; this.append(...items); },
       querySelector() { return element(); }, querySelectorAll() { return []; },
       getContext() { return new Proxy({}, { get: () => () => {} }); },
       getBoundingClientRect() { return { left: 0, top: 0, width: 1200, height: 710 }; },
-      focus() {}, remove() {}, setPointerCapture() {}, contains() { return false; }
+      focus() {}, remove() { if (this.parentNode) this.parentNode.children = this.parentNode.children.filter(item => item !== this); this.parentNode = null; },
+      cloneNode(deep) { const clone = element(); clone.dataset = {...this.dataset}; clone.className = this.className; if (deep) clone.append(...this.children.map(child => child.cloneNode(true))); return clone; },
+      setPointerCapture() {}, contains(target) { return this === target || this.children.some(child => child.contains(target)); }
     };
   }
   const document = {
@@ -32,7 +36,8 @@ function game() {
   const context = vm.createContext({
     document, window: { matchMedia: () => ({ matches: false, addEventListener() {} }), addEventListener() {} },
     navigator: {}, location: { protocol: 'https:' }, Image: class {}, Audio,
-    performance: { now: () => time }, Date, console, assert, URL, WebSocket: { OPEN: 1 },
+    performance: { now: () => time }, Date: class extends Date { static now() { return Date.now() + wallOffset; } },
+    console, assert, URL, WebSocket: { OPEN: 1 },
     requestAnimationFrame() {}, setTimeout(fn) { timeouts.push(fn); return timeouts.length; }, clearTimeout() {},
     setInterval() { return 1; }, clearInterval() {}, crypto: { randomUUID: () => 'test-id' }
   });
@@ -40,7 +45,8 @@ function game() {
   const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
   vm.runInContext(script.replace(/\}\)\(\);\s*$/, 'globalThis.run = code => eval(code); })();'), context);
   context.run(`globalThis.sounds = []; playSound = name => sounds.push(name); playFileSound = name => sounds.push(name);`);
-  return { run: context.run, elements, tick: ms => { time += ms; }, flush: () => timeouts.splice(0).forEach(fn => fn()) };
+  return { run: context.run, elements, tick: ms => { time += ms; }, wall: ms => { wallOffset += ms; },
+    flush: () => timeouts.splice(0).forEach(fn => fn()) };
 }
 
 function onlinePair() {
@@ -59,6 +65,140 @@ function onlinePair() {
   send();
   return {host, guest, send};
 }
+
+test('independent clock advances hidden-host physics and snapshots without animation frames', () => {
+  const {host, guest} = onlinePair();
+  host.run(`document.hidden = true; globalThis.sent = [];
+    sendOnlineRealtimeMessage = (session, message) => { sent.push(message); return true; };
+    advanceGameClock(performance.now());`);
+  for (let i = 0; i < 40; i++) { host.tick(25); host.run('advanceGameClock(performance.now())'); }
+  host.run(`assert.ok(state.mapTime > .98); assert.ok(turns.currentUnit.ability.guardAngle > 1.6);
+    assert.ok(sent.length >= 19); assert.ok(sent.at(-1).snapshot.mapTime > .95);`);
+  const snapshot = host.run('JSON.stringify(sent.at(-1).snapshot)');
+  guest.run(`applyOnlineSnapshot(${snapshot}); updateOnlineInterpolation(performance.now()+100);
+    assert.ok(state.mapTime > .95); assert.ok(turns.currentUnit.ability.guardAngle > 1.5);`);
+});
+
+test('clock accounts for delayed ticks and never counts an older animation timestamp twice', () => {
+  const g = game();
+  g.run(`state.currentMap=MAPS[2]; turns.reset(); turns.createCurrentUnit(); state.phase='aiming';
+    advanceGameClock(1000); advanceGameClock(1500); advanceGameClock(1490); advanceGameClock(1500);
+    assert.ok(Math.abs(state.mapTime-.5)<.01);`);
+});
+
+test('35 second turn timer is independent of game speed and echoes each final-ten count', () => {
+  const g = game();
+  g.run(`turns.reset(); turns.createCurrentUnit(); state.phase='aiming'; state.gameSpeed=.4;
+    const before=Date.now(); startTurnTimer(); assert.ok(state.turnDeadline-before>=35000);
+    assert.ok(state.turnDeadline-before<35050);
+    for(let seconds=10;seconds>=1;seconds--) {
+      state.turnDeadline=Date.now()+seconds*1000-20; updateTurnTimer();
+      assert.equal(turnTimer.dataset.seconds,String(seconds).padStart(2,'0'));
+      assert.equal(state.timerLastVisualSecond,seconds);
+    }`);
+});
+
+test('stone motion freezes turn time and the countdown resumes at the saved value', () => {
+  const g = game();
+  g.run(`turns.reset(); turns.createCurrentUnit(); state.phase='aiming'; startTurnTimer();`);
+  g.wall(4000);
+  g.run(`updateTurnTimer(); globalThis.beforePause=turnTimeRemaining();
+    turns.currentUnit.status='sliding'; state.phase='sliding'; updateTurnTimer();
+    assert.equal(turnTimer.classList !== null,true); assert.ok(state.turnPausedAt != null);`);
+  g.wall(12000);
+  g.run(`updateTurnTimer(); assert.ok(Math.abs(turnTimeRemaining()-beforePause)<50);
+    assert.equal(turnTimer.textContent,'31');
+    turns.currentUnit.status='resting'; state.phase='turn-ready'; updateTurnTimer();
+    assert.ok(Math.abs(turnTimeRemaining()-beforePause)<50); assert.equal(state.turnPausedAt,null);`);
+  g.wall(3000);
+  g.run(`updateTurnTimer(); assert.equal(turnTimer.textContent,'28');
+    assert.ok(turnTimeRemaining() < beforePause-2900);`);
+});
+
+test('guest timer stays frozen from host snapshots while a stone slides', () => {
+  const {host, guest, send} = onlinePair();
+  host.run(`turns.currentUnit.status='sliding'; state.phase='sliding'; updateTurnTimer();`);
+  send(2);
+  guest.run(`updateTurnTimer(); assert.equal(state.turnPausedByHost,true);
+    globalThis.pausedValue=turnTimeRemaining();`);
+  guest.wall(10000);
+  guest.run(`updateTurnTimer(); assert.ok(Math.abs(turnTimeRemaining()-pausedValue)<50);`);
+  host.run(`turns.currentUnit.status='resting'; state.phase='turn-ready'; updateTurnTimer();`);
+  send(3);
+  guest.run(`updateTurnTimer(); assert.equal(state.turnPausedByHost,false);
+    assert.ok(Math.abs(turnTimeRemaining()-pausedValue)<100);`);
+  guest.wall(2500);
+  guest.run(`updateTurnTimer(); assert.ok(turnTimeRemaining()<pausedValue-2400);`);
+});
+
+test('online turn owner alone controls speed, including host validation', () => {
+  const {host, guest, send} = onlinePair();
+  host.run(`updateHud(); assert.equal(speedToggle.disabled,true);
+    handleOnlineHostAction({playerIndex:1,action:{type:'speed',level:2}});
+    assert.equal(state.speedLevel,2);`);
+  send(2);
+  guest.run(`onlineSession.pendingActions=new Map(); sendOnlineRealtimeMessage=()=>true;
+    assert.equal(speedToggle.disabled,false); speedToggle.listeners.click();
+    assert.equal(state.speedLevel,0);`);
+  host.run(`turns.reset(0); state.units=[]; turns.createCurrentUnit(); state.phase='aiming'; updateHud();
+    assert.equal(speedToggle.disabled,false);
+    handleOnlineHostAction({playerIndex:1,action:{type:'speed',level:1}});
+    assert.equal(state.speedLevel,2);`);
+  send(3);
+  guest.run(`assert.equal(speedToggle.disabled,true); const old=state.speedLevel;
+    speedToggle.listeners.click(); assert.equal(state.speedLevel,old);`);
+});
+
+test('ice friction rises by 20 percent and catalog uses the card illustration files', () => {
+  const g = game();
+  g.run(`assert.ok(Math.abs(MAPS[1].friction/.007115625-1.2)<1e-10);
+    renderCatalog('cards');
+    const cards=cardDefinitions();
+    cards.forEach((card,index)=>{
+      const image=learningUI.catalogList.children[index].children[0].children[0];
+      assert.equal(image.src,CARD_PRESENTATION[card.id].art);
+      assert.equal(image.dataset.cardId,card.id);
+    });`);
+});
+
+test('background draw completes exactly once and resets cancel stale draw callbacks', () => {
+  const g = game();
+  g.run(`globalThis.completed=0; state.deck=[{id:'guard',name:'방호벽'}];
+    drawCardForPlayer(0,()=>{completed++;state.phase='aiming';});
+    assert.equal(cardDrawVisual.card.id,'guard');`);
+  g.tick(1600); g.run('advanceGameClock(performance.now())'); g.flush();
+  g.run(`assert.equal(completed,1); assert.equal(state.hands[0].length,1);
+    assert.equal(state.hands[0][0].id,'guard');
+    state.deck=[{id:'ammo',name:'총알 장전'}]; drawCardForPlayer(0,()=>completed++); clearPracticeBoard();`);
+  g.tick(1600); g.run('advanceGameClock(performance.now())'); g.flush();
+  g.run('assert.equal(completed,1); assert.equal(state.hands[0].length,0)');
+});
+
+test('draw snapshot masks host card and shares the exact guest card without restarting its animation', () => {
+  const {host, guest, send} = onlinePair();
+  host.run(`state.deck=[{id:'guard',name:'방호벽'}]; drawCardForPlayer(0,()=>{});
+    assert.equal(createOnlineSnapshot().cardDraw.card.id,'hidden');`);
+  host.flush();
+  host.run(`state.deck=[{id:'hardening',name:'경질화'}]; drawCardForPlayer(1,()=>{});`);
+  send(2);
+  guest.run(`assert.equal(cardDrawVisual.card.id,'hardening'); globalThis.drawStarted=cardDrawVisual.startedAt;`);
+  host.tick(50); guest.tick(50); send(3);
+  guest.run('assert.equal(cardDrawVisual.startedAt,drawStarted)');
+  host.flush(); send(4);
+  guest.run(`assert.equal(state.hands[1][0].id,'hardening')`);
+});
+
+test('hand reconciliation preserves hovered cards and every card has an existing illustration', () => {
+  const g = game();
+  g.run(`state.hands[0]=[{id:'guard',name:'방호벽',instanceId:'one'}]; renderHands();
+    globalThis.cardNode=handEls[0].children[0]; showCardInspector(cardNode); renderHands();
+    assert.equal(handEls[0].children[0],cardNode); assert.equal(cardInspector.hidden,false);
+    state.hands[0]=[]; renderHands(); assert.equal(handEls[0].children.length,0);
+    assert.equal(cardInspector.hidden,true);`);
+  for (const asset of g.run('Object.values(CARD_PRESENTATION).map(item=>item.art)')) {
+    assert.ok(fs.existsSync(path.join(__dirname,'..',asset)), asset);
+  }
+});
 
 test('snapshots advance walls and guards throughout a local aim without replacing the pointer', () => {
   const {host, guest, send} = onlinePair();
