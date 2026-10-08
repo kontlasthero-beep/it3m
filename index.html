@@ -142,6 +142,21 @@
       background: #111b1d;
       box-shadow: 0 20px 48px rgba(0, 0, 0, .34);
     }
+    .power-control { position: absolute; z-index: 18; width: 112px; transform: translateX(-50%); pointer-events: none; text-align: center; }
+    .power-control button { pointer-events: auto; min-height: 38px; width: 100%; font-weight: 800; }
+    .power-control .power-launch { width: 58px; min-height: 28px; padding: 4px 6px; border-color: rgba(240, 200, 116, .65); background: rgba(180, 117, 34, .55); color: #fff0d6; font-size: 12px; }
+    .power-control .power-launch:hover { background: rgba(180, 117, 34, .78); }
+    .power-panel { padding: 8px; border: 1px solid #bd9561; border-radius: 5px; background: rgba(15, 28, 29, .96); box-shadow: 0 8px 22px rgba(0,0,0,.45); }
+    .power-panel.power-dismissing { animation: power-dismiss .3s ease-in forwards; }
+    @keyframes power-dismiss { to { opacity: 0; transform: translateY(-10px) scale(.9); } }
+    .power-panel[hidden], .power-launch[hidden], .power-control[hidden] { display: none; }
+    .power-track { position: relative; height: 148px; margin: 0 12px 8px; border: 2px solid #9ca8a1; border-radius: 2px; background: linear-gradient(to top, #263d3a 0%, #3e775f 55%, #a98a4b 85%, #b64b3d 100%); }
+    .power-control.big-boy .power-track { height: 170px; }
+    .power-track::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(to top, transparent 0 23%, rgba(238,244,230,.35) 23% calc(23% + 1px), transparent calc(23% + 1px) 25%); }
+    .power-needle { position: absolute; z-index: 1; left: -9px; right: -9px; height: 6px; border: 1px solid #ffd2b2; border-radius: 2px; background: #ed5c4b; box-shadow: 0 0 11px rgba(255,101,72,.85); transform: translateY(-50%); }
+    .power-value { min-height: 21px; margin-bottom: 6px; color: #f3e5c4; font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .power-confirm { border-color: #69d7ba; background: #236b60; }
+    .power-confirm:disabled, .power-launch:disabled { opacity: .48; cursor: not-allowed; }
 
     #aimOverlay { position: fixed; z-index: 15; inset: 0; display: none; width: 100vw; height: 100vh; height: 100dvh; overflow: visible; pointer-events: none; }
 
@@ -339,8 +354,10 @@
     .card-face { display: flex; flex-direction: column; width: 100%; height: 100%; overflow: hidden; border: 1px solid #83928c; border-radius: 5px; background: #152226; color: #f4f0e6; box-shadow: 0 3px 8px rgba(0,0,0,.25); text-align: left; }
     .card-art { display: block; width: 100%; height: 43%; flex: 0 0 auto; object-fit: cover; object-position: center; pointer-events: none; }
     .card-art[data-card-id="reposition"] { object-position: center 18%; }
+    .card-art[data-card-id="bluffing"] { object-position: center 12%; transform: scale(1.1); transform-origin: center top; }
     .card-name { display: block; flex: 0 0 auto; padding: 8px 10px; font-size: 16px; line-height: 1.25; border-top: 1px solid #65736d; }
     .card-rules { display: block; padding: 0 10px 10px; font-size: 12px; font-weight: 400; line-height: 1.45; overflow-y: auto; overflow-wrap: anywhere; }
+    .card-face .card-name { position: relative; z-index: 1; background: #152226; }
     .ability-card .card-art { height: 76px; }
     .ability-card .card-name { display: flex; align-items: center; justify-content: center; min-height: 30px; padding: 3px 2px; font-size: 11px; text-align: center; }
     .ability-card .card-rules { display: none; }
@@ -361,6 +378,13 @@
     .ability-card.spent { opacity: .45; }
     .card-ghost { position: fixed; z-index: 75; pointer-events: none; transform: translate(-50%, -80%); }
     .card-ghost.full-card { width: 210px; height: min(310px, 80dvh); opacity: .9; }
+    .card-ghost.drag-card { width: 112px; height: 148px; opacity: .93; transition: width .12s ease, height .12s ease, transform .12s ease, filter .12s ease; }
+    .drag-card .card-art { height: calc(100% - 32px); }
+    .drag-card .card-name { display: flex; align-items: center; justify-content: center; min-height: 32px; padding: 3px 5px; font-size: 12px; text-align: center; }
+    .drag-card .card-rules { display: none; }
+    .card-ghost.drag-card.valid-target { width: 68px; height: 86px; transform: translate(-50%, -50%); filter: drop-shadow(0 0 12px #9ff4c0); }
+    .drag-card.valid-target .card-art { height: calc(100% - 22px); }
+    .drag-card.valid-target .card-name { min-height: 22px; font-size: 9px; }
     .trigger-placement-preview { position: fixed; z-index: 21; display: none; box-sizing: border-box; pointer-events: none; transform: translate(-50%, -50%); border: 3px solid #c1fff0; border-radius: 50%; background: #17302f; color: #56e0bc; opacity: .9; text-align: center; font-weight: 700; line-height: 1; }
     .card-deal-overlay { z-index: 65; background: rgba(8,15,16,.48); }
     .deal-player { position: fixed; top: max(12px, calc(50% - 202px)); left: 0; right: 0; margin: 0; color: #f4f0e6; font-size: 15px; text-align: center; }
@@ -392,6 +416,7 @@
     .catalog-entry canvas { width: 96px; height: 72px; flex: 0 0 96px; touch-action: auto; }
     .catalog-entry .catalog-card-art { display: block; width: 96px; height: 72px; flex: 0 0 96px; border: 1px solid var(--line); border-radius: 3px; object-fit: cover; object-position: center; }
     .catalog-entry .catalog-card-art[data-card-id="reposition"] { object-position: center 18%; }
+    .catalog-entry .catalog-card-art[data-card-id="bluffing"] { object-position: center 12%; transform: scale(1.08); }
     .catalog-entry.hero-catalog-entry header { display: block; }
     .catalog-entry .catalog-portrait { display: block; width: 100%; height: clamp(160px, 20vw, 230px); margin-bottom: 10px; border: 1px solid var(--line); border-radius: 3px; object-fit: cover; object-position: center top; }
     .catalog-entry h3 { margin: 0; font-size: 17px; overflow-wrap: anywhere; }
@@ -509,6 +534,13 @@
       .trigger-tool { min-height: 26px; padding: 4px 6px; font-size: 10px; }
       .table-clock-bar { min-height: 34px; padding: 2px 0 4px; }
       .turn-timer { min-width: 76px; font-size: 20px; padding: 2px 12px; }
+      .power-control { width: 88px; }
+      .power-control button { min-height: 32px; font-size: 11px; }
+      .power-control .power-launch { width: 48px; min-height: 26px; font-size: 10px; }
+      .power-panel { padding: 5px; }
+      .power-track { height: 96px; margin: 0 7px 4px; }
+      .power-control.big-boy .power-track { height: 110px; }
+      .power-value { min-height: 16px; margin-bottom: 3px; font-size: 12px; }
       .trigger-tool { min-width: 0; }
     }
   </style>
@@ -553,14 +585,14 @@
 
     <section class="scoreboard" aria-label="점수판">
       <div class="player-panel p1" id="panel0">
-        <div class="player-label">플레이어 1 · 스톤 4개</div>
+        <div class="player-label">플레이어 1 · 스톤 5개</div>
         <span class="hero-badge" id="heroBadge0" hidden></span>
-        <div class="player-score" id="score0">거리 0 · 점수 0</div>
+        <div class="player-score" id="score0">점수 0</div>
       </div>
       <div class="player-panel p2" id="panel1">
-        <div class="player-label">플레이어 2 · 스톤 4개</div>
+        <div class="player-label">플레이어 2 · 스톤 5개</div>
         <span class="hero-badge" id="heroBadge1" hidden></span>
-        <div class="player-score" id="score1">거리 0 · 점수 0</div>
+        <div class="player-score" id="score1">점수 0</div>
       </div>
     </section>
     <div class="match-hud" id="matchHud" hidden aria-live="polite"><span class="match-player" id="matchPlayer0"></span><strong id="matchScore0"></strong><span class="match-separator" aria-hidden="true">:</span><strong id="matchScore1"></strong><span class="match-player p2" id="matchPlayer1"></span><span class="match-round" id="matchRound"></span></div>
@@ -573,6 +605,14 @@
     <div class="table-clock-bar"><div class="turn-timer" id="turnTimer" aria-label="남은 턴 시간" hidden>35</div></div>
     <section class="game-shell" aria-label="컬링 테이블">
       <canvas id="game" width="1200" height="700" aria-label="Underhanded Curling Club 게임"></canvas>
+      <div class="power-control" id="powerControl" hidden>
+        <button class="power-launch" id="powerLaunchButton" type="button">발사</button>
+        <div class="power-panel" id="powerPanel" hidden>
+          <div class="power-track" id="powerTrack" role="meter" aria-label="발사 파워" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="power-needle" id="powerNeedle"></div></div>
+          <div class="power-value" id="powerValue">0%</div>
+          <button class="power-confirm" id="powerConfirmButton" type="button">결정</button>
+        </div>
+      </div>
       <div class="entity-tooltip" id="entityTooltip" role="tooltip" hidden>
         <strong id="entityTooltipTitle"></strong>
         <span id="entityTooltipDetail"></span>
@@ -687,11 +727,11 @@
     </section>
     <section class="bottom-bar" aria-label="남은 스톤과 턴 조작">
       <div class="remaining-ui">
-        <div class="remaining-player p1">플레이어 1 남은 스톤<strong id="remaining0">4개</strong></div>
-        <div class="remaining-player p2">플레이어 2 남은 스톤<strong id="remaining1">4개</strong></div>
+        <div class="remaining-player p1">플레이어 1 남은 스톤<strong id="remaining0">5개</strong></div>
+        <div class="remaining-player p2">플레이어 2 남은 스톤<strong id="remaining1">5개</strong></div>
       </div>
       <div class="turn-actions">
-        <span id="actionHint">스톤을 당겨 발사하세요</span>
+        <span id="actionHint">발사 버튼으로 파워를 정하세요</span>
         <button id="endTurnButton" disabled>턴 종료</button>
       </div>
     </section>
@@ -737,6 +777,13 @@
     (() => {
       const canvas = document.querySelector('#game');
       const ctx = canvas.getContext('2d');
+      const powerControl = document.querySelector('#powerControl');
+      const powerLaunchButton = document.querySelector('#powerLaunchButton');
+      const powerPanel = document.querySelector('#powerPanel');
+      const powerConfirmButton = document.querySelector('#powerConfirmButton');
+      const powerTrack = document.querySelector('#powerTrack');
+      const powerNeedle = document.querySelector('#powerNeedle');
+      const powerValue = document.querySelector('#powerValue');
       const learningUI = Object.fromEntries([
         'tutorialPanel', 'tutorialTitle', 'tutorialLessonSelect', 'tutorialInstruction', 'tutorialObjective', 'tutorialCompletion',
         'tutorialSettingsButton', 'tutorialSettingsOverlay', 'tutorialNextButton', 'catalogOverlay', 'catalogList',
@@ -853,6 +900,9 @@
           speedChange: { frequency: 720, endFrequency: 1040, duration: .12, waveform: 'sine', volume: .26 },
           deal: { frequency: 640, endFrequency: 880, duration: .11, waveform: 'triangle', volume: .28 },
           launch: { frequency: 300, endFrequency: 115, duration: .25, waveform: 'triangle', volume: .58 },
+          powerStart: { frequency: 280, endFrequency: 490, duration: .15, waveform: 'triangle', volume: .3 },
+          powerLock: { frequency: 950, endFrequency: 590, duration: .14, waveform: 'square', volume: .25 },
+          bluffing: { frequency: 720, endFrequency: 160, duration: .28, waveform: 'sine', volume: .34 },
           ammoFire: { frequency: 1500, endFrequency: 65, duration: .14, waveform: 'sawtooth', volume: .48 },
           hardening: { frequency: 330, endFrequency: 140, duration: .23, waveform: 'triangle', volume: .48 },
           guard: { frequency: 520, endFrequency: 1250, duration: .24, waveform: 'sine', volume: .4 },
@@ -892,9 +942,10 @@
       const TABLE = { left: 88, right: 1112, top: 58, bottom: 652, goalX: 108, launchX: 1060 };
       const CONFIG = {
         unitRadius: 29,
-        maxTurnsPerPlayer: 4,
+        maxTurnsPerPlayer: 5,
         launchScale: 5.566,
         maxPullDistance: 275,
+        directionPullDistance: 96,
         maxLaunchSpeed: 1392,
         bulletSpeedMultiplier: 3,
         stopSpeed: 12,
@@ -918,16 +969,18 @@
         { id: 'reposition', name: '재배치' }, { id: 'reposition', name: '재배치' },
         { id: 'brick', name: '구조물 투하' }, { id: 'brick', name: '구조물 투하' },
         { id: 'blackhole', name: '블랙홀 방출' }, { id: 'blackhole', name: '블랙홀 방출' },
-        { id: 'ammo', name: '총알 장전' }, { id: 'ammo', name: '총알 장전' }
+        { id: 'ammo', name: '총알 장전' }, { id: 'ammo', name: '총알 장전' },
+        { id: 'bluffing', name: '속임수' }, { id: 'bluffing', name: '속임수' }
       ];
       const CARD_DESCRIPTIONS = {
         hardening: '스톤의 마찰력이 3배가 됩니다. 같은 카드 효과는 중첩되어 마찰력과 회색 코팅이 더 강해집니다.',
         guard: '스톤 주위를 도는 위성 방호벽 2개를 추가합니다. 최대 4개까지 중첩되며 충돌로 유닛을 밀어냅니다. 위성체가 지나가는 위치와 타이밍을 확인하세요. 1번 더 중첩해서 사용하면 위성체가 두 방향을 방어합니다.',
         pulse: '사용한 스톤이 4초마다 충격파를 발산해 주변의 다른 스톤과 벽돌을 밀쳐냅니다. 발동 직전 스톤이 빛나며 시점을 알려줍니다. 상대 가까이에 멈춘 뒤 사용하면 4초마다 밀어낼 수 있습니다.',
-        reposition: '필드에 있는 자신의 스톤을 한 번 더 당겨 발사할 수 있게됩니다.',
+        reposition: '필드에 있는 자신의 스톤을 한 번 더 발사할 수 있게 됩니다. 파워를 정한 뒤 방향을 지정하세요.',
         brick: '시작선에서 충분히 떨어진 곳에 움직일 수 있는 벽돌 유닛을 배치합니다.',
         blackhole: '즉시 주변의 다른 스톤과 벽돌을 끌어당깁니다.',
-        ammo: '자신의 스톤에 사용하면 해당 스톤을 드래그하여 총알을 발사할 수 있습니다. 총알은 강한 충돌 판정을 가지며 방호벽과 벽돌을 파괴합니다.'
+        ammo: '자신의 스톤에 사용하면 해당 스톤을 드래그하여 총알을 발사할 수 있습니다. 총알은 강한 충돌 판정을 가지며 방호벽과 벽돌을 파괴합니다.',
+        bluffing: '다음 상대 턴이 종료될 때까지 해당 스톤의 충돌 판정이 사라집니다. 벽돌, 총알, 방호벽, 스톤, 맵 구조물을 통과하지만 방출과 블랙홀 방출의 영향은 받습니다.'
       };
       const TURN_LIMIT_MS = 35_000;
       const CARD_DRAW_HOLD_MS = 1050;
@@ -939,7 +992,8 @@
         reposition: { art: 'Card_illustration/Relocation.png', sound: 'reposition' },
         brick: { art: 'Card_illustration/Structure Drop.png', sound: 'drop' },
         blackhole: { art: 'Card_illustration/blackhole release.png', sound: 'blackhole' },
-        ammo: { art: 'Card_illustration/Load.png', sound: 'ammoLoad' }
+        ammo: { art: 'Card_illustration/Load.png', sound: 'ammoLoad' },
+        bluffing: { art: 'Card_illustration/Bluffing.png', sound: 'bluffing' }
       };
       const UNIT_EFFECTS = Object.freeze({
         hardening: { maxStacks: Infinity, frictionPerStack: 3 },
@@ -949,7 +1003,7 @@
       const HEROES = [
         { id: 'trap-master', name: '트랩 마스터', portrait: '영웅 초상화/trap master.png', description: '트리거를 게임당 두 번까지 설치할 수 있습니다.', color: '#71dbbf', trapLimit: 2 },
         { id: 'hunter', name: '헌터', portrait: '영웅 초상화/hunter.png', description: '첫 카드와 마지막 차례의 카드를 총알 장전으로 받습니다. 이 카드들은 카드 풀을 소모하지 않습니다.', color: '#f1c275', firstCard: 'ammo', lastCard: 'ammo' },
-        { id: 'big-boy', name: '빅 보이', portrait: '영웅 초상화/big boy.png', description: '자신의 스톤 크기가 20% 커지고 기본 마찰 계수가 35% 증가합니다.', color: '#92b6f7', capScale: 1.2, frictionScale: 1.35 },
+        { id: 'big-boy', name: '빅 보이', portrait: '영웅 초상화/big boy.png', description: '자신의 스톤 크기가 20% 커지고 기본 마찰 계수가 35% 증가합니다.', color: '#92b6f7', capScale: 1.2, frictionScale: 1.35, powerScale: 1.15 },
         { id: 'joker', name: '조커', portrait: '영웅 초상화/joker.png', description: '상대 스톤을 떨어뜨리면 40점을 얻지만 자신의 스톤이 떨어지면 10점을 잃습니다.', color: '#ef9bc6', knockoutPoints: 40, fallPenalty: 10 }
       ];
       const LEARNING_DETAILS = {
@@ -959,21 +1013,22 @@
         reposition: { color: '#79dfc2', tip: '점수가 낮은 스톤을 구하거나 다른 방향에서 공격할 수 있습니다. 재발사가 끝날 때까지 총알 장전과 함께 사용할 수 없습니다.' },
         brick: { color: '#c3d0ce', tip: '왼쪽 배치 가능 구역에서 경로를 막거나 충돌 각도를 만드세요. 벽돌도 밀려나고 총탄에 파괴됩니다. 점수는 없습니다.' },
         blackhole: { color: '#bd75f5', tip: '주변 아군도 함께 끌려옵니다. 시전한 스톤은 잠시 유체 상태가 되어 다른 스톤이 통과합니다.' },
-        ammo: { color: '#ffe58a', tip: '빠른 총탄으로 방호벽 위성체나 벽돌을 제거하세요. 총탄은 마찰을 무시하며 구조물 맵의 벽에서 도탄됩니다.' }
+        ammo: { color: '#ffe58a', tip: '빠른 총탄으로 방호벽 위성체나 벽돌을 제거하세요. 총탄은 마찰을 무시하며 구조물 맵의 벽에서 도탄됩니다.' },
+        bluffing: { color: '#bdc8e8', tip: '다음 상대 턴이 끝날 때까지 물리 충돌을 피하지만 충격파의 힘은 그대로 받습니다.' }
       };
 
       // Card and trigger lessons/catalog entries follow the gameplay registries automatically.
       function cardDefinitions() { return [...new Map(CARDS.map(card => [card.id, card])).values()]; }
       function tutorialLessons() {
         return [
-          { id: 'launch', title: '발사와 힘 조절', text: '파란 스톤을 오른쪽으로 당겼다가 놓으면 왼쪽으로 발사됩니다. 길게 당길수록 강하게 발사되며, 상한선에 가까워지면 저항과 떨림이 생깁니다.', objective: '파란 스톤을 발사하세요.', event: 'launch' },
-          { id: 'score', title: '거리 점수와 낙사', text: '왼쪽 끝선에 가까울수록 높은 점수입니다. 짧게 당겨 안전하게 멈춰보세요. 네 방향 어디로든 테이블 밖으로 나가면 해당 스톤의 거리 점수는 사라집니다.', objective: '스톤을 테이블 위에 멈추세요.', event: 'rest' },
+          { id: 'launch', title: '발사와 힘 조절', text: '스톤 아래 발사 버튼을 누른 뒤, 빨간 미터가 왕복할 때 결정 버튼으로 파워를 고르세요. 위쪽일수록 강해집니다. 그다음 스톤을 짧게 드래그해 방향을 정하고 놓으면 발사됩니다.', objective: '파워를 결정하고 파란 스톤을 발사하세요.', event: 'launch' },
+          { id: 'score', title: '거리 점수와 낙사', text: '왼쪽 끝선에 가까울수록 높은 점수입니다. 낮은 파워를 골라 안전하게 멈춰보세요. 네 방향 어디로든 테이블 밖으로 나가면 해당 스톤의 거리 점수는 사라집니다.', objective: '스톤을 테이블 위에 멈추세요.', event: 'rest' },
           { id: 'collision', title: '상대 밀어내기', text: '빨간 스톤을 맞혀 위치를 바꿔보세요. 정면 충돌과 비스듬한 충돌의 결과가 다릅니다. 자신의 턴에 상대가 떨어지면 25점을 얻습니다.', objective: '빨간 스톤과 충돌하세요.', event: 'collision', targets: true },
           { id: 'turn', title: '턴과 타이머', text: '턴마다 35초가 주어지고 스톤이 움직이는 동안에는 시간이 멈춥니다. 테이블 위의 타이머에서 남은 시간을 확인하세요. 시간이 끝나면 이 연습에서는 턴을 넘기지 않고 타이머만 다시 시작합니다. 스톤을 발사하고 완전히 멈춘 다음 아래의 강조된 턴 종료 버튼을 눌러야 턴이 끝납니다.', objective: '발사한 스톤이 멈추면 강조된 턴 종료 버튼을 누르세요.', event: 'end-turn', timed: true },
           { id: 'hero-selection', title: '영웅 능력 선택', kind: 'hero', text: '맵을 고른 뒤 두 가지 영웅 능력 중 하나를 선택합니다. 15초 안에 선택하지 않으면 무작위로 정해집니다. 선택한 능력은 대전이 끝날 때까지 유지됩니다.', objective: '제시된 두 영웅 능력 중 하나를 선택하세요.', event: 'hero' },
           ...cardDefinitions().map(card => ({ id: `card-${card.id}`, title: `${card.name} 카드`, kind: 'card', elementId: card.id,
             text: `${CARD_DESCRIPTIONS[card.id] || card.name} ${LEARNING_DETAILS[card.id]?.tip || ''}`,
-            objective: card.id === 'brick' ? '구조물 투하 카드를 왼쪽 테이블에 놓으세요.' : ['ammo', 'reposition'].includes(card.id) ? '카드를 파란 스톤에 놓고 다시 당겨 발사하세요.' : ['hardening', 'guard'].includes(card.id) ? '같은 카드를 두 번 사용해 중첩을 확인하세요.' : '카드를 파란 스톤에 드래그해 사용하세요.',
+            objective: card.id === 'brick' ? '구조물 투하 카드를 왼쪽 테이블에 놓으세요.' : card.id === 'ammo' ? '카드를 파란 스톤에 놓고 당겨 총탄을 발사하세요.' : card.id === 'reposition' ? '카드를 파란 스톤에 놓고 파워와 방향을 정해 재발사하세요.' : ['hardening', 'guard'].includes(card.id) ? '같은 카드를 두 번 사용해 중첩을 확인하세요.' : '카드를 파란 스톤에 드래그해 사용하세요.',
             event: card.id === 'ammo' ? 'ammo' : card.id === 'reposition' ? 'launch' : 'card', targets: true,
             requiredUses: ['hardening', 'guard'].includes(card.id) ? 2 : 1 })),
           { id: 'speed-card', title: '게임 속도 조절', kind: 'speed-card', elementId: 'blackhole', cardId: 'blackhole', targets: true,
@@ -982,7 +1037,7 @@
           ...ITEM_TRIGGERS.map(trigger => ({ id: `trigger-${trigger.id}`, title: `${trigger.name} 트리거`, kind: 'trigger', elementId: trigger.id,
             text: `${trigger.description} 트리거는 스톤에 닿으면 소모되어 효과를 부여하는 아이템입니다.`, objective: '발사해 앞에 놓인 트리거를 획득하세요.', event: 'trigger', targets: true })),
           { id: 'placement', title: '나만의 트리거 배치', text: '각 플레이어는 게임당 한 번 트리거를 설치할 수 있습니다. 하단의 트리거 배치를 왼쪽 구역으로 끌어놓고 종류를 고르세요. 시작 위치에서 35% 이상 지난 곳에만 놓을 수 있으며 유닛이나 구조물 옆은 피해야 합니다.', objective: '트리거를 직접 배치하세요.', event: 'placement' },
-          { id: 'ice', title: '얼음판의 이동 거리', mapId: 'ice', text: '얼음판은 마찰력이 낮아 같은 힘으로도 더 멀리 갑니다. 힘을 줄여 발사하고 경질화로 이동 거리를 조절해보세요.', objective: '얼음판에서 스톤을 발사하세요.', event: 'launch', cardId: 'hardening' },
+          { id: 'ice', title: '얼음판의 이동 거리', mapId: 'ice', text: '얼음판은 마찰력이 낮아 같은 파워로도 더 멀리 갑니다. 낮은 파워를 고르고 경질화로 이동 거리를 조절해보세요.', objective: '얼음판에서 스톤을 발사하세요.', event: 'launch', cardId: 'hardening' },
           { id: 'walls', title: '움직이는 구조물', mapId: 'moving-walls', text: '구조물은 정해진 경로를 왕복합니다. 벽의 위치와 진행 방향을 보며 발사 시점을 고르세요. 벽 자체는 밀려나지 않고 총탄은 벽에 튕깁니다.', objective: '움직이는 벽 사이로 발사하세요.', event: 'launch' }
         ];
       }
@@ -1015,6 +1070,7 @@
         aiming: false,
         aimPoint: null,
         aimTension: 0,
+        powerMeter: null,
         phase: 'intro',
         advanceAt: 0,
         lastTime: 0,
@@ -1277,7 +1333,7 @@
           hands: [[], []], deck: [], fallPoints: [0, 0], triggerPlacementUsed: [false, false], triggerPlacementCount: [0, 0],
           heroOffers: [[], []], heroChoices: [null, null], heroDeadline: null, heroSelectionMode: null,
           heroSelectionOwner: 0, heroTransitionTimer: null, heroPendingChoice: null, heroCardDraws: [0, 0],
-          aiming: false, aimPoint: null, aimTension: 0, repositionUnit: null, repositionMode: null,
+          aiming: false, aimPoint: null, aimTension: 0, powerMeter: null, repositionUnit: null, repositionMode: null,
           pendingTriggerPlacement: null, selectedTriggerType: null, phaseBeforeTriggerSelect: null,
           turnDeadline: null, turnPausedAt: null, turnPausedByHost: false, timerTurn: -1, mapTime: 0 });
         turns.reset();
@@ -1286,6 +1342,7 @@
         entityTooltip.hidden = true;
         turnTimer.hidden = true;
         aimOverlay.style.display = 'none';
+        powerControl.hidden = true;
         document.body.classList.remove('timer-flash');
       }
 
@@ -1624,6 +1681,14 @@
           sound.duration, sound.waveform, AUDIO_CONFIG.sfxVolume * sound.volume * Math.min(1.5, intensity), audio.sfxBus);
       }
 
+      function playPowerLockSound(value) {
+        if (!sfxToggle.checked || !initializeAudio()) return;
+        const sound = AUDIO_CONFIG.sounds.powerLock;
+        const pitch = .65 + value * .7;
+        scheduleTone(sound.frequency * pitch, sound.endFrequency * pitch, audio.context.currentTime,
+          sound.duration, sound.waveform, AUDIO_CONFIG.sfxVolume * sound.volume * (.45 + value * .55), audio.sfxBus);
+      }
+
       function playFileSound(name, { volume = 1, cooldown = 0 } = {}) {
         if (!sfxToggle.checked) return;
         const source = AUDIO_FILES[name];
@@ -1751,7 +1816,7 @@
         frictionAtPosition() {
           const hardeningStacks = this.ability?.stacks?.hardening ?? (this.ability?.hardening ? 1 : 0);
           let multiplier = this.frictionMultiplier ?? (UNIT_EFFECTS.hardening.frictionPerStack ** hardeningStacks);
-          for (const brick of state.bricks) {
+          for (const brick of isCollisionPhased(this) ? [] : state.bricks) {
             if (Math.abs(this.x - brick.x) <= brick.width / 2 + this.radius &&
                 Math.abs(this.y - brick.y) <= brick.height / 2 + this.radius) multiplier += brick.frictionMultiplier - 1;
           }
@@ -1835,6 +1900,9 @@
           if (this.globalTurn === 0 && this.currentUnit) this.currentUnit.openingFrictionMultiplier = 1.25;
           this.currentUnit = null;
           this.globalTurn += 1;
+          for (const unit of state.units) {
+            if (unit.ability?.bluffingUntilTurn < this.globalTurn) delete unit.ability.bluffingUntilTurn;
+          }
         }
       }
 
@@ -1857,6 +1925,7 @@
         state.aiming = false;
         state.aimPoint = null;
         state.aimTension = 0;
+        state.powerMeter = null;
         state.repositionUnit = null;
         state.repositionMode = null;
         state.triggerPlacementUsed = [false, false];
@@ -1889,6 +1958,7 @@
         }
         drawCardForPlayer(turns.playerIndex, () => {
           turns.createCurrentUnit();
+          state.powerMeter = null;
           if (state.currentMap.items) spawnItemTrigger();
           state.phase = 'aiming';
           startTurnTimer();
@@ -1991,6 +2061,7 @@
         state.aiming = false;
         state.aimPoint = null;
         state.aimTension = 0;
+        state.powerMeter = null;
         state.repositionUnit = null;
         state.pendingTriggerPlacement = null;
         state.selectedTriggerType = null;
@@ -2041,11 +2112,10 @@
       }
 
       function showCardDraw(draw) {
-        const concealed = Boolean(onlineSession?.started && draw.owner !== onlineSession.playerIndex);
         if (cardDrawVisual?.id !== draw.id) {
           hideCardInspector();
           dealPlayer.textContent = `${PLAYER[draw.owner].name} · 카드 뽑기`;
-          dealCard.replaceChildren(createCardFace(draw.card, concealed));
+          dealCard.replaceChildren(createCardFace(draw.card));
           playSound('deal', .8);
         }
         cardDrawVisual = draw;
@@ -2096,7 +2166,7 @@
         const scores = calculateScores();
         scores.forEach((result, index) => {
           const bonus = result.fallBonus ? ` (${result.fallBonus > 0 ? '+' : ''}${result.fallBonus} 낙사)` : '';
-          scoreEls[index].textContent = `거리 ${Math.round(result.distance)} · 점수 ${result.score}${bonus}`;
+          scoreEls[index].textContent = `점수 ${result.score}${bonus}`;
           const hero = heroFor(index);
           heroBadges[index].hidden = !hero;
           heroBadges[index].textContent = hero ? `영웅 · ${hero.name}` : '';
@@ -2107,10 +2177,11 @@
         });
         endTurnButton.disabled = state.phase !== 'turn-ready' || state.bullets.length > 0 || !canControlPlayer(turns.playerIndex);
         speedToggle.disabled = !canChangeSpeed();
-        actionHint.textContent = state.phase === 'sliding' ? '스톤이 움직이는 중' : state.phase === 'turn-ready' ? '턴을 마치거나 카드를 사용하세요' : state.phase === 'reposition' ? (state.repositionMode === 'ammo' ? '총알 장전: 방향을 정해 총탄을 발사하세요' : '재배치: 스톤을 다시 당겨 발사하세요') : state.phase === 'trigger-select' ? '트리거 종류를 선택하세요' : '스톤을 당겨 발사하세요';
+        actionHint.textContent = state.phase === 'sliding' ? '스톤이 움직이는 중' : state.phase === 'turn-ready' ? '턴을 마치거나 카드를 사용하세요' : state.phase === 'reposition' && state.repositionMode === 'ammo' ? '총알 장전: 당겨서 발사' : state.phase === 'trigger-select' ? '트리거 종류를 선택하세요' : needsPowerMeter() && state.powerMeter?.stage === 'locked' ? '스톤을 드래그해 방향을 지정하세요' : needsPowerMeter() && state.powerMeter?.stage === 'spinning' ? '미터를 보고 파워를 결정하세요' : '스톤 아래 발사 버튼을 누르세요';
         handPanels.forEach((panel, index) => panel.classList.toggle('current', !turns.isComplete && index === turns.playerIndex));
         updateTriggerTools();
         updateMatchHud();
+        renderPowerControl();
         if (turns.isComplete) return;
         turnText.textContent = `${PLAYER[turns.playerIndex].name} · ${turns.playerTurn}번째 스톤`;
         if (state.tutorial) {
@@ -2202,11 +2273,99 @@
         updateHud();
       }
 
+      function activeLaunchUnit() {
+        return state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit;
+      }
+
+      function needsPowerMeter() {
+        return ['aiming', 'reposition'].includes(state.phase) && state.repositionMode !== 'ammo';
+      }
+
+      function startPowerMeter() {
+        const unit = activeLaunchUnit();
+        if (!needsPowerMeter() || !unit || unit.status === 'fallen' || state.powerMeter) return false;
+        state.powerMeter = { unitId: unit.id, stage: 'spinning', value: .12, direction: 1,
+          lastAt: performance.now(), elapsed: 0 };
+        playSound('powerStart');
+        renderPowerControl();
+        updateHud();
+        return true;
+      }
+
+      function lockPowerMeter(value = state.powerMeter?.value) {
+        const meter = state.powerMeter;
+        if (!meter || meter.stage !== 'spinning' || meter.unitId !== activeLaunchUnit()?.id ||
+            !Number.isFinite(value) || value < 0 || value > 1) return false;
+        meter.stage = 'locked';
+        meter.value = value;
+        meter.lockedAt = performance.now();
+        playPowerLockSound(value);
+        renderPowerControl();
+        updateHud();
+        return true;
+      }
+
+      function updatePowerMeter(timestamp) {
+        const meter = state.powerMeter;
+        if (!meter || meter.stage !== 'spinning') return;
+        const elapsed = Math.max(0, Math.min((timestamp - meter.lastAt) / 1000, .12));
+        meter.lastAt = timestamp;
+        meter.elapsed += elapsed;
+        const rate = 1.326 + .405 * Math.sin(meter.elapsed * 5.3) + .225 * Math.sin(meter.elapsed * 11.7 + 1.4);
+        meter.value += meter.direction * rate * elapsed;
+        if (meter.value > 1) { meter.value = 2 - meter.value; meter.direction = -1; }
+        if (meter.value < 0) { meter.value = -meter.value; meter.direction = 1; }
+      }
+
+      function renderPowerControl() {
+        const unit = activeLaunchUnit();
+        const meter = state.powerMeter?.unitId === unit?.id ? state.powerMeter : null;
+        const dismissing = meter?.stage === 'locked';
+        const visible = needsPowerMeter() && unit && unit.status !== 'fallen' &&
+          !['intro', 'dealing', 'finished'].includes(state.phase) &&
+          (meter || canControlPlayer(unit.owner)) && (!dismissing || performance.now() - meter.lockedAt < 300);
+        powerControl.hidden = !visible;
+        if (!visible) return;
+        const canChoose = canControlPlayer(unit.owner);
+        powerControl.classList.toggle('big-boy', heroRule(unit.owner, 'powerScale', 1) > 1);
+        powerLaunchButton.hidden = Boolean(meter);
+        powerLaunchButton.disabled = !canChoose;
+        powerPanel.hidden = !meter;
+        powerPanel.classList.toggle('power-dismissing', dismissing);
+        if (meter) {
+          const limit = Math.round(heroRule(unit.owner, 'powerScale', 1) * 100);
+          const amount = Math.round(meter.value * limit);
+          powerTrack.setAttribute('aria-valuemax', String(limit));
+          powerTrack.setAttribute('aria-valuenow', String(amount));
+          powerNeedle.style.top = `${(1 - meter.value) * 100}%`;
+          powerValue.textContent = `${amount}%`;
+          powerConfirmButton.hidden = meter.stage === 'locked';
+          powerConfirmButton.disabled = !canChoose;
+        }
+        const board = canvas.getBoundingClientRect();
+        const shell = canvas.parentElement?.getBoundingClientRect() || board;
+        const scale = board.width / canvas.width;
+        const x = board.left - shell.left + unit.x * scale;
+        const y = board.top - shell.top + unit.y * board.height / canvas.height;
+        const width = powerControl.offsetWidth || 136;
+        const height = powerControl.offsetHeight || 40;
+        const below = y + unit.radius * scale + 8;
+        const above = y - unit.radius * scale - height - 8;
+        const visibleTop = Math.max(6, -shell.top + 8);
+        const visibleBottom = Math.min(shell.height - 6, window.innerHeight - shell.top - 8);
+        const beside = meter && below + height > visibleBottom && above < visibleTop;
+        const centerX = beside ? x - unit.radius * scale - width / 2 - 12 : x;
+        const top = beside ? y - height / 2 : below + height <= visibleBottom || above < visibleTop ? below : above;
+        powerControl.style.left = `${Math.max(width / 2 + 6, Math.min(shell.width - width / 2 - 6, centerX))}px`;
+        powerControl.style.top = `${Math.max(visibleTop, Math.min(visibleBottom - height, top))}px`;
+      }
+
       function launchCurrentUnit() {
         const unit = state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit;
         if (!unit || !state.aimPoint || !['aiming', 'reposition'].includes(state.phase)) return;
         const launchedFromReposition = state.phase === 'reposition';
         const firingAmmo = state.repositionMode === 'ammo';
+        if (!firingAmmo && (state.powerMeter?.unitId !== unit.id || state.powerMeter.stage !== 'locked')) return;
         if (launchedFromReposition && !unit.relaunchAvailable) {
           state.aiming = false;
           state.aimPoint = null;
@@ -2214,16 +2373,22 @@
           aimOverlay.style.display = 'none';
           return;
         }
-        let vx = (unit.x - state.aimPoint.x) * CONFIG.launchScale;
-        let vy = (unit.y - state.aimPoint.y) * CONFIG.launchScale;
-        const speed = Math.hypot(vx, vy);
-        if (speed < 35) {
+        const dx = unit.x - state.aimPoint.x;
+        const dy = unit.y - state.aimPoint.y;
+        const directionLength = Math.hypot(dx, dy);
+        if (directionLength < (firingAmmo ? 35 / CONFIG.launchScale : 8)) {
           state.aiming = false;
           state.aimPoint = null;
           state.aimTension = 0;
           aimOverlay.style.display = 'none';
           return;
         }
+        const powerScale = heroRule(unit.owner, 'powerScale', 1);
+        let vx = firingAmmo ? dx * CONFIG.launchScale : dx / directionLength *
+          Math.max(35, Math.min(CONFIG.maxLaunchSpeed, CONFIG.maxPullDistance * state.powerMeter.value * CONFIG.launchScale) * powerScale);
+        let vy = firingAmmo ? dy * CONFIG.launchScale : dy / directionLength *
+          Math.max(35, Math.min(CONFIG.maxLaunchSpeed, CONFIG.maxPullDistance * state.powerMeter.value * CONFIG.launchScale) * powerScale);
+        const speed = Math.hypot(vx, vy);
         if (firingAmmo) {
           const bulletSpeed = Math.min(CONFIG.maxLaunchSpeed, speed) * CONFIG.bulletSpeedMultiplier;
           state.bullets.push({
@@ -2236,9 +2401,9 @@
           state.repositionMode = null;
           emitGameFeedback('ammoFire', unit, '격발', '#ffe58a');
         } else {
-          if (speed > CONFIG.maxLaunchSpeed) {
-            vx = vx / speed * CONFIG.maxLaunchSpeed;
-            vy = vy / speed * CONFIG.maxLaunchSpeed;
+          if (speed > CONFIG.maxLaunchSpeed * powerScale) {
+            vx = vx / speed * CONFIG.maxLaunchSpeed * powerScale;
+            vy = vy / speed * CONFIG.maxLaunchSpeed * powerScale;
           }
           unit.launch(vx, vy);
           playSound('launch');
@@ -2252,6 +2417,7 @@
         state.aiming = false;
         state.aimPoint = null;
         state.aimTension = 0;
+        state.powerMeter = null;
         aimOverlay.style.display = 'none';
         state.phase = 'sliding';
         if (launchedFromReposition) state.repositionMode = null;
@@ -2263,16 +2429,11 @@
         const dx = point.x - unit.x;
         const dy = point.y - unit.y;
         const rawDistance = Math.hypot(dx, dy);
-        const inputRatio = Math.min(1, rawDistance / CONFIG.maxPullDistance);
-        const taperStart = .75;
-        const easedRatio = state.repositionMode === 'ammo' || inputRatio <= taperStart
-          ? inputRatio
-          : taperStart + (1 - taperStart) * (1 - (1 - (inputRatio - taperStart) / (1 - taperStart)) ** 2);
-        const easedDistance = CONFIG.maxPullDistance * easedRatio;
-        const scale = rawDistance > 0 ? easedDistance / rawDistance : 0;
+        const maxDistance = state.repositionMode === 'ammo' ? CONFIG.maxPullDistance : CONFIG.directionPullDistance;
+        const distance = Math.min(rawDistance, maxDistance);
+        const scale = rawDistance > 0 ? distance / rawDistance : 0;
         state.aimPoint = { x: unit.x + dx * scale, y: unit.y + dy * scale };
-        state.aimTension = easedDistance / CONFIG.maxPullDistance;
-        if (state.repositionMode !== 'ammo' && state.aimTension > .08) playSound('elasticStretch', state.aimTension);
+        state.aimTension = distance / maxDistance;
       }
 
       function resolveCollisions() {
@@ -2281,7 +2442,7 @@
           for (let j = i + 1; j < active.length; j += 1) {
             const a = active[i];
             const b = active[j];
-            if (a.fluidTimer > 0 || b.fluidTimer > 0) continue;
+            if (a.fluidTimer > 0 || b.fluidTimer > 0 || isCollisionPhased(a) || isCollisionPhased(b)) continue;
             const dx = b.x - a.x;
             const dy = b.y - a.y;
             const minDistance = a.radius + b.radius;
@@ -2315,7 +2476,7 @@
 
       function resolveBrickCollisions() {
         for (const unit of state.units) {
-          if (unit.status !== 'sliding' && unit.status !== 'resting') continue;
+          if ((unit.status !== 'sliding' && unit.status !== 'resting') || isCollisionPhased(unit)) continue;
           for (const brick of state.bricks) {
             const halfW = brick.width / 2;
             const halfH = brick.height / 2;
@@ -2416,19 +2577,11 @@
       }
 
       function useCard(cardId, owner, unit) {
-        if (!unit || unit.owner !== owner || unit.status === 'fallen' || owner !== turns.playerIndex || !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase)) return false;
         const hand = state.hands[owner];
         const cardIndex = hand.findIndex(card => card.instanceId === cardId);
         if (cardIndex < 0) return false;
         const card = hand[cardIndex];
-        if (card.id === 'brick') return false;
-        if (['reposition', 'ammo'].includes(card.id) && state.units.some(item => item.activeSpecial)) return false;
-        if (card.id === 'pulse' && unit.ability?.pulse) return false;
-        if (['reposition', 'ammo'].includes(card.id) && unit.status === 'ready') return false;
-        if (['reposition', 'ammo'].includes(card.id) && unit.activeSpecial) return false;
-        if (card.id === 'reposition' && !['aiming', 'turn-ready'].includes(state.phase)) return false;
-        if (card.id === 'ammo' && !['aiming', 'sliding', 'turn-ready'].includes(state.phase)) return false;
-        if (unit.status === 'ready' && unit !== turns.currentUnit) return false;
+        if (!canUseCardOnUnit(card, owner, unit)) return false;
         if (UNIT_EFFECTS[card.id] && !applyUnitEffectStack(unit, card.id)) return false;
         if (card.id === 'blackhole') triggerBlackHole(unit);
         if (card.id === 'pulse') {
@@ -2436,7 +2589,11 @@
           ability.pulse = true;
           ability.pulseTimer = 4;
         }
+        if (card.id === 'bluffing') {
+          ensureUnitAbility(unit).bluffingUntilTurn = turns.globalTurn + 1;
+        }
         if (card.id === 'reposition') {
+          state.powerMeter = null;
           unit.relaunchAvailable = true;
           state.repositionUnit = unit;
           unit.activeSpecial = 'reposition';
@@ -2444,6 +2601,7 @@
           state.phase = 'reposition';
         }
         if (card.id === 'ammo') {
+          state.powerMeter = null;
           unit.relaunchAvailable = true;
           state.repositionUnit = unit;
           unit.activeSpecial = 'ammo';
@@ -2458,6 +2616,21 @@
         return true;
       }
 
+      function canUseCardOnUnit(card, owner, unit) {
+        if (!card || !unit || unit.owner !== owner || unit.status === 'fallen' || owner !== turns.playerIndex ||
+            !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase) || card.id === 'brick') return false;
+        if (unit.status === 'ready' && unit !== turns.currentUnit) return false;
+        if (UNIT_EFFECTS[card.id] && getUnitEffectStacks(unit, card.id) >= UNIT_EFFECTS[card.id].maxStacks) return false;
+        if (card.id === 'pulse' && unit.ability?.pulse) return false;
+        if (card.id === 'bluffing' && isCollisionPhased(unit)) return false;
+        if (['reposition', 'ammo'].includes(card.id)) {
+          if (unit.status === 'ready' || unit.activeSpecial || state.units.some(item => item.activeSpecial)) return false;
+          if (card.id === 'reposition' && !['aiming', 'turn-ready'].includes(state.phase)) return false;
+          if (card.id === 'ammo' && !['aiming', 'sliding', 'turn-ready'].includes(state.phase)) return false;
+        }
+        return true;
+      }
+
       function ensureUnitAbility(unit) {
         if (!unit.ability) unit.ability = { hardening: false, guard: false, pulse: false, guardAngle: 0, stacks: {}, destroyedGuardSatellites: [] };
         if (!unit.ability.stacks) unit.ability.stacks = {};
@@ -2466,6 +2639,10 @@
           if (unit.ability[effectId] && !unit.ability.stacks[effectId]) unit.ability.stacks[effectId] = 1;
         }
         return unit.ability;
+      }
+
+      function isCollisionPhased(unit) {
+        return unit.unitKind === 'stone' && unit.ability?.bluffingUntilTurn >= turns.globalTurn;
       }
 
       function getUnitEffectStacks(unit, effectId) {
@@ -2530,7 +2707,7 @@
         const source = cardElement === cardInspector ? inspectedCardElement : cardElement;
         hideCardInspector();
         const ghost = document.createElement('div');
-        ghost.className = 'card-ghost full-card';
+        ghost.className = 'card-ghost drag-card';
         ghost.append(createCardFace(card));
         document.body.append(ghost);
         source?.classList.add('dragging');
@@ -2560,14 +2737,14 @@
 
       function moveCardGhost(event) {
         if (!state.cardDrag) return;
-        state.cardDrag.ghost.style.left = `${event.clientX}px`;
-        state.cardDrag.ghost.style.top = `${event.clientY}px`;
+        const drag = state.cardDrag;
+        drag.ghost.style.left = `${event.clientX}px`;
+        drag.ghost.style.top = `${event.clientY}px`;
         const rect = canvas.getBoundingClientRect();
-        state.cardDrag.point = event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom
+        drag.point = event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom
           ? eventPoint(event)
           : null;
-        if (state.cardDrag.type === 'trigger-placement') {
-          const drag = state.cardDrag;
+        if (drag.type === 'trigger-placement') {
           const legal = Boolean(drag.point && canPlaceItemTrigger(drag.point));
           drag.ghost.style.visibility = legal ? 'hidden' : 'visible';
           drag.preview.style.display = legal ? 'block' : 'none';
@@ -2580,6 +2757,12 @@
             drag.preview.style.height = `${diameter}px`;
             drag.preview.style.fontSize = `${Math.max(9, radius * .58 * rect.width / canvas.width)}px`;
           }
+        } else if (drag.type === 'brick') {
+          drag.ghost.style.visibility = drag.point && canPlaceBrick(drag.point) ? 'hidden' : 'visible';
+        } else {
+          const card = state.hands[drag.owner].find(item => item.instanceId === drag.id);
+          const target = drag.point && findCardTarget(drag.point, drag.owner);
+          drag.ghost.classList.toggle('valid-target', Boolean(target && canUseCardOnUnit(card, drag.owner, target)));
         }
       }
 
@@ -2960,7 +3143,7 @@
             }
             if (consumed) break;
             for (const target of state.units) {
-              if (target.id === bullet.sourceUnitId || target.status === 'fallen' || target.fluidTimer > 0) continue;
+              if (target.id === bullet.sourceUnitId || target.status === 'fallen' || target.fluidTimer > 0 || isCollisionPhased(target)) continue;
               const dx = target.x - bullet.x;
               const dy = target.y - bullet.y;
               const distance = Math.hypot(dx, dy);
@@ -2988,7 +3171,7 @@
           if (!source.ability?.guard || source.status === 'fallen') continue;
           for (const satellite of guardSatellites(source)) {
             for (const target of [...state.units, ...state.bricks]) {
-              if (target === source || target.status === 'fallen' || target.status === 'ready') continue;
+              if (target === source || target.status === 'fallen' || target.status === 'ready' || isCollisionPhased(target)) continue;
               const isBrick = target.unitKind === 'brick';
               const closestX = isBrick ? Math.max(target.x - target.width / 2, Math.min(satellite.x, target.x + target.width / 2)) : target.x;
               const closestY = isBrick ? Math.max(target.y - target.height / 2, Math.min(satellite.y, target.y + target.height / 2)) : target.y;
@@ -3056,7 +3239,7 @@
         state.mapTime += dt;
         for (const wall of wallSegments()) {
           for (const unit of state.units) {
-            if (unit.status !== 'sliding' && unit.status !== 'resting') continue;
+            if ((unit.status !== 'sliding' && unit.status !== 'resting') || isCollisionPhased(unit)) continue;
             const closestX = Math.max(wall.x1, Math.min(unit.x, wall.x2));
             const closestY = Math.max(wall.y1, Math.min(unit.y, wall.y2));
             let nx = unit.x - closestX;
@@ -3112,6 +3295,7 @@
           return;
         }
         playSound('turn');
+        state.powerMeter = null;
         state.repositionUnit = null;
         state.repositionMode = null;
         state.turnDeadline = null;
@@ -3257,6 +3441,7 @@
         pendingHeroTransition = null;
         pendingCardDraw = null;
         cardDrawVisual = null;
+        state.powerMeter = null;
         dealOverlay.hidden = true;
         hideCardInspector();
         heroSelectOverlay.hidden = true;
@@ -3784,9 +3969,8 @@
             remaining: state.heroDeadline == null ? null : Math.max(0, state.heroDeadline - Date.now())
           },
           deck: [],
-          hands: state.hands.map((hand, owner) => hand.map(card => owner === 1
-            ? { ...card }
-            : { instanceId: card.instanceId, id: 'hidden', name: '비공개 카드' })),
+          hands: state.hands.map(hand => hand.map(card => ({ ...card }))),
+          powerMeter: state.powerMeter ? { ...state.powerMeter } : null,
           nextCardId: state.nextCardId,
           currentMapId: state.currentMap.id,
           speedLevel: state.speedLevel,
@@ -3798,13 +3982,12 @@
           currentUnitId: turns.currentUnit?.id ?? null,
           repositionUnitId: state.repositionUnit?.id ?? null,
           dealPlayer: dealPlayer.textContent,
-          dealCard: state.dealOwner === 1 ? state.lastDealtCardName : '카드 1장',
+          dealCard: state.lastDealtCardName,
           dealOwner: state.dealOwner,
           cardDraw: pendingCardDraw ? {
             id: pendingCardDraw.id, owner: pendingCardDraw.owner,
             elapsed: Math.max(0, performance.now() - pendingCardDraw.startedAt),
-            card: pendingCardDraw.owner === 1 ? { ...pendingCardDraw.card } :
-              { id: 'hidden', name: '비공개 카드', instanceId: pendingCardDraw.card.instanceId }
+            card: { ...pendingCardDraw.card }
           } : null,
           series: {
             roundIndex: onlineSession.roundIndex,
@@ -3841,6 +4024,8 @@
           ['aiming', 'reposition'].includes(snapshot.phase) && localAimUnit?.id === remoteAimId &&
           snapshot.units.some(unit => unit.id === remoteAimId && unit.status !== 'fallen');
         const localAim = preserveAim ? { aimPoint: state.aimPoint, aimTension: state.aimTension } : null;
+        const localPower = inputAllowed && ['aiming', 'reposition'].includes(snapshot.phase) &&
+          state.powerMeter?.unitId === remoteAimId ? state.powerMeter : null;
         const preserveTriggerSelection = inputAllowed && state.phase === 'trigger-select' &&
           state.pendingTriggerPlacement && snapshot.triggerPlacementCount[onlineSession.playerIndex] <
             (HEROES.find(hero => hero.id === snapshot.hero?.choices[onlineSession.playerIndex])?.trapLimit ?? 1);
@@ -3894,6 +4079,13 @@
         state.aimTension = localAim ? localAim.aimTension : snapshot.aimTension;
         state.mapTime = onlineInterpolation.fromMapTime;
         state.repositionMode = snapshot.repositionMode || null;
+        const incomingPower = snapshot.powerMeter ? { ...snapshot.powerMeter, lastAt: snapshotTime } : null;
+        if (incomingPower?.stage === 'locked') {
+          incomingPower.lockedAt = state.powerMeter?.unitId === incomingPower.unitId && state.powerMeter.stage === 'locked'
+            ? state.powerMeter.lockedAt : snapshotTime;
+          if (!localPower && state.powerMeter?.stage !== 'locked') playPowerLockSound(incomingPower.value);
+        }
+        state.powerMeter = localPower || incomingPower;
         state.triggerPlacementUsed = snapshot.triggerPlacementUsed;
         state.triggerPlacementCount = snapshot.triggerPlacementCount;
         if (snapshot.hero) {
@@ -3970,10 +4162,15 @@
         if (!onlineSession?.started || onlineSession.role !== 'host' || packet.playerIndex !== 1 || turns.playerIndex !== 1 ||
             !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase)) return;
         const action = packet.action;
-        if (action.type === 'launch' && ['aiming', 'reposition'].includes(state.phase) && action.aimPoint) {
+        if (action.type === 'power-start' && needsPowerMeter() && activeLaunchUnit()?.id === action.unitId) {
+          startPowerMeter();
+        } else if (action.type === 'power-lock' && needsPowerMeter() && activeLaunchUnit()?.id === action.unitId) {
+          lockPowerMeter(action.value);
+        } else if (action.type === 'launch' && ['aiming', 'reposition'].includes(state.phase) && action.aimPoint) {
           const dx = action.aimPoint.x - (state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit)?.x;
           const dy = action.aimPoint.y - (state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit)?.y;
-          if (!Number.isFinite(dx) || !Number.isFinite(dy) || Math.hypot(dx, dy) > CONFIG.maxPullDistance + 1) return;
+          const maxDistance = state.repositionMode === 'ammo' ? CONFIG.maxPullDistance : CONFIG.directionPullDistance;
+          if (!Number.isFinite(dx) || !Number.isFinite(dy) || Math.hypot(dx, dy) > maxDistance + 1) return;
           state.aiming = true;
           state.aimPoint = action.aimPoint;
           launchCurrentUnit();
@@ -4071,7 +4268,8 @@
           label.textContent = row.label;
           score.textContent = row.score;
           detail.textContent = row.detail;
-          item.append(label, score, detail);
+          item.append(label, score);
+          if (row.detail) item.append(detail);
           return item;
         }));
       }
@@ -4196,7 +4394,7 @@
         if (!element || state.cardDrag) return;
         const owner = Number(element.dataset.owner);
         const card = state.hands[owner]?.find(item => item.instanceId === element.dataset.cardId);
-        if (!card || (onlineSession?.started && owner !== onlineSession.playerIndex)) return;
+        if (!card) return;
         inspectedCardElement = element;
         const rect = element.getBoundingClientRect();
         const viewportWidth = window.innerWidth || 1200;
@@ -4228,7 +4426,7 @@
 
       function renderHands() {
         handEls.forEach((hand, owner) => {
-          const concealed = Boolean(onlineSession?.started && owner !== onlineSession.playerIndex);
+          const concealed = false;
           const existing = new Map(Array.from(hand.children).map(element => [element.dataset.cardId, element]));
           for (const element of existing.values()) {
             if (state.hands[owner].some(card => card.instanceId === element.dataset.cardId &&
@@ -4267,6 +4465,7 @@
 
       function finishGame() {
         state.phase = 'finished';
+        state.powerMeter = null;
         state.turnDeadline = null;
         state.turnPausedAt = null;
         state.bullets = [];
@@ -4289,7 +4488,7 @@
         renderResultRows(scores.map((result, index) => ({
           label: PLAYER[index].name,
           score: `${result.score}점`,
-          detail: `거리 ${Math.round(result.distance)} · 낙사 점수 ${result.fallBonus}점`
+          detail: result.fallBonus ? `낙사 점수 ${result.fallBonus}점` : ''
         })));
         createConfetti(winner === null ? '#e5b35a' : PLAYER[winner].color);
         resultOverlay.hidden = false;
@@ -4455,7 +4654,7 @@
           ctx.lineWidth = 2;
           ctx.stroke();
         }
-        ctx.globalAlpha = unit.fluidTimer > 0 ? .58 : 1;
+        ctx.globalAlpha = unit.fluidTimer > 0 ? .58 : isCollisionPhased(unit) ? .46 : 1;
         ctx.beginPath();
         ctx.arc(0, 0, unit.radius + 3, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(0,0,0,.25)';
@@ -4662,10 +4861,11 @@
         }
         if (drag.type === 'brick') {
           const legal = canPlaceBrick(drag.point);
+          if (!legal) return;
           const preview = { ...drag.point, width: 18, height: 64 };
           drawBrick(preview, .58);
           ctx.save();
-          ctx.strokeStyle = legal ? '#b8f274' : '#ff4f5e';
+          ctx.strokeStyle = '#b8f274';
           ctx.lineWidth = 3;
           ctx.strokeRect(preview.x - preview.width / 2, preview.y - preview.height / 2, preview.width, preview.height);
           ctx.restore();
@@ -4701,23 +4901,8 @@
         });
         const start = screenPoint(unit);
         const end = screenPoint(state.aimPoint);
-        const dx = end.x - start.x;
-        const dy = end.y - start.y;
-        const length = Math.hypot(dx, dy) || 1;
-        const perpendicularX = -dy / length;
-        const perpendicularY = dx / length;
-        const shakeProgress = state.repositionMode === 'ammo' ? 0 : Math.max(0, (state.aimTension - .75) / .25);
         const scale = rect.width / canvas.width;
-        const shake = Math.pow(shakeProgress, 2.2) * 4.5 * scale;
-        const time = performance.now();
-        const points = [`M ${start.x.toFixed(1)} ${start.y.toFixed(1)}`];
-        for (let index = 1; index <= 14; index += 1) {
-          const progress = index / 14;
-          const envelope = Math.sin(progress * Math.PI);
-          const jitter = envelope * shake * (Math.sin(time * .055 + index * 2.4) + .32 * Math.sin(time * .091 + index * 4.1));
-          points.push(`L ${(start.x + dx * progress + perpendicularX * jitter).toFixed(1)} ${(start.y + dy * progress + perpendicularY * jitter).toFixed(1)}`);
-        }
-        aimPath.setAttribute('d', points.join(' '));
+        aimPath.setAttribute('d', `M ${start.x.toFixed(1)} ${start.y.toFixed(1)} L ${end.x.toFixed(1)} ${end.y.toFixed(1)}`);
         aimPath.setAttribute('stroke', PLAYER[unit.owner].color);
         aimPath.setAttribute('stroke-width', String(5 * scale));
         aimPath.setAttribute('stroke-dasharray', `${10 * scale} ${8 * scale}`);
@@ -4744,6 +4929,7 @@
         drawTable();
         drawItemTriggers();
         state.units.forEach(drawUnit);
+        drawLockedPower();
         state.bricks.forEach(brick => drawBrick(brick));
         state.bullets.forEach(drawBullet);
         drawEffects();
@@ -4751,6 +4937,23 @@
         drawCardPreview();
         drawParticles();
         drawSkullEffects();
+      }
+
+      function drawLockedPower() {
+        const unit = activeLaunchUnit();
+        const meter = state.powerMeter;
+        if (!unit || meter?.stage !== 'locked' || meter.unitId !== unit.id || !needsPowerMeter()) return;
+        const amount = Math.round(meter.value * heroRule(unit.owner, 'powerScale', 1) * 100);
+        ctx.save();
+        ctx.globalAlpha = .68;
+        ctx.fillStyle = '#fff2d3';
+        ctx.shadowColor = '#1b1712';
+        ctx.shadowBlur = 5;
+        ctx.font = '800 23px "Malgun Gothic", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`${amount}%`, unit.x, unit.y - unit.radius - 21);
+        ctx.restore();
       }
 
       function drawSkullEffects() {
@@ -4788,6 +4991,7 @@
         if (unit.openingFrictionMultiplier > 1) effects.push('선공 첫 스톤 · 추가 마찰력 25%');
         if (hardeningStacks) effects.push(`경질화 ${hardeningStacks}중첩 · 마찰력 ${UNIT_EFFECTS.hardening.frictionPerStack ** hardeningStacks}배`);
         if (guardStacks) effects.push(`방호벽 ${guardStacks}중첩 · 위성체 ${guardStacks * UNIT_EFFECTS.guard.satellitesPerStack}개`);
+        if (isCollisionPhased(unit)) effects.push('속임수 · 다음 상대 턴 종료까지 충돌 무시');
         if (unit.fluidTimer > 0) effects.push('블랙홀 방출 · 유체 상태');
         if (unit.relaunchAvailable && !unit.relaunchUsed) effects.push('재배치 가능');
         return {
@@ -4900,6 +5104,7 @@
         const elapsed = simulationClockAt === null ? 0 : Math.max(0, (timestamp - simulationClockAt) / 1000);
         simulationClockAt = timestamp;
         state.lastTime = timestamp;
+        updatePowerMeter(timestamp);
         if (pendingCardDraw && timestamp - pendingCardDraw.startedAt >= CARD_DRAW_DURATION_MS) completeCardDraw(pendingCardDraw);
         if (pendingHeroTransition && timestamp >= pendingHeroTransition.deadline) completeHeroTransition(pendingHeroTransition);
         updateTurnTimer();
@@ -4951,9 +5156,9 @@
         advanceGameClock(timestamp);
         const onlineReplica = onlineSession?.started && onlineSession.role === 'challenger';
         if (onlineReplica) updateOnlineInterpolation(timestamp);
-        if (state.aiming && state.repositionMode !== 'ammo' && (!onlineReplica || localAimPointerId !== null) && state.aimTension >= .75) playSound('strainRumble', state.aimTension);
         updateCardDrawVisual(timestamp);
         draw();
+        renderPowerControl();
         requestAnimationFrame(gameLoop);
       }
 
@@ -4970,6 +5175,7 @@
         const point = eventPoint(event);
         const unit = state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit;
         if (!unit) return;
+        if (needsPowerMeter() && (state.powerMeter?.unitId !== unit.id || state.powerMeter.stage !== 'locked')) return;
         if (Math.hypot(point.x - unit.x, point.y - unit.y) > unit.radius + 12) return;
         state.aiming = true;
         localAimPointerId = event.pointerId;
@@ -5009,6 +5215,22 @@
         state.aiming = false;
         state.aimPoint = null;
         state.aimTension = 0;
+      });
+
+      powerLaunchButton.addEventListener('click', () => {
+        const unit = activeLaunchUnit();
+        if (!unit || !canControlPlayer(unit.owner) || !startPowerMeter()) return;
+        const panelBounds = powerControl.getBoundingClientRect();
+        if (panelBounds.top < 8 || panelBounds.bottom > window.innerHeight - 8) {
+          powerControl.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
+        if (shouldForwardOnlineAction()) sendOnlineAction({ type: 'power-start', unitId: unit.id });
+      });
+      powerConfirmButton.addEventListener('click', () => {
+        const unit = activeLaunchUnit();
+        const value = state.powerMeter?.value;
+        if (!unit || !canControlPlayer(unit.owner) || !lockPowerMeter(value)) return;
+        if (shouldForwardOnlineAction()) sendOnlineAction({ type: 'power-lock', unitId: unit.id, value });
       });
 
       document.querySelector('#openPlayMenuButton').addEventListener('click', () => showStartScreen('startMenu'));

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'table-curling-v26';
+const CACHE_NAME = 'table-curling-v29';
 const APP_FILES = [
   './',
   './index.html',
@@ -16,6 +16,7 @@ const APP_FILES = [
   './Card_illustration/Structure Drop.png',
   './Card_illustration/blackhole release.png',
   './Card_illustration/Load.png',
+  './Card_illustration/Bluffing.png',
   './영웅 초상화/trap master.png',
   './영웅 초상화/hunter.png',
   './영웅 초상화/big boy.png',

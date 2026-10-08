@@ -19,7 +19,7 @@ function game() {
       append(...items) { for (const item of items) { item.remove(); item.parentNode = this; this.children.push(item); } },
       replaceChildren(...items) { for (const item of this.children) item.parentNode = null; this.children = []; this.append(...items); },
       querySelector() { return element(); }, querySelectorAll() { return []; },
-      getContext() { return new Proxy({}, { get: () => () => {} }); },
+      getContext() { return new Proxy({}, { get: (target, key) => Reflect.has(target, key) ? target[key] : () => {} }); },
       getBoundingClientRect() { return { left: 0, top: 0, width: 1200, height: 710 }; },
       focus() {}, remove() { if (this.parentNode) this.parentNode.children = this.parentNode.children.filter(item => item !== this); this.parentNode = null; },
       cloneNode(deep) { const clone = element(); clone.dataset = {...this.dataset}; clone.className = this.className; if (deep) clone.append(...this.children.map(child => child.cloneNode(true))); return clone; },
@@ -174,10 +174,10 @@ test('background draw completes exactly once and resets cancel stale draw callba
   g.run('assert.equal(completed,1); assert.equal(state.hands[0].length,0)');
 });
 
-test('draw snapshot masks host card and shares the exact guest card without restarting its animation', () => {
+test('draw snapshot shares both players cards without restarting its animation', () => {
   const {host, guest, send} = onlinePair();
   host.run(`state.deck=[{id:'guard',name:'방호벽'}]; drawCardForPlayer(0,()=>{});
-    assert.equal(createOnlineSnapshot().cardDraw.card.id,'hidden');`);
+    assert.equal(createOnlineSnapshot().cardDraw.card.id,'guard');`);
   host.flush();
   host.run(`state.deck=[{id:'hardening',name:'경질화'}]; drawCardForPlayer(1,()=>{});`);
   send(2);
@@ -185,7 +185,7 @@ test('draw snapshot masks host card and shares the exact guest card without rest
   host.tick(50); guest.tick(50); send(3);
   guest.run('assert.equal(cardDrawVisual.startedAt,drawStarted)');
   host.flush(); send(4);
-  guest.run(`assert.equal(state.hands[1][0].id,'hardening')`);
+  guest.run(`assert.equal(state.hands[0][0].id,'guard'); assert.equal(state.hands[1][0].id,'hardening')`);
 });
 
 test('hand reconciliation preserves hovered cards and every card has an existing illustration', () => {
@@ -231,7 +231,7 @@ test('card drag and trigger picker do not block snapshots, and timeout cancels s
 test('opponent aiming remains display-only and cannot suppress incoming updates', () => {
   const {host, guest, send} = onlinePair();
   host.run(`turns.reset(0); state.units=[]; turns.createCurrentUnit(); state.phase='aiming';
-    state.aiming=true; state.aimPoint={x:1100,y:355};`);
+    startPowerMeter(); lockPowerMeter(.5); state.aiming=true; state.aimPoint={x:1100,y:355};`);
   send(2);
   guest.run(`assert.equal(localAimPointerId,null); assert.equal(state.aiming,true);
     canvas.listeners.pointerup({pointerId:5,clientX:1100,clientY:355});`);
@@ -256,6 +256,125 @@ test('ammo aims linearly without shaking or stretch cues and launches at 300 per
     assert.equal(turns.currentUnit.vx,0); assert.ok(sounds.includes('ammoFire')); assert.ok(!sounds.includes('launch'));`);
 });
 
+test('normal launch requires a locked meter and short drag controls direction only', () => {
+  const g = game();
+  g.run(`turns.createCurrentUnit(); state.phase='aiming'; const cap=turns.currentUnit;
+    state.aimPoint={x:cap.x-60,y:cap.y}; launchCurrentUnit();
+    assert.equal(cap.status,'ready'); assert.equal(state.powerMeter,null);
+    assert.equal(startPowerMeter(),true);
+    updateAimFromInput(cap,{x:cap.x+300,y:cap.y});
+    assert.ok(Math.abs(state.aimPoint.x-cap.x-CONFIG.directionPullDistance)<.001);
+    assert.ok(!sounds.includes('elasticStretch'));
+    launchCurrentUnit(); assert.equal(cap.status,'ready');
+    lockPowerMeter(.5); state.aimPoint={x:cap.x+50,y:cap.y}; launchCurrentUnit();
+    assert.equal(cap.status,'sliding'); assert.ok(cap.vx<0);
+    assert.ok(Math.abs(Math.hypot(cap.vx,cap.vy)-Math.min(CONFIG.maxLaunchSpeed,CONFIG.maxPullDistance*.5*CONFIG.launchScale))<.001);
+    assert.equal(state.powerMeter,null);`);
+});
+
+test('meter bounces, Big Boy gets 15 percent more power, and reposition uses the meter', () => {
+  const g = game();
+  g.run(`state.heroChoices[0]='big-boy'; turns.createCurrentUnit(); state.phase='aiming';
+    startPowerMeter(); for(let t=0;t<400;t++) updatePowerMeter(1000+t*25);
+    assert.ok(state.powerMeter.value>=0 && state.powerMeter.value<=1);
+    assert.ok(state.powerMeter.direction===1 || state.powerMeter.direction===-1);
+    lockPowerMeter(1); const cap=turns.currentUnit;
+    state.aimPoint={x:cap.x+40,y:cap.y}; launchCurrentUnit();
+    assert.ok(Math.abs(Math.hypot(cap.vx,cap.vy)-CONFIG.maxLaunchSpeed*1.15)<.001);
+    cap.status='resting'; cap.vx=0; cap.vy=0; state.phase='turn-ready';
+    state.hands[0]=[{id:'reposition',name:'재배치',instanceId:'r1'}];
+    assert.equal(useCard('r1',0,cap),true); assert.equal(state.phase,'reposition');
+    assert.equal(startPowerMeter(),true); lockPowerMeter(.3);
+    state.aimPoint={x:cap.x+40,y:cap.y}; launchCurrentUnit();
+    assert.equal(state.phase,'sliding'); assert.equal(cap.relaunchUsed,true);
+    assert.ok(Math.abs(Math.hypot(cap.vx,cap.vy)-CONFIG.maxPullDistance*.3*CONFIG.launchScale*1.15)<.001);`);
+});
+
+test('challenger power selection survives snapshots and host validates its launch', () => {
+  const {host,guest,send}=onlinePair();
+  guest.run(`startPowerMeter(); lockPowerMeter(.7);`);
+  host.run(`handleOnlineHostAction({playerIndex:1,action:{type:'power-start',unitId:turns.currentUnit.id}});
+    handleOnlineHostAction({playerIndex:1,action:{type:'power-lock',unitId:turns.currentUnit.id,value:.7}});
+    assert.equal(state.powerMeter.stage,'locked');
+    handleOnlineHostAction({playerIndex:1,action:{type:'launch',aimPoint:{x:turns.currentUnit.x+200,y:turns.currentUnit.y}}});
+    assert.equal(turns.currentUnit.status,'ready');`);
+  send(2);
+  guest.run(`assert.equal(state.powerMeter.stage,'locked'); assert.equal(state.powerMeter.value,.7);`);
+  host.run(`handleOnlineHostAction({playerIndex:1,action:{type:'launch',aimPoint:{x:turns.currentUnit.x+50,y:turns.currentUnit.y}}});
+    assert.equal(turns.currentUnit.status,'sliding');`);
+  send(3);
+  guest.run(`assert.equal(state.phase,'sliding'); assert.equal(state.powerMeter,null);`);
+});
+
+test('power choice is shown above the stone, meter dismisses, and lock sound scales with power', () => {
+  const g = game();
+  g.run(`turns.createCurrentUnit(); state.phase='aiming';
+    globalThis.tones=[]; sfxToggle.checked=true; initializeAudio=()=>true;
+    audio.context={currentTime:0}; scheduleTone=(...args)=>tones.push(args);
+    assert.equal(startPowerMeter(),true); assert.equal(lockPowerMeter(.2),true); const low=tones.at(-1);
+    state.powerMeter=null; assert.equal(startPowerMeter(),true); assert.equal(lockPowerMeter(.9),true); const high=tones.at(-1);
+    assert.equal(tones.length,2);
+    assert.ok(high[0]>low[0]); assert.ok(high[5]>low[5]);
+    globalThis.labels=[]; ctx.fillText=(...args)=>labels.push(args);
+    drawLockedPower(); assert.equal(labels.at(-1)[0],'90%');
+    renderPowerControl(); assert.equal(powerControl.hidden,false);`);
+  g.tick(301);
+  g.run(`renderPowerControl(); assert.equal(powerControl.hidden,true); assert.equal(state.powerMeter.stage,'locked');`);
+});
+
+test('power meter is faster and irregular while the scoreboard shows scores without distances', () => {
+  const g = game();
+  g.run(`turns.createCurrentUnit(); state.phase='aiming'; startPowerMeter();
+    updatePowerMeter(1100); assert.ok(state.powerMeter.value>.27);
+    const firstRate=(state.powerMeter.value-.12)/.1;
+    updatePowerMeter(1200); const nextRate=(state.powerMeter.value-.12-firstRate*.1)/.1;
+    assert.notEqual(firstRate,nextRate);
+    updateHud(); assert.match(scoreEls[0].textContent,/^점수 /);
+    assert.doesNotMatch(scoreEls[0].textContent,/거리/);
+    assert.doesNotMatch(HEROES.find(hero=>hero.id==='big-boy').description,/파워 미터/);`);
+});
+
+test('bluffing ignores stones, bricks, bullets, guards and map walls until the opponent turn ends', () => {
+  const g = game();
+  g.run(`turns.reset(0); const cap=turns.createCurrentUnit(); cap.status='resting';
+    state.phase='turn-ready'; state.hands[0]=[{id:'bluffing',name:'속임수',instanceId:'b1'}];
+    assert.equal(useCard('b1',0,cap),true); assert.equal(isCollisionPhased(cap),true);
+    globalThis.cap=cap; const enemy=new CurlingUnit({id:'enemy',owner:1,turnNumber:1,x:cap.x+20,y:cap.y});
+    enemy.status='resting'; state.units.push(enemy); globalThis.enemy=enemy;
+    const x=cap.x; resolveCollisions(); assert.equal(cap.x,x); assert.equal(enemy.x,x+20);
+    state.units=[cap]; const brick=new BrickUnit({x:cap.x,y:cap.y,owner:1}); state.bricks.push(brick);
+    resolveBrickCollisions(); assert.equal(cap.x,x); assert.equal(brick.x,x);
+    assert.equal(cap.frictionAtPosition(),state.currentMap.friction);
+    state.units=[cap]; state.bricks=[];
+    state.bullets=[{id:'shot',sourceUnitId:'enemy',x:cap.x,y:cap.y,vx:0,vy:0,radius:5,mass:.12,outsideTime:0}];
+    updateBullets(.01); assert.equal(state.bullets.length,1);
+    state.bullets=[]; enemy.x=cap.x-54; enemy.y=cap.y; applyUnitEffectStack(enemy,'guard');
+    const satellite=guardSatellites(enemy)[0]; cap.x=satellite.x; cap.y=satellite.y;
+    state.units=[enemy,cap]; const before={x:cap.x,y:cap.y}; resolveGuardCollisions();
+    assert.equal(cap.x,before.x); assert.equal(cap.y,before.y);
+    state.units=[cap]; state.currentMap=MAPS.find(map=>map.walls);
+    const wall=wallSegments()[0]; cap.x=wall.x+wall.width/2; cap.y=wall.y+wall.height/2;
+    const wallX=cap.x, wallY=cap.y; updateWalls(0);
+    assert.equal(cap.x,wallX); assert.equal(cap.y,wallY);
+    turns.finishCurrentTurn(); assert.equal(isCollisionPhased(cap),true);
+    turns.createCurrentUnit(); turns.finishCurrentTurn(); assert.equal(isCollisionPhased(cap),false);
+    assert.equal(cap.ability.bluffingUntilTurn,undefined);`);
+});
+
+test('bluffing still takes pulse and black-hole force and crosses online snapshots', () => {
+  const {host,guest,send}=onlinePair();
+  host.run(`const cap=turns.currentUnit; cap.status='resting';
+    state.hands[1]=[{id:'bluffing',name:'속임수',instanceId:'b1'}];
+    assert.equal(useCard('b1',1,cap),true);
+    const source=new CurlingUnit({id:'source',owner:0,turnNumber:1,x:cap.x-50,y:cap.y});
+    source.status='resting'; state.units.push(source);
+    triggerPulse(source,100,80); assert.ok(cap.vx>0);
+    cap.vx=0; triggerBlackHole(source,100); assert.ok(cap.vx<0);`);
+  send(2);
+  guest.run(`assert.equal(isCollisionPhased(turns.currentUnit),true);
+    assert.ok(turns.currentUnit.vx<0);`);
+});
+
 test('opening cap gets a one-time 25 percent friction multiplier after turn end, stacking with hardening', () => {
   const g=game();
   g.run(`turns.reset(1); const first=turns.createCurrentUnit();
@@ -275,7 +394,7 @@ test('round starters and extra initial card follow host, challenger, previous lo
   g.flush(); g.flush();
   g.run(`assert.equal(turns.currentUnit.owner,1); assert.equal(state.hands[1].length,2); assert.equal(state.hands[0].length,0);
     const schedule=[]; while(!turns.isComplete) {schedule.push(turns.playerIndex); turns.finishCurrentTurn();}
-    assert.deepEqual(schedule,[1,0,1,0,1,0,1,0]); onlineSession.roundIndex=2;
+    assert.deepEqual(schedule,[1,0,1,0,1,0,1,0,1,0]); onlineSession.roundIndex=2;
     onlineSession.roundResults=[{winner:0},{winner:1}]; assert.equal(roundStartingPlayer(),0);
     onlineSession.roundResults[1].winner=0; assert.equal(roundStartingPlayer(),1);
     onlineSession.roundResults[1].winner=null; assert.equal(roundStartingPlayer(),0);`);
@@ -321,6 +440,7 @@ test('tutorial lessons cover every card and trigger; practice uses fixed hands w
           assert.equal(useCard(state.hands[0][0].instanceId,0,turns.currentUnit),true);
         }
         if(['ammo','reposition'].includes(card.id)) {
+          if(card.id==='reposition') { startPowerMeter(); lockPowerMeter(.5); }
           state.aimPoint={x:turns.currentUnit.x+100,y:turns.currentUnit.y}; launchCurrentUnit();
         }
         assert.equal(state.tutorial.complete,true);
@@ -359,6 +479,7 @@ test('catalog builds all entries from live definitions and returns to the home s
 test('basic tutorial objectives follow real launches, collisions, resting and turn completion', () => {
   const g=game();
   g.run(`startTutorial();
+    startPowerMeter(); lockPowerMeter(.5);
     state.aimPoint={x:turns.currentUnit.x+80,y:turns.currentUnit.y}; launchCurrentUnit();
     assert.equal(state.tutorial.complete,true);
     loadTutorialLesson(1); assert.equal(state.tutorial.complete,false);
@@ -377,7 +498,7 @@ test('basic tutorial objectives follow real launches, collisions, resting and tu
 test('tutorial navigation restores instructions, retry resets practice, and launch clears the aim overlay', () => {
   const g=game();
   g.run(`startTutorial();
-    assert.match(learningUI.tutorialInstruction.textContent,/스톤을 오른쪽으로/);
+    assert.match(learningUI.tutorialInstruction.textContent,/발사 버튼을 누른 뒤/);
     assert.equal(tutorialShowsPlacementLimit(),false);
     const guardIndex=tutorialLessons().findIndex(lesson=>lesson.id==='card-guard');
     learningUI.tutorialLessonSelect.listeners.change({target:{value:String(guardIndex)}});
@@ -394,6 +515,7 @@ test('tutorial navigation restores instructions, retry resets practice, and laun
     loadTutorialLesson(tutorialLessons().findIndex(lesson=>lesson.kind==='trigger'));
     assert.equal(tutorialShowsPlacementLimit(),true);
     loadTutorialLesson(0);
+    startPowerMeter(); lockPowerMeter(.5);
     state.aiming=true; state.aimPoint={x:turns.currentUnit.x+1,y:turns.currentUnit.y};
     aimOverlay.style.display='block'; launchCurrentUnit();
     assert.equal(turns.currentUnit.status,'ready');
@@ -439,6 +561,7 @@ test('speed tutorial supplies blackhole and completes only after using it in fli
     assert.match(learningUI.tutorialInstruction.textContent,/발사 도중 블랙홀 방출 카드를 사용해 보세요/);
     assert.equal(state.hands[0][0].id,'blackhole');
     setSpeedLevel(2); assert.equal(state.tutorial.complete,false);
+    startPowerMeter(); lockPowerMeter(.5);
     state.aimPoint={x:turns.currentUnit.x+80,y:turns.currentUnit.y}; launchCurrentUnit();
     assert.equal(state.tutorial.complete,false); assert.equal(state.phase,'sliding');
     assert.equal(useCard(state.hands[0][0].instanceId,0,turns.currentUnit),true);
@@ -520,7 +643,7 @@ test('hunter gets extra ammo as first and last-turn cards without consuming the 
     drawCardForPlayer(0,()=>{});`);
   g.flush();
   g.run(`assert.equal(state.hands[0][0].id,'ammo'); assert.equal(state.deck.length,CARDS.length);
-    turns.globalTurn=6; drawCardForPlayer(0,()=>{});`);
+    turns.globalTurn=8; drawCardForPlayer(0,()=>{});`);
   g.flush();
   g.run(`assert.equal(state.hands[0][1].id,'ammo'); assert.equal(state.deck.length,CARDS.length);
     assert.equal(state.heroCardDraws[0],2);`);
