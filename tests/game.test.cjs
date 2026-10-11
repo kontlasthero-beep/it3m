@@ -309,7 +309,7 @@ test('challenger power selection survives snapshots and host validates its launc
 test('power choice is shown above the stone, meter dismisses, and lock sound scales with power', () => {
   const g = game();
   g.run(`turns.createCurrentUnit(); state.phase='aiming';
-    globalThis.tones=[]; sfxToggle.checked=true; initializeAudio=()=>true;
+    globalThis.tones=[]; audio.sfxVolume=100; initializeAudio=()=>true;
     audio.context={currentTime:0}; scheduleTone=(...args)=>tones.push(args);
     assert.equal(startPowerMeter(),true); assert.equal(lockPowerMeter(.2),true); const low=tones.at(-1);
     state.powerMeter=null; assert.equal(startPowerMeter(),true); assert.equal(lockPowerMeter(.9),true); const high=tones.at(-1);

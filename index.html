@@ -108,9 +108,9 @@
     .speed-toggle[data-speed-level="2"] [data-speed-arrow="3"] { display: none; }
     .speed-toggle[aria-pressed="true"] { border-color: #65d6bd; color: #8debd7; background: #163a35; }
     .speed-toggle:disabled { opacity: .45; cursor: not-allowed; }
-    .audio-controls { display: flex; gap: 12px; margin-top: 9px; }
-    .audio-controls label { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-size: 12px; cursor: pointer; }
-    .audio-controls input { accent-color: var(--accent); }
+    .volume-row { display: grid; grid-template-columns: 85px minmax(0, 1fr) 38px; align-items: center; gap: 10px; margin: 18px 0; color: var(--muted); text-align: left; }
+    .volume-row input { width: 100%; accent-color: #65d6bd; }
+    .volume-row output { color: var(--ink); font-variant-numeric: tabular-nums; text-align: right; }
 
     .scoreboard {
       display: grid;
@@ -307,7 +307,8 @@
     #endTurnButton:disabled { opacity: .42; cursor: not-allowed; }
     #endTurnButton.tutorial-highlight { animation: tutorial-button-pulse 1.25s ease-in-out infinite; }
     @keyframes tutorial-button-pulse { 50% { box-shadow: 0 0 0 4px rgba(101, 214, 189, .4), 0 0 18px rgba(101, 214, 189, .6); transform: translateY(-2px); } }
-    .table-clock-bar { position: sticky; top: max(4px, env(safe-area-inset-top)); z-index: 18; display: flex; justify-content: center; min-height: 48px; padding: 4px 0 8px; pointer-events: none; }
+    .table-clock-bar { position: sticky; top: max(4px, env(safe-area-inset-top)); z-index: 18; display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; padding: 4px 0 8px; pointer-events: none; }
+    .table-clock-bar > * { pointer-events: auto; }
     .turn-timer { position: relative; min-width: 92px; padding: 4px 14px; border: 1px solid #55716c; border-radius: 4px; background: #142522; color: #e5f2ed; font-variant-numeric: tabular-nums; font-size: 24px; font-weight: 800; text-align: center; line-height: 1.2; }
     .turn-timer.urgent { border-color: #ff6d5e; background: #492a27; color: #fff1ed; }
     .turn-timer.paused::before { content: 'Ⅱ'; position: absolute; right: calc(100% + 8px); top: 50%; transform: translateY(-50%); color: #9cb8af; font-size: 15px; }
@@ -348,8 +349,13 @@
     .hand-cards { display: flex; flex-wrap: wrap; gap: 7px; min-height: 108px; }
     .hand-row { display: flex; align-items: flex-start; gap: 10px; }
     .hand-row .hand-cards { flex: 1; }
-    .trigger-tool { min-width: 116px; min-height: 38px; padding: 7px 9px; border-color: #54756f; background: #183b37; font-size: 12px; white-space: nowrap; touch-action: none; user-select: none; }
+    .trigger-tool { position: relative; display: grid; place-items: start center; flex: 0 0 48px; width: 48px; height: 54px; padding: 2px 0 0; border: 0; background: transparent; touch-action: none; user-select: none; }
+    .trigger-tool:hover { background: transparent; filter: drop-shadow(0 0 8px rgba(141, 235, 215, .5)); }
+    .trigger-tool img { display: block; width: 40px; height: 40px; object-fit: contain; opacity: .78; animation: trigger-icon-rotation 14s linear infinite; transform-origin: center; pointer-events: none; }
+    .trigger-count { position: absolute; bottom: 0; left: 50%; display: grid; place-items: center; min-width: 20px; height: 18px; padding: 0 4px; border: 1.5px solid #91e6d0; border-radius: 50%; background: #0b1c1e; color: #e9fff7; font-size: 10px; font-variant-numeric: tabular-nums; transform: translateX(-50%); pointer-events: none; }
+    @keyframes trigger-icon-rotation { to { transform: rotate(360deg); } }
     .trigger-tool[disabled] { opacity: .42; cursor: not-allowed; }
+    .trigger-tool[disabled]:hover { filter: none; }
     .ability-card { position: relative; flex: 0 0 84px; width: 84px; height: 108px; padding: 0; border: 0; border-radius: 5px; color: var(--ink); touch-action: none; user-select: none; }
     .card-face { display: flex; flex-direction: column; width: 100%; height: 100%; overflow: hidden; border: 1px solid #83928c; border-radius: 5px; background: #152226; color: #f4f0e6; box-shadow: 0 3px 8px rgba(0,0,0,.25); text-align: left; }
     .card-art { display: block; width: 100%; height: 43%; flex: 0 0 auto; object-fit: cover; object-position: center; pointer-events: none; }
@@ -369,9 +375,8 @@
     .card-consumed { position: fixed; z-index: 72; pointer-events: none; animation: card-consume .4s ease-out forwards; }
     @keyframes card-consume { to { opacity: 0; transform: translateY(-24px) scale(.85); filter: brightness(1.8); } }
     .trigger-tool[data-description]:hover { z-index: 30; }
-    .trigger-tool[data-description]::after { content: attr(data-description); position: absolute; z-index: 31; left: 0; bottom: calc(100% + 8px); display: none; width: min(250px, 70vw); padding: 9px 11px; border: 1px solid #71847d; border-radius: 4px; background: #101a1c; color: #edf4ef; box-shadow: 0 8px 22px rgba(0,0,0,.4); font-size: 12px; font-weight: 400; line-height: 1.45; white-space: normal; pointer-events: none; }
+    .trigger-tool[data-description]::after { content: attr(data-description); position: absolute; z-index: 31; right: 0; bottom: calc(100% + 8px); display: none; width: min(250px, 70vw); padding: 9px 11px; border: 1px solid #71847d; border-radius: 4px; background: #101a1c; color: #edf4ef; box-shadow: 0 8px 22px rgba(0,0,0,.4); font-size: 12px; font-weight: 400; line-height: 1.45; white-space: normal; pointer-events: none; }
     .trigger-tool[data-description]:hover::after { display: block; }
-    .trigger-tool { position: relative; }
     .ability-card.usable { cursor: grab; }
     .ability-card.usable:active { cursor: grabbing; }
     .ability-card.card-back { border-style: dashed; background: #1b2925; color: #a3b0ab; cursor: default; touch-action: auto; }
@@ -385,7 +390,7 @@
     .card-ghost.drag-card.valid-target { width: 68px; height: 86px; transform: translate(-50%, -50%); filter: drop-shadow(0 0 12px #9ff4c0); }
     .drag-card.valid-target .card-art { height: calc(100% - 22px); }
     .drag-card.valid-target .card-name { min-height: 22px; font-size: 9px; }
-    .trigger-placement-preview { position: fixed; z-index: 21; display: none; box-sizing: border-box; pointer-events: none; transform: translate(-50%, -50%); border: 3px solid #c1fff0; border-radius: 50%; background: #17302f; color: #56e0bc; opacity: .9; text-align: center; font-weight: 700; line-height: 1; }
+    .trigger-placement-preview { position: fixed; z-index: 21; display: none; pointer-events: none; transform: translate(-50%, -50%); background: url('Trigger_illustration/v3-simple/empty.png') center / 145% no-repeat; opacity: .9; }
     .card-deal-overlay { z-index: 65; background: rgba(8,15,16,.48); }
     .deal-player { position: fixed; top: max(12px, calc(50% - 202px)); left: 0; right: 0; margin: 0; color: #f4f0e6; font-size: 15px; text-align: center; }
     .deal-card { position: fixed; left: 50%; top: 50%; width: 232px; height: min(340px, calc(100dvh - 72px)); transform: translate(-50%, -50%); transform-origin: center; }
@@ -393,14 +398,31 @@
     .trigger-select-overlay[hidden] { display: none; }
     .trigger-type-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 16px 0; text-align: left; }
     .trigger-type-option { min-width: 0; padding: 10px; background: #101a1c; text-align: left; }
+    .trigger-type-option { display: grid; grid-template-columns: 48px minmax(0, 1fr); align-items: center; gap: 9px; }
+    .trigger-type-option img { width: 48px; height: 48px; object-fit: contain; opacity: .82; animation: trigger-icon-rotation 14s linear infinite; transform-origin: center; }
     .trigger-type-option[aria-checked="true"] { border-color: var(--accent); background: #263331; }
     .trigger-type-option strong, .trigger-type-option span { display: block; }
     .trigger-type-option span { margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 1.4; white-space: normal; }
 
     .home-stones { display: flex; justify-content: center; gap: 18px; margin: 14px 0 22px; }
     .home-stones img { width: 66px; height: 66px; border-radius: 50%; object-fit: cover; }
+    .guest-profile { margin: 0 0 18px; padding: 12px 0 0; border-top: 1px solid var(--line); text-align: left; }
+    .guest-profile[hidden], .match-fame-reward[hidden] { display: none; }
+    .guest-profile-line { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+    .guest-profile-line strong { color: var(--ink); font-size: 14px; }
+    .guest-profile-line span, .guest-profile-meta { color: var(--muted); font-size: 12px; }
+    .guest-profile-meta { margin: 6px 0; font-variant-numeric: tabular-nums; }
+    .guest-profile progress { display: block; width: 100%; height: 7px; accent-color: #e5b35a; }
+    .match-fame-reward { margin: 14px 0; color: #f4d487; font-weight: 700; }
     .home-menu { display: grid; gap: 10px; }
     .home-menu button { min-height: 52px; font-size: 17px; }
+    .home-account { width: 100%; margin-top: 10px; }
+    .account-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 14px; }
+    .account-tabs button[aria-selected="true"] { border-color: #65d6bd; background: #247667; }
+    .account-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 16px 0; }
+    .account-stats span { padding: 9px 4px; border: 1px solid var(--line); text-align: center; font-size: 12px; color: var(--muted); }
+    .account-stats strong { display: block; color: var(--ink); font-size: 18px; }
+    .account-identity { margin: 0; color: var(--muted); font-size: 12px; }
     .home-return { width: 100%; margin-top: 16px; }
     .icon-button { width: 34px; height: 34px; padding: 0; font-size: 22px; line-height: 1; }
     [hidden] { display: none !important; }
@@ -413,7 +435,7 @@
     .catalog-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
     .catalog-entry { border: 1px solid var(--line); border-radius: 5px; padding: 14px; min-width: 0; }
     .catalog-entry header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-    .catalog-entry canvas { width: 96px; height: 72px; flex: 0 0 96px; touch-action: auto; }
+    .catalog-entry .catalog-trigger-art { display: block; width: 96px; height: 72px; flex: 0 0 96px; padding: 2px 12px; border: 1px solid var(--line); border-radius: 3px; background: #102427; object-fit: contain; }
     .catalog-entry .catalog-card-art { display: block; width: 96px; height: 72px; flex: 0 0 96px; border: 1px solid var(--line); border-radius: 3px; object-fit: cover; object-position: center; }
     .catalog-entry .catalog-card-art[data-card-id="reposition"] { object-position: center 18%; }
     .catalog-entry .catalog-card-art[data-card-id="bluffing"] { object-position: center 12%; transform: scale(1.08); }
@@ -504,9 +526,6 @@
       .turn-status { display: flex; align-items: center; gap: 8px; min-width: 0; margin: 0; padding: 3px 6px; border-left-width: 2px; font-size: 11px; }
       .status-topline { gap: 5px; }
       .turn-status strong { margin: 0; font-size: 12px; }
-      .audio-controls { gap: 6px; margin: 0; }
-      .audio-controls label { font-size: 10px; }
-      .audio-controls input { width: 13px; height: 13px; margin: 0; }
       .speed-toggle { min-height: 28px; padding: 3px 5px; }
       .scoreboard { gap: 5px; margin-bottom: 5px; }
       .player-panel { min-height: 0; padding: 4px 8px; }
@@ -531,7 +550,9 @@
       .ability-card { flex-basis: 62px; width: 62px; height: 76px; }
       .ability-card .card-art { height: 49px; }
       .ability-card .card-name { min-height: 25px; font-size: 9px; }
-      .trigger-tool { min-height: 26px; padding: 4px 6px; font-size: 10px; }
+      .trigger-tool { flex-basis: 44px; width: 44px; height: 48px; padding-top: 1px; }
+      .trigger-tool img { width: 30px; height: 30px; }
+      .trigger-count { bottom: 0; min-width: 18px; height: 16px; padding: 0 3px; font-size: 9px; }
       .table-clock-bar { min-height: 34px; padding: 2px 0 4px; }
       .turn-timer { min-width: 76px; font-size: 20px; padding: 2px 12px; }
       .power-control { width: 88px; }
@@ -541,7 +562,9 @@
       .power-track { height: 96px; margin: 0 7px 4px; }
       .power-control.big-boy .power-track { height: 110px; }
       .power-value { min-height: 16px; margin-bottom: 3px; font-size: 12px; }
-      .trigger-tool { min-width: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .trigger-tool img, .trigger-type-option img { animation: none; }
     }
   </style>
 </head>
@@ -559,10 +582,7 @@
             <button class="connection-status-button" id="connectionStatusButton" type="button" data-state="idle" aria-expanded="false" aria-controls="connectionDetails" title="실시간 연결 상태" hidden>
               <span class="connection-dot" aria-hidden="true"></span><span id="connectionStatusLabel">연결 대기</span>
             </button>
-            <button class="speed-toggle" id="speedToggle" data-speed-level="0" type="button" aria-label="게임 속도: 정상 속도" aria-pressed="false" title="게임 속도 전환">
-              <svg viewBox="0 0 20 16" aria-hidden="true"><path data-speed-arrow="1" d="M0 2v12l7-6z"/><path data-speed-arrow="2" d="M6 2v12l7-6z"/><path data-speed-arrow="3" d="M12 2v12l7-6z"/></svg>
-              <span id="speedLabel">100%</span>
-            </button>
+            <button class="icon-button" id="gameSettingsButton" type="button" aria-label="게임 설정" title="게임 설정">⚙</button>
             <button class="icon-button" id="tutorialSettingsButton" type="button" aria-label="튜토리얼 설정" title="튜토리얼 설정" hidden>⚙</button>
           </div>
         </div>
@@ -576,10 +596,6 @@
           </dl>
         </div>
         <strong id="turnText">게임 시작 대기</strong>
-        <div class="audio-controls" aria-label="오디오 설정">
-          <label><input id="sfxToggle" type="checkbox" checked>효과음</label>
-          <label><input id="musicToggle" type="checkbox" checked>배경음악</label>
-        </div>
       </div>
     </section>
 
@@ -602,7 +618,7 @@
       <p id="tutorialInstruction"></p>
       <div class="tutorial-actions"><span id="tutorialObjective" role="status" aria-live="polite"></span><button id="tutorialRetryButton" type="button">다시 연습</button><button id="tutorialNextButton" type="button">다음 연습 →</button></div>
     </section>
-    <div class="table-clock-bar"><div class="turn-timer" id="turnTimer" aria-label="남은 턴 시간" hidden>35</div></div>
+    <div class="table-clock-bar"><div class="turn-timer" id="turnTimer" aria-label="남은 턴 시간" hidden>35</div><button class="speed-toggle" id="speedToggle" data-speed-level="0" type="button" aria-label="게임 속도: 정상 속도" aria-pressed="false" title="게임 속도 전환"><svg viewBox="0 0 20 16" aria-hidden="true"><path data-speed-arrow="1" d="M0 2v12l7-6z"/><path data-speed-arrow="2" d="M6 2v12l7-6z"/><path data-speed-arrow="3" d="M12 2v12l7-6z"/></svg><span id="speedLabel">100%</span></button></div>
     <section class="game-shell" aria-label="컬링 테이블">
       <canvas id="game" width="1200" height="700" aria-label="Underhanded Curling Club 게임"></canvas>
       <div class="power-control" id="powerControl" hidden>
@@ -620,10 +636,35 @@
       <div class="overlay" id="startOverlay">
         <div class="dialog">
           <h2>Underhanded Curling Club</h2>
-          <p id="startScreenDescription">한 수 앞선 한 판.</p>
+          <p id="startScreenDescription"></p>
           <div class="start-screen" id="homeScreen">
             <div class="home-stones" aria-hidden="true"><img src="stone-blue.png" alt=""><img src="stone-red.png" alt=""></div>
+            <div class="guest-profile" id="guestProfile" hidden>
+              <div class="guest-profile-line"><strong id="guestProfileName"></strong><span id="guestProfileId"></span></div>
+              <p class="guest-profile-meta" id="guestProfileMeta"></p>
+              <progress id="guestProfileProgress" max="100" value="0" aria-label="다음 레벨 진행도"></progress>
+            </div>
             <div class="home-menu"><button class="primary" id="openPlayMenuButton" type="button">게임 시작</button><button id="openTutorialButton" type="button">튜토리얼</button><button id="openCatalogButton" type="button">도감</button></div>
+            <button class="home-account" id="openAccountButton" type="button">로그인 · 계정 등록</button>
+          </div>
+          <div class="start-screen" id="accountScreen" hidden>
+            <h3>플레이어 계정</h3>
+            <div class="account-tabs" role="tablist" aria-label="계정 방식"><button id="loginTab" type="button" role="tab" aria-selected="true">로그인</button><button id="registerTab" type="button" role="tab" aria-selected="false">계정 등록</button></div>
+            <form class="start-form" id="accountForm">
+              <label>계정 ID<input id="accountUsernameInput" minlength="4" maxlength="20" autocomplete="username" required></label>
+              <label id="accountNicknameField" hidden>닉네임<input id="accountNicknameInput" maxlength="20" autocomplete="nickname"></label>
+              <label>비밀번호<input id="accountPasswordInput" type="password" minlength="8" autocomplete="current-password" required></label>
+              <button class="primary" id="accountSubmitButton" type="submit">로그인</button>
+            </form>
+            <button class="home-return" id="accountHomeButton" type="button">← 돌아가기</button>
+          </div>
+          <div class="start-screen" id="accountSettingsScreen" hidden>
+            <h3>계정 설정</h3>
+            <p class="account-identity" id="accountIdentity"></p>
+            <div class="account-stats" id="accountStats"></div>
+            <form class="start-form" id="nicknameForm"><label>온라인 닉네임<input id="profileNicknameInput" maxlength="20" autocomplete="nickname" required></label><button class="primary" type="submit">닉네임 변경</button></form>
+            <button class="home-account" id="logoutButton" type="button">로그아웃</button>
+            <button class="home-return" id="accountSettingsHomeButton" type="button">← 시작 화면으로 돌아가기</button>
           </div>
           <div class="start-screen" id="startMenu" hidden>
             <div class="start-menu-grid">
@@ -637,7 +678,7 @@
           <div class="start-screen" id="browseRoomsScreen" hidden>
             <h3>공개 방 찾기</h3>
             <div class="start-form">
-              <label>내 닉네임<input id="browsePlayerNameInput" maxlength="20" autocomplete="nickname"></label>
+              <p class="account-identity online-identity"></p>
               <div id="publicRoomPanel">
                 <div class="room-list" id="publicRoomList"></div>
                 <p class="room-list-status" id="publicRoomStatus" role="status"></p>
@@ -649,7 +690,7 @@
           <div class="start-screen" id="joinRoomScreen" hidden>
             <h3>방 코드로 참가</h3>
             <div class="start-form">
-              <label>내 닉네임<input id="playerNameInput" maxlength="20" autocomplete="nickname"></label>
+              <p class="account-identity online-identity"></p>
               <label>방 코드<input id="roomCodeInput" maxlength="6" autocomplete="off" placeholder="초대 코드"></label>
               <label id="joinPasswordField" hidden>방 비밀번호<input id="joinPasswordInput" type="password" maxlength="64" autocomplete="current-password"></label>
               <button id="joinRoomButton" type="button">참가</button>
@@ -668,7 +709,7 @@
           <div class="start-screen" id="createRoomScreen" hidden>
             <h3>온라인 방 만들기</h3>
             <div class="start-form">
-              <label>내 닉네임<input id="createPlayerNameInput" maxlength="20" autocomplete="nickname"></label>
+              <p class="account-identity online-identity"></p>
               <label class="private-toggle"><input id="privateRoomToggle" type="checkbox"><span>사설 방으로 설정</span></label>
               <label>방 비밀번호<input id="roomPasswordInput" type="password" maxlength="64" autocomplete="new-password" disabled></label>
               <button id="confirmCreateRoomButton" type="button">방 만들기</button>
@@ -721,6 +762,7 @@
           <h2 class="result-title" id="winnerTitle">플레이어 1 승리!</h2>
           <p id="resultMessage"></p>
           <div class="result-grid" id="resultGrid"></div>
+          <p class="match-fame-reward" id="matchFameReward" role="status" hidden></p>
           <button class="primary" id="replayButton">다시 플레이</button>
         </div>
       </div>
@@ -736,8 +778,8 @@
       </div>
     </section>
     <section class="hands" aria-label="플레이어 카드">
-      <div class="hand-panel" id="handPanel0"><div class="hand-title">플레이어 1 카드</div><div class="hand-row"><div class="hand-cards" id="hand0"></div><button class="trigger-tool" data-owner="0" disabled>트리거 배치 · 1회</button></div></div>
-      <div class="hand-panel" id="handPanel1"><div class="hand-title">플레이어 2 카드</div><div class="hand-row"><div class="hand-cards" id="hand1"></div><button class="trigger-tool" data-owner="1" disabled>트리거 배치 · 1회</button></div></div>
+      <div class="hand-panel" id="handPanel0"><div class="hand-title">플레이어 1 카드</div><div class="hand-row"><div class="hand-cards" id="hand0"></div><button class="trigger-tool" data-owner="0" type="button" aria-label="트리거 배치, 남은 횟수 1" disabled><img src="Trigger_illustration/v3-simple/empty.png" alt="" draggable="false"><span class="trigger-count" aria-hidden="true">1</span></button></div></div>
+      <div class="hand-panel" id="handPanel1"><div class="hand-title">플레이어 2 카드</div><div class="hand-row"><div class="hand-cards" id="hand1"></div><button class="trigger-tool" data-owner="1" type="button" aria-label="트리거 배치, 남은 횟수 1" disabled><img src="Trigger_illustration/v3-simple/empty.png" alt="" draggable="false"><span class="trigger-count" aria-hidden="true">1</span></button></div></div>
     </section>
   </main>
 
@@ -754,6 +796,14 @@
     <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="tutorialSettingsTitle">
       <h2 id="tutorialSettingsTitle">튜토리얼 설정</h2>
       <div class="settings-actions"><button id="tutorialResumeButton" type="button">계속 연습</button><button id="tutorialRestartButton" type="button">현재 연습 다시 시작</button><button id="tutorialHomeButton" type="button">시작 화면으로 돌아가기</button></div>
+    </div>
+  </div>
+  <div class="overlay" id="gameSettingsOverlay" hidden>
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="gameSettingsTitle">
+      <h2 id="gameSettingsTitle">게임 설정</h2>
+      <label class="volume-row">배경음악<input id="musicVolume" type="range" min="0" max="100" value="100"><output id="musicVolumeValue">100%</output></label>
+      <label class="volume-row">효과음<input id="sfxVolume" type="range" min="0" max="100" value="100"><output id="sfxVolumeValue">100%</output></label>
+      <button id="closeGameSettingsButton" type="button">게임으로 돌아가기</button>
     </div>
   </div>
 
@@ -797,6 +847,12 @@
       const entityTooltipDetail = document.querySelector('#entityTooltipDetail');
       const startOverlay = document.querySelector('#startOverlay');
       const resultOverlay = document.querySelector('#resultOverlay');
+      const guestProfileElement = document.querySelector('#guestProfile');
+      const guestProfileName = document.querySelector('#guestProfileName');
+      const guestProfileId = document.querySelector('#guestProfileId');
+      const guestProfileMeta = document.querySelector('#guestProfileMeta');
+      const guestProfileProgress = document.querySelector('#guestProfileProgress');
+      const matchFameReward = document.querySelector('#matchFameReward');
       const mapSelectOverlay = document.querySelector('#mapSelectOverlay');
       const heroSelectOverlay = document.querySelector('#heroSelectOverlay');
       const heroSelectPlayer = document.querySelector('#heroSelectPlayer');
@@ -806,9 +862,16 @@
       const heroBadges = [document.querySelector('#heroBadge0'), document.querySelector('#heroBadge1')];
       const dealOverlay = document.querySelector('#dealOverlay');
       const startButton = document.querySelector('#startButton');
-      const playerNameInput = document.querySelector('#playerNameInput');
-      const browsePlayerNameInput = document.querySelector('#browsePlayerNameInput');
-      const createPlayerNameInput = document.querySelector('#createPlayerNameInput');
+      const openAccountButton = document.querySelector('#openAccountButton');
+      const accountForm = document.querySelector('#accountForm');
+      const accountUsernameInput = document.querySelector('#accountUsernameInput');
+      const accountPasswordInput = document.querySelector('#accountPasswordInput');
+      const accountNicknameInput = document.querySelector('#accountNicknameInput');
+      const accountNicknameField = document.querySelector('#accountNicknameField');
+      const accountSubmitButton = document.querySelector('#accountSubmitButton');
+      const accountIdentity = document.querySelector('#accountIdentity');
+      const accountStats = document.querySelector('#accountStats');
+      const profileNicknameInput = document.querySelector('#profileNicknameInput');
       const localPlayerNameInputs = [document.querySelector('#localPlayer1NameInput'), document.querySelector('#localPlayer2NameInput')];
       const startScreens = [...document.querySelectorAll('.start-screen')];
       const startScreenDescription = document.querySelector('#startScreenDescription');
@@ -870,8 +933,9 @@
       const handEls = [document.querySelector('#hand0'), document.querySelector('#hand1')];
       const handPanels = [document.querySelector('#handPanel0'), document.querySelector('#handPanel1')];
       const triggerToolButtons = [...document.querySelectorAll('.trigger-tool')];
-      const sfxToggle = document.querySelector('#sfxToggle');
-      const musicToggle = document.querySelector('#musicToggle');
+      const gameSettingsOverlay = document.querySelector('#gameSettingsOverlay');
+      const musicVolume = document.querySelector('#musicVolume');
+      const sfxVolume = document.querySelector('#sfxVolume');
       const speedToggle = document.querySelector('#speedToggle');
       const speedLabel = document.querySelector('#speedLabel');
       const turnTimer = document.querySelector('#turnTimer');
@@ -885,9 +949,6 @@
       const connectionPeerValue = document.querySelector('#connectionPeerValue');
       const mobileLayoutQuery = window.matchMedia('(max-width: 700px), (pointer: coarse)');
       let connectionNoticeTimer = null;
-      playerNameInput.value = createRandomNickname();
-      browsePlayerNameInput.value = createRandomNickname();
-      createPlayerNameInput.value = createRandomNickname();
       updateDeviceLayout();
       mobileLayoutQuery.addEventListener('change', updateDeviceLayout);
 
@@ -962,6 +1023,18 @@
         { id: 'hardening', name: '경질화', description: '중첩할 때마다 마찰력이 3배씩 곱해집니다.', color: '#aeb8bc' },
         { id: 'guard', name: '방호벽', description: '중첩하면 위성체가 최대 네 개까지 늘어납니다.', color: '#f1b66e' }
       ];
+      const TRIGGER_ART = Object.freeze({
+        blackhole: 'Trigger_illustration/v3-simple/blackhole.png',
+        pulse: 'Trigger_illustration/v3-simple/pulse.png',
+        hardening: 'Trigger_illustration/v3-simple/hardening.png',
+        guard: 'Trigger_illustration/v3-simple/guard.png',
+        empty: 'Trigger_illustration/v3-simple/empty.png'
+      });
+      const triggerImages = Object.fromEntries(Object.entries(TRIGGER_ART).map(([id, src]) => {
+        const image = new Image();
+        image.src = src;
+        return [id, image];
+      }));
       const CARDS = [
         { id: 'hardening', name: '경질화' }, { id: 'hardening', name: '경질화' },
         { id: 'guard', name: '방호벽' }, { id: 'guard', name: '방호벽' },
@@ -1111,6 +1184,12 @@
       };
 
       let onlineSession = null;
+      let guestToken = null;
+      let guestProfile = null;
+      let guestProfilePersistent = false;
+      let guestProfileInit = null;
+      let accountReturnScreen = 'homeScreen';
+      let registeringAccount = false;
       let pendingCardDraw = null;
       let cardDrawVisual = null;
       let cardDrawSequence = 0;
@@ -1141,7 +1220,15 @@
       let publicRoomFetchPending = false;
       let feedbackSequence = 0;
 
-      const audio = { context: null, sfxBus: null, lastPlayed: new Map() };
+      function savedVolume(key) {
+        try { return Math.max(0, Math.min(100, Number(localStorage.getItem(key) ?? 100) || 0)); }
+        catch { return 100; }
+      }
+      const audio = { context: null, sfxBus: null, lastPlayed: new Map(), musicVolume: savedVolume('ucc.musicVolume'), sfxVolume: savedVolume('ucc.sfxVolume') };
+      musicVolume.value = String(audio.musicVolume);
+      sfxVolume.value = String(audio.sfxVolume);
+      document.querySelector('#musicVolumeValue').textContent = `${audio.musicVolume}%`;
+      document.querySelector('#sfxVolumeValue').textContent = `${audio.sfxVolume}%`;
 
       function initializeAudio() {
         if (audio.context) {
@@ -1152,17 +1239,10 @@
         if (!Context) return false;
         audio.context = new Context();
         audio.sfxBus = audio.context.createGain();
-        audio.sfxBus.gain.value = 1;
+        audio.sfxBus.gain.value = audio.sfxVolume / 100;
         audio.sfxBus.connect(audio.context.destination);
         audio.context.resume();
         return true;
-      }
-
-      function createRandomNickname() {
-        const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-        let suffix = '';
-        for (let index = 0; index < 4; index += 1) suffix += alphabet[Math.floor(Math.random() * alphabet.length)];
-        return suffix;
       }
 
       function updateDeviceLayout() {
@@ -1477,40 +1557,6 @@
         playSound('connected');
       }
 
-      function drawCatalogArt(surface, entry, isTrigger) {
-        const painter = surface.getContext('2d');
-        const color = entry.color || LEARNING_DETAILS[entry.id]?.color || '#65d6bd';
-        painter.fillStyle = '#102427';
-        painter.fillRect(0, 0, 192, 144);
-        const circle = (x, y, r, fill) => {
-          painter.beginPath(); painter.arc(x, y, r, 0, Math.PI * 2);
-          painter.fillStyle = fill; painter.fill();
-        };
-        if (isTrigger) {
-          circle(96, 72, 48, `${color}33`);
-          circle(96, 72, 28, color);
-          circle(96, 72, 23, '#17302f');
-          circle(96, 72, 4, color);
-          return;
-        }
-        circle(96, 72, 30, PLAYER[0].color);
-        const image = images[0];
-        if (image.complete && image.naturalWidth) painter.drawImage(image, 68, 44, 56, 56);
-        if (entry.id === 'hardening') circle(96, 72, 28, '#aeb8bc99');
-        if (entry.id === 'guard') { circle(96, 23, 12, color); circle(96, 121, 12, color); }
-        if (['pulse', 'blackhole'].includes(entry.id)) {
-          painter.strokeStyle = color; painter.lineWidth = 4;
-          [42, 55].forEach(r => { painter.beginPath(); painter.arc(96, 72, r, 0, Math.PI * 2); painter.stroke(); });
-          if (entry.id === 'blackhole') circle(96, 72, 16, '#170b24');
-        }
-        if (entry.id === 'brick') { painter.fillStyle = color; painter.fillRect(43, 38, 18, 68); }
-        if (entry.id === 'ammo') { circle(35, 72, 8, color); painter.fillStyle = color; painter.fillRect(45, 70, 18, 4); }
-        if (entry.id === 'reposition') {
-          painter.strokeStyle = color; painter.lineWidth = 3; painter.setLineDash([5, 4]);
-          painter.beginPath(); painter.moveTo(16, 72); painter.lineTo(62, 72); painter.stroke();
-        }
-      }
-
       function renderCatalog(category = 'cards') {
         const isTrigger = category === 'triggers';
         const isHero = category === 'heroes';
@@ -1525,14 +1571,12 @@
         learningUI.catalogList.replaceChildren(...definitions.map(entry => {
           const article = document.createElement('article'); article.className = `catalog-entry${isHero ? ' hero-catalog-entry' : ''}`;
           const header = document.createElement('header');
-          const preview = document.createElement(isTrigger ? 'canvas' : 'img');
-          if (!isTrigger) {
-            preview.className = isHero ? 'catalog-portrait' : 'catalog-card-art';
-            preview.src = isHero ? entry.portrait : CARD_PRESENTATION[entry.id]?.art || '';
-            preview.alt = '';
-            preview.loading = 'lazy';
-            if (!isHero) preview.dataset.cardId = entry.id;
-          } else { preview.width = 192; preview.height = 144; }
+          const preview = document.createElement('img');
+          preview.className = isHero ? 'catalog-portrait' : isTrigger ? 'catalog-trigger-art' : 'catalog-card-art';
+          preview.src = isHero ? entry.portrait : isTrigger ? TRIGGER_ART[entry.id] : CARD_PRESENTATION[entry.id]?.art || '';
+          preview.alt = '';
+          preview.loading = 'lazy';
+          if (!isHero && !isTrigger) preview.dataset.cardId = entry.id;
           preview.setAttribute('aria-hidden', 'true');
           const title = document.createElement('h3'); title.textContent = entry.name;
           header.append(preview, title);
@@ -1544,7 +1588,6 @@
             : LEARNING_DETAILS[entry.id]?.tip || entry.description
             : LEARNING_DETAILS[entry.id]?.tip || '자신의 턴에 사용합니다.';
           article.append(header, description, tip);
-          if (isTrigger) drawCatalogArt(preview, entry, true);
           return article;
         }));
       }
@@ -1670,7 +1713,7 @@
       }
 
       function playSound(name, intensity = 1) {
-        if (!sfxToggle.checked || !initializeAudio()) return;
+        if (!audio.sfxVolume || !initializeAudio()) return;
         const sound = AUDIO_CONFIG.sounds[name];
         if (!sound) return;
         const now = performance.now();
@@ -1682,7 +1725,7 @@
       }
 
       function playPowerLockSound(value) {
-        if (!sfxToggle.checked || !initializeAudio()) return;
+        if (!audio.sfxVolume || !initializeAudio()) return;
         const sound = AUDIO_CONFIG.sounds.powerLock;
         const pitch = .65 + value * .7;
         scheduleTone(sound.frequency * pitch, sound.endFrequency * pitch, audio.context.currentTime,
@@ -1690,14 +1733,14 @@
       }
 
       function playFileSound(name, { volume = 1, cooldown = 0 } = {}) {
-        if (!sfxToggle.checked) return;
+        if (!audio.sfxVolume) return;
         const source = AUDIO_FILES[name];
         if (!source) return;
         const now = performance.now();
         if (now - (fileSoundLastPlayed.get(name) || 0) < cooldown) return;
         fileSoundLastPlayed.set(name, now);
         const clip = source.cloneNode();
-        clip.volume = volume;
+        clip.volume = Math.min(1, volume * audio.sfxVolume / 100);
         clip.currentTime = 0;
         const playback = clip.play();
         if (playback?.catch) playback.catch(() => {});
@@ -1708,7 +1751,8 @@
       }
 
       function startMusic() {
-        if (!musicToggle.checked) return;
+        if (!audio.musicVolume) return;
+        AUDIO_FILES.music.volume = .28 * audio.musicVolume / 100;
         const playback = AUDIO_FILES.music.play();
         if (playback?.catch) playback.catch(() => {});
       }
@@ -2156,9 +2200,10 @@
           const spent = remaining <= 0;
           button.dataset.description = '원하는 위치에 스톤과 상호작용하는 특수 함정을 설치합니다.';
           button.title = button.dataset.description;
+          button.setAttribute('aria-label', `트리거 배치, 남은 횟수 ${remaining}`);
           button.disabled = spent || owner !== turns.playerIndex || !canControlPlayer(owner) || !turns.currentUnit ||
             !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase);
-          button.textContent = spent ? '트리거 배치 · 사용 완료' : `트리거 배치 · ${remaining}회`;
+          button.querySelector('.trigger-count').textContent = String(remaining);
         });
       }
 
@@ -2729,7 +2774,7 @@
         document.body.append(ghost);
         const preview = document.createElement('div');
         preview.className = 'trigger-placement-preview';
-        preview.textContent = '+';
+        preview.setAttribute('aria-hidden', 'true');
         document.body.append(preview);
         state.cardDrag = { id: 'trigger-placement', type: 'trigger-placement', owner, ghost, preview, point: null };
         moveCardGhost(event);
@@ -2755,7 +2800,6 @@
             drag.preview.style.top = `${event.clientY}px`;
             drag.preview.style.width = `${diameter}px`;
             drag.preview.style.height = `${diameter}px`;
-            drag.preview.style.fontSize = `${Math.max(9, radius * .58 * rect.width / canvas.width)}px`;
           }
         } else if (drag.type === 'brick') {
           drag.ghost.style.visibility = drag.point && canPlaceBrick(drag.point) ? 'hidden' : 'visible';
@@ -2961,11 +3005,17 @@
           option.className = 'trigger-type-option';
           option.setAttribute('role', 'radio');
           option.setAttribute('aria-checked', String(state.selectedTriggerType === type.id));
+          const art = document.createElement('img');
+          art.src = TRIGGER_ART[type.id];
+          art.alt = '';
+          art.draggable = false;
+          const copy = document.createElement('div');
           const name = document.createElement('strong');
           name.textContent = type.name;
           const description = document.createElement('span');
           description.textContent = type.description;
-          option.append(name, description);
+          copy.append(name, description);
+          option.append(art, copy);
           option.addEventListener('click', () => {
             state.selectedTriggerType = type.id;
             triggerTypeOptions.querySelectorAll('[role="radio"]').forEach(item => {
@@ -3336,12 +3386,90 @@
       async function postOnlineRequest(path, payload) {
         const response = await fetch(path, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...(guestToken ? { Authorization: `Bearer ${guestToken}` } : {}) },
           body: JSON.stringify(payload)
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || `서버 오류 (${response.status})`);
         return data;
+      }
+
+      function renderGuestProfile(profile, persistent) {
+        guestProfile = profile;
+        guestProfilePersistent = persistent;
+        guestProfileElement.hidden = false;
+        guestProfileName.textContent = profile.name;
+        guestProfileId.textContent = profile.id;
+        guestProfileMeta.textContent = `Lv ${profile.level} · 명성치 ${profile.fame} / ${profile.nextLevel}${persistent ? '' : ' · 임시 기록'}`;
+        guestProfileProgress.max = profile.nextLevel - profile.levelStart;
+        guestProfileProgress.value = profile.fame - profile.levelStart;
+        openAccountButton.textContent = '계정 설정';
+        accountIdentity.textContent = `계정 ID ${profile.username} · 플레이어 ID ${profile.id}`;
+        accountStats.replaceChildren(...[
+          ['경기', profile.played], ['승리', profile.wins], ['패배', profile.losses], ['무승부', profile.draws]
+        ].map(([label, value]) => {
+          const cell = document.createElement('span');
+          const number = document.createElement('strong');
+          number.textContent = String(value);
+          cell.append(number, label);
+          return cell;
+        }));
+        profileNicknameInput.value = profile.name;
+        document.querySelectorAll('.online-identity').forEach(element => {
+          element.textContent = `온라인 닉네임: ${profile.name}`;
+        });
+      }
+
+      async function initializeGuestProfile() {
+        if (location.protocol === 'file:' || typeof fetch !== 'function') return null;
+        if (guestProfileInit) return guestProfileInit;
+        guestProfileInit = (async () => {
+          if (!guestToken) {
+            try { guestToken = localStorage.getItem('ucc.accountToken.v1'); }
+            catch { guestToken = null; }
+          }
+          if (!guestToken) return null;
+          const response = await fetch('/api/profile', { headers: { Authorization: `Bearer ${guestToken}` }, cache: 'no-store' });
+          if (response.status === 401) {
+            guestToken = null;
+            try { localStorage.removeItem('ucc.accountToken.v1'); } catch {}
+            return null;
+          }
+          if (!response.ok) throw new Error(`Profile request failed (${response.status})`);
+          const data = await response.json();
+          if (!data.profile?.username) return null;
+          renderGuestProfile(data.profile, data.persistent);
+          return data.profile;
+        })().catch(error => {
+          console.warn('Account profile is unavailable:', error);
+          return null;
+        }).finally(() => { guestProfileInit = null; });
+        return guestProfileInit;
+      }
+
+      function showAccountScreen(returnScreen = 'homeScreen') {
+        accountReturnScreen = returnScreen;
+        showStartScreen('accountScreen');
+        accountUsernameInput.focus();
+      }
+
+      async function requireAccount(screenId) {
+        await initializeGuestProfile();
+        if (guestProfile?.username) {
+          showStartScreen(screenId);
+          return true;
+        }
+        showAccountScreen('startMenu');
+        startStatus.textContent = '온라인 플레이에는 로그인이 필요합니다.';
+        return false;
+      }
+
+      function showMatchFameAward(award, persistent) {
+        if (!award?.profile) return;
+        renderGuestProfile(award.profile, persistent);
+        const leveledUp = award.profile.level > award.previousLevel;
+        matchFameReward.textContent = `명성치 +${award.gained} · Lv ${award.profile.level}${leveledUp ? ' 레벨 업!' : ''}${persistent ? '' : ' · 임시 기록'}`;
+        matchFameReward.hidden = false;
       }
 
       function updatePlayerNames() {
@@ -3361,10 +3489,12 @@
         publicRoomPasswordOverlay.hidden = true;
         startStatus.textContent = '';
         const descriptions = {
-          homeScreen: '한 수 앞선 한 판.',
+          homeScreen: '',
+          accountScreen: '온라인 플레이 계정을 사용하세요.',
+          accountSettingsScreen: '전적과 닉네임을 관리하세요.',
           startMenu: '플레이 방식을 선택하세요.',
           browseRoomsScreen: '참가할 공개 방을 선택하세요.',
-          joinRoomScreen: '닉네임과 초대 코드를 입력하세요.',
+          joinRoomScreen: '초대 코드를 입력하세요.',
           localPlayScreen: '두 플레이어의 이름을 정하세요.',
           createRoomScreen: '방 공개 여부와 비밀번호를 설정하세요.'
         };
@@ -3373,6 +3503,7 @@
 
       function openOnlineLobby() {
         clearInterval(publicRoomRefreshTimer);
+        matchFameReward.hidden = true;
         state.mapSelectionOrigin = 'online';
         state.phase = 'map-select';
         startOverlay.hidden = true;
@@ -3731,6 +3862,8 @@
             showConnectionNotice(message.connected ? '상대 연결됨' : '상대 연결이 끊겼습니다');
           } else if (message.type === 'forfeit') {
             showOnlineForfeitResult(message.winner);
+          } else if (message.type === 'profile-award') {
+            showMatchFameAward(message.award, message.persistent);
           } else if (message.type === 'room-closed') {
             onlineStatus.textContent = message.message;
             showConnectionNotice(message.message);
@@ -3794,12 +3927,11 @@
       async function createOnlineRoom() {
         try {
           initializeAudio();
+          if (!guestProfile?.username) throw new Error('온라인 플레이에는 로그인이 필요합니다.');
           const isPrivate = privateRoomToggle.checked;
           const password = isPrivate ? roomPasswordInput.value : '';
           if (isPrivate && !password) throw new Error('사설 방 비밀번호를 입력하세요.');
-          const name = createPlayerNameInput.value.trim() || '방장';
           const result = await postOnlineRequest('/api/rooms', {
-            name,
             isPublic: !isPrivate,
             password
           });
@@ -3819,10 +3951,10 @@
       async function joinOnlineRoom(options = {}) {
         try {
           initializeAudio();
+          if (!guestProfile?.username) throw new Error('온라인 플레이에는 로그인이 필요합니다.');
           const code = String(options.roomCode ?? roomCodeInput.value).trim().toUpperCase();
           if (!code) throw new Error('방 코드를 입력하세요.');
           const result = await postOnlineRequest(`/api/rooms/${encodeURIComponent(code)}/join`, {
-            name: String(options.playerName ?? playerNameInput.value).trim() || '도전자',
             password: options.password ?? joinPasswordInput.value
           });
           onlineSession = {
@@ -3886,7 +4018,6 @@
               }
               joinOnlineRoom({
                 roomCode: room.code,
-                playerName: browsePlayerNameInput.value,
                 password: '',
                 revealJoinPassword: false
               });
@@ -4277,6 +4408,7 @@
       function openMapSelection(origin) {
         closeOnlineSocket(onlineSession);
         onlineSession = null;
+        matchFameReward.hidden = true;
         state.mapSelectionOrigin = origin;
         state.phase = 'map-select';
         startOverlay.hidden = true;
@@ -4478,6 +4610,7 @@
           finishOnlineRound(scores, winner);
           return;
         }
+        matchFameReward.hidden = true;
         turnText.textContent = winner === null ? '무승부' : `${PLAYER[winner].name} 승리`;
         panels.forEach(panel => panel.classList.remove('current'));
         winnerTitle.textContent = winner === null ? '무승부!' : `${PLAYER[winner].name} 승리!`;
@@ -4529,12 +4662,32 @@
         showOnlineResult(session.result);
         createConfetti(matchWinner === null ? PLAYER[winner ?? 0].color : PLAYER[matchWinner].color);
         if (matchOver) {
-          postOnlineRequest(`/api/rooms/${session.code}/complete`, { token: session.token }).catch(() => {});
+          completeOnlineMatch(session);
         } else {
           const nextRound = session.roundIndex + 1;
           setTimeout(() => {
             if (onlineSession === session && !session.matchOver) startOnlineRound(nextRound);
           }, 2600);
+        }
+      }
+
+      async function completeOnlineMatch(session) {
+        const payload = { token: session.token, roundResults: session.roundResults.map(round => ({
+          winner: round.winner, scores: round.scores
+        })) };
+        for (let attempt = 0; attempt < 3; attempt += 1) {
+          try {
+            const result = await postOnlineRequest(`/api/rooms/${session.code}/complete`, payload);
+            if (result.progressionError) throw new Error('명성치 기록 실패');
+            if (onlineSession === session) showMatchFameAward(result.award, result.persistent);
+            return;
+          } catch (error) {
+            if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 1500 * (attempt + 1)));
+            else if (onlineSession === session) {
+              matchFameReward.textContent = `명성치 기록을 확인하지 못했습니다 · ${error.message}`;
+              matchFameReward.hidden = false;
+            }
+          }
         }
       }
 
@@ -4849,16 +5002,7 @@
       function drawCardPreview() {
         const drag = state.cardDrag;
         if (!drag?.point) return;
-        if (drag.type === 'trigger-placement') {
-          if (drag.preview?.style.display === 'block') return;
-          const legal = canPlaceItemTrigger(drag.point);
-          const radius = CONFIG.unitRadius * .5;
-          drawTriggerToken(drag.point.x, drag.point.y, radius, {
-            color: legal ? '#56e0bc' : '#ef6262',
-            id: 'preview'
-          }, { scale: 1, alpha: .72, glyph: '+' });
-          return;
-        }
+        if (drag.type === 'trigger-placement') return;
         if (drag.type === 'brick') {
           const legal = canPlaceBrick(drag.point);
           if (!legal) return;
@@ -5053,11 +5197,11 @@
       function drawItemTriggers() {
         for (const trigger of state.triggers) {
           const { x, y, radius, type } = trigger;
-          const pulse = 1 + Math.sin(performance.now() / 180 + x) * .08;
+          const pulse = 1 + Math.sin(performance.now() / 300 + x) * .04;
           ctx.save();
-          ctx.globalAlpha = .22;
+          ctx.globalAlpha = .14;
           ctx.beginPath();
-          ctx.arc(x, y, radius * 1.85 * pulse, 0, Math.PI * 2);
+          ctx.arc(x, y, radius * 1.55 * pulse, 0, Math.PI * 2);
           ctx.fillStyle = type.color;
           ctx.fill();
           ctx.restore();
@@ -5077,10 +5221,27 @@
 
       function drawTriggerToken(x, y, radius, type, options = {}) {
         const scale = options.scale ?? 1;
-        const alpha = options.alpha ?? 1;
+        const alpha = options.alpha ?? .76;
         const color = type.color;
+        const image = triggerImages[type.id] || triggerImages.empty;
         ctx.save();
         ctx.globalAlpha = alpha;
+        if (image.complete && image.naturalWidth) {
+          const size = radius * 2.65 * scale;
+          ctx.translate(x, y);
+          ctx.rotate(performance.now() * Math.PI * 2 / 14000);
+          ctx.drawImage(image, -size / 2, -size / 2, size, size);
+          if (type.id === 'pulse') {
+            ctx.globalAlpha = alpha * .35;
+            ctx.strokeStyle = '#c5fcff';
+            ctx.lineWidth = Math.max(1, radius * .1);
+            ctx.beginPath();
+            ctx.arc(0, 0, radius * .88 * scale, -.7, -.12);
+            ctx.stroke();
+          }
+          ctx.restore();
+          return;
+        }
         ctx.beginPath();
         ctx.arc(x, y, radius * scale, 0, Math.PI * 2);
         ctx.fillStyle = '#17302f';
@@ -5236,6 +5397,65 @@
       document.querySelector('#openPlayMenuButton').addEventListener('click', () => showStartScreen('startMenu'));
       document.querySelector('#openTutorialButton').addEventListener('click', startTutorial);
       document.querySelector('#openCatalogButton').addEventListener('click', openCatalog);
+      openAccountButton.addEventListener('click', () => {
+        if (guestProfile?.username) showStartScreen('accountSettingsScreen');
+        else showAccountScreen();
+      });
+      function setAccountMode(register) {
+        registeringAccount = register;
+        accountNicknameField.hidden = !register;
+        accountNicknameInput.required = register;
+        accountPasswordInput.autocomplete = register ? 'new-password' : 'current-password';
+        accountSubmitButton.textContent = register ? '계정 등록' : '로그인';
+        document.querySelector('#loginTab').setAttribute('aria-selected', String(!register));
+        document.querySelector('#registerTab').setAttribute('aria-selected', String(register));
+        startStatus.textContent = '';
+      }
+      document.querySelector('#loginTab').addEventListener('click', () => setAccountMode(false));
+      document.querySelector('#registerTab').addEventListener('click', () => setAccountMode(true));
+      accountForm.addEventListener('submit', async event => {
+        event.preventDefault();
+        accountSubmitButton.disabled = true;
+        startStatus.textContent = '';
+        try {
+          const account = await postOnlineRequest(registeringAccount ? '/api/accounts/register' : '/api/accounts/login', {
+            username: accountUsernameInput.value,
+            password: accountPasswordInput.value,
+            ...(registeringAccount ? { name: accountNicknameInput.value } : {})
+          });
+          guestToken = account.token;
+          try { localStorage.setItem('ucc.accountToken.v1', guestToken); } catch {}
+          renderGuestProfile(account.profile, account.persistent);
+          accountPasswordInput.value = '';
+          playSound('connected');
+          showStartScreen(accountReturnScreen);
+        } catch (error) { startStatus.textContent = error.message; }
+        finally { accountSubmitButton.disabled = false; }
+      });
+      document.querySelector('#accountHomeButton').addEventListener('click', () => showStartScreen(accountReturnScreen));
+      document.querySelector('#accountSettingsHomeButton').addEventListener('click', returnToHome);
+      document.querySelector('#nicknameForm').addEventListener('submit', async event => {
+        event.preventDefault();
+        try {
+          const response = await fetch('/api/profile', { method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${guestToken}` },
+            body: JSON.stringify({ name: profileNicknameInput.value }) });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || '닉네임을 변경하지 못했습니다.');
+          renderGuestProfile(data.profile, data.persistent);
+          startStatus.textContent = '닉네임을 변경했습니다.';
+        } catch (error) { startStatus.textContent = error.message; }
+      });
+      document.querySelector('#logoutButton').addEventListener('click', async () => {
+        const token = guestToken;
+        guestToken = null;
+        guestProfile = null;
+        guestProfileElement.hidden = true;
+        openAccountButton.textContent = '로그인 · 계정 등록';
+        try { localStorage.removeItem('ucc.accountToken.v1'); } catch {}
+        showStartScreen('homeScreen');
+        if (token) fetch('/api/accounts/logout', { method: 'POST', headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
+      });
       for (const id of ['playMenuHomeButton', 'catalogHomeButton', 'tutorialHomeButton']) {
         document.getElementById(id).addEventListener('click', returnToHome);
       }
@@ -5287,26 +5507,25 @@
         }
       });
       startButton.addEventListener('click', startLocalGame);
-      browseRoomsButton.addEventListener('click', () => {
-        showStartScreen('browseRoomsScreen');
-        refreshPublicRooms();
+      browseRoomsButton.addEventListener('click', async () => {
+        if (await requireAccount('browseRoomsScreen')) refreshPublicRooms();
       });
-      joinScreenButton.addEventListener('click', () => {
+      joinScreenButton.addEventListener('click', async () => {
+        if (!await requireAccount('joinRoomScreen')) return;
         joinPasswordField.hidden = true;
         joinPasswordInput.value = '';
-        showStartScreen('joinRoomScreen');
-        playerNameInput.focus();
+        roomCodeInput.focus();
       });
       localPlayScreenButton.addEventListener('click', () => {
         showStartScreen('localPlayScreen');
         localPlayerNameInputs[0].focus();
       });
-      createRoomButton.addEventListener('click', () => {
-        showStartScreen('createRoomScreen');
+      createRoomButton.addEventListener('click', async () => {
+        if (!await requireAccount('createRoomScreen')) return;
         privateRoomToggle.checked = false;
         roomPasswordInput.value = '';
         roomPasswordInput.disabled = true;
-        createPlayerNameInput.focus();
+        confirmCreateRoomButton.focus();
       });
       privateRoomToggle.addEventListener('change', () => {
         roomPasswordInput.disabled = !privateRoomToggle.checked;
@@ -5322,7 +5541,6 @@
         if (!selectedPublicRoom) return;
         joinOnlineRoom({
           roomCode: selectedPublicRoom.code,
-          playerName: browsePlayerNameInput.value,
           password: publicRoomPasswordInput.value,
           revealJoinPassword: false,
           statusElement: publicRoomPasswordStatus
@@ -5371,9 +5589,26 @@
           connectionStatusButton.setAttribute('aria-expanded', 'false');
         }
       });
-      musicToggle.addEventListener('change', () => {
-        if (musicToggle.checked) startMusic();
-        else stopMusic();
+      document.querySelector('#gameSettingsButton').addEventListener('click', () => {
+        gameSettingsOverlay.hidden = false;
+        musicVolume.focus();
+      });
+      document.querySelector('#closeGameSettingsButton').addEventListener('click', () => {
+        gameSettingsOverlay.hidden = true;
+        document.querySelector('#gameSettingsButton').focus();
+      });
+      for (const [input, key, output] of [
+        [musicVolume, 'musicVolume', document.querySelector('#musicVolumeValue')],
+        [sfxVolume, 'sfxVolume', document.querySelector('#sfxVolumeValue')]
+      ]) input.addEventListener('input', () => {
+        audio[key] = Number(input.value);
+        output.textContent = `${input.value}%`;
+        try { localStorage.setItem(`ucc.${key}`, input.value); } catch {}
+        if (key === 'musicVolume') {
+          AUDIO_FILES.music.volume = .28 * audio.musicVolume / 100;
+          if (audio.musicVolume) startMusic();
+          else AUDIO_FILES.music.pause();
+        } else if (audio.sfxBus) audio.sfxBus.gain.value = audio.sfxVolume / 100;
       });
       document.addEventListener('pointermove', moveCardGhost);
       document.addEventListener('pointerup', finishCardDrag);
@@ -5392,6 +5627,7 @@
       window.addEventListener('resize', hideCardInspector);
       window.addEventListener('scroll', hideCardInspector, true);
       document.addEventListener('visibilitychange', () => advanceGameClock(performance.now()));
+      initializeGuestProfile();
       if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
         let refreshingForWorkerUpdate = false;
         navigator.serviceWorker.addEventListener('controllerchange', () => {

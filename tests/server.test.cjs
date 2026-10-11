@@ -24,11 +24,18 @@ test('public room lifecycle, admission races and WebSocket delivery', { timeout:
     child.on('error',reject); child.on('exit',code=>reject(new Error(`Server exited ${code}`)));
   });
   const base=`http://127.0.0.1:${port}`;
-  async function api(route,body) {
-    const response=await fetch(base+route,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  async function api(route,body,auth) {
+    const response=await fetch(base+route,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json',...(auth?{Authorization:`Bearer ${auth}`}:{})},body:JSON.stringify(body)});
     return {status:response.status,headers:response.headers,data:await response.json()};
   }
-  const host=(await api('/api/rooms',{name:'TEST-HOST',isPublic:true})).data;
+  async function account(username) {
+    const response=await api('/api/accounts/register',{username,password:'test-password-123',name:username});
+    assert.equal(response.status,201);
+    return response.data.token;
+  }
+  const [hostAuth, challengerA, challengerB, challengerC, challengerD]=await Promise.all(
+    ['testhost','testchallengera','testchallengerb','testchallengerc','testchallengerd'].map(account));
+  const host=(await api('/api/rooms',{isPublic:true},hostAuth)).data;
   const roomPath=`/api/rooms/${host.code}`;
   await t.test('new room is listed with no-store response',async()=>{
     const listing=await api('/api/rooms');
@@ -37,7 +44,7 @@ test('public room lifecycle, admission races and WebSocket delivery', { timeout:
   });
   let challenger;
   await t.test('concurrent joins reserve exactly one seat; full room is hidden',async()=>{
-    const attempts=await Promise.all([api(roomPath+'/join',{name:'A'}),api(roomPath+'/join',{name:'B'})]);
+    const attempts=await Promise.all([api(roomPath+'/join',{},challengerA),api(roomPath+'/join',{},challengerB)]);
     assert.deepEqual(attempts.map(r=>r.status).sort(),[200,409]);
     challenger=attempts.find(r=>r.status===200).data;
     assert.ok(!(await api('/api/rooms')).data.rooms.some(r=>r.code===host.code));
@@ -46,15 +53,15 @@ test('public room lifecycle, admission races and WebSocket delivery', { timeout:
     assert.equal((await api(roomPath+'/map',{token:host.token,mapId:'moving-walls'})).status,200);
     await api(roomPath+'/leave',{token:challenger.token});
     assert.ok((await api('/api/rooms')).data.rooms.some(r=>r.code===host.code));
-    const join=await api(roomPath+'/join',{name:'C'}); assert.equal(join.status,200); challenger=join.data;
+    const join=await api(roomPath+'/join',{},challengerC); assert.equal(join.status,200); challenger=join.data;
     assert.equal(challenger.room.host.mapId,'moving-walls');
   });
   await t.test('locked listed rooms require the correct password',async()=>{
-    const locked=(await api('/api/rooms',{name:'LOCKED',isPublic:true,password:'test-password'})).data;
+    const locked=(await api('/api/rooms',{isPublic:true,password:'test-password'},hostAuth)).data;
     const listed=(await api('/api/rooms')).data.rooms.find(r=>r.code===locked.code);
     assert.equal(listed.locked,true);
-    assert.equal((await api(`/api/rooms/${locked.code}/join`,{name:'D',password:'wrong'})).status,403);
-    assert.equal((await api(`/api/rooms/${locked.code}/join`,{name:'D',password:'test-password'})).status,200);
+    assert.equal((await api(`/api/rooms/${locked.code}/join`,{password:'wrong'},challengerD)).status,403);
+    assert.equal((await api(`/api/rooms/${locked.code}/join`,{password:'test-password'},challengerD)).status,200);
   });
   await t.test('WebSocket forwards snapshots repeatedly, including aiming state',async()=>{
     await api(roomPath+'/map',{token:challenger.token,mapId:'classic'});

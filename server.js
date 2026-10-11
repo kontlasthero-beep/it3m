@@ -3,12 +3,15 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { WebSocket, WebSocketServer } = require('ws');
+const { createProfileStore, matchOutcome, parseBearer } = require('./progression');
 
 const ROOT = __dirname;
 const PORT = Number(process.env.PORT) || 4173;
 const ROOM_CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const MAP_IDS = ['classic', 'ice', 'moving-walls', 'items'];
 const rooms = new Map();
+const profiles = createProfileStore(process.env.DATABASE_URL);
+const loginAttempts = new Map();
 const webSocketServer = new WebSocketServer({ noServer: true, maxPayload: 2 * 1024 * 1024, perMessageDeflate: false });
 const mimeTypes = {
   '.html': 'text/html; charset=utf-8',
@@ -86,6 +89,7 @@ function roomView(room) {
     host: { name: room.host.name, mapId: room.host.mapId },
     challenger: room.challenger ? { name: room.challenger.name, mapId: room.challenger.mapId } : null,
     seriesMaps: room.seriesMaps,
+    matchId: room.matchId || null,
     snapshotRevision: room.snapshotRevision,
     forfeitWinner: room.forfeitWinner ?? null
   };
@@ -238,6 +242,10 @@ function attachRoomSocket(socket, room, member) {
     snapshotRevision: room.snapshotRevision,
     snapshot: member.role === 'challenger' ? room.snapshot : null
   });
+  if (room.awards?.[member.index]) sendSocketJson(socket, {
+    type: 'profile-award', matchId: room.matchId,
+    award: room.awards[member.index], persistent: profiles.persistent
+  });
   sendToRoomRole(room, member.role === 'host' ? 'challenger' : 'host', { type: 'peer-connection', role: member.role, connected: true });
   if (member.role === 'host') dispatchPendingActions(room);
 }
@@ -249,6 +257,76 @@ function rejectUpgrade(socket, status, message) {
 
 async function handleApi(request, response, url) {
   const parts = url.pathname.split('/').filter(Boolean);
+  if (request.method === 'POST' && url.pathname === '/api/accounts/register') {
+    const data = await readJson(request);
+    try {
+      const account = await profiles.register(data.username, data.password, data.name);
+      return sendJson(response, 201, { ...account, persistent: profiles.persistent });
+    } catch (error) {
+      if (error.message.includes('입력하세요') || error.message.includes('사용 중')) return fail(response, 400, error.message);
+      console.error('Account registration failed:', error);
+      return fail(response, 503, '계정 저장소를 사용할 수 없습니다.');
+    }
+  }
+  if (request.method === 'POST' && url.pathname === '/api/accounts/login') {
+    const data = await readJson(request);
+    const key = String(data.username || '').trim().toLowerCase().slice(0, 20);
+    if (loginAttempts.size > 500) {
+      for (const [name, previous] of loginAttempts) {
+        if (Date.now() - previous.started >= 15 * 60_000) loginAttempts.delete(name);
+      }
+    }
+    const attempt = loginAttempts.get(key);
+    if (attempt && attempt.count >= 8 && Date.now() - attempt.started < 15 * 60_000)
+      return fail(response, 429, '로그인을 너무 많이 시도했습니다. 잠시 후 다시 시도하세요.');
+    try {
+      const account = await profiles.login(data.username, data.password);
+      if (!account) {
+        const current = attempt && Date.now() - attempt.started < 15 * 60_000 ? attempt : { count: 0, started: Date.now() };
+        current.count += 1;
+        loginAttempts.set(key, current);
+        return fail(response, 401, '계정 ID 또는 비밀번호가 올바르지 않습니다.');
+      }
+      loginAttempts.delete(key);
+      return sendJson(response, 200, { ...account, persistent: profiles.persistent });
+    } catch (error) {
+      if (error.message.includes('입력하세요')) return fail(response, 400, error.message);
+      console.error('Account login failed:', error);
+      return fail(response, 503, '계정 저장소를 사용할 수 없습니다.');
+    }
+  }
+  if (request.method === 'POST' && url.pathname === '/api/accounts/logout') {
+    const token = parseBearer(request.headers.authorization);
+    if (token) await profiles.logout(token);
+    return sendJson(response, 200, { ok: true });
+  }
+  if (request.method === 'POST' && url.pathname === '/api/profiles/guest') {
+    const data = await readJson(request);
+    try {
+      const guest = await profiles.createGuest(data.name);
+      return sendJson(response, 201, { ...guest, persistent: profiles.persistent });
+    } catch (error) {
+      console.error('Guest profile creation failed:', error);
+      return fail(response, 503, '프로필 저장소를 사용할 수 없습니다.');
+    }
+  }
+  if (url.pathname === '/api/profile' && ['GET', 'PATCH'].includes(request.method)) {
+    const token = parseBearer(request.headers.authorization);
+    if (!token) return fail(response, 401, '프로필 인증이 필요합니다.');
+    const data = request.method === 'PATCH' ? await readJson(request) : null;
+    try {
+      const member = await profiles.findByToken(token);
+      if (!member) return fail(response, 401, '프로필을 찾을 수 없습니다.');
+      const profile = request.method === 'PATCH'
+        ? await profiles.rename(token, data.name)
+        : member.profile;
+      return sendJson(response, 200, { profile, persistent: profiles.persistent });
+    } catch (error) {
+      if (error.message.includes('닉네임은')) return fail(response, 400, error.message);
+      console.error('Profile lookup failed:', error);
+      return fail(response, 503, '프로필 저장소를 사용할 수 없습니다.');
+    }
+  }
   if (request.method === 'GET' && url.pathname === '/api/rooms') {
     const publicRooms = [...rooms.values()]
       .filter(room => room.isPublic && room.status === 'waiting' && !room.challenger)
@@ -259,13 +337,18 @@ async function handleApi(request, response, url) {
 
   if (request.method === 'POST' && url.pathname === '/api/rooms') {
     const data = await readJson(request);
+    const profileToken = parseBearer(request.headers.authorization);
+    let profile;
+    try { profile = profileToken && await profiles.findByToken(profileToken); }
+    catch (error) { console.error('Profile unavailable while creating room:', error); return fail(response, 503, '계정 저장소를 사용할 수 없습니다.'); }
+    if (!profile?.profile.username) return fail(response, 401, '온라인 플레이에는 계정 로그인이 필요합니다.');
     const password = typeof data.password === 'string' ? data.password : '';
     if (password.length > 64) return fail(response, 400, '비밀번호는 64자 이하여야 합니다.');
     const code = createRoomCode();
     const token = crypto.randomBytes(24).toString('base64url');
     const room = {
       code,
-      host: { name: String(data.name || '방장').trim().slice(0, 20) || '방장', token, mapId: null },
+      host: { name: profile.profile.name, token, mapId: null, profileId: profile.internalId },
       isPublic: data.isPublic === true,
       passwordHash: createPasswordHash(password),
       createdAt: Date.now(),
@@ -279,6 +362,9 @@ async function handleApi(request, response, url) {
       turnCredentials: new Map(),
       snapshot: null,
       snapshotRevision: 0,
+      matchId: null,
+      matchResult: null,
+      awards: null,
       forfeitWinner: null,
       updatedAt: Date.now()
     };
@@ -296,8 +382,15 @@ async function handleApi(request, response, url) {
     // Recheck capacity after the asynchronous body read, before reserving the seat.
     if (room.status !== 'waiting' || room.challenger) return fail(response, 409, '이미 다른 도전자가 참가한 방입니다.');
     if (!verifyRoomPassword(room, data.password)) return fail(response, 403, '방 비밀번호가 올바르지 않습니다.');
+    const profileToken = parseBearer(request.headers.authorization);
+    let profile;
+    try { profile = profileToken && await profiles.findByToken(profileToken); }
+    catch (error) { console.error('Profile unavailable while joining room:', error); return fail(response, 503, '계정 저장소를 사용할 수 없습니다.'); }
+    if (!profile?.profile.username) return fail(response, 401, '온라인 플레이에는 계정 로그인이 필요합니다.');
+    if (profile.internalId === room.host.profileId) return fail(response, 409, '자신이 만든 방에는 참가할 수 없습니다.');
+    if (room.status !== 'waiting' || room.challenger) return fail(response, 409, '이미 다른 도전자가 참가한 방입니다.');
     const token = crypto.randomBytes(24).toString('base64url');
-    room.challenger = { name: String(data.name || '도전자').trim().slice(0, 20) || '도전자', token, mapId: null };
+    room.challenger = { name: profile.profile.name, token, mapId: null, profileId: profile.internalId };
     room.status = 'choosing';
     broadcastRoom(room);
     return sendJson(response, 200, { code: room.code, token, role: 'challenger', room: roomView(room) });
@@ -335,6 +428,9 @@ async function handleApi(request, response, url) {
     if (member.role !== 'host') return fail(response, 403, '방장만 대전을 시작할 수 있습니다.');
     if (room.status !== 'ready' || !room.seriesMaps) return fail(response, 409, '두 플레이어가 맵을 선택해야 합니다.');
     room.status = 'playing';
+    room.matchId = crypto.randomUUID();
+    room.matchResult = null;
+    room.awards = null;
     room.snapshot = null;
     room.snapshotRevision = 0;
     room.pendingActions.clear();
@@ -345,9 +441,27 @@ async function handleApi(request, response, url) {
 
   if (request.method === 'POST' && parts.length === 4 && parts[3] === 'complete') {
     if (member.role !== 'host') return fail(response, 403, '방장만 대전을 종료할 수 있습니다.');
-    room.status = 'complete';
-    broadcastRoom(room);
-    return sendJson(response, 200, { room: roomView(room) });
+    if (room.forfeitWinner != null || !['playing', 'complete'].includes(room.status)) return fail(response, 409, '대전을 종료할 수 없는 상태입니다.');
+    if (!room.matchResult) {
+      const result = matchOutcome(data.roundResults);
+      if (!result) return fail(response, 400, '올바른 매치 결과가 필요합니다.');
+      room.matchResult = result;
+      room.status = 'complete';
+      broadcastRoom(room);
+    }
+    const playerIds = [room.host.profileId, room.challenger?.profileId];
+    if (playerIds.every(Boolean) && playerIds[0] !== playerIds[1]) {
+      try {
+        room.awards = await profiles.awardMatch(room.matchId, playerIds, room.matchResult.winner);
+        room.awards.forEach((award, index) => sendToRoomRole(room, index === 0 ? 'host' : 'challenger', {
+          type: 'profile-award', matchId: room.matchId, award, persistent: profiles.persistent
+        }));
+      } catch (error) {
+        console.error('Match fame award failed:', error);
+        return sendJson(response, 200, { room: roomView(room), progressionError: true });
+      }
+    }
+    return sendJson(response, 200, { room: roomView(room), award: room.awards?.[0] || null, persistent: profiles.persistent });
   }
 
   if (request.method === 'POST' && parts.length === 4 && parts[3] === 'action') {
