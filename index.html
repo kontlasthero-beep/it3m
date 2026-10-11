@@ -417,8 +417,8 @@
     .home-menu { display: grid; gap: 10px; }
     .home-menu button { min-height: 52px; font-size: 17px; }
     .home-account { width: 100%; margin-top: 10px; }
-    .account-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 14px; }
-    .account-tabs button[aria-selected="true"] { border-color: #65d6bd; background: #247667; }
+    .account-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .account-actions button { min-width: 0; min-height: 46px; padding: 8px; }
     .account-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 16px 0; }
     .account-stats span { padding: 9px 4px; border: 1px solid var(--line); text-align: center; font-size: 12px; color: var(--muted); }
     .account-stats strong { display: block; color: var(--ink); font-size: 18px; }
@@ -637,7 +637,7 @@
         <div class="dialog">
           <h2>Underhanded Curling Club</h2>
           <p id="startScreenDescription"></p>
-          <div class="start-screen" id="homeScreen">
+          <div class="start-screen" id="homeScreen" hidden>
             <div class="home-stones" aria-hidden="true"><img src="stone-blue.png" alt=""><img src="stone-red.png" alt=""></div>
             <div class="guest-profile" id="guestProfile" hidden>
               <div class="guest-profile-line"><strong id="guestProfileName"></strong><span id="guestProfileId"></span></div>
@@ -645,18 +645,21 @@
               <progress id="guestProfileProgress" max="100" value="0" aria-label="다음 레벨 진행도"></progress>
             </div>
             <div class="home-menu"><button class="primary" id="openPlayMenuButton" type="button">게임 시작</button><button id="openTutorialButton" type="button">튜토리얼</button><button id="openCatalogButton" type="button">도감</button></div>
-            <button class="home-account" id="openAccountButton" type="button">로그인 · 계정 등록</button>
+            <button class="home-account" id="openAccountButton" type="button" hidden>계정 설정</button>
           </div>
-          <div class="start-screen" id="accountScreen" hidden>
-            <h3>플레이어 계정</h3>
-            <div class="account-tabs" role="tablist" aria-label="계정 방식"><button id="loginTab" type="button" role="tab" aria-selected="true">로그인</button><button id="registerTab" type="button" role="tab" aria-selected="false">계정 등록</button></div>
+          <div class="start-screen" id="accountScreen">
             <form class="start-form" id="accountForm">
               <label>계정 ID<input id="accountUsernameInput" minlength="4" maxlength="20" autocomplete="username" required></label>
               <label id="accountNicknameField" hidden>닉네임<input id="accountNicknameInput" maxlength="20" autocomplete="nickname"></label>
               <label>비밀번호<input id="accountPasswordInput" type="password" minlength="8" autocomplete="current-password" required></label>
-              <button class="primary" id="accountSubmitButton" type="submit">로그인</button>
+              <div class="account-actions"><button class="primary" id="accountSubmitButton" type="submit">로그인</button><button id="accountModeButton" type="button">계정 등록</button></div>
             </form>
-            <button class="home-return" id="accountHomeButton" type="button">← 돌아가기</button>
+            <button class="home-account" id="guestPlayButton" type="button">게스트로 플레이하기</button>
+          </div>
+          <div class="start-screen" id="guestWarningScreen" hidden>
+            <h3>게스트로 플레이</h3>
+            <p>게스트로 플레이하면 진척도가 저장되지 않습니다.</p>
+            <div class="account-actions"><button class="primary" id="confirmGuestButton" type="button">확인</button><button id="cancelGuestButton" type="button">돌아가기</button></div>
           </div>
           <div class="start-screen" id="accountSettingsScreen" hidden>
             <h3>계정 설정</h3>
@@ -864,6 +867,7 @@
       const startButton = document.querySelector('#startButton');
       const openAccountButton = document.querySelector('#openAccountButton');
       const accountForm = document.querySelector('#accountForm');
+      const accountModeButton = document.querySelector('#accountModeButton');
       const accountUsernameInput = document.querySelector('#accountUsernameInput');
       const accountPasswordInput = document.querySelector('#accountPasswordInput');
       const accountNicknameInput = document.querySelector('#accountNicknameInput');
@@ -3403,7 +3407,7 @@
         guestProfileMeta.textContent = `Lv ${profile.level} · 명성치 ${profile.fame} / ${profile.nextLevel}${persistent ? '' : ' · 임시 기록'}`;
         guestProfileProgress.max = profile.nextLevel - profile.levelStart;
         guestProfileProgress.value = profile.fame - profile.levelStart;
-        openAccountButton.textContent = '계정 설정';
+        openAccountButton.hidden = false;
         accountIdentity.textContent = `계정 ID ${profile.username} · 플레이어 ID ${profile.id}`;
         accountStats.replaceChildren(...[
           ['경기', profile.played], ['승리', profile.wins], ['패배', profile.losses], ['무승부', profile.draws]
@@ -3449,6 +3453,7 @@
 
       function showAccountScreen(returnScreen = 'homeScreen') {
         accountReturnScreen = returnScreen;
+        setAccountMode(false);
         showStartScreen('accountScreen');
         accountUsernameInput.focus();
       }
@@ -3490,7 +3495,8 @@
         startStatus.textContent = '';
         const descriptions = {
           homeScreen: '',
-          accountScreen: '온라인 플레이 계정을 사용하세요.',
+          accountScreen: '',
+          guestWarningScreen: '',
           accountSettingsScreen: '전적과 닉네임을 관리하세요.',
           startMenu: '플레이 방식을 선택하세요.',
           browseRoomsScreen: '참가할 공개 방을 선택하세요.',
@@ -5407,12 +5413,13 @@
         accountNicknameInput.required = register;
         accountPasswordInput.autocomplete = register ? 'new-password' : 'current-password';
         accountSubmitButton.textContent = register ? '계정 등록' : '로그인';
-        document.querySelector('#loginTab').setAttribute('aria-selected', String(!register));
-        document.querySelector('#registerTab').setAttribute('aria-selected', String(register));
+        accountModeButton.textContent = register ? '돌아가기' : '계정 등록';
         startStatus.textContent = '';
       }
-      document.querySelector('#loginTab').addEventListener('click', () => setAccountMode(false));
-      document.querySelector('#registerTab').addEventListener('click', () => setAccountMode(true));
+      accountModeButton.addEventListener('click', () => setAccountMode(!registeringAccount));
+      document.querySelector('#guestPlayButton').addEventListener('click', () => showStartScreen('guestWarningScreen'));
+      document.querySelector('#confirmGuestButton').addEventListener('click', () => showStartScreen('homeScreen'));
+      document.querySelector('#cancelGuestButton').addEventListener('click', () => showAccountScreen());
       accountForm.addEventListener('submit', async event => {
         event.preventDefault();
         accountSubmitButton.disabled = true;
@@ -5432,7 +5439,6 @@
         } catch (error) { startStatus.textContent = error.message; }
         finally { accountSubmitButton.disabled = false; }
       });
-      document.querySelector('#accountHomeButton').addEventListener('click', () => showStartScreen(accountReturnScreen));
       document.querySelector('#accountSettingsHomeButton').addEventListener('click', returnToHome);
       document.querySelector('#nicknameForm').addEventListener('submit', async event => {
         event.preventDefault();
@@ -5451,9 +5457,9 @@
         guestToken = null;
         guestProfile = null;
         guestProfileElement.hidden = true;
-        openAccountButton.textContent = '로그인 · 계정 등록';
+        openAccountButton.hidden = true;
         try { localStorage.removeItem('ucc.accountToken.v1'); } catch {}
-        showStartScreen('homeScreen');
+        showAccountScreen();
         if (token) fetch('/api/accounts/logout', { method: 'POST', headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
       });
       for (const id of ['playMenuHomeButton', 'catalogHomeButton', 'tutorialHomeButton']) {
@@ -5627,7 +5633,9 @@
       window.addEventListener('resize', hideCardInspector);
       window.addEventListener('scroll', hideCardInspector, true);
       document.addEventListener('visibilitychange', () => advanceGameClock(performance.now()));
-      initializeGuestProfile();
+      initializeGuestProfile().then(profile => {
+        if (profile && !startOverlay.hidden && !document.querySelector('#accountScreen').hidden) showStartScreen('homeScreen');
+      });
       if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
         let refreshingForWorkerUpdate = false;
         navigator.serviceWorker.addEventListener('controllerchange', () => {
