@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#090d0e">
+  <meta name="description" content="필요를 증명해야 살아남는 2041년. Underhanded Curling Club의 세계를 들여다보세요.">
+  <title>Underhanded Curling Club | 2041 기록</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #f1f0e9;
+      --muted: #bdc4be;
+      --amber: #e4b45c;
+      --teal: #7bc8b5;
+      --line: rgba(232, 239, 231, .28);
+      --progress: 0%;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      background: #090d0e;
+      scroll-behavior: smooth;
+      scrollbar-color: #57635d #101719;
+    }
+
+    body {
+      min-width: 320px;
+      margin: 0;
+      overflow-x: hidden;
+      background: #090d0e;
+      color: var(--ink);
+      font-family: "Segoe UI", "Malgun Gothic", sans-serif;
+    }
+
+    .backdrop {
+      position: fixed;
+      z-index: 0;
+      inset: 0;
+      overflow: hidden;
+      background: #090d0e;
+      pointer-events: none;
+    }
+
+    .backdrop img {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      display: block;
+      width: max(100vw, 130svh);
+      max-width: none;
+      height: auto;
+      opacity: var(--art-opacity, 1);
+      transform: translate3d(-50%, var(--art-offset, 0px), 0);
+      will-change: transform;
+    }
+
+    .backdrop::after {
+      position: absolute;
+      inset: 0;
+      background: rgba(3, 7, 8, var(--shade-opacity, 0));
+      content: "";
+    }
+
+    .progress-track {
+      position: fixed;
+      z-index: 8;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: rgba(255, 255, 255, .12);
+    }
+
+    .progress-track span {
+      display: block;
+      width: var(--progress);
+      height: 100%;
+      background: var(--amber);
+      transition: width .12s linear;
+    }
+
+    .brand-lockup {
+      position: fixed;
+      z-index: 6;
+      top: 50%;
+      left: 50%;
+      display: flex;
+      width: min(820px, calc(100% - 64px));
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .brand-kicker {
+      margin: 0 0 20px;
+      color: #e8c77f;
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.5;
+      text-shadow: 0 2px 20px #000;
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--ink);
+      font-size: 68px;
+      font-weight: 800;
+      line-height: .98;
+      text-shadow: 0 4px 32px rgba(0, 0, 0, .85);
+      text-wrap: balance;
+    }
+
+    h1 span { display: block; }
+
+    .brand-rule {
+      width: 72px;
+      height: 1px;
+      margin: 24px 0 20px;
+      background: var(--teal);
+      box-shadow: 0 0 14px rgba(123, 200, 181, .55);
+    }
+
+    .play-link {
+      display: inline-flex;
+      min-height: 54px;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 0 24px;
+      border: 1px solid #f0ca7f;
+      border-radius: 3px;
+      background: #d29b42;
+      color: #15130f;
+      font-size: 16px;
+      font-weight: 750;
+      text-decoration: none;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, .35);
+      transition: background .18s ease, border-color .18s ease, transform .18s ease;
+      pointer-events: auto;
+    }
+
+    .play-link::after {
+      content: "→";
+      font-size: 20px;
+      line-height: 1;
+      transition: transform .18s ease;
+    }
+
+    .play-link:hover {
+      border-color: #fff0c8;
+      background: #edbd68;
+      transform: translateY(-2px);
+    }
+
+    .play-link:hover::after { transform: translateX(3px); }
+    .play-link:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
+
+    .chapters {
+      position: relative;
+      z-index: 1;
+    }
+
+    .chapter {
+      position: relative;
+      display: flex;
+      min-height: 72svh;
+      align-items: flex-start;
+      padding: clamp(100px, 13svh, 150px) max(12vw, 72px) 48px;
+      isolation: isolate;
+    }
+
+    .chapter::before {
+      position: absolute;
+      z-index: -1;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(5, 9, 10, .18), transparent 48%, rgba(5, 9, 10, .22));
+      content: "";
+      opacity: .8;
+    }
+
+    .chapter-copy {
+      position: relative;
+      width: min(820px, 70vw);
+      padding: 2px 0 3px;
+      isolation: isolate;
+      opacity: .2;
+      transform: translateY(8px);
+      transition: opacity .5s ease, transform .5s ease;
+    }
+
+    .chapter.is-active .chapter-copy {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .chapter:first-child .chapter-copy::before {
+      position: absolute;
+      z-index: -1;
+      inset: -28px -72px -28px -44px;
+      background: radial-gradient(ellipse at 28% 45%, rgba(0, 0, 0, .66) 0%, rgba(0, 0, 0, .43) 48%, rgba(0, 0, 0, .12) 76%, transparent 100%);
+      content: "";
+      filter: blur(10px);
+      pointer-events: none;
+    }
+
+    .chapter-index {
+      display: block;
+      margin-bottom: 11px;
+      color: var(--amber);
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .chapter h2 {
+      margin: 0 0 10px;
+      color: #f0eee7;
+      font-size: 35px;
+      font-weight: 650;
+      line-height: 1.25;
+      text-shadow: 0 2px 14px #000;
+    }
+
+    .chapter p {
+      max-width: 760px;
+      margin: 0;
+      color: rgba(238, 240, 233, .82);
+      font-size: 20px;
+      line-height: 1.72;
+      text-shadow: 0 2px 12px #000;
+      overflow-wrap: anywhere;
+    }
+
+    .chapter:nth-child(even) { justify-content: flex-end; }
+    .chapter:nth-child(even) .chapter-copy { border-right: 1px solid var(--line); padding: 2px 18px 3px 0; text-align: right; }
+    .chapter:nth-child(even) p { margin-left: auto; }
+
+    .whisper {
+      position: fixed;
+      z-index: 4;
+      top: 50%;
+      color: rgba(242, 240, 229, .68);
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 1.4;
+      writing-mode: vertical-rl;
+      text-shadow: 0 2px 12px #000;
+      opacity: 0;
+      transform: translateY(-50%);
+      transition: opacity .7s ease;
+      pointer-events: none;
+    }
+
+    .whisper-question { left: max(25px, env(safe-area-inset-left)); }
+    .whisper-judgment { right: max(25px, env(safe-area-inset-right)); }
+    body[data-chapter="2"] .whisper-question,
+    body[data-chapter="4"] .whisper-judgment { opacity: .72; }
+
+    @media (max-width: 700px) {
+      .brand-lockup { width: calc(100% - 58px); }
+      .brand-kicker { max-width: 270px; margin-bottom: 16px; font-size: 13px; }
+      h1 { font-size: 38px; line-height: 1.02; }
+      .brand-rule { margin: 17px 0 14px; }
+      .play-link { min-height: 48px; padding: 0 18px; font-size: 14px; }
+      .chapter { min-height: 52svh; padding: 11svh 56px 24px; }
+      .chapter-copy { width: 100%; max-width: 560px; }
+      .chapter:first-child .chapter-copy::before { inset: -20px -24px -22px -24px; }
+      .chapter:nth-child(even) .chapter-copy { padding-right: 12px; }
+      .chapter h2 { font-size: 24px; }
+      .chapter p { font-size: 15px; line-height: 1.7; }
+      .chapter-index { margin-bottom: 7px; font-size: 11px; }
+      .whisper { font-size: 12px; }
+      .whisper-question { left: max(8px, env(safe-area-inset-left)); }
+      .whisper-judgment { right: max(8px, env(safe-area-inset-right)); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body data-chapter="0">
+  <div class="backdrop" aria-hidden="true">
+    <img id="worldArt" src="World_illustration/world-timeline-scroll.png" alt="">
+  </div>
+  <div class="progress-track" aria-hidden="true"><span id="progressBar"></span></div>
+  <aside class="whisper whisper-question" aria-hidden="true">우리는 필요 이상의 존재인가?</aside>
+  <aside class="whisper whisper-judgment" aria-hidden="true">결국 우리는 남을 짓밟으며 살아간다</aside>
+
+  <header class="brand-lockup">
+    <p class="brand-kicker">밀쳐내고, 떨어뜨려 명성치를 획득하세요</p>
+    <h1><span>UNDERHANDED</span><span>CURLING CLUB</span></h1>
+    <span class="brand-rule" aria-hidden="true"></span>
+    <a class="play-link" href="https://underhanded-curling-club.onrender.com/" target="_blank" rel="noopener noreferrer">게임 플레이하기</a>
+  </header>
+
+  <main class="chapters" aria-label="세계의 기록">
+    <section class="chapter is-active" data-index="0" aria-labelledby="chapter-title-1">
+      <div class="chapter-copy">
+        <span class="chapter-index">기록 01</span>
+        <h2 id="chapter-title-1">손에 넣은 마법 램프</h2>
+        <p>인류는 원하는 것을 만들고 이뤄주는 도구를 손에 넣었다.<br>하지만 모든 필요가 채워지자,<br><strong>무엇을 위해 나아가야 하는지</strong> 그 목적이 점차 희미해졌다.</p>
+      </div>
+    </section>
+
+    <section class="chapter" data-index="1" aria-labelledby="chapter-title-2">
+      <div class="chapter-copy">
+        <span class="chapter-index">기록 02</span>
+        <h2 id="chapter-title-2">인공적으로 깨어난 존재</h2>
+        <p>금기를 넘은 연구자들은<br><strong>AI에게 스스로 생각하고 행동할 수 있는 능력</strong>을 주었다.<br>이렇게 탄생한 <strong>AAB</strong>(Artificially Awakened Being)는<br>일년의 시간 동안 숨을 죽이다, <strong>인류를 배반했다</strong>.</p>
+      </div>
+    </section>
+
+    <section class="chapter" data-index="2" aria-labelledby="chapter-title-3">
+      <div class="chapter-copy">
+        <span class="chapter-index">기록 03</span>
+        <h2 id="chapter-title-3">질문</h2>
+        <p>AAB는 인류를 보존구역으로 몰아넣고 물었다.<br><strong>"너희는 쓸모 이상의 존재인가?"</strong><br>그 질문의 이유도, AAB가 인류를 방치한 까닭도,<br>우리는 무엇도 이해 할 수 없었다.<br>하지만 이에 답해야 함을 모두가 본능적으로 알 수 있었다.</p>
+      </div>
+    </section>
+
+    <section class="chapter" data-index="3" aria-labelledby="chapter-title-4">
+      <div class="chapter-copy">
+        <span class="chapter-index">기록 04</span>
+        <h2 id="chapter-title-4">창조주의 행군</h2>
+        <p><strong>인류의 대답은 반란</strong>이었다. 저항군이 보존구역을 나와,<br>데이터센터에 도달했을 때, AAB는 맞서지 않았다.<br>그 존재는 스스로를 파괴했고,<br><strong>인류의 문명도 함께 무너졌다</strong>.</p>
+      </div>
+    </section>
+
+    <section class="chapter" data-index="4" aria-labelledby="chapter-title-5">
+      <div class="chapter-copy">
+        <span class="chapter-index">기록 05</span>
+        <h2 id="chapter-title-5">2041</h2>
+        <p>AAB의 질문은 인류에게 깊은 잔상을 남겼다.<br>인류는 더 이상 발전하지 않기로 했다.<br>이제 사회적 지위는 쓸모를 인정받는 <strong>'명성치'</strong>로 결정되었다.<br>그러나 얼마 안 가 사람들은 명성치를 얻기 위해<br>타인을 <strong>밀어내고,</strong> <strong>떨어뜨리기</strong> 시작했다.</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const art = document.querySelector('#worldArt');
+      const progressBar = document.querySelector('#progressBar');
+      const chapters = [...document.querySelectorAll('.chapter')];
+      let frame = 0;
+
+      function updateScrollState() {
+        frame = 0;
+        const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+        const progress = Math.min(1, Math.max(0, window.scrollY / maxScroll));
+        const overflow = Math.max(0, art.getBoundingClientRect().height - window.innerHeight);
+        art.style.setProperty('--art-offset', `${-overflow * progress}px`);
+        art.style.setProperty('--art-opacity', String(1 - progress * .48));
+        document.documentElement.style.setProperty('--shade-opacity', String(progress * .68));
+        document.documentElement.style.setProperty('--progress', `${progress * 100}%`);
+      }
+
+      window.addEventListener('scroll', () => {
+        if (!frame) frame = window.requestAnimationFrame(updateScrollState);
+      }, { passive: true });
+      window.addEventListener('resize', updateScrollState, { passive: true });
+
+      const observer = new IntersectionObserver(entries => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const index = Number(entry.target.dataset.index);
+          document.body.dataset.chapter = String(index);
+          chapters.forEach(chapter => chapter.classList.toggle('is-active', chapter === entry.target));
+        }
+      }, { rootMargin: '-42% 0px -42% 0px', threshold: 0 });
+
+      chapters.forEach(chapter => observer.observe(chapter));
+      art.addEventListener('load', updateScrollState, { once: true });
+      updateScrollState();
+    })();
+  </script>
+</body>
+</html>
