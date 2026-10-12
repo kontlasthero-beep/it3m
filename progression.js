@@ -240,14 +240,6 @@ function createPostgresStore(connectionString) {
   }
   return {
     persistent: true,
-    async promoteAccountForMaintenance(username, level) {
-      await ensureReady();
-      const { rows } = await pool.query(
-        'UPDATE ucc_profiles SET fame = GREATEST(fame, $2) WHERE username = $1 RETURNING *',
-        [username, fameAtLevel(level)]
-      );
-      return rows[0] ? presentProfile(fromRow(rows[0])) : null;
-    },
     async createGuest(name) {
       await ensureReady();
       for (let attempt = 0; attempt < 3; attempt += 1) {
