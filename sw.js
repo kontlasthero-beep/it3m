@@ -1,7 +1,9 @@
-const CACHE_NAME = 'table-curling-v37';
+const CACHE_NAME = 'table-curling-v40';
 const APP_FILES = [
   './',
   './index.html',
+  './ai-planner.js',
+  './ai-planner-worker.js',
   './manifest.webmanifest',
   './icon.svg',
   './apple-touch-icon.png',

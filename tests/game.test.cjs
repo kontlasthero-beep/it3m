@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
+const aiPlanner = require('../ai-planner.js');
 
 function game() {
   const elements = new Map();
@@ -45,7 +46,7 @@ function game() {
   const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
   vm.runInContext(script.replace(/\}\)\(\);\s*$/, 'globalThis.run = code => eval(code); })();'), context);
   context.run(`globalThis.sounds = []; playSound = name => sounds.push(name); playFileSound = name => sounds.push(name);`);
-  return { run: context.run, elements, tick: ms => { time += ms; }, wall: ms => { wallOffset += ms; },
+  return { run: context.run, context, elements, tick: ms => { time += ms; }, wall: ms => { wallOffset += ms; },
     flush: () => timeouts.splice(0).forEach(fn => fn()) };
 }
 
@@ -226,6 +227,17 @@ test('hand reconciliation preserves hovered cards and every card has an existing
   }
 });
 
+test('a click without a deliberate card drag cannot consume a neighboring card', () => {
+  const g = game();
+  g.run(`turns.reset(0); const cap=turns.createCurrentUnit(); state.phase='aiming';
+    state.hands[0]=[{id:'guard',name:'방호벽',instanceId:'g1'}]; renderHands();
+    const element=handEls[0].children[0];
+    const event={currentTarget:element,clientX:cap.x,clientY:cap.y,pointerId:1,pointerType:'mouse',preventDefault(){}};
+    beginCardDrag(event); assert.ok(state.cardDrag);
+    finishCardDrag(event); assert.equal(state.cardDrag,null);
+    assert.equal(state.hands[0].length,1); assert.equal(cap.ability?.guard,undefined);`);
+});
+
 test('snapshots advance walls and guards throughout a local aim without replacing the pointer', () => {
   const {host, guest, send} = onlinePair();
   guest.run(`localAimPointerId = 7; state.aiming = true; state.aimPoint = {x:1120,y:355}; state.aimTension=.3;`);
@@ -280,6 +292,31 @@ test('ammo aims linearly without shaking or stretch cues and launches at 300 per
     assert.equal(state.bullets.length,1);
     assert.equal(Math.hypot(state.bullets[0].vx,state.bullets[0].vy),CONFIG.maxLaunchSpeed*3);
     assert.equal(turns.currentUnit.vx,0); assert.ok(sounds.includes('ammoFire')); assert.ok(!sounds.includes('launch'));`);
+});
+
+test('a falling ammo source cancels the queued shot and restores turn controls', () => {
+  const g = game();
+  g.run(`turns.reset(0); const cap=turns.createCurrentUnit(); cap.status='sliding'; cap.hasLaunched=true;
+    state.phase='sliding'; state.hands[0]=[{id:'ammo',name:'총알 장전',instanceId:'a1'}];
+    assert.equal(useCard('a1',0,cap),true); assert.equal(state.phase,'reposition');
+    state.aiming=true; state.aimPoint={x:400,y:355}; localAimPointerId=7;
+    cap.status='fallen'; update(0,performance.now());
+    assert.equal(state.phase,'turn-ready'); assert.equal(state.repositionUnit,null);
+    assert.equal(state.repositionMode,null); assert.equal(state.aiming,false);
+    assert.equal(localAimPointerId,null); assert.equal(cap.activeSpecial,null);
+    assert.equal(endTurnButton.disabled,false);
+    endTurn(); assert.equal(turns.globalTurn,1);`);
+});
+
+test('an older ammo source falling while other stones move resumes normal simulation', () => {
+  const g = game();
+  g.run(`turns.reset(0); const old=new CurlingUnit({id:'old',owner:0,turnNumber:1,x:420,y:355});
+    old.status='sliding'; old.hasLaunched=true; state.units.push(old);
+    const current=turns.createCurrentUnit(); current.status='resting'; current.hasLaunched=true;
+    state.phase='sliding'; state.hands[0]=[{id:'ammo',name:'총알 장전',instanceId:'a2'}];
+    assert.equal(useCard('a2',0,old),true);
+    old.status='fallen'; update(0,performance.now());
+    assert.equal(state.phase,'turn-ready'); assert.equal(endTurnButton.disabled,false);`);
 });
 
 test('normal launch requires a locked meter and short drag controls direction only', () => {
@@ -479,19 +516,218 @@ test('tutorial lessons cover every card and trigger; practice uses fixed hands w
     }`);
 });
 
-test('tutorial settings pause movement, return home clears practice, and normal play restores timed turns', () => {
+test('unified game settings pause tutorial movement, return home clears practice, and normal play restores timed turns', () => {
   const g = game();
   g.run(`setSpeedLevel(0); startTutorial(); loadTutorialLesson(tutorialLessons().findIndex(l=>l.id==='walls'));
     turns.currentUnit.launch(-200,0); state.phase='sliding';
-    learningUI.tutorialSettingsButton.listeners.click(); const x=turns.currentUnit.x;
+    document.querySelector('#gameSettingsButton').listeners.click(); const x=turns.currentUnit.x;
+    assert.equal(document.querySelector('#tutorialSettingsActions').hidden,false);
     gameLoop(1100); assert.equal(turns.currentUnit.x,x);
-    document.querySelector('#tutorialResumeButton').listeners.click(); gameLoop(1150);
+    document.querySelector('#closeGameSettingsButton').listeners.click(); gameLoop(1150);
     assert.ok(turns.currentUnit.x<x);
     returnToHome(); assert.equal(state.tutorial,null); assert.equal(state.phase,'intro');
     assert.equal(state.units.length,0); assert.equal(state.hands[0].length,0);
     assert.equal(state.speedLevel,0); assert.equal(PLAYER[0].name,'플레이어 1');
     assert.equal(learningUI.tutorialPanel.hidden,true);
     beginRound(); assert.equal(turns.currentUnit.owner,0); assert.ok(state.turnDeadline>Date.now());`);
+});
+
+test('AI mode chooses a hero, owns only player two, and completes a launch without pointer input', () => {
+  const g = game();
+  g.run(`state.aiMode=true; state.aiOwner=1; state.aiDifficulty='hard'; state.aiStyle='defender'; PLAYER[1].name='클럽 AI';
+    startHeroSelection('ai'); const offered=state.heroOffers[0][0]; chooseHero(0,offered);
+    assert.ok(state.heroChoices[1]); finishHeroSelection();
+    clearTimeout(state.cardDrawTimer); pendingCardDraw=null; dealOverlay.hidden=true;
+    state.phase='aiming'; state.units=[]; turns.reset(1); turns.createCurrentUnit();
+    state.hands[1]=[]; assert.equal(canControlPlayer(1),false); assert.equal(canControlPlayer(0),true);
+    updateAiPlayer(1000); updateAiPlayer(1600); assert.equal(state.powerMeter.stage,'spinning');
+    state.powerMeter.value=state.aiAction.plan.power>.5?0:1;
+    updateAiPlayer(1900); assert.equal(state.powerMeter.stage,'spinning');
+    state.powerMeter.value=state.aiAction.plan.power;
+    updateAiPlayer(2200); assert.equal(state.powerMeter.stage,'locked');
+    updateAiPlayer(2800); assert.equal(turns.currentUnit.status,'sliding'); assert.ok(turns.currentUnit.vx<0);`);
+});
+
+test('AI applies a planned defense to an earlier stone and schedules its flight card', () => {
+  const g = game();
+  g.run(`state.aiMode=true; state.aiOwner=1; state.aiDifficulty='hard'; state.currentMap=MAPS[0];
+    turns.reset(1); state.phase='aiming';
+    const old=new CurlingUnit({id:'old-ai',owner:1,turnNumber:1,x:160,y:355});
+    old.status='resting'; state.units=[old]; turns.createCurrentUnit();
+    state.hands[1]=[{id:'guard',name:'방호벽',instanceId:'g1'},
+      {id:'blackhole',name:'블랙홀 방출',instanceId:'b1'}];
+    state.hands[0]=[{id:'ammo',name:'총알 장전',instanceId:'a1'}];
+    const snapshot=aiPlannerSnapshot(turns.currentUnit);
+    assert.ok(snapshot.hand.includes('guard'));
+    assert.deepEqual(snapshot.enemyHand,['ammo']);
+    assert.equal(snapshot.replyKoPoints,25);
+    const action={plan:{tactics:[{card:'guard',at:0,targetId:'old-ai'},
+      {card:'blackhole',at:1}],trigger:null}};
+    aiApplyPlannedSetup(action,turns.currentUnit);
+    assert.equal(old.ability.stacks.guard,1);
+    assert.equal(action.scheduledTactics.length,1);
+    assert.deepEqual(state.hands[1].map(card=>card.id),['blackhole']);
+    state.aiAction={turn:turns.globalTurn,deadline:0,planSource:'simulation',
+      scheduledTactics:action.scheduledTactics,launchedAt:1000,inFlightCardAt:0};
+    turns.currentUnit.status='sliding'; state.phase='sliding';
+    updateAiPlayer(2100);
+    assert.equal(state.hands[1].length,0);
+    assert.ok(turns.currentUnit.fluidTimer>0);`);
+});
+
+test('AI difficulty changes planning breadth and launch precision', () => {
+  const g = game();
+  g.run(`state.currentMap=MAPS[0]; turns.reset(1); turns.createCurrentUnit();
+    let samples=0; const original=aiPredictShot;
+    aiPredictShot=(...args)=>{ samples++; return original(...args); };
+    state.aiDifficulty='easy'; const easy=aiShotPlan(turns.currentUnit); const easySamples=samples;
+    samples=0; state.aiDifficulty='hard'; const hard=aiShotPlan(turns.currentUnit);
+    assert.ok(samples>easySamples*3);
+    for (const plan of [easy,hard]) {
+      assert.ok(plan.power>=0 && plan.power<=1);
+      assert.ok(Number.isFinite(plan.aimPoint.x) && Number.isFinite(plan.aimPoint.y));
+    }
+    assert.ok(AI_LEVELS.easy.meterTolerance>AI_LEVELS.hard.meterTolerance);
+    aiPredictShot=original;`);
+});
+
+test('rollout prediction tracks a real stone impact and the resulting scores', () => {
+  const g = game();
+  g.context.UCCAiPlanner = aiPlanner;
+  const snapshot = g.run(`state.currentMap=MAPS[0]; state.phase='aiming'; turns.reset(1);
+    const enemy=new CurlingUnit({id:'enemy',owner:0,turnNumber:1,x:800,y:355});
+    enemy.status='resting'; state.units=[enemy]; turns.createCurrentUnit();
+    aiPlannerSnapshot(turns.currentUnit);`);
+  const predicted = aiPlanner.simulate(snapshot, {dx:-1,dy:0,power:.5});
+  const actual = g.run(`turns.currentUnit.launch(-275*.5*CONFIG.launchScale,0);
+    state.phase='sliding';
+    for(let i=0;i<960;i++) {
+      update(1/120,0,false);
+      if(i>4 && state.units.every(unit=>unit.status!=='sliding')) break;
+    }
+    ({positions:state.units.map(unit=>unit.x),scores:calculateScores().map(result=>result.score)});`);
+  assert.ok(Math.abs(predicted.world.units[0].x - actual.positions[0]) < 25);
+  assert.ok(Math.abs(predicted.world.units[1].x - actual.positions[1]) < 25);
+  assert.ok(Math.abs(predicted.scores[0] - actual.scores[0]) <= 3);
+  assert.ok(Math.abs(predicted.scores[1] - actual.scores[1]) <= 3);
+});
+
+test('rollout prediction follows the ice and moving-wall map dynamics', () => {
+  for (const mapIndex of [1, 2]) {
+    const g = game();
+    const snapshot = g.run(`state.currentMap=MAPS[${mapIndex}]; state.phase='aiming';
+      state.mapTime=1.2; turns.reset(1); turns.createCurrentUnit();
+      aiPlannerSnapshot(turns.currentUnit);`);
+    const predicted = aiPlanner.simulate(snapshot, {dx:-1,dy:0,power:.5});
+    const actual = g.run(`turns.currentUnit.launch(-275*.5*CONFIG.launchScale,0);
+      state.phase='sliding';
+      for(let i=0;i<1080;i++) {
+        update(1/120,0,false);
+        if(i>4 && state.units.every(unit=>unit.status!=='sliding')) break;
+      }
+      ({x:turns.currentUnit.x,status:turns.currentUnit.status,score:calculateScores()[1].score});`);
+    const expected = predicted.world.units[0];
+    assert.equal(expected.status, actual.status, `map ${mapIndex}`);
+    assert.ok(Math.abs(expected.x - actual.x) < 65, `map ${mapIndex}: ${expected.x} vs ${actual.x}`);
+    assert.ok(Math.abs(predicted.scores[1] - actual.score) < 10, `map ${mapIndex}`);
+  }
+});
+
+test('AI tiers use their names, rewards, and progressively wider card sets', () => {
+  const g = game();
+  g.run(`for (const [difficulty, name, fame, count] of [
+      ['easy','네오',25,7], ['normal','뉴트론',35,8], ['hard','AAB',75,9]]) {
+      selectAiOpponent(difficulty); startAiGame();
+      assert.equal(PLAYER[1].name,name);
+      assert.equal(aiLevel().fame,fame);
+      assert.equal(aiLevel().cards.length,count);
+      assert.equal(state.playerDecks[1].length,8);
+      assert.ok(state.playerDecks[1].every(id=>aiCanUseCard(id)));
+      assert.equal(state.playerLevels[1],difficulty==='hard'?2:1);
+    }`);
+});
+
+test('AI selection requires a portrait choice and uses the account or a stable random guest name', () => {
+  const g = game();
+  g.run(`guestProfile=null; guestAiNickname=null; selectAiOpponent(null);
+    assert.equal(startAiButton.disabled,true);
+    startAiGame(); assert.equal(state.aiMode,false);
+    const first=aiPlayerName(); assert.match(first,/^방랑자 [0-9]{4}$/);
+    assert.equal(aiPlayerName(),first);
+    guestProfile={name:'설정한 이름',level:1}; assert.equal(aiPlayerName(),'설정한 이름');
+    selectAiOpponent('normal'); assert.equal(startAiButton.disabled,false);
+    startAiGame(); assert.equal(PLAYER[0].name,'설정한 이름');`);
+});
+
+test('AI result offers a lobby exit without losing a pending account award', async () => {
+  const g = game();
+  g.run(`state.aiMode=true; state.phase='aiming'; turns.reset(0); turns.createCurrentUnit();
+    finishGame(); assert.equal(resultLobbyButton.hidden,false);
+    assert.equal(replayButton.hidden,false);
+    resultLobbyButton.listeners.click();
+    assert.equal(state.phase,'intro'); assert.equal(state.aiMode,false);
+    assert.equal(resultOverlay.hidden,true); assert.equal(startOverlay.hidden,false);`);
+  const pending = g.run(`guestProfile={username:'member',name:'MEMBER',level:1}; guestToken='token';
+    state.aiMode=true; state.aiMatchId='match-id'; state.aiMatchToken='token';
+    state.aiMatchPromise=Promise.resolve('match-id'); globalThis.awardRequested=false;
+    renderGuestProfile=profile=>{ guestProfile=profile; };
+    fetch=async(url,options)=>{ awardRequested=true; assert.equal(options.headers.Authorization,'Bearer token');
+      return {ok:true,json:async()=>({award:{profile:{name:'MEMBER',level:1,fame:25},gained:25,previousLevel:1},persistent:true})}; };
+    completeAiVictory([{score:60},{score:20}]);`);
+  g.run('returnToHome()');
+  await pending;
+  g.run('assert.equal(awardRequested,true); assert.equal(guestProfile.fame,25);');
+});
+
+test('AI settings require confirmation before forfeiting and record the forfeiture', async () => {
+  const g = game();
+  g.run(`state.aiMode=true; state.phase='aiming'; turns.reset(0); turns.createCurrentUnit();
+    guestProfile={username:'member',name:'MEMBER',level:1}; guestToken='token';
+    state.aiMatchToken='token'; state.aiMatchPromise=Promise.resolve('match-id');
+    globalThis.requests=[]; fetch=async(url,options)=>{ requests.push({url,options}); return {ok:true}; };
+    document.querySelector('#gameSettingsButton').listeners.click();
+    assert.equal(aiForfeitActions.hidden,false);
+    aiForfeitButton.listeners.click(); assert.equal(aiForfeitConfirm.hidden,false);
+    document.querySelector('#aiForfeitCancelButton').listeners.click();
+    assert.equal(state.phase,'aiming'); assert.equal(aiForfeitConfirm.hidden,true);
+    aiForfeitButton.listeners.click();
+    document.querySelector('#aiForfeitConfirmButton').listeners.click();
+    assert.equal(state.phase,'intro'); assert.equal(state.aiMode,false);`);
+  await new Promise(resolve => setImmediate(resolve));
+  g.run(`assert.equal(requests.length,1);
+    assert.equal(requests[0].url,'/api/ai-matches/match-id/forfeit');
+    assert.equal(requests[0].options.headers.Authorization,'Bearer token');`);
+});
+
+test('AI style changes hero priorities and can place a legal trigger only within its limit', () => {
+  const g = game();
+  g.run(`state.aiOwner=1; state.aiDifficulty='hard'; state.currentMap=MAPS[0];
+    state.heroOffers[1]=['hunter','trap-master']; state.aiStyle='attacker';
+    assert.equal(chooseAiHeroOffer(),'hunter'); state.aiStyle='controller';
+    assert.equal(chooseAiHeroOffer(),'trap-master');
+    state.heroChoices[1]='trap-master'; turns.reset(1); turns.createCurrentUnit(); state.triggerPlacementCount=[0,0];
+    assert.equal(aiPlaceTrigger(),true); assert.equal(state.triggers.length,1);
+    assert.ok(canPlaceItemTrigger({x:TABLE.left+90,y:TABLE.top+90}));
+    assert.equal(aiPlaceTrigger(),true); assert.equal(state.triggers.length,2);
+    assert.equal(aiPlaceTrigger(),false); assert.equal(state.triggers.length,2);`);
+});
+
+test('AI saves blackhole for a nearby target and hardens a stone headed off the table', () => {
+  const g = game();
+  g.run(`state.aiMode=true; state.aiOwner=1; state.aiDifficulty='hard'; state.aiStyle='attacker';
+    state.currentMap=MAPS[0]; turns.reset(1); const unit=turns.createCurrentUnit();
+    const enemy=new CurlingUnit({id:'enemy',owner:0,turnNumber:1,x:450,y:355});
+    enemy.status='resting'; state.units.push(enemy);
+    state.phase='aiming'; state.hands[1]=[{id:'blackhole',name:'블랙홀 방출',instanceId:'bh'}];
+    assert.equal(aiUsePreparationCard(unit),false);
+    assert.equal(state.hands[1].length,1);
+    unit.x=540; unit.vx=-200; unit.vy=0; unit.status='sliding'; state.phase='sliding';
+    assert.equal(aiUseInFlightCard(),true);
+    assert.equal(state.hands[1].length,0);
+    state.hands[1]=[{id:'hardening',name:'경질화',instanceId:'hard'}];
+    unit.x=180; unit.vx=-900; unit.vy=0; unit.status='sliding';
+    assert.equal(aiUseInFlightCard(),true);
+    assert.equal(getUnitEffectStacks(unit,'hardening'),1);`);
 });
 
 test('catalog builds all entries from live definitions and returns to the home screen', () => {

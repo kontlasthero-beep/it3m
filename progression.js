@@ -5,7 +5,20 @@ const scrypt = promisify(crypto.scrypt);
 
 const PLAY_FAME = 50;
 const WIN_FAME = 50;
+const AI_WIN_FAME = Object.freeze({ easy: 25, normal: 35, hard: 75 });
+const AI_MIN_MATCH_MS = 20_000;
 const ID_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+function validateAiDifficulty(difficulty) {
+  if (!Object.hasOwn(AI_WIN_FAME, difficulty)) throw new Error('올바른 AI 난이도를 선택하세요.');
+  return difficulty;
+}
+
+function validateAiVictory(scores) {
+  if (!Array.isArray(scores) || scores.length !== 2 ||
+      scores.some(score => !Number.isInteger(score) || score < -1000 || score > 1000) ||
+      scores[0] <= scores[1]) throw new Error('AI 대전 승리 결과가 필요합니다.');
+}
 
 function fameAtLevel(level) {
   let total = 0;
@@ -109,11 +122,12 @@ function matchOutcome(rounds) {
   return { winner, wins, totals };
 }
 
-function createMemoryStore() {
+function createMemoryStore(now = Date.now) {
   const profiles = new Map();
   const usernames = new Map();
   const tokens = new Map();
   const awards = new Map();
+  const aiMatches = new Map();
   const pending = new Set();
   const lookup = token => profiles.get(tokens.get(tokenHash(token)));
   return {
@@ -173,6 +187,35 @@ function createMemoryStore() {
       return presentProfile(row);
     },
     async logout(token) { tokens.delete(tokenHash(token)); },
+    async startAiMatch(token, difficulty) {
+      const row = lookup(token);
+      if (!row?.username) return null;
+      const matchId = crypto.randomUUID();
+      aiMatches.set(matchId, { profileId: row.id, difficulty: validateAiDifficulty(difficulty), startedAt: now() });
+      return matchId;
+    },
+    async awardAiMatch(token, matchId, scores) {
+      const row = lookup(token);
+      if (!row?.username) return null;
+      const match = aiMatches.get(matchId);
+      if (!match || match.profileId !== row.id) throw new Error('AI 경기 기록을 찾을 수 없습니다.');
+      if (match.forfeited) throw new Error('AI 경기는 포기되었습니다.');
+      if (match.award) return { ...match.award, profile: presentProfile(row) };
+      validateAiVictory(scores);
+      if (now() - match.startedAt < AI_MIN_MATCH_MS) throw new Error('AI 경기가 아직 완료되지 않았습니다.');
+      match.award = { gained: AI_WIN_FAME[match.difficulty], previousLevel: presentProfile(row).level };
+      row.fame += match.award.gained;
+      return { ...match.award, profile: presentProfile(row) };
+    },
+    async forfeitAiMatch(token, matchId) {
+      const row = lookup(token);
+      if (!row?.username) return null;
+      const match = aiMatches.get(matchId);
+      if (!match || match.profileId !== row.id) throw new Error('AI 경기 기록을 찾을 수 없습니다.');
+      if (match.award) throw new Error('AI 경기가 이미 완료되었습니다.');
+      match.forfeited = true;
+      return true;
+    },
     async awardMatch(matchId, playerIds, winner) {
       return playerIds.map((id, index) => {
         const row = profiles.get(id);
@@ -223,6 +266,11 @@ function createPostgresStore(connectionString) {
         match_id UUID NOT NULL, profile_id UUID NOT NULL REFERENCES ucc_profiles(id),
         gained INTEGER NOT NULL, fame_before INTEGER NOT NULL,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), PRIMARY KEY (match_id, profile_id)
+      )`);
+      await pool.query(`CREATE TABLE IF NOT EXISTS ucc_ai_matches (
+        id UUID PRIMARY KEY, profile_id UUID NOT NULL REFERENCES ucc_profiles(id),
+        difficulty TEXT NOT NULL, started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        completed_at TIMESTAMPTZ, gained INTEGER, fame_before INTEGER
       )`);
     })().catch(error => { ready = null; throw error; });
     return ready;
@@ -320,6 +368,65 @@ function createPostgresStore(connectionString) {
       await ensureReady();
       await pool.query('DELETE FROM ucc_sessions WHERE token_hash = $1', [tokenHash(token)]);
     },
+    async startAiMatch(token, difficulty) {
+      validateAiDifficulty(difficulty);
+      const member = await this.findByToken(token);
+      if (!member?.profile.username) return null;
+      const matchId = crypto.randomUUID();
+      await pool.query('INSERT INTO ucc_ai_matches (id, profile_id, difficulty) VALUES ($1, $2, $3)',
+        [matchId, member.internalId, difficulty]);
+      return matchId;
+    },
+    async awardAiMatch(token, matchId, scores) {
+      const member = await this.findByToken(token);
+      if (!member?.profile.username) return null;
+      await ensureReady();
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        const { rows: matches } = await client.query('SELECT * FROM ucc_ai_matches WHERE id = $1 FOR UPDATE', [matchId]);
+        const match = matches[0];
+        if (!match || match.profile_id !== member.internalId) throw new Error('AI 경기 기록을 찾을 수 없습니다.');
+        if (match.completed_at && match.gained === 0) throw new Error('AI 경기는 포기되었습니다.');
+        if (match.completed_at) {
+          const { rows } = await client.query('SELECT * FROM ucc_profiles WHERE id = $1', [member.internalId]);
+          await client.query('COMMIT');
+          return { gained: match.gained, previousLevel: presentProfile({ fame: match.fame_before }).level,
+            profile: presentProfile(fromRow(rows[0])) };
+        }
+        validateAiVictory(scores);
+        if (Date.now() - new Date(match.started_at).getTime() < AI_MIN_MATCH_MS)
+          throw new Error('AI 경기가 아직 완료되지 않았습니다.');
+        const { rows: locked } = await client.query('SELECT * FROM ucc_profiles WHERE id = $1 FOR UPDATE', [member.internalId]);
+        const before = locked[0].fame;
+        const gained = AI_WIN_FAME[match.difficulty];
+        const { rows: updated } = await client.query('UPDATE ucc_profiles SET fame = fame + $1 WHERE id = $2 RETURNING *',
+          [gained, member.internalId]);
+        await client.query(`UPDATE ucc_ai_matches SET completed_at = NOW(), gained = $1, fame_before = $2 WHERE id = $3`,
+          [gained, before, matchId]);
+        await client.query('COMMIT');
+        return { gained, previousLevel: presentProfile({ fame: before }).level, profile: presentProfile(fromRow(updated[0])) };
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      } finally { client.release(); }
+    },
+    async forfeitAiMatch(token, matchId) {
+      const member = await this.findByToken(token);
+      if (!member?.profile.username) return null;
+      await ensureReady();
+      const { rows } = await pool.query(
+        `UPDATE ucc_ai_matches SET completed_at = NOW(), gained = 0
+         WHERE id = $1 AND profile_id = $2 AND completed_at IS NULL RETURNING id`,
+        [matchId, member.internalId]
+      );
+      if (rows.length) return true;
+      const existing = await pool.query('SELECT gained FROM ucc_ai_matches WHERE id = $1 AND profile_id = $2',
+        [matchId, member.internalId]);
+      if (!existing.rows.length) throw new Error('AI 경기 기록을 찾을 수 없습니다.');
+      if (existing.rows[0].gained !== 0) throw new Error('AI 경기가 이미 완료되었습니다.');
+      return true;
+    },
     async awardMatch(matchId, playerIds, winner) {
       await ensureReady();
       const client = await pool.connect();
@@ -363,4 +470,4 @@ function createPostgresStore(connectionString) {
   };
 }
 
-module.exports = { createProfileStore: url => url ? createPostgresStore(url) : createMemoryStore(), fameAtLevel, matchOutcome, parseBearer };
+module.exports = { createProfileStore: (url, options = {}) => url ? createPostgresStore(url) : createMemoryStore(options.now), fameAtLevel, matchOutcome, parseBearer };

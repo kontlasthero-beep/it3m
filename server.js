@@ -342,6 +342,51 @@ async function handleApi(request, response, url) {
       return fail(response, 503, '카드 덱을 저장할 수 없습니다.');
     }
   }
+  if (request.method === 'POST' && url.pathname === '/api/ai-matches') {
+    const token = parseBearer(request.headers.authorization);
+    if (!token) return fail(response, 401, '계정 로그인이 필요합니다.');
+    const data = await readJson(request);
+    try {
+      const matchId = await profiles.startAiMatch(token, data.difficulty);
+      if (!matchId) return fail(response, 401, '계정 로그인이 필요합니다.');
+      return sendJson(response, 201, { matchId });
+    } catch (error) {
+      if (error.message.includes('난이도')) return fail(response, 400, error.message);
+      console.error('AI match registration failed:', error);
+      return fail(response, 503, 'AI 경기를 기록할 수 없습니다.');
+    }
+  }
+  if (request.method === 'POST' && parts.length === 4 && parts[0] === 'api' &&
+      parts[1] === 'ai-matches' && parts[3] === 'complete') {
+    const token = parseBearer(request.headers.authorization);
+    if (!token) return fail(response, 401, '계정 로그인이 필요합니다.');
+    if (!/^[a-f0-9-]{36}$/.test(parts[2])) return fail(response, 400, '잘못된 경기 ID입니다.');
+    const data = await readJson(request);
+    try {
+      const award = await profiles.awardAiMatch(token, parts[2], data.scores);
+      if (!award) return fail(response, 401, '계정 로그인이 필요합니다.');
+      return sendJson(response, 200, { award, persistent: profiles.persistent });
+    } catch (error) {
+      if (error.message.includes('AI 경기') || error.message.includes('AI 대전')) return fail(response, 409, error.message);
+      console.error('AI match award failed:', error);
+      return fail(response, 503, '명성치를 저장할 수 없습니다.');
+    }
+  }
+  if (request.method === 'POST' && parts.length === 4 && parts[0] === 'api' &&
+      parts[1] === 'ai-matches' && parts[3] === 'forfeit') {
+    const token = parseBearer(request.headers.authorization);
+    if (!token) return fail(response, 401, '계정 로그인이 필요합니다.');
+    if (!/^[a-f0-9-]{36}$/.test(parts[2])) return fail(response, 400, '잘못된 경기 ID입니다.');
+    try {
+      const forfeited = await profiles.forfeitAiMatch(token, parts[2]);
+      if (!forfeited) return fail(response, 401, '계정 로그인이 필요합니다.');
+      return sendJson(response, 200, { forfeited: true });
+    } catch (error) {
+      if (error.message.includes('AI 경기')) return fail(response, 409, error.message);
+      console.error('AI match forfeit failed:', error);
+      return fail(response, 503, 'AI 경기 포기를 기록할 수 없습니다.');
+    }
+  }
   if (request.method === 'GET' && url.pathname === '/api/rooms') {
     const publicRooms = [...rooms.values()]
       .filter(room => room.isPublic && room.status === 'waiting' && !room.challenger)

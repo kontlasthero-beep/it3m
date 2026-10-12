@@ -54,6 +54,44 @@ test('level thresholds and duplicate awards', async () => {
   assert.equal(matchOutcome([{ winner: 0, scores: [20, 80] }, { winner: 0, scores: [70, 10] }]), null);
 });
 
+test('AI wins award level-based fame once, only to the registered match owner', async () => {
+  let now = 100_000;
+  const store = createProfileStore('', { now: () => now });
+  const account = await store.register('ai_player', 'long-password', 'PLAYER');
+  const other = await store.register('ai_other', 'long-password', 'OTHER');
+  const guest = await store.createGuest('GUEST');
+  assert.equal(await store.startAiMatch(guest.token, 'easy'), null);
+  await assert.rejects(store.startAiMatch(account.token, 'impossible'), /난이도/);
+  for (const [difficulty, gained] of [['easy', 25], ['normal', 35], ['hard', 75]]) {
+    const matchId = await store.startAiMatch(account.token, difficulty);
+    await assert.rejects(store.awardAiMatch(other.token, matchId, [80, 20]), /찾을 수 없습니다/);
+    await assert.rejects(store.awardAiMatch(account.token, matchId, [20, 80]), /승리 결과/);
+    await assert.rejects(store.awardAiMatch(account.token, matchId, [80, 20]), /아직 완료되지/);
+    now += 20_000;
+    const award = await store.awardAiMatch(account.token, matchId, [80, 20]);
+    assert.equal(award.gained, gained);
+    assert.equal((await store.awardAiMatch(account.token, matchId, [80, 20])).profile.fame, award.profile.fame);
+  }
+  const profile = (await store.findByToken(account.token)).profile;
+  assert.equal(profile.fame, 135);
+  assert.equal(profile.level, 2);
+  assert.equal(profile.played, 0);
+});
+
+test('forfeited AI matches cannot later award fame', async () => {
+  let now = 100_000;
+  const store = createProfileStore('', { now: () => now });
+  const player = await store.register('ai_forfeit', 'long-password', 'PLAYER');
+  const other = await store.register('ai_forfeit_other', 'long-password', 'OTHER');
+  const matchId = await store.startAiMatch(player.token, 'hard');
+  await assert.rejects(store.forfeitAiMatch(other.token, matchId), /찾을 수 없습니다/);
+  assert.equal(await store.forfeitAiMatch(player.token, matchId), true);
+  assert.equal(await store.forfeitAiMatch(player.token, matchId), true);
+  now += 20_000;
+  await assert.rejects(store.awardAiMatch(player.token, matchId, [80, 20]), /포기/);
+  assert.equal((await store.findByToken(player.token)).profile.fame, 0);
+});
+
 test('accounts and online match fame are bound to room participants', { timeout: 20000 }, async t => {
   const reservation = net.createServer();
   reservation.listen(0, '127.0.0.1');
@@ -87,6 +125,20 @@ test('accounts and online match fame are bound to room participants', { timeout:
   }
   const hostProfile = (await api('/api/accounts/register', { username: 'host_account', password: 'host-password', name: 'HOST' })).data;
   const challengerProfile = (await api('/api/accounts/register', { username: 'challenger_account', password: 'challenger-password', name: 'CHALLENGER' })).data;
+  assert.equal((await api('/api/ai-matches', { difficulty: 'easy' })).status, 401);
+  assert.equal((await api('/api/ai-matches', { difficulty: 'unknown' }, hostProfile.token)).status, 400);
+  const aiMatch = await api('/api/ai-matches', { difficulty: 'normal' }, hostProfile.token);
+  assert.equal(aiMatch.status, 201);
+  assert.match(aiMatch.data.matchId, /^[0-9a-f-]{36}$/);
+  assert.equal((await api(`/api/ai-matches/${aiMatch.data.matchId}/complete`,
+    { scores: [100, 20] }, challengerProfile.token)).status, 409);
+  assert.equal((await api(`/api/ai-matches/${aiMatch.data.matchId}/complete`,
+    { scores: [100, 20] }, hostProfile.token)).status, 409);
+  const abandoned = (await api('/api/ai-matches', { difficulty: 'hard' }, hostProfile.token)).data.matchId;
+  assert.equal((await api(`/api/ai-matches/${abandoned}/forfeit`, undefined, challengerProfile.token)).status, 409);
+  assert.equal((await api(`/api/ai-matches/${abandoned}/forfeit`, undefined, hostProfile.token)).status, 200);
+  assert.equal((await api(`/api/ai-matches/${abandoned}/complete`,
+    { scores: [100, 20] }, hostProfile.token)).status, 409);
   assert.match(hostProfile.profile.id, /^UCC-[A-Z2-9]{8}$/);
   assert.equal(hostProfile.persistent, false);
   assert.equal((await api('/api/profile', undefined, null, 'GET')).status, 401);

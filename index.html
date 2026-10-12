@@ -219,6 +219,7 @@
     .start-menu-grid .menu-local { border-color: #d59e4d; background: #b47522; color: #18110a; }
     .start-menu-grid .menu-online { border-color: #4cae9b; background: #247667; color: #f1fffb; }
     .start-menu-grid .menu-browse { border-color: #76908c; background: #243936; }
+    .start-menu-grid .menu-ai { grid-column: 1 / -1; border-color: #9b87d4; background: #493d6b; color: #f8f3ff; }
     .start-screen[hidden] { display: none; }
     .start-screen h3 { margin: 16px 0 10px; font-size: 17px; }
     .start-form { display: grid; gap: 10px; margin: 14px 0 4px; text-align: left; }
@@ -234,6 +235,44 @@
     .start-form .private-toggle { display: flex; grid-template-columns: auto 1fr; align-items: center; gap: 8px; color: var(--ink); }
     .start-form .private-toggle input { width: 18px; min-height: 18px; accent-color: #65d6bd; }
     .start-form .primary { width: 100%; min-height: 46px; }
+    .result-actions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+    .result-actions.two-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .result-actions button { min-width: 0; min-height: 44px; }
+    .dialog.ai-selection-dialog { width: min(900px, 100%); }
+    .ai-player-identity { margin: 0 0 12px; color: var(--muted); font-size: 13px; text-align: left; }
+    .ai-opponent-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(190px, 230px); gap: 16px; align-items: stretch; }
+    .ai-opponent-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; gap: 10px; }
+    .ai-opponent { min-width: 0; padding: 6px; border: 1px solid #566b69; border-radius: 4px; background: #122022; transition: transform .22s ease, filter .22s ease, border-color .22s ease, box-shadow .22s ease; }
+    .ai-opponent:hover, .ai-opponent:focus-visible { border-color: #a9d6ca; }
+    .ai-opponent-grid.has-selection .ai-opponent:not(.selected) { filter: grayscale(1) brightness(.58); }
+    .ai-opponent.selected { position: relative; z-index: 1; transform: scale(1.035); border-color: #e3be79; box-shadow: 0 0 0 2px rgba(227, 190, 121, .28); }
+    .ai-portrait-wrap { position: relative; display: block; }
+    .ai-portrait-frame { display: block; width: 100%; aspect-ratio: 3 / 4; overflow: hidden; border: 1px solid #647b75; border-radius: 2px; background: #263f3b; }
+    .ai-opponent[data-ai-opponent="normal"] .ai-portrait-frame { background: #404246; }
+    .ai-opponent[data-ai-opponent="hard"] .ai-portrait-frame { background: #3b343a; }
+    .ai-portrait-frame img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    .ai-skulls { position: absolute; top: 8px; right: 8px; display: none; gap: 3px; padding: 2px 5px; color: #f1cf88; background: rgba(9, 15, 16, .7); font-family: "Segoe UI Symbol", sans-serif; font-size: 22px; line-height: 1.1; white-space: nowrap; text-shadow: 0 1px 4px #000; }
+    .ai-opponent.selected .ai-skulls { display: flex; }
+    .ai-skulls span { display: block; width: 1em; text-align: center; }
+    .ai-opponent-name { display: block; padding: 9px 2px 4px; color: var(--ink); font-size: 16px; text-align: center; }
+    .ai-opponent-detail { min-height: 100%; padding: 15px; border-left: 2px solid #637b75; background: #101c1e; text-align: left; }
+    .ai-opponent-detail h4 { margin: 0 0 10px; color: #eac684; font-size: 13px; font-weight: 700; }
+    .ai-opponent-detail strong { display: block; font-size: 20px; }
+    .ai-opponent-detail p { margin: 12px 0 0; color: #c0cfca; font-size: 13px; line-height: 1.5; }
+    .ai-opponent-detail:not(.has-selection) strong, .ai-opponent-detail:not(.has-selection) p { display: none; }
+    #aiPlayScreen .start-form { margin-top: 16px; }
+    #aiDeckSelect { width: 100%; min-height: 44px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; background: #0f191b; color: var(--ink); font: inherit; }
+    #aiPlayScreen #startAiButton:disabled { opacity: .45; cursor: not-allowed; }
+    @media (max-width: 700px) {
+      .ai-opponent-layout { grid-template-columns: 1fr; gap: 12px; }
+      .ai-opponent-grid { gap: 6px; }
+      .ai-opponent { padding: 4px; }
+      .ai-opponent-name { font-size: 13px; padding: 6px 0 2px; }
+      .ai-skulls { top: 4px; right: 4px; font-size: 15px; padding: 1px 3px; }
+      .ai-opponent-detail { min-height: 88px; padding: 10px 12px; }
+      .ai-opponent-detail h4 { margin-bottom: 5px; }
+      .ai-opponent-detail p { margin-top: 6px; }
+    }
     .room-password-title { color: var(--muted); font-size: 13px; text-align: left; }
     .room-list { display: grid; gap: 6px; max-height: 180px; overflow-y: auto; }
     .room-list button { display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; text-align: left; }
@@ -525,6 +564,9 @@
     .tutorial-highlight { position: relative; z-index: 2; animation: tutorial-highlight-pulse 1.7s ease-in-out infinite; }
     @keyframes tutorial-highlight-pulse { 50% { filter: brightness(1.55) drop-shadow(0 0 8px rgba(255, 225, 117, .9)); box-shadow: 0 0 0 3px rgba(255, 225, 117, .5); } }
     .settings-actions { display: grid; gap: 10px; }
+    .settings-forfeit { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 12px; }
+    .settings-forfeit p { margin: 0 0 12px; line-height: 1.5; }
+    .settings-forfeit button { width: 100%; }
     @media (max-width: 600px) {
       .catalog-list, .hero-options { grid-template-columns: 1fr; }
       .catalog-header { flex-wrap: wrap; }
@@ -650,7 +692,6 @@
               <span class="connection-dot" aria-hidden="true"></span><span id="connectionStatusLabel">연결 대기</span>
             </button>
             <button class="icon-button" id="gameSettingsButton" type="button" aria-label="게임 설정" title="게임 설정">⚙</button>
-            <button class="icon-button" id="tutorialSettingsButton" type="button" aria-label="튜토리얼 설정" title="튜토리얼 설정" hidden>⚙</button>
           </div>
         </div>
         <div class="connection-details" id="connectionDetails" hidden>
@@ -743,6 +784,7 @@
               <button id="openJoinScreenButton" type="button">방 코드 입력하기</button>
               <button class="menu-local" id="openLocalScreenButton" type="button">로컬 2인 플레이</button>
               <button class="menu-online" id="createRoomButton" type="button">온라인 방 만들기</button>
+              <button class="menu-ai" id="openAiScreenButton" type="button">AI 대전</button>
             </div>
             <button class="deck-entry-button" id="openMenuDeckButton" type="button">카드 덱 만들기</button>
             <button class="home-return" id="playMenuHomeButton" type="button">← 시작 화면으로 돌아가기</button>
@@ -776,6 +818,23 @@
               <label>플레이어 2 닉네임<input id="localPlayer2NameInput" maxlength="20" value="플레이어 2" autocomplete="off"></label>
               <div class="local-deck-choice"><label>플레이어 1 가방<select id="localDeck0"></select></label><label>플레이어 2 가방<select id="localDeck1"></select></label></div>
               <button class="primary" id="startButton" type="button">맵 선택</button>
+              <div class="start-form-actions"><button class="backToStartMenuButton" type="button">뒤로</button></div>
+            </div>
+          </div>
+          <div class="start-screen" id="aiPlayScreen" hidden>
+            <h3>AI 대전</h3>
+            <p class="ai-player-identity" id="aiPlayerIdentity"></p>
+            <div class="ai-opponent-layout">
+              <div class="ai-opponent-grid" id="aiOpponentGrid" role="group" aria-label="대전 상대 선택">
+                <button class="ai-opponent" data-ai-opponent="easy" type="button" aria-pressed="false"><span class="ai-portrait-wrap"><span class="ai-portrait-frame"></span><span class="ai-skulls" aria-hidden="true"></span></span><strong class="ai-opponent-name">네오</strong></button>
+                <button class="ai-opponent" data-ai-opponent="normal" type="button" aria-pressed="false"><span class="ai-portrait-wrap"><span class="ai-portrait-frame"></span><span class="ai-skulls" aria-hidden="true"></span></span><strong class="ai-opponent-name">뉴트론</strong></button>
+                <button class="ai-opponent" data-ai-opponent="hard" type="button" aria-pressed="false"><span class="ai-portrait-wrap"><span class="ai-portrait-frame"></span><span class="ai-skulls" aria-hidden="true"></span></span><strong class="ai-opponent-name">AAB</strong></button>
+              </div>
+              <aside class="ai-opponent-detail" id="aiOpponentDetail" aria-live="polite"><h4>상대 기록</h4><strong id="aiOpponentDetailName"></strong><p id="aiOpponentDetailDescription"></p></aside>
+            </div>
+            <div class="start-form">
+              <label>사용할 가방<select id="aiDeckSelect"></select></label>
+              <button class="primary" id="startAiButton" type="button" disabled>게임 시작</button>
               <div class="start-form-actions"><button class="backToStartMenuButton" type="button">뒤로</button></div>
             </div>
           </div>
@@ -836,7 +895,7 @@
           <p id="resultMessage"></p>
           <div class="result-grid" id="resultGrid"></div>
           <p class="match-fame-reward" id="matchFameReward" role="status" hidden></p>
-          <button class="primary" id="replayButton">다시 플레이</button>
+          <div class="result-actions"><button class="primary" id="replayButton">다시 플레이</button><button id="resultLobbyButton" type="button" hidden>로비로 돌아가기</button></div>
         </div>
       </div>
     </section>
@@ -884,17 +943,19 @@
       <div class="game-deck-list" id="gameDeckList"></div>
     </div>
   </div>
-  <div class="overlay" id="tutorialSettingsOverlay" hidden>
-    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="tutorialSettingsTitle">
-      <h2 id="tutorialSettingsTitle">튜토리얼 설정</h2>
-      <div class="settings-actions"><button id="tutorialResumeButton" type="button">계속 연습</button><button id="tutorialRestartButton" type="button">현재 연습 다시 시작</button><button id="tutorialHomeButton" type="button">시작 화면으로 돌아가기</button></div>
-    </div>
-  </div>
   <div class="overlay" id="gameSettingsOverlay" hidden>
     <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="gameSettingsTitle">
       <h2 id="gameSettingsTitle">게임 설정</h2>
       <label class="volume-row">배경음악<input id="musicVolume" type="range" min="0" max="100" value="100"><output id="musicVolumeValue">100%</output></label>
       <label class="volume-row">효과음<input id="sfxVolume" type="range" min="0" max="100" value="100"><output id="sfxVolumeValue">100%</output></label>
+      <div class="settings-actions" id="tutorialSettingsActions" hidden><button id="tutorialRestartButton" type="button">현재 연습 다시 시작</button><button id="tutorialHomeButton" type="button">시작 화면으로 돌아가기</button></div>
+      <div class="settings-forfeit" id="aiForfeitActions" hidden>
+        <button id="aiForfeitButton" type="button">게임 포기하기</button>
+        <div id="aiForfeitConfirm" hidden>
+          <p>AI 대전을 포기하고 시작 화면으로 돌아갈까요? 이 경기의 명성치는 획득할 수 없습니다.</p>
+          <div class="settings-actions"><button id="aiForfeitConfirmButton" type="button">포기하고 나가기</button><button id="aiForfeitCancelButton" type="button">계속 플레이</button></div>
+        </div>
+      </div>
       <button id="closeGameSettingsButton" type="button">게임으로 돌아가기</button>
     </div>
   </div>
@@ -915,6 +976,7 @@
     <path id="aimPath" fill="none" stroke-linecap="round" />
     <circle id="aimTip" fill="#f4f0e6" />
   </svg>
+  <script src="ai-planner.js"></script>
   <script>
     (() => {
       const canvas = document.querySelector('#game');
@@ -928,7 +990,7 @@
       const powerValue = document.querySelector('#powerValue');
       const learningUI = Object.fromEntries([
         'tutorialPanel', 'tutorialTitle', 'tutorialLessonSelect', 'tutorialInstruction', 'tutorialObjective', 'tutorialCompletion',
-        'tutorialSettingsButton', 'tutorialSettingsOverlay', 'tutorialNextButton', 'catalogOverlay', 'catalogList',
+        'tutorialNextButton', 'catalogOverlay', 'catalogList',
         'cardCatalogTab', 'triggerCatalogTab', 'heroCatalogTab'
       ].map(id => [id, document.getElementById(id)]));
       const aimOverlay = document.querySelector('#aimOverlay');
@@ -967,6 +1029,14 @@
       const profileNicknameInput = document.querySelector('#profileNicknameInput');
       const localPlayerNameInputs = [document.querySelector('#localPlayer1NameInput'), document.querySelector('#localPlayer2NameInput')];
       const localDeckSelects = [document.querySelector('#localDeck0'), document.querySelector('#localDeck1')];
+      const aiDeckSelect = document.querySelector('#aiDeckSelect');
+      const aiPlayerIdentity = document.querySelector('#aiPlayerIdentity');
+      const aiOpponentGrid = document.querySelector('#aiOpponentGrid');
+      const aiOpponentButtons = [...document.querySelectorAll('.ai-opponent')];
+      const aiOpponentDetail = document.querySelector('#aiOpponentDetail');
+      const aiOpponentDetailName = document.querySelector('#aiOpponentDetailName');
+      const aiOpponentDetailDescription = document.querySelector('#aiOpponentDetailDescription');
+      const startAiButton = document.querySelector('#startAiButton');
       const deckOverlay = document.querySelector('#deckOverlay');
       const deckPool = document.querySelector('#deckPool');
       const deckBag = document.querySelector('#deckBag');
@@ -1009,6 +1079,8 @@
       const joinRoomButton = document.querySelector('#joinRoomButton');
       const startStatus = document.querySelector('#startStatus');
       const replayButton = document.querySelector('#replayButton');
+      const resultLobbyButton = document.querySelector('#resultLobbyButton');
+      const resultActions = document.querySelector('.result-actions');
       const turnText = document.querySelector('#turnText');
       const scoreEls = [document.querySelector('#score0'), document.querySelector('#score1')];
       const panels = [document.querySelector('#panel0'), document.querySelector('#panel1')];
@@ -1040,6 +1112,11 @@
       const handPanels = [document.querySelector('#handPanel0'), document.querySelector('#handPanel1')];
       const triggerToolButtons = [...document.querySelectorAll('.trigger-tool')];
       const gameSettingsOverlay = document.querySelector('#gameSettingsOverlay');
+      const gameSettingsTitle = document.querySelector('#gameSettingsTitle');
+      const tutorialSettingsActions = document.querySelector('#tutorialSettingsActions');
+      const aiForfeitActions = document.querySelector('#aiForfeitActions');
+      const aiForfeitConfirm = document.querySelector('#aiForfeitConfirm');
+      const aiForfeitButton = document.querySelector('#aiForfeitButton');
       const musicVolume = document.querySelector('#musicVolume');
       const sfxVolume = document.querySelector('#sfxVolume');
       const speedToggle = document.querySelector('#speedToggle');
@@ -1318,12 +1395,22 @@
         repositionMode: null,
         timerTurn: -1,
         timerTenPlayed: false,
-        timerLastBeepSecond: null
+        timerLastBeepSecond: null,
+        aiMode: false,
+        aiOwner: 1,
+        aiDifficulty: 'normal',
+        aiStyle: 'balanced',
+        aiMatchId: null,
+        aiMatchPromise: null,
+        aiMatchToken: null,
+        aiAction: null
       };
 
       let onlineSession = null;
       let guestToken = null;
       let guestProfile = null;
+      let guestAiNickname = null;
+      let selectedAiDifficulty = null;
       let guestProfilePersistent = false;
       let guestProfileInit = null;
       let accountReturnScreen = 'homeScreen';
@@ -1334,6 +1421,7 @@
       let pendingHeroTransition = null;
       const cardInspector = document.querySelector('#cardInspector');
       let inspectedCardElement = null;
+      let cardInspectTimer = null;
 
       // Deadlines also run from the simulation clock when browser UI timers are throttled.
       function scheduleHeroTransition(callback) {
@@ -1402,6 +1490,17 @@
           [pool[index], pool[pick]] = [pool[pick], pool[index]];
         }
         return pool.slice(0, 2).map(hero => hero.id);
+      }
+
+      function chooseAiHeroOffer() {
+        const priorities = {
+          balanced: { 'big-boy': 4, hunter: 3, 'trap-master': 2, joker: 2 },
+          attacker: { hunter: 4, joker: 3, 'big-boy': 2, 'trap-master': 1 },
+          controller: { 'trap-master': 4, 'big-boy': 3, hunter: 2, joker: 1 },
+          defender: { 'big-boy': 4, 'trap-master': 3, hunter: 2, joker: 1 }
+        };
+        const weights = priorities[state.aiStyle] || priorities.balanced;
+        return [...state.heroOffers[state.aiOwner]].sort((a, b) => (weights[b] || 0) - (weights[a] || 0))[0];
       }
 
       function renderHeroSelection() {
@@ -1493,6 +1592,9 @@
         }
         state.heroChoices[owner] = id;
         playSound('heroSelect');
+        if (state.heroSelectionMode === 'ai' && owner === 0 && !state.heroChoices[state.aiOwner]) {
+          state.heroChoices[state.aiOwner] = chooseAiHeroOffer();
+        }
         renderHeroSelection();
         updateHud();
         if (state.heroSelectionMode === 'local' && owner === 0) {
@@ -1502,7 +1604,7 @@
             state.heroTransitionTimer = null;
             renderHeroSelection();
           });
-        } else if (state.heroSelectionMode === 'tutorial' || state.heroChoices.every(Boolean)) {
+        } else if (state.heroSelectionMode === 'tutorial' || state.heroSelectionMode === 'ai' || state.heroChoices.every(Boolean)) {
           if (!pendingHeroTransition) scheduleHeroTransition(finishHeroSelection);
         }
         return true;
@@ -1525,6 +1627,14 @@
           state.heroSelectionOwner = 1;
           renderHeroSelection();
           scheduleHeroTransition(finishHeroSelection);
+          return;
+        }
+        if (state.heroSelectionMode === 'ai') {
+          if (!state.heroChoices[0]) state.heroChoices[0] = state.heroOffers[0][Math.floor(Math.random() * 2)];
+          if (!state.heroChoices[state.aiOwner]) state.heroChoices[state.aiOwner] = chooseAiHeroOffer();
+          playSound('heroSelect');
+          renderHeroSelection();
+          if (!pendingHeroTransition) scheduleHeroTransition(finishHeroSelection);
           return;
         }
         const owners = state.heroSelectionMode === 'online' ? [0, 1] : [state.heroSelectionOwner];
@@ -1556,7 +1666,7 @@
           turnDeadline: null, turnPausedAt: null, turnPausedByHost: false, timerTurn: -1, mapTime: 0 });
         turns.reset();
         for (const overlay of [resultOverlay, mapSelectOverlay, heroSelectOverlay, dealOverlay, triggerSelectOverlay,
-          publicRoomPasswordOverlay, learningUI.catalogOverlay, learningUI.tutorialSettingsOverlay]) overlay.hidden = true;
+          publicRoomPasswordOverlay, learningUI.catalogOverlay, gameSettingsOverlay]) overlay.hidden = true;
         entityTooltip.hidden = true;
         turnTimer.hidden = true;
         aimOverlay.style.display = 'none';
@@ -1567,11 +1677,19 @@
       function returnToHome() {
         const previous = state.tutorial?.previous;
         clearPracticeBoard();
+        state.aiMode = false;
+        state.aiAction = null;
+        state.aiMatchId = null;
+        state.aiMatchPromise = null;
+        state.aiMatchToken = null;
         state.tutorial = null;
         state.phase = 'intro';
         document.body.dataset.tutorial = 'false';
         learningUI.tutorialPanel.hidden = true;
-        learningUI.tutorialSettingsButton.hidden = true;
+        tutorialSettingsActions.hidden = true;
+        aiForfeitActions.hidden = true;
+        aiForfeitConfirm.hidden = true;
+        gameSettingsTitle.textContent = '게임 설정';
         if (previous) {
           PLAYER.forEach((player, index) => { player.name = previous.names[index]; });
           setSpeedLevel(previous.speedLevel);
@@ -1616,7 +1734,8 @@
         document.body.dataset.tutorial = 'true';
         startOverlay.hidden = true;
         learningUI.tutorialPanel.hidden = false;
-        learningUI.tutorialSettingsButton.hidden = false;
+        tutorialSettingsActions.hidden = false;
+        gameSettingsTitle.textContent = '튜토리얼 설정';
         state.currentMap = MAPS.find(map => map.id === lesson.mapId) || MAPS[0];
         state.phase = 'aiming';
         const unit = turns.createCurrentUnit();
@@ -2103,7 +2222,8 @@
       function beginRound() {
         state.tutorial = null;
         learningUI.tutorialPanel.hidden = true;
-        learningUI.tutorialSettingsButton.hidden = true;
+        tutorialSettingsActions.hidden = true;
+        gameSettingsTitle.textContent = '게임 설정';
         document.body.dataset.tutorial = 'false';
         turns.reset(roundStartingPlayer());
         localAimPointerId = null;
@@ -2119,6 +2239,7 @@
         state.aimPoint = null;
         state.aimTension = 0;
         state.powerMeter = null;
+        state.aiAction = null;
         state.repositionUnit = null;
         state.repositionMode = null;
         state.triggerPlacementUsed = [false, false];
@@ -2413,6 +2534,7 @@
         endTurnButton.disabled = state.phase !== 'turn-ready' || state.bullets.length > 0 || !canControlPlayer(turns.playerIndex);
         speedToggle.disabled = !canChangeSpeed();
         actionHint.textContent = state.phase === 'sliding' ? '스톤이 움직이는 중' : state.phase === 'turn-ready' ? '턴을 마치거나 카드를 사용하세요' : state.phase === 'reposition' && state.repositionMode === 'ammo' ? '총알 장전: 당겨서 발사' : state.phase === 'trigger-select' ? '트리거 종류를 선택하세요' : needsPowerMeter() && state.powerMeter?.stage === 'locked' ? '스톤을 드래그해 방향을 지정하세요' : needsPowerMeter() && state.powerMeter?.stage === 'spinning' ? '미터를 보고 파워를 결정하세요' : '스톤 아래 발사 버튼을 누르세요';
+        if (state.aiMode && turns.playerIndex === state.aiOwner && !turns.isComplete) actionHint.textContent = '클럽 AI가 수를 계산하는 중';
         handPanels.forEach((panel, index) => panel.classList.toggle('current', !turns.isComplete && index === turns.playerIndex));
         updateTriggerTools();
         updateGameDeckButtons();
@@ -2673,6 +2795,493 @@
         state.aimTension = distance / maxDistance;
       }
 
+      const AI_LEVELS = Object.freeze({
+        easy: { name: '네오', fame: 25, portrait: null, description: '안정적인 경로와 기본적인 카드 활용에 집중합니다.', lanes: 12, offsets: [.9, 1, 1.1], error: .025,
+          meterTolerance: .03, cardChance: .85, cards: ['hardening', 'guard', 'reposition', 'ammo', 'pulse', 'brick', 'bluffing'] },
+        normal: { name: '뉴트론', fame: 35, portrait: null, description: '필드의 위치를 살피며 카드와 트리거를 조합합니다.', lanes: 18, offsets: [.86, .94, 1.02, 1.1], error: .012,
+          meterTolerance: .018, cardChance: .95,
+          cards: [...DEFAULT_DECK_IDS] },
+        hard: { name: 'AAB', fame: 75, portrait: null, description: '여러 발사 경로를 비교하고 충돌, 카드, 함정을 적극적으로 활용합니다.', lanes: 24, offsets: [.84, .92, 1, 1.08, 1.16], error: .004,
+          meterTolerance: .01, cardChance: 1,
+          cards: ['hardening', 'guard', 'reposition', 'ammo', 'pulse', 'bluffing', 'brick', 'blackhole', 'escape'] }
+      });
+
+      let aiPlannerWorker = null;
+      let aiPlannerRequestId = 0;
+      const aiPlannerRequests = new Map();
+
+      function aiPlannerSnapshot(unit) {
+        const triggerCandidates = [];
+        if (remainingTriggerPlacements(unit.owner) > 0) {
+          const anchors = state.units.filter(item => item.owner === unit.owner && item.isOnTable &&
+            item.status === 'resting').sort((a, b) => a.x - b.x).slice(0, 2);
+          for (const anchor of anchors) for (const offset of [110, 190, 260]) for (const shift of [0, -65, 65]) {
+            const point = { x: Math.min(brickDropLimitX() - 20, anchor.x + offset),
+              y: Math.max(TABLE.top + 30, Math.min(TABLE.bottom - 30, anchor.y + shift)) };
+            if (canPlaceItemTrigger(point) && !triggerCandidates.some(item =>
+              Math.hypot(item.x - point.x, item.y - point.y) < 30)) triggerCandidates.push(point);
+            if (triggerCandidates.length >= 8) break;
+          }
+          for (const x of [620, 520, 420]) for (const y of [unit.y, unit.y - 100, unit.y + 100]) {
+            if (triggerCandidates.length >= 8) break;
+            const point = { x, y: Math.max(TABLE.top + 30, Math.min(TABLE.bottom - 30, y)) };
+            if (canPlaceItemTrigger(point) && !triggerCandidates.some(item =>
+              Math.hypot(item.x - point.x, item.y - point.y) < 30)) triggerCandidates.push(point);
+          }
+        }
+        return {
+          actor: unit.owner, turn: turns.globalTurn, launchId: unit.id, style: state.aiStyle,
+          seed: (turns.globalTurn + 1) * 997 + Math.floor(state.mapTime * 100) +
+            Math.floor(Math.random() * 100000),
+          friction: state.currentMap.friction, walls: Boolean(state.currentMap.walls),
+          mapTime: state.mapTime,
+          koPoints: heroRule(unit.owner, 'knockoutPoints', 25),
+          replyKoPoints: heroRule(1 - unit.owner, 'knockoutPoints', 25),
+          replyStone: {
+            radius: CONFIG.unitRadius * heroRule(1 - unit.owner, 'capScale', 1),
+            heroFriction: heroRule(1 - unit.owner, 'frictionScale', 1),
+            powerScale: heroRule(1 - unit.owner, 'powerScale', 1),
+            fallPenalty: heroRule(1 - unit.owner, 'fallPenalty', 0)
+          },
+          hasReply: turns.globalTurn < CONFIG.maxTurnsPerPlayer * 2 - 1,
+          hand: state.hands[unit.owner].filter(card => aiCanUseCard(card.id) && isCardUnlocked(card, unit.owner))
+            .map(card => card.id),
+          enemyHand: state.hands[1 - unit.owner].map(card => card.id),
+          triggerCandidates,
+          points: [0, 1].map(owner => state.fallPoints[owner] + state.escapePoints[owner]),
+          units: state.units.map(item => ({
+            id: item.id, owner: item.owner, x: item.x, y: item.y, vx: item.vx, vy: item.vy,
+            radius: item.radius, status: item.status, fluidTimer: item.fluidTimer || 0,
+            ability: item.ability ? JSON.parse(JSON.stringify(item.ability)) : null,
+            pendingPulseTriggers: (item.pendingPulseTriggers || []).map(pulse => ({ ...pulse })),
+            frictionMultiplier: item.frictionMultiplier,
+            openingFrictionMultiplier: item.openingFrictionMultiplier,
+            heroFriction: heroRule(item.owner, 'frictionScale', 1),
+            powerScale: heroRule(item.owner, 'powerScale', 1),
+            fallPenalty: heroRule(item.owner, 'fallPenalty', 0)
+          })),
+          bricks: state.bricks.map(brick => ({ x: brick.x, y: brick.y, vx: brick.vx, vy: brick.vy,
+            width: brick.width, height: brick.height, mass: brick.mass,
+            restitution: brick.restitution, frictionMultiplier: brick.frictionMultiplier })),
+          triggers: state.triggers.map(trigger => ({ x: trigger.x, y: trigger.y, radius: trigger.radius,
+            type: trigger.type.id, range: trigger.type.range, impulse: trigger.type.impulse }))
+        };
+      }
+
+      function getAiPlannerWorker() {
+        if (aiPlannerWorker || typeof Worker !== 'function' || location.protocol === 'file:') return aiPlannerWorker;
+        try {
+          aiPlannerWorker = new Worker('ai-planner-worker.js');
+          aiPlannerWorker.onmessage = event => {
+            const request = aiPlannerRequests.get(event.data.id);
+            if (!request) return;
+            aiPlannerRequests.delete(event.data.id);
+            request(event.data.plan || null);
+          };
+          aiPlannerWorker.onerror = () => {
+            aiPlannerWorker.terminate();
+            aiPlannerWorker = null;
+            for (const resolve of aiPlannerRequests.values()) resolve(null);
+            aiPlannerRequests.clear();
+          };
+        } catch { aiPlannerWorker = null; }
+        return aiPlannerWorker;
+      }
+
+      function requestAiShotPlan(unit) {
+        const planner = globalThis.UCCAiPlanner;
+        if (!planner) return Promise.resolve(null);
+        const snapshot = aiPlannerSnapshot(unit);
+        const worker = getAiPlannerWorker();
+        if (worker) {
+          const id = ++aiPlannerRequestId;
+          return new Promise(resolve => {
+            aiPlannerRequests.set(id, resolve);
+            try { worker.postMessage({ id, snapshot, difficulty: state.aiDifficulty }); }
+            catch { aiPlannerRequests.delete(id); resolve(null); }
+          });
+        }
+        return new Promise(resolve => setTimeout(() => {
+          try { resolve(planner.plan(snapshot, 'easy')); }
+          catch { resolve(null); }
+        }, 0));
+      }
+
+      function aiPlanToAim(unit, result) {
+        if (!result || !Number.isFinite(result.dx) || !Number.isFinite(result.dy) ||
+            !Number.isFinite(result.power)) return null;
+        return { aimPoint: { x: unit.x - result.dx * CONFIG.directionPullDistance,
+          y: unit.y - result.dy * CONFIG.directionPullDistance }, power: result.power,
+          tactics: result.tactics || [], trigger: result.trigger || null };
+      }
+
+      function aiApplyPlannedSetup(action, unit) {
+        const trigger = action.plan?.trigger;
+        if (trigger && remainingTriggerPlacements(unit.owner) > 0 && canPlaceItemTrigger(trigger)) {
+          const type = ITEM_TRIGGERS.find(item => item.id === trigger.type);
+          if (type) {
+            state.triggers.push({ entityKind: ENTITY_KIND.TRIGGER,
+              id: `ai-trigger-${turns.globalTurn}`, type, owner: unit.owner,
+              x: trigger.x, y: trigger.y, radius: CONFIG.unitRadius * .5 });
+            spendTriggerPlacement(unit.owner);
+            emitGameFeedback('drop', trigger, '트리거 배치', PLAYER[unit.owner].color);
+          }
+        }
+        action.scheduledTactics = [];
+        for (const tactic of action.plan?.tactics || []) {
+          if (tactic.at > 0) { action.scheduledTactics.push({ ...tactic }); continue; }
+          const target = state.units.find(item => item.id === (tactic.targetId || unit.id));
+          const card = state.hands[unit.owner].find(item => item.id === tactic.card);
+          if (target && card) useCard(card.instanceId, unit.owner, target);
+        }
+        updateHud();
+      }
+
+      function aiLevel() { return AI_LEVELS[state.aiDifficulty] || AI_LEVELS.normal; }
+      function aiCanUseCard(id) { return aiLevel().cards.includes(id); }
+
+      function aiPlayerName() {
+        if (guestProfile?.name) return guestProfile.name;
+        if (!guestAiNickname) guestAiNickname = `방랑자 ${1000 + Math.floor(Math.random() * 9000)}`;
+        return guestAiNickname;
+      }
+
+      function selectAiOpponent(difficulty) {
+        selectedAiDifficulty = Object.hasOwn(AI_LEVELS, difficulty) ? difficulty : null;
+        aiOpponentGrid.classList.toggle('has-selection', Boolean(selectedAiDifficulty));
+        aiOpponentButtons.forEach(button => {
+          const id = button.dataset.aiOpponent;
+          const selected = id === selectedAiDifficulty;
+          button.classList.toggle('selected', selected);
+          button.setAttribute('aria-pressed', String(selected));
+          button.querySelector('.ai-skulls').replaceChildren(...Array.from({length: selected ? ['easy', 'normal', 'hard'].indexOf(id) + 1 : 0}, () => {
+            const skull = document.createElement('span');
+            skull.textContent = '☠';
+            return skull;
+          }));
+          const frame = button.querySelector('.ai-portrait-frame');
+          const portrait = AI_LEVELS[id]?.portrait;
+          if (portrait && !frame.querySelector('img')) {
+            const image = document.createElement('img');
+            image.src = portrait;
+            image.alt = '';
+            frame.append(image);
+          }
+        });
+        const selected = selectedAiDifficulty && AI_LEVELS[selectedAiDifficulty];
+        aiOpponentDetail.classList.toggle('has-selection', Boolean(selected));
+        aiOpponentDetailName.textContent = selected?.name || '';
+        aiOpponentDetailDescription.textContent = selected?.description || '';
+        startAiButton.disabled = !selected;
+      }
+
+      function aiPredictShot(unit, dx, dy, power) {
+        const speed = Math.max(35, Math.min(CONFIG.maxLaunchSpeed, CONFIG.maxPullDistance * power * CONFIG.launchScale)) *
+          heroRule(unit.owner, 'powerScale', 1);
+        const length = Math.hypot(dx, dy) || 1;
+        const friction = Math.min(.95, Math.max(.001, unit.frictionAtPosition()));
+        const drag = Math.pow(1 - friction, 60 / 40);
+        const obstacles = state.units.filter(item => item !== unit && item.isOnTable && item.status !== 'ready');
+        const walls = state.currentMap.walls ? wallSegments() : [];
+        let x = unit.x, y = unit.y, vx = speed * dx / length, vy = speed * dy / length;
+        let hit = null, blocked = false, trigger = false;
+        for (let step = 0; step < 500; step += 1) {
+          x += vx / 40; y += vy / 40; vx *= drag; vy *= drag;
+          if (x < TABLE.left - unit.radius || x > TABLE.right + unit.radius ||
+              y < TABLE.top - unit.radius || y > TABLE.bottom + unit.radius) break;
+          if (!hit) hit = obstacles.find(item => !isCollisionPhased(item) &&
+            Math.hypot(x - item.x, y - item.y) < unit.radius + item.radius);
+          if (hit) break;
+          if (walls.some(wall => x + unit.radius > wall.x && x - unit.radius < wall.x + wall.width &&
+              y + unit.radius > wall.y && y - unit.radius < wall.y + wall.height) ||
+              state.bricks.some(brick => Math.abs(x - brick.x) < unit.radius + brick.width / 2 &&
+                Math.abs(y - brick.y) < unit.radius + brick.height / 2)) { blocked = true; break; }
+          if (state.triggers.some(item => Math.hypot(x - item.x, y - item.y) < unit.radius + item.radius)) trigger = true;
+          if (Math.hypot(vx, vy) < CONFIG.stopSpeed) break;
+        }
+        return { x, y, hit, blocked, trigger };
+      }
+
+      function aiShotPlan(unit, ammo = false) {
+        const enemies = state.units.filter(item => item.owner !== unit.owner && item.isOnTable && item.status !== 'ready');
+        if (ammo) {
+          const target = [...enemies].sort((a, b) => a.x - b.x)[0] ||
+            { x: TABLE.goalX + 100, y: (TABLE.top + TABLE.bottom) / 2 };
+          const dx = target.x - unit.x, dy = target.y - unit.y;
+          const distance = Math.hypot(dx, dy) || 1;
+          const pull = Math.min(CONFIG.maxPullDistance, Math.max(105, distance / CONFIG.bulletSpeedMultiplier / CONFIG.launchScale));
+          return { aimPoint: { x: unit.x - dx / distance * pull, y: unit.y - dy / distance * pull }, power: 1 };
+        }
+        const level = aiLevel();
+        const targets = [];
+        for (let i = 0; i < level.lanes; i += 1) {
+          targets.push({ x: TABLE.goalX + unit.radius + 45 + Math.random() * 155,
+            y: TABLE.top + unit.radius + 32 + (TABLE.bottom - TABLE.top - 2 * (unit.radius + 32)) *
+              (i + .15 + Math.random() * .7) / level.lanes });
+        }
+        for (const enemy of enemies) targets.push({ x: enemy.x, y: enemy.y });
+        let best = null;
+        for (const target of targets) {
+          const dx = target.x - unit.x, dy = target.y - unit.y;
+          const distance = Math.hypot(dx, dy) || 1;
+          const friction = Math.max(.001, unit.frictionAtPosition());
+          const basePower = distance * -60 * Math.log(Math.max(.001, 1 - friction)) /
+            (CONFIG.maxPullDistance * CONFIG.launchScale * heroRule(unit.owner, 'powerScale', 1));
+          for (const offset of level.offsets) {
+            const power = Math.max(.06, Math.min(1, basePower * offset));
+            const result = aiPredictShot(unit, dx, dy, power);
+            const onTable = result.x >= TABLE.left + unit.radius && result.x <= TABLE.right - unit.radius &&
+              result.y >= TABLE.top + unit.radius && result.y <= TABLE.bottom - unit.radius;
+            const placement = onTable ? Math.max(0, 100 * (1 - (result.x - TABLE.goalX) / (TABLE.right - TABLE.goalX))) : -90;
+            const hitValue = result.hit ? (result.hit.owner === unit.owner ? -48 :
+              (state.aiStyle === 'attacker' ? 55 : 30) + (TABLE.right - result.hit.x) / 45) : 0;
+            const score = placement + hitValue + (result.trigger ? 12 : 0) - (result.blocked ? 36 : 0) +
+              (state.aiStyle === 'defender' && onTable ? Math.min(12, (TABLE.right - result.x) / 70) : 0) +
+              (Math.random() - .5) * level.error * 180;
+            if (!best || score > best.score) best = { dx, dy, power, score };
+          }
+        }
+        const dx = best?.dx ?? -1, dy = best?.dy ?? 0;
+        const distance = Math.hypot(dx, dy) || 1;
+        return { aimPoint: { x: unit.x - dx / distance * CONFIG.directionPullDistance,
+          y: unit.y - dy / distance * CONFIG.directionPullDistance }, power: best?.power ?? .5 };
+      }
+
+      function aiPlaceTrigger() {
+        const owner = state.aiOwner;
+        if (remainingTriggerPlacements(owner) <= 0 || Math.random() > aiLevel().cardChance) return false;
+        const enemy = state.units.filter(item => item.owner !== owner && item.isOnTable && item.status !== 'ready')
+          .sort((a, b) => a.x - b.x)[0];
+        const typeId = state.aiStyle === 'attacker' ? 'pulse' : state.aiStyle === 'defender' ? 'guard' :
+          state.aiStyle === 'controller' ? 'blackhole' : 'hardening';
+        const type = ITEM_TRIGGERS.find(item => item.id === typeId);
+        for (let attempt = 0; attempt < 18; attempt += 1) {
+          const point = { x: Math.min(brickDropLimitX() - 30, Math.max(TABLE.left + 90,
+            (enemy?.x ?? TABLE.goalX + 210) + (Math.random() - .5) * 260)),
+          y: Math.max(TABLE.top + 55, Math.min(TABLE.bottom - 55,
+            (enemy?.y ?? (TABLE.top + TABLE.bottom) / 2) + (Math.random() - .5) * 240)) };
+          if (!canPlaceItemTrigger(point)) continue;
+          state.triggers.push({ entityKind: ENTITY_KIND.TRIGGER, id: `ai-trigger-${turns.globalTurn}-${attempt}`,
+            type, owner, ...point, radius: CONFIG.unitRadius * .5 });
+          spendTriggerPlacement(owner);
+          emitGameFeedback('drop', point, '트리거 배치', PLAYER[owner].color);
+          updateHud();
+          return true;
+        }
+        return false;
+      }
+
+      function aiPlaceBrick() {
+        const owner = state.aiOwner;
+        const card = aiCanUseCard('brick') && state.hands[owner].find(item => item.id === 'brick');
+        const enemies = state.units.filter(item => item.owner !== owner && item.isOnTable && item.status !== 'ready');
+        if (!card || !enemies.length || Math.random() > aiLevel().cardChance *
+            (state.aiStyle === 'controller' ? .8 : .35)) return false;
+        const enemy = enemies.sort((a, b) => a.x - b.x)[0];
+        for (const offset of [-85, 85, -135, 135]) {
+          const point = { x: Math.min(brickDropLimitX() - 15, enemy.x + 100),
+            y: Math.max(TABLE.top + 35, Math.min(TABLE.bottom - 35, enemy.y + offset)) };
+          if (!canPlaceBrick(point)) continue;
+          state.bricks.push(new BrickUnit({ ...point, owner }));
+          state.hands[owner].splice(state.hands[owner].indexOf(card), 1);
+          emitGameFeedback('drop', point, card.name, PLAYER[owner].color);
+          renderHands();
+          updateHud();
+          return true;
+        }
+        return false;
+      }
+
+      function aiUsePreparationCard(unit) {
+        if (Math.random() > aiLevel().cardChance) return false;
+        const enemies = state.units.filter(item => item.owner !== unit.owner && item.isOnTable && item.status !== 'ready');
+        const crowded = enemies.some(item => unit.x - item.x > 15 &&
+          Math.hypot(item.x - unit.x, item.y - unit.y) < BLACK_HOLE.range * .85);
+        const options = state.aiStyle === 'attacker' ? ['bluffing', 'blackhole', 'pulse', 'guard'] :
+          state.aiStyle === 'defender' ? ['guard', 'bluffing', 'pulse'] :
+          state.aiStyle === 'controller' ? ['bluffing', 'pulse', 'guard'] : ['guard', 'bluffing', 'pulse'];
+        for (const id of options) {
+          if (!aiCanUseCard(id) || id === 'blackhole' && !crowded) continue;
+          const card = state.hands[state.aiOwner].find(item => item.id === id);
+          if (card && useCard(card.instanceId, state.aiOwner, unit)) return true;
+        }
+        return false;
+      }
+
+      function aiUseFollowUpCard(unit) {
+        if (Math.random() > aiLevel().cardChance) return false;
+        const owner = state.aiOwner;
+        const enemies = state.units.filter(item => item.owner !== owner && item.isOnTable && item.status !== 'ready');
+        const allies = state.units.filter(item => item.owner === owner && item.isOnTable && item.status === 'resting');
+        const weak = [...allies].sort((a, b) => b.x - a.x)[0];
+        const strong = [...allies].sort((a, b) => a.x - b.x)[0];
+        const choices = [
+          ['escape', weak && weak.x > TABLE.right - 100 ? weak : null],
+          ['pulse', allies.find(item => enemies.some(enemy => Math.hypot(item.x - enemy.x, item.y - enemy.y) < PULSE_RANGE * .85))],
+          ['blackhole', allies.find(item => enemies.some(enemy => Math.hypot(item.x - enemy.x, item.y - enemy.y) < BLACK_HOLE.range))],
+          ['hardening', strong && strong.x < TABLE.goalX + 240 ? strong : null],
+          ['guard', strong],
+          ['ammo', enemies.length ? unit : null],
+          ['reposition', weak && weak.x > TABLE.goalX + 330 ? weak : null]
+        ];
+        if (state.aiStyle === 'attacker') choices.sort((a, b) => ['ammo', 'pulse', 'blackhole'].indexOf(a[0]) === -1 ? 1 :
+          ['ammo', 'pulse', 'blackhole'].indexOf(b[0]) === -1 ? -1 : 0);
+        for (const [id, target] of choices) {
+          if (!target || !aiCanUseCard(id)) continue;
+          const card = state.hands[owner].find(item => item.id === id);
+          if (card && useCard(card.instanceId, owner, target)) return true;
+        }
+        return false;
+      }
+
+      function aiUseInFlightCard() {
+        const owner = state.aiOwner;
+        const hand = state.hands[owner];
+        const moving = state.units.filter(unit => unit.owner === owner && unit.status === 'sliding');
+        const enemies = state.units.filter(unit => unit.owner !== owner && unit.isOnTable && unit.status !== 'ready');
+        for (const unit of moving) {
+          const friction = Math.max(.001, unit.frictionAtPosition());
+          const travel = Math.hypot(unit.vx, unit.vy) / (-60 * Math.log(1 - friction));
+          const projectedX = unit.x + unit.vx / Math.max(1, Math.hypot(unit.vx, unit.vy)) * travel;
+          if (projectedX < TABLE.left + unit.radius * 1.5) {
+            const card = hand.find(item => item.id === 'hardening' && aiCanUseCard(item.id));
+            if (card && useCard(card.instanceId, owner, unit)) return true;
+          }
+          if (state.aiDifficulty !== 'easy') {
+            const target = enemies.find(enemy => unit.x - enemy.x > 18 &&
+              Math.hypot(unit.x - enemy.x, unit.y - enemy.y) < BLACK_HOLE.range * .85);
+            const card = target && hand.find(item => item.id === 'blackhole' && aiCanUseCard(item.id));
+            if (card && useCard(card.instanceId, owner, unit)) return true;
+          }
+          if (state.aiDifficulty === 'hard' && enemies.some(enemy =>
+            Math.hypot(unit.x - enemy.x, unit.y - enemy.y) < unit.radius + enemy.radius + 80 &&
+            enemy.ability?.guard)) {
+            const card = hand.find(item => item.id === 'bluffing' && aiCanUseCard(item.id));
+            if (card && useCard(card.instanceId, owner, unit)) return true;
+          }
+        }
+        return false;
+      }
+
+      function updateAiPlayer(timestamp) {
+        if (!state.aiMode || onlineSession?.started || state.tutorial || turns.isComplete || turns.playerIndex !== state.aiOwner) {
+          state.aiAction = null;
+          return;
+        }
+        if (['intro', 'map-select', 'hero-select', 'dealing', 'trigger-select', 'finished'].includes(state.phase)) return;
+        if (!state.aiAction || state.aiAction.turn !== turns.globalTurn) {
+          state.aiAction = { turn: turns.globalTurn, deadline: timestamp + 420, prepared: false,
+            followUp: false, plan: null, planPending: false, planStartedAt: 0,
+            meterDeadline: 0, inFlightCardAt: 0, scheduledTactics: [], launchedAt: 0,
+            planApplied: false };
+        }
+        const action = state.aiAction;
+        if (timestamp < action.deadline) return;
+        const unit = activeLaunchUnit();
+        if (['aiming', 'reposition'].includes(state.phase) && unit) {
+          if (state.repositionMode === 'ammo') {
+            const plan = aiShotPlan(unit, true);
+            state.aiming = true;
+            state.aimPoint = plan.aimPoint;
+            launchCurrentUnit();
+            action.deadline = timestamp + 700;
+            return;
+          }
+          if (!action.prepared && state.phase === 'aiming') {
+            action.prepared = true;
+            aiPlaceBrick();
+          }
+          if (!state.powerMeter) {
+            if (!globalThis.UCCAiPlanner) {
+              action.plan = aiShotPlan(unit);
+              action.planSource = 'fallback';
+            }
+            if (!action.plan && !action.planPending) {
+              action.planPending = true;
+              action.planStartedAt = timestamp;
+              requestAiShotPlan(unit).then(result => {
+                if (state.aiAction !== action || state.powerMeter || !result) return;
+                action.plan = aiPlanToAim(unit, result);
+                if (action.plan) action.planSource = 'simulation';
+                action.planPending = false;
+              });
+              action.deadline = timestamp + 60;
+              return;
+            }
+            if (!action.plan && timestamp - action.planStartedAt < 1600) {
+              action.deadline = timestamp + 60;
+              return;
+            }
+            if (!action.plan) {
+              action.plan = aiShotPlan(unit);
+              action.planSource = 'fallback';
+            }
+            if (!action.planApplied) {
+              action.planApplied = true;
+              if (action.planSource === 'simulation') aiApplyPlannedSetup(action, unit);
+              else { aiPlaceTrigger(); aiUsePreparationCard(unit); }
+            }
+            startPowerMeter();
+            action.meterDeadline = timestamp + (state.aiDifficulty === 'easy' ? 1600 : 2900);
+            action.deadline = timestamp + 160;
+            return;
+          }
+          if (state.powerMeter.stage === 'spinning') {
+            const target = action.plan?.power ?? .5;
+            if (Math.abs(state.powerMeter.value - target) > aiLevel().meterTolerance &&
+                timestamp < action.meterDeadline) {
+              action.deadline = timestamp + 60;
+              return;
+            }
+            lockPowerMeter();
+            action.deadline = timestamp + 430;
+            return;
+          }
+          if (state.powerMeter.stage === 'locked') {
+            const plan = action.plan || aiShotPlan(unit);
+            state.aiming = true;
+            state.aimPoint = plan.aimPoint;
+            launchCurrentUnit();
+            action.launchedAt = timestamp;
+            action.plan = null;
+            action.deadline = timestamp + 700;
+          }
+          return;
+        }
+        if (state.phase === 'sliding' && timestamp >= action.inFlightCardAt) {
+          if (action.planSource === 'simulation') {
+            const elapsed = (timestamp - action.launchedAt) / 1000 * state.gameSpeed;
+            for (const tactic of action.scheduledTactics.filter(item => item.at <= elapsed)) {
+              const target = state.units.find(item => item.id === (tactic.targetId || turns.currentUnit?.id));
+              const card = state.hands[state.aiOwner].find(item => item.id === tactic.card);
+              if (target && card) useCard(card.instanceId, state.aiOwner, target);
+            }
+            action.scheduledTactics = action.scheduledTactics.filter(item => item.at > elapsed);
+            action.inFlightCardAt = timestamp + 50;
+          } else {
+            action.inFlightCardAt = timestamp + 450;
+            aiUseInFlightCard();
+          }
+          return;
+        }
+        if (state.phase === 'turn-ready' && turns.currentUnit) {
+          if (!action.followUp) {
+            action.followUp = true;
+            if (aiUseFollowUpCard(turns.currentUnit)) {
+              if (state.phase === 'reposition') {
+                action.plan = null;
+                action.planPending = false;
+                action.planApplied = false;
+                action.scheduledTactics = [];
+              }
+              action.deadline = timestamp + 520;
+              return;
+            }
+          }
+          endTurn();
+        }
+      }
+
       function resolveCollisions() {
         const active = state.units.filter(unit => unit.status === 'sliding' || unit.status === 'resting');
         for (let i = 0; i < active.length; i += 1) {
@@ -2797,6 +3406,24 @@
         resolveGuardCollisions();
         const objectsMoving = state.units.some(unit => unit.status === 'sliding') || state.bullets.length > 0 ||
           state.bricks.some(brick => Math.hypot(brick.vx, brick.vy) > 5);
+        if (state.phase === 'reposition' &&
+            (!state.repositionUnit || state.repositionUnit.status === 'fallen' || !state.units.includes(state.repositionUnit))) {
+          const lostUnit = state.repositionUnit;
+          if (lostUnit) {
+            lostUnit.activeSpecial = null;
+            lostUnit.relaunchAvailable = false;
+          }
+          state.repositionUnit = null;
+          state.repositionMode = null;
+          state.powerMeter = null;
+          state.aiming = false;
+          state.aimPoint = null;
+          state.aimTension = 0;
+          if (localAimPointerId !== null && canvas.hasPointerCapture?.(localAimPointerId)) canvas.releasePointerCapture(localAimPointerId);
+          localAimPointerId = null;
+          state.phase = objectsMoving ? 'sliding' : turns.currentUnit?.status === 'ready' ? 'aiming' : 'turn-ready';
+          aimOverlay.style.display = 'none';
+        }
         if (state.phase === 'turn-ready' && objectsMoving) state.phase = 'sliding';
         if (state.phase === 'sliding') {
           const moving = state.units.some(unit => unit.status === 'sliding') || state.bullets.length > 0 ||
@@ -2970,7 +3597,8 @@
         document.body.append(ghost);
         source?.classList.add('dragging');
         state.cardDrag = { id: card.instanceId, type: card.id, owner, ghost, source, point: null,
-          startX: event.clientX, startY: event.clientY, pointerType: event.pointerType };
+          startX: event.clientX, startY: event.clientY, pointerType: event.pointerType,
+          pointerId: event.pointerId, moved: false };
         moveCardGhost(event);
       }
 
@@ -2996,6 +3624,8 @@
       function moveCardGhost(event) {
         if (!state.cardDrag) return;
         const drag = state.cardDrag;
+        if (drag.pointerId !== undefined && event.pointerId !== drag.pointerId) return;
+        if (drag.startX !== undefined && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) >= 10) drag.moved = true;
         drag.ghost.style.left = `${event.clientX}px`;
         drag.ghost.style.top = `${event.clientY}px`;
         const rect = canvas.getBoundingClientRect();
@@ -3026,10 +3656,13 @@
       function finishCardDrag(event) {
         if (!state.cardDrag) return;
         const drag = state.cardDrag;
+        if (drag.pointerId !== undefined && event.pointerId !== drag.pointerId) return;
+        const moved = drag.moved || (drag.startX !== undefined &&
+          Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) >= 10);
         const rect = canvas.getBoundingClientRect();
         const insideCanvas = event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
         let triggerDrop = null;
-        if (insideCanvas && drag.owner === turns.playerIndex && turns.currentUnit) {
+        if ((drag.type === 'trigger-placement' || moved) && insideCanvas && drag.owner === turns.playerIndex && turns.currentUnit) {
           const point = eventPoint(event);
           if (drag.type === 'trigger-placement') {
             if (remainingTriggerPlacements(drag.owner) > 0 && canPlaceItemTrigger(point)) triggerDrop = point;
@@ -3720,13 +4353,18 @@
           browseRoomsScreen: '참가할 공개 방을 선택하세요.',
           joinRoomScreen: '초대 코드를 입력하세요.',
           localPlayScreen: '두 플레이어의 이름을 정하세요.',
+          aiPlayScreen: '',
           createRoomScreen: '방 공개 여부와 비밀번호를 설정하세요.'
         };
         startScreenDescription.textContent = descriptions[screenId] || '';
+        startScreenDescription.hidden = !startScreenDescription.textContent;
+        startOverlay.querySelector('.dialog').classList.toggle('ai-selection-dialog', screenId === 'aiPlayScreen');
       }
 
       function openOnlineLobby() {
         clearInterval(publicRoomRefreshTimer);
+        state.aiMode = false;
+        state.aiAction = null;
         matchFameReward.hidden = true;
         state.mapSelectionOrigin = 'online';
         state.phase = 'map-select';
@@ -4566,7 +5204,8 @@
       }
 
       function canControlPlayer(owner) {
-        return !onlineSession?.started || onlineSession.playerIndex === owner;
+        if (!onlineSession?.started) return !(state.aiMode && owner === state.aiOwner);
+        return onlineSession.playerIndex === owner;
       }
 
       function sendOnlineAction(action) {
@@ -4620,6 +5259,8 @@
         renderResultRows(result.rows || []);
         replayButton.hidden = !result.matchOver;
         replayButton.textContent = '방 나가기';
+        resultLobbyButton.hidden = true;
+        resultActions.classList.remove('two-buttons');
         resultOverlay.hidden = false;
       }
 
@@ -4696,10 +5337,12 @@
         mapIndicator.textContent = state.currentMap.name;
         mapSelectOverlay.hidden = true;
         dealOverlay.hidden = true;
-        startHeroSelection('local');
+        startHeroSelection(state.aiMode ? 'ai' : 'local');
       }
 
       function startLocalGame() {
+        state.aiMode = false;
+        state.aiAction = null;
         PLAYER[0].name = localPlayerNameInputs[0].value.trim().slice(0, 20) || '플레이어 1';
         PLAYER[1].name = localPlayerNameInputs[1].value.trim().slice(0, 20) || '플레이어 2';
         const localLevel = guestProfile?.level || 1;
@@ -4710,8 +5353,54 @@
         openMapSelection('start');
       }
 
+      function startAiGame() {
+        if (!selectedAiDifficulty) return;
+        state.aiMode = true;
+        state.aiOwner = 1;
+        state.aiDifficulty = selectedAiDifficulty;
+        state.aiStyle = ['balanced', 'attacker', 'controller', 'defender'][Math.floor(Math.random() * 4)];
+        state.aiMatchId = null;
+        state.aiMatchPromise = null;
+        state.aiMatchToken = null;
+        state.aiAction = null;
+        PLAYER[0].name = aiPlayerName();
+        PLAYER[1].name = aiLevel().name;
+        const localLevel = guestProfile?.level || 1;
+        state.playerLevels = [localLevel, state.aiDifficulty === 'hard' ? 2 : 1];
+        const aiDeck = state.aiDifficulty === 'easy'
+          ? [...AI_LEVELS.easy.cards, 'hardening']
+          : state.aiDifficulty === 'hard' ? [...DEFAULT_DECK_IDS, 'escape'] : [...DEFAULT_DECK_IDS];
+        if (state.aiDifficulty === 'hard') {
+          for (let index = aiDeck.length - 1; index > 0; index -= 1) {
+            const pick = Math.floor(Math.random() * (index + 1));
+            [aiDeck[index], aiDeck[pick]] = [aiDeck[pick], aiDeck[index]];
+          }
+          aiDeck.length = 8;
+        }
+        state.playerDecks = [
+          aiDeckSelect.value === '-1' ? [...DEFAULT_DECK_IDS] : selectedDeck(Number(aiDeckSelect.value), localLevel),
+          aiDeck
+        ];
+        updatePlayerNames();
+        openMapSelection('ai');
+      }
+
       function dealCards() {
         state.phase = 'dealing';
+        if (state.aiMode && guestProfile?.username && guestToken && !state.aiMatchPromise) {
+          const token = guestToken;
+          state.aiMatchToken = token;
+          const matchPromise = fetch('/api/ai-matches', {
+            method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ difficulty: state.aiDifficulty })
+          }).then(async response => {
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'AI 경기 기록을 시작하지 못했습니다.');
+            if (state.aiMatchPromise === matchPromise) state.aiMatchId = data.matchId;
+            return data.matchId;
+          }).catch(error => { console.warn('AI match registration failed:', error); return null; });
+          state.aiMatchPromise = matchPromise;
+        }
         hideCardInspector();
         turns.reset(roundStartingPlayer());
         state.heroCardDraws = [0, 0];
@@ -4758,8 +5447,8 @@
       }
 
       function refreshLocalDeckSelects() {
-        localDeckSelects.forEach((select, owner) => {
-          const previous = select.value || (owner === 0 ? String(activeDeckPreset) : '-1');
+        [...localDeckSelects, aiDeckSelect].forEach((select, owner) => {
+          const previous = select.value || (owner === 0 || select === aiDeckSelect ? String(activeDeckPreset) : '-1');
           const choices = [{ label: '기본 덱', value: '-1' }];
           savedDecks.forEach((cards, index) => {
             if (deckIsValid(cards)) choices.push({ label: `가방 ${index + 1}`, value: String(index) });
@@ -4942,8 +5631,18 @@
       }
 
       function hideCardInspector() {
+        clearTimeout(cardInspectTimer);
+        cardInspectTimer = null;
         cardInspector.hidden = true;
         inspectedCardElement = null;
+      }
+
+      function scheduleCardInspector(element) {
+        hideCardInspector();
+        cardInspectTimer = setTimeout(() => {
+          cardInspectTimer = null;
+          if (element.isConnected !== false) showCardInspector(element);
+        }, 100);
       }
 
       function showCardInspector(element) {
@@ -5006,7 +5705,7 @@
             element.setAttribute('aria-label', concealed ? '상대 비공개 카드' : `${card.name} 카드`);
             if (!concealed) {
               element.addEventListener('pointerdown', beginCardDrag);
-              element.addEventListener('pointerenter', event => { if (event.pointerType !== 'touch') showCardInspector(element); });
+              element.addEventListener('pointerenter', event => { if (event.pointerType !== 'touch') scheduleCardInspector(element); });
               element.addEventListener('focus', () => showCardInspector(element));
               element.addEventListener('pointerleave', event => {
                 if (event.pointerType === 'touch') return;
@@ -5048,7 +5747,64 @@
           detail: [result.fallBonus ? `낙사 ${result.fallBonus}점` : '', result.escapeBonus ? `탈출 +${result.escapeBonus}점` : ''].filter(Boolean).join(' · ')
         })));
         createConfetti(winner === null ? '#e5b35a' : PLAYER[winner].color);
+        replayButton.hidden = false;
+        replayButton.textContent = '다시 플레이';
+        resultLobbyButton.hidden = !state.aiMode;
+        resultActions.classList.toggle('two-buttons', state.aiMode);
         resultOverlay.hidden = false;
+        if (state.aiMode && winner === 0 && guestProfile?.username) void completeAiVictory(scores);
+      }
+
+      async function completeAiVictory(scores) {
+        const matchPromise = state.aiMatchPromise;
+        const token = state.aiMatchToken;
+        const matchId = await matchPromise;
+        if (!matchId) {
+          if (state.aiMatchPromise === matchPromise && state.aiMode && !resultOverlay.hidden) {
+            matchFameReward.textContent = 'AI 대전 명성치를 기록하지 못했습니다. 서버 연결을 확인하세요.';
+            matchFameReward.hidden = false;
+          }
+          return;
+        }
+        for (let attempt = 0; attempt < 6; attempt += 1) {
+          try {
+            const response = await fetch(`/api/ai-matches/${matchId}/complete`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+              body: JSON.stringify({ scores: scores.map(result => result.score) })
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || '명성치를 기록하지 못했습니다.');
+            if (guestToken === token) {
+              if (state.aiMatchId === matchId && state.aiMode && !resultOverlay.hidden)
+                showMatchFameAward(data.award, data.persistent);
+              else if (state.phase === 'intro') renderGuestProfile(data.award.profile, data.persistent);
+              else guestProfile = data.award.profile;
+            }
+            return;
+          } catch (error) {
+            if (attempt < 5) await new Promise(resolve => setTimeout(resolve, 4000));
+            else if (state.aiMatchId === matchId && state.aiMode && !resultOverlay.hidden) {
+              matchFameReward.textContent = `명성치 기록을 확인하지 못했습니다 · ${error.message}`;
+              matchFameReward.hidden = false;
+            }
+          }
+        }
+      }
+
+      function forfeitAiGame() {
+        if (!state.aiMode || state.phase === 'intro' || state.phase === 'finished') return;
+        const matchPromise = state.aiMatchPromise;
+        const token = state.aiMatchToken;
+        returnToHome();
+        if (matchPromise && token) void matchPromise.then(async matchId => {
+          if (!matchId) return;
+          try {
+            const response = await fetch(`/api/ai-matches/${matchId}/forfeit`, {
+              method: 'POST', headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!response.ok) console.warn('AI match forfeit was not recorded:', response.status);
+          } catch (error) { console.warn('AI match forfeit failed:', error); }
+        });
       }
 
       function finishOnlineRound(scores, winner) {
@@ -5694,8 +6450,9 @@
         if (pendingHeroTransition && timestamp >= pendingHeroTransition.deadline) completeHeroTransition(pendingHeroTransition);
         updateTurnTimer();
         updateHeroSelection();
+        updateAiPlayer(timestamp);
         const onlineReplica = onlineSession?.started && onlineSession.role === 'challenger';
-        const tutorialPaused = state.tutorial && !learningUI.tutorialSettingsOverlay.hidden;
+        const tutorialPaused = state.tutorial && !gameSettingsOverlay.hidden;
         if (!onlineReplica && !tutorialPaused && !['intro', 'map-select', 'hero-select', 'dealing', 'trigger-select', 'finished'].includes(state.phase)) {
           // Bound catch-up after an OS freeze; normal hidden-tab ticks retain all elapsed time.
           simulationRemainder += Math.min(elapsed, 1) * state.gameSpeed;
@@ -5883,7 +6640,10 @@
       }
       accountModeButton.addEventListener('click', () => setAccountMode(!registeringAccount));
       document.querySelector('#guestPlayButton').addEventListener('click', () => showStartScreen('guestWarningScreen'));
-      document.querySelector('#confirmGuestButton').addEventListener('click', () => showStartScreen('homeScreen'));
+      document.querySelector('#confirmGuestButton').addEventListener('click', () => {
+        guestAiNickname = null;
+        showStartScreen('homeScreen');
+      });
       document.querySelector('#cancelGuestButton').addEventListener('click', () => showAccountScreen());
       accountForm.addEventListener('submit', async event => {
         event.preventDefault();
@@ -5961,28 +6721,17 @@
         if (state.tutorial.index === tutorialLessons().length - 1) returnToHome();
         else loadTutorialLesson(state.tutorial.index + 1);
       });
-      learningUI.tutorialSettingsButton.addEventListener('click', () => {
-        if (!state.tutorial) return;
-        cancelCardDrag();
-        localAimPointerId = null;
-        state.aiming = false;
-        state.aimPoint = null;
-        learningUI.tutorialSettingsOverlay.hidden = false;
-        document.querySelector('#tutorialResumeButton').focus();
-      });
-      document.querySelector('#tutorialResumeButton').addEventListener('click', () => {
-        learningUI.tutorialSettingsOverlay.hidden = true;
-        learningUI.tutorialSettingsButton.focus();
-      });
       document.addEventListener('keydown', event => {
         if (event.key !== 'Escape') return;
         if (!learningUI.catalogOverlay.hidden) returnToHome();
-        else if (state.tutorial && !learningUI.tutorialSettingsOverlay.hidden) {
-          learningUI.tutorialSettingsOverlay.hidden = true;
-          learningUI.tutorialSettingsButton.focus();
+        else if (!gameSettingsOverlay.hidden) {
+          gameSettingsOverlay.hidden = true;
+          document.querySelector('#gameSettingsButton').focus();
         }
       });
       startButton.addEventListener('click', startLocalGame);
+      startAiButton.addEventListener('click', startAiGame);
+      aiOpponentButtons.forEach(button => button.addEventListener('click', () => selectAiOpponent(button.dataset.aiOpponent)));
       browseRoomsButton.addEventListener('click', async () => {
         if (await requireAccount('browseRoomsScreen')) refreshPublicRooms();
       });
@@ -5997,6 +6746,14 @@
         if (deckIsValid(savedDecks[activeDeckPreset])) localDeckSelects[0].value = String(activeDeckPreset);
         showStartScreen('localPlayScreen');
         localPlayerNameInputs[0].focus();
+      });
+      document.querySelector('#openAiScreenButton').addEventListener('click', () => {
+        refreshLocalDeckSelects();
+        aiPlayerIdentity.textContent = `도전자 · ${aiPlayerName()}`;
+        selectAiOpponent(null);
+        if (deckIsValid(savedDecks[activeDeckPreset])) aiDeckSelect.value = String(activeDeckPreset);
+        showStartScreen('aiPlayScreen');
+        aiOpponentButtons[0]?.focus();
       });
       createRoomButton.addEventListener('click', async () => {
         if (!await requireAccount('createRoomScreen')) return;
@@ -6042,6 +6799,7 @@
           state.phase = 'intro';
         } else openMapSelection('result');
       });
+      resultLobbyButton.addEventListener('click', returnToHome);
       confirmMapButton.addEventListener('click', startSelectedMap);
       cancelMapButton.addEventListener('click', cancelMapSelection);
       triggerToolButtons.forEach(button => button.addEventListener('pointerdown', beginTriggerPlacementDrag));
@@ -6068,11 +6826,34 @@
         }
       });
       document.querySelector('#gameSettingsButton').addEventListener('click', () => {
+        if (state.tutorial) {
+          cancelCardDrag();
+          localAimPointerId = null;
+          state.aiming = false;
+          state.aimPoint = null;
+        }
+        gameSettingsTitle.textContent = state.tutorial ? '튜토리얼 설정' : '게임 설정';
+        tutorialSettingsActions.hidden = !state.tutorial;
+        aiForfeitActions.hidden = !state.aiMode || state.phase === 'finished';
+        aiForfeitConfirm.hidden = true;
+        aiForfeitButton.hidden = false;
         gameSettingsOverlay.hidden = false;
         musicVolume.focus();
       });
+      aiForfeitButton.addEventListener('click', () => {
+        aiForfeitButton.hidden = true;
+        aiForfeitConfirm.hidden = false;
+        document.querySelector('#aiForfeitCancelButton').focus();
+      });
+      document.querySelector('#aiForfeitCancelButton').addEventListener('click', () => {
+        aiForfeitConfirm.hidden = true;
+        aiForfeitButton.hidden = false;
+        aiForfeitButton.focus();
+      });
+      document.querySelector('#aiForfeitConfirmButton').addEventListener('click', forfeitAiGame);
       document.querySelector('#closeGameSettingsButton').addEventListener('click', () => {
         gameSettingsOverlay.hidden = true;
+        aiForfeitConfirm.hidden = true;
         document.querySelector('#gameSettingsButton').focus();
       });
       for (const [input, key, output] of [
@@ -6103,7 +6884,7 @@
         if (!cardInspector.contains(event.target) && !inspectedCardElement?.contains(event.target)) hideCardInspector();
       });
       window.addEventListener('resize', hideCardInspector);
-      window.addEventListener('scroll', hideCardInspector, true);
+      window.addEventListener('scroll', () => { if (!cardInspector.hidden) hideCardInspector(); }, true);
       document.addEventListener('visibilitychange', () => advanceGameClock(performance.now()));
       initializeGuestProfile().then(profile => {
         if (profile && !startOverlay.hidden && !document.querySelector('#accountScreen').hidden) showStartScreen('homeScreen');
