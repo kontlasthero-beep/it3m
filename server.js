@@ -86,8 +86,8 @@ function roomView(room) {
   return {
     code: room.code,
     status: room.status,
-    host: { name: room.host.name, mapId: room.host.mapId },
-    challenger: room.challenger ? { name: room.challenger.name, mapId: room.challenger.mapId } : null,
+    host: { name: room.host.name, level: room.host.level, mapId: room.host.mapId },
+    challenger: room.challenger ? { name: room.challenger.name, level: room.challenger.level, mapId: room.challenger.mapId } : null,
     seriesMaps: room.seriesMaps,
     matchId: room.matchId || null,
     snapshotRevision: room.snapshotRevision,
@@ -348,7 +348,7 @@ async function handleApi(request, response, url) {
     const token = crypto.randomBytes(24).toString('base64url');
     const room = {
       code,
-      host: { name: profile.profile.name, token, mapId: null, profileId: profile.internalId },
+      host: { name: profile.profile.name, level: profile.profile.level, token, mapId: null, profileId: profile.internalId },
       isPublic: data.isPublic === true,
       passwordHash: createPasswordHash(password),
       createdAt: Date.now(),
@@ -390,7 +390,7 @@ async function handleApi(request, response, url) {
     if (profile.internalId === room.host.profileId) return fail(response, 409, '자신이 만든 방에는 참가할 수 없습니다.');
     if (room.status !== 'waiting' || room.challenger) return fail(response, 409, '이미 다른 도전자가 참가한 방입니다.');
     const token = crypto.randomBytes(24).toString('base64url');
-    room.challenger = { name: profile.profile.name, token, mapId: null, profileId: profile.internalId };
+    room.challenger = { name: profile.profile.name, level: profile.profile.level, token, mapId: null, profileId: profile.internalId };
     room.status = 'choosing';
     broadcastRoom(room);
     return sendJson(response, 200, { code: room.code, token, role: 'challenger', room: roomView(room) });

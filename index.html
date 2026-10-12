@@ -439,6 +439,19 @@
     .catalog-entry .catalog-card-art { display: block; width: 96px; height: 72px; flex: 0 0 96px; border: 1px solid var(--line); border-radius: 3px; object-fit: cover; object-position: center; }
     .catalog-entry .catalog-card-art[data-card-id="reposition"] { object-position: center 18%; }
     .catalog-entry .catalog-card-art[data-card-id="bluffing"] { object-position: center 12%; transform: scale(1.08); }
+    .catalog-entry.locked-card header { position: relative; }
+    .catalog-entry.locked-card .catalog-card-art { filter: grayscale(1) blur(4px) brightness(.48); }
+    .catalog-lock {
+      position: absolute;
+      left: 48px;
+      top: 36px;
+      transform: translate(-50%, -50%);
+      color: #f4f0e6;
+      font-size: 30px;
+      line-height: 1;
+      text-shadow: 0 2px 8px #000;
+      pointer-events: none;
+    }
     .catalog-entry.hero-catalog-entry header { display: block; }
     .catalog-entry .catalog-portrait { display: block; width: 100%; height: clamp(160px, 20vw, 230px); margin-bottom: 10px; border: 1px solid var(--line); border-radius: 3px; object-fit: cover; object-position: center top; }
     .catalog-entry h3 { margin: 0; font-size: 17px; overflow-wrap: anywhere; }
@@ -968,6 +981,7 @@
           powerStart: { frequency: 280, endFrequency: 490, duration: .15, waveform: 'triangle', volume: .3 },
           powerLock: { frequency: 950, endFrequency: 590, duration: .14, waveform: 'square', volume: .25 },
           bluffing: { frequency: 720, endFrequency: 160, duration: .28, waveform: 'sine', volume: .34 },
+          escape: { frequency: 560, endFrequency: 1160, duration: .32, waveform: 'sine', volume: .38 },
           ammoFire: { frequency: 1500, endFrequency: 65, duration: .14, waveform: 'sawtooth', volume: .48 },
           hardening: { frequency: 330, endFrequency: 140, duration: .23, waveform: 'triangle', volume: .48 },
           guard: { frequency: 520, endFrequency: 1250, duration: .24, waveform: 'sine', volume: .4 },
@@ -1047,7 +1061,8 @@
         { id: 'brick', name: '구조물 투하' }, { id: 'brick', name: '구조물 투하' },
         { id: 'blackhole', name: '블랙홀 방출' }, { id: 'blackhole', name: '블랙홀 방출' },
         { id: 'ammo', name: '총알 장전' }, { id: 'ammo', name: '총알 장전' },
-        { id: 'bluffing', name: '속임수' }, { id: 'bluffing', name: '속임수' }
+        { id: 'bluffing', name: '속임수' }, { id: 'bluffing', name: '속임수' },
+        { id: 'escape', name: '탈출', unlockLevel: 2 }, { id: 'escape', name: '탈출', unlockLevel: 2 }
       ];
       const CARD_DESCRIPTIONS = {
         hardening: '스톤의 마찰력이 3배가 됩니다. 같은 카드 효과는 중첩되어 마찰력과 회색 코팅이 더 강해집니다.',
@@ -1057,7 +1072,8 @@
         brick: '시작선에서 충분히 떨어진 곳에 움직일 수 있는 벽돌 유닛을 배치합니다.',
         blackhole: '즉시 주변의 다른 스톤과 벽돌을 끌어당깁니다.',
         ammo: '자신의 스톤에 사용하면 해당 스톤을 드래그하여 총알을 발사할 수 있습니다. 총알은 강한 충돌 판정을 가지며 방호벽과 벽돌을 파괴합니다.',
-        bluffing: '다음 상대 턴이 종료될 때까지 해당 스톤의 충돌 판정이 사라집니다. 벽돌, 총알, 방호벽, 스톤, 맵 구조물을 통과하지만 방출과 블랙홀 방출의 영향은 받습니다.'
+        bluffing: '다음 상대 턴이 종료될 때까지 해당 스톤의 충돌 판정이 사라집니다. 벽돌, 총알, 방호벽, 스톤, 맵 구조물을 통과하지만 방출과 블랙홀 방출의 영향은 받습니다.',
+        escape: '자신의 스톤을 게임에서 제거하는 대신 10점을 획득합니다.'
       };
       const TURN_LIMIT_MS = 35_000;
       const CARD_DRAW_HOLD_MS = 1050;
@@ -1070,7 +1086,8 @@
         brick: { art: 'Card_illustration/Structure Drop.png', sound: 'drop' },
         blackhole: { art: 'Card_illustration/blackhole release.png', sound: 'blackhole' },
         ammo: { art: 'Card_illustration/Load.png', sound: 'ammoLoad' },
-        bluffing: { art: 'Card_illustration/Bluffing.png', sound: 'bluffing' }
+        bluffing: { art: 'Card_illustration/Bluffing.png', sound: 'bluffing' },
+        escape: { art: 'Card_illustration/Escape.png', sound: 'escape' }
       };
       const UNIT_EFFECTS = Object.freeze({
         hardening: { maxStacks: Infinity, frictionPerStack: 3 },
@@ -1091,11 +1108,14 @@
         brick: { color: '#c3d0ce', tip: '왼쪽 배치 가능 구역에서 경로를 막거나 충돌 각도를 만드세요. 벽돌도 밀려나고 총탄에 파괴됩니다. 점수는 없습니다.' },
         blackhole: { color: '#bd75f5', tip: '주변 아군도 함께 끌려옵니다. 시전한 스톤은 잠시 유체 상태가 되어 다른 스톤이 통과합니다.' },
         ammo: { color: '#ffe58a', tip: '빠른 총탄으로 방호벽 위성체나 벽돌을 제거하세요. 총탄은 마찰을 무시하며 구조물 맵의 벽에서 도탄됩니다.' },
-        bluffing: { color: '#bdc8e8', tip: '다음 상대 턴이 끝날 때까지 물리 충돌을 피하지만 충격파의 힘은 그대로 받습니다.' }
+        bluffing: { color: '#bdc8e8', tip: '다음 상대 턴이 끝날 때까지 물리 충돌을 피하지만 충격파의 힘은 그대로 받습니다.' },
+        escape: { color: '#e7e2d8', tip: '위험한 위치의 스톤을 제거해 확정 점수로 바꿉니다.' }
       };
 
       // Card and trigger lessons/catalog entries follow the gameplay registries automatically.
       function cardDefinitions() { return [...new Map(CARDS.map(card => [card.id, card])).values()]; }
+      function playerLevel(owner) { return Math.max(1, Number(state.playerLevels?.[owner]) || 1); }
+      function isCardUnlocked(card, owner) { return playerLevel(owner) >= (card.unlockLevel || 1); }
       function tutorialLessons() {
         return [
           { id: 'launch', title: '발사와 힘 조절', text: '스톤 아래 발사 버튼을 누른 뒤, 빨간 미터가 왕복할 때 결정 버튼으로 파워를 고르세요. 위쪽일수록 강해집니다. 그다음 스톤을 짧게 드래그해 방향을 정하고 놓으면 발사됩니다.', objective: '파워를 결정하고 파란 스톤을 발사하세요.', event: 'launch' },
@@ -1103,7 +1123,7 @@
           { id: 'collision', title: '상대 밀어내기', text: '빨간 스톤을 맞혀 위치를 바꿔보세요. 정면 충돌과 비스듬한 충돌의 결과가 다릅니다. 자신의 턴에 상대가 떨어지면 25점을 얻습니다.', objective: '빨간 스톤과 충돌하세요.', event: 'collision', targets: true },
           { id: 'turn', title: '턴과 타이머', text: '턴마다 35초가 주어지고 스톤이 움직이는 동안에는 시간이 멈춥니다. 테이블 위의 타이머에서 남은 시간을 확인하세요. 시간이 끝나면 이 연습에서는 턴을 넘기지 않고 타이머만 다시 시작합니다. 스톤을 발사하고 완전히 멈춘 다음 아래의 강조된 턴 종료 버튼을 눌러야 턴이 끝납니다.', objective: '발사한 스톤이 멈추면 강조된 턴 종료 버튼을 누르세요.', event: 'end-turn', timed: true },
           { id: 'hero-selection', title: '영웅 능력 선택', kind: 'hero', text: '맵을 고른 뒤 두 가지 영웅 능력 중 하나를 선택합니다. 15초 안에 선택하지 않으면 무작위로 정해집니다. 선택한 능력은 대전이 끝날 때까지 유지됩니다.', objective: '제시된 두 영웅 능력 중 하나를 선택하세요.', event: 'hero' },
-          ...cardDefinitions().map(card => ({ id: `card-${card.id}`, title: `${card.name} 카드`, kind: 'card', elementId: card.id,
+          ...cardDefinitions().filter(card => isCardUnlocked(card, 0)).map(card => ({ id: `card-${card.id}`, title: `${card.name} 카드`, kind: 'card', elementId: card.id,
             text: `${CARD_DESCRIPTIONS[card.id] || card.name} ${LEARNING_DETAILS[card.id]?.tip || ''}`,
             objective: card.id === 'brick' ? '구조물 투하 카드를 왼쪽 테이블에 놓으세요.' : card.id === 'ammo' ? '카드를 파란 스톤에 놓고 당겨 총탄을 발사하세요.' : card.id === 'reposition' ? '카드를 파란 스톤에 놓고 파워와 방향을 정해 재발사하세요.' : ['hardening', 'guard'].includes(card.id) ? '같은 카드를 두 번 사용해 중첩을 확인하세요.' : '카드를 파란 스톤에 드래그해 사용하세요.',
             event: card.id === 'ammo' ? 'ammo' : card.id === 'reposition' ? 'launch' : 'card', targets: true,
@@ -1142,6 +1162,8 @@
         bullets: [],
         triggers: [],
         fallPoints: [0, 0],
+        escapePoints: [0, 0],
+        playerLevels: [1, 1],
         particles: [],
         effects: [],
         aiming: false,
@@ -1414,7 +1436,7 @@
         onlineInterpolation = null;
         onlineLastSnapshotAt = null;
         Object.assign(state, { units: [], bricks: [], bullets: [], triggers: [], particles: [], effects: [],
-          hands: [[], []], deck: [], fallPoints: [0, 0], triggerPlacementUsed: [false, false], triggerPlacementCount: [0, 0],
+          hands: [[], []], deck: [], fallPoints: [0, 0], escapePoints: [0, 0], playerLevels: [guestProfile?.level || 1, guestProfile?.level || 1], triggerPlacementUsed: [false, false], triggerPlacementCount: [0, 0],
           heroOffers: [[], []], heroChoices: [null, null], heroDeadline: null, heroSelectionMode: null,
           heroSelectionOwner: 0, heroTransitionTimer: null, heroPendingChoice: null, heroCardDraws: [0, 0],
           aiming: false, aimPoint: null, aimTension: 0, powerMeter: null, repositionUnit: null, repositionMode: null,
@@ -1573,7 +1595,8 @@
         learningUI.heroCatalogTab.tabIndex = isHero ? 0 : -1;
         learningUI.catalogList.setAttribute('aria-labelledby', isHero ? 'heroCatalogTab' : isTrigger ? 'triggerCatalogTab' : 'cardCatalogTab');
         learningUI.catalogList.replaceChildren(...definitions.map(entry => {
-          const article = document.createElement('article'); article.className = `catalog-entry${isHero ? ' hero-catalog-entry' : ''}`;
+          const locked = !isHero && !isTrigger && !isCardUnlocked(entry, 0);
+          const article = document.createElement('article'); article.className = `catalog-entry${isHero ? ' hero-catalog-entry' : ''}${locked ? ' locked-card' : ''}`;
           const header = document.createElement('header');
           const preview = document.createElement('img');
           preview.className = isHero ? 'catalog-portrait' : isTrigger ? 'catalog-trigger-art' : 'catalog-card-art';
@@ -1584,6 +1607,15 @@
           preview.setAttribute('aria-hidden', 'true');
           const title = document.createElement('h3'); title.textContent = entry.name;
           header.append(preview, title);
+          if (locked) {
+            const lock = document.createElement('span');
+            lock.className = 'catalog-lock';
+            lock.textContent = '🔒';
+            lock.setAttribute('aria-label', `${entry.unlockLevel}레벨에 해금`);
+            header.append(lock);
+            article.append(header);
+            return article;
+          }
           const description = document.createElement('p');
           description.textContent = isHero ? entry.description : isTrigger ? getTriggerTooltip({ type: entry }).detail || entry.description : CARD_DESCRIPTIONS[entry.id] || entry.description || entry.name;
           const tip = document.createElement('p'); tip.className = 'strategy-tip';
@@ -1968,6 +2000,7 @@
         state.bullets = [];
         state.triggers = [];
         state.fallPoints = [0, 0];
+        state.escapePoints = [0, 0];
         state.particles = [];
         state.effects = [];
         state.aiming = false;
@@ -2129,7 +2162,14 @@
         const hero = heroFor(owner);
         const forcedId = drawNumber === 0 ? hero?.firstCard :
           turns.playerIndex === owner && turns.playerTurn === CONFIG.maxTurnsPerPlayer ? hero?.lastCard : null;
-        const card = forcedId ? { ...cardDefinitions().find(item => item.id === forcedId) } : state.deck.pop();
+        let card = forcedId ? { ...cardDefinitions().find(item => item.id === forcedId) } : null;
+        if (!card) {
+          for (let index = state.deck.length - 1; index >= 0; index -= 1) {
+            if (!isCardUnlocked(state.deck[index], owner)) continue;
+            card = state.deck.splice(index, 1)[0];
+            break;
+          }
+        }
         if (!card) {
           onComplete();
           return;
@@ -2214,7 +2254,10 @@
       function updateHud() {
         const scores = calculateScores();
         scores.forEach((result, index) => {
-          const bonus = result.fallBonus ? ` (${result.fallBonus > 0 ? '+' : ''}${result.fallBonus} 낙사)` : '';
+          const bonuses = [];
+          if (result.fallBonus) bonuses.push(`${result.fallBonus > 0 ? '+' : ''}${result.fallBonus} 낙사`);
+          if (result.escapeBonus) bonuses.push(`+${result.escapeBonus} 탈출`);
+          const bonus = bonuses.length ? ` (${bonuses.join(' · ')})` : '';
           scoreEls[index].textContent = `점수 ${result.score}${bonus}`;
           const hero = heroFor(index);
           heroBadges[index].hidden = !hero;
@@ -2298,7 +2341,8 @@
             score += unit.score;
           });
           const fallBonus = state.fallPoints[index];
-          return { player, units, distance, score: score + fallBonus, fallBonus };
+          const escapeBonus = state.escapePoints[index];
+          return { player, units, distance, score: score + fallBonus + escapeBonus, fallBonus, escapeBonus };
         });
       }
 
@@ -2641,6 +2685,26 @@
         if (card.id === 'bluffing') {
           ensureUnitAbility(unit).bluffingUntilTurn = turns.globalTurn + 1;
         }
+        if (card.id === 'escape') {
+          unit.status = 'fallen';
+          unit.vx = 0;
+          unit.vy = 0;
+          unit.fallResolved = true;
+          unit.fallRewarded = true;
+          unit.removedByEscape = true;
+          state.escapePoints[owner] += 10;
+          if (state.repositionUnit === unit) {
+            state.repositionUnit = null;
+            state.repositionMode = null;
+          }
+          if (unit === turns.currentUnit) {
+            state.aiming = false;
+            state.aimPoint = null;
+            state.aimTension = 0;
+            state.powerMeter = null;
+            state.phase = 'turn-ready';
+          }
+        }
         if (card.id === 'reposition') {
           state.powerMeter = null;
           unit.relaunchAvailable = true;
@@ -2668,6 +2732,7 @@
       function canUseCardOnUnit(card, owner, unit) {
         if (!card || !unit || unit.owner !== owner || unit.status === 'fallen' || owner !== turns.playerIndex ||
             !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase) || card.id === 'brick') return false;
+        if (!isCardUnlocked(card, owner)) return false;
         if (unit.status === 'ready' && unit !== turns.currentUnit) return false;
         if (UNIT_EFFECTS[card.id] && getUnitEffectStacks(unit, card.id) >= UNIT_EFFECTS[card.id].maxStacks) return false;
         if (card.id === 'pulse' && unit.ability?.pulse) return false;
@@ -3407,6 +3472,7 @@
         guestProfileMeta.textContent = `Lv ${profile.level} · 명성치 ${profile.fame} / ${profile.nextLevel}${persistent ? '' : ' · 임시 기록'}`;
         guestProfileProgress.max = profile.nextLevel - profile.levelStart;
         guestProfileProgress.value = profile.fame - profile.levelStart;
+        if (!onlineSession?.started) state.playerLevels = [profile.level, profile.level];
         openAccountButton.hidden = false;
         accountIdentity.textContent = `계정 ID ${profile.username} · 플레이어 ID ${profile.id}`;
         accountStats.replaceChildren(...[
@@ -3473,7 +3539,8 @@
         if (!award?.profile) return;
         renderGuestProfile(award.profile, persistent);
         const leveledUp = award.profile.level > award.previousLevel;
-        matchFameReward.textContent = `명성치 +${award.gained} · Lv ${award.profile.level}${leveledUp ? ' 레벨 업!' : ''}${persistent ? '' : ' · 임시 기록'}`;
+        const unlockedEscape = award.previousLevel < 2 && award.profile.level >= 2 ? ' · 탈출 카드 해금!' : '';
+        matchFameReward.textContent = `명성치 +${award.gained} · Lv ${award.profile.level}${leveledUp ? ' 레벨 업!' : ''}${unlockedEscape}${persistent ? '' : ' · 임시 기록'}`;
         matchFameReward.hidden = false;
       }
 
@@ -3546,6 +3613,7 @@
         confirmMapButton.textContent = onlineSession.localMapConfirmed ? '맵 확정 완료' : '이 맵 확정';
         PLAYER[0].name = room.host.name || '방장';
         PLAYER[1].name = room.challenger?.name || '도전자 대기 중';
+        state.playerLevels = [room.host.level || 1, room.challenger?.level || 1];
         updatePlayerNames();
         if (onlineSession.role === 'host' && !previousChallenger && room.challenger) {
           showConnectionNotice(`${room.challenger.name} 님이 참가했습니다`);
@@ -4090,6 +4158,8 @@
           bullets: state.bullets.map(bullet => ({ ...bullet })),
           triggers: state.triggers.map(trigger => ({ ...trigger, typeId: trigger.type.id, type: undefined })),
           fallPoints: [...state.fallPoints],
+          escapePoints: [...state.escapePoints],
+          playerLevels: [...state.playerLevels],
           particles: state.particles.map(particle => ({ ...particle })),
           effects: state.effects.map(effect => ({ ...effect })),
           phase: state.phase === 'trigger-select' ? (state.phaseBeforeTriggerSelect || 'turn-ready') : state.phase,
@@ -4199,6 +4269,8 @@
           return { ...trigger, type: ITEM_TRIGGERS.find(type => type.id === typeId) };
         });
         state.fallPoints = snapshot.fallPoints;
+        state.escapePoints = snapshot.escapePoints || [0, 0];
+        state.playerLevels = snapshot.playerLevels || [1, 1];
         state.particles = snapshot.particles;
         state.effects = snapshot.effects;
         onlineSession.playedFeedbackIds ||= new Set();
@@ -4475,6 +4547,8 @@
       function startLocalGame() {
         PLAYER[0].name = localPlayerNameInputs[0].value.trim().slice(0, 20) || '플레이어 1';
         PLAYER[1].name = localPlayerNameInputs[1].value.trim().slice(0, 20) || '플레이어 2';
+        const localLevel = guestProfile?.level || 1;
+        state.playerLevels = [localLevel, localLevel];
         updatePlayerNames();
         openMapSelection('start');
       }
@@ -4623,11 +4697,11 @@
         winnerTitle.classList.remove('result-title');
         void winnerTitle.offsetWidth;
         winnerTitle.classList.add('result-title');
-        resultMessage.textContent = winner === null ? '거리 점수와 낙사 보너스를 합산한 결과 무승부입니다.' : `거리 점수와 상대 스톤 낙사 보너스를 합산해 ${PLAYER[winner].name}이 승리했습니다.`;
+        resultMessage.textContent = winner === null ? '거리 점수와 보너스를 합산한 결과 무승부입니다.' : `거리 점수와 보너스를 합산해 ${PLAYER[winner].name}이 승리했습니다.`;
         renderResultRows(scores.map((result, index) => ({
           label: PLAYER[index].name,
           score: `${result.score}점`,
-          detail: result.fallBonus ? `낙사 점수 ${result.fallBonus}점` : ''
+          detail: [result.fallBonus ? `낙사 ${result.fallBonus}점` : '', result.escapeBonus ? `탈출 +${result.escapeBonus}점` : ''].filter(Boolean).join(' · ')
         })));
         createConfetti(winner === null ? '#e5b35a' : PLAYER[winner].color);
         resultOverlay.hidden = false;
@@ -5456,6 +5530,7 @@
         const token = guestToken;
         guestToken = null;
         guestProfile = null;
+        state.playerLevels = [1, 1];
         guestProfileElement.hidden = true;
         openAccountButton.hidden = true;
         try { localStorage.removeItem('ucc.accountToken.v1'); } catch {}
