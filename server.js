@@ -584,7 +584,14 @@ setInterval(() => {
   for (const [code, room] of rooms) if (room.updatedAt < cutoff) rooms.delete(code);
 }, 10 * 60 * 1000).unref();
 
-server.listen(PORT, '0.0.0.0', () => console.log(`Underhanded Curling Club listening on port ${PORT}`));
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Underhanded Curling Club listening on port ${PORT}`);
+  if (profiles.promoteAccountForMaintenance) {
+    profiles.promoteAccountForMaintenance('kontlasthero', 100)
+      .then(profile => console.log(`Account level maintenance: ${profile ? `level ${profile.level}, fame ${profile.fame}` : 'account not found'}`))
+      .catch(error => console.error('Account level maintenance failed:', error));
+  }
+});
 
 process.once('SIGTERM', () => {
   for (const socket of webSocketServer.clients) {
