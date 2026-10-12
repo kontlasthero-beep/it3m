@@ -15,6 +15,8 @@ test('eight-card bags allow one duplicate and respect unlock levels', async () =
   assert.equal(validateDeck(['hardening', 'hardening', 'guard', 'guard', 'pulse', 'brick', 'ammo', 'bluffing'], 1), false);
   assert.equal(validateDeck([...DEFAULT_DECK.slice(0, 7), 'escape'], 1), false);
   assert.equal(validateDeck([...DEFAULT_DECK.slice(0, 7), 'escape'], 2), true);
+  assert.equal(validateDeck([...DEFAULT_DECK.slice(0, 7), 'data-barrier'], 1), false);
+  assert.equal(validateDeck([...DEFAULT_DECK.slice(0, 7), 'data-barrier'], 2), true);
   assert.equal(validateDeck(DEFAULT_DECK.slice(0, 7), 2), false);
   assert.deepEqual(deckForPreset([null, null, null], 0, 1), DEFAULT_DECK);
   const store = createProfileStore('');
@@ -24,6 +26,22 @@ test('eight-card bags allow one duplicate and respect unlock levels', async () =
   assert.deepEqual(saved.decks[1], doubleHardening);
   assert.equal(saved.activePreset, 1);
   assert.deepEqual((await store.login('deck_owner', 'long-password')).profile.decks[1], doubleHardening);
+});
+
+test('local level 100 is a view-only override for memory profiles and deck validation', async () => {
+  const local = createProfileStore('', { localTestLevel: 100 });
+  const guest = await local.createGuest('테스터');
+  assert.equal(guest.profile.level, 100);
+  assert.equal(guest.profile.levelStart, fameAtLevel(100));
+  assert.equal(guest.profile.fame, fameAtLevel(100));
+  const account = await local.register('local_level100', 'long-password', '테스터');
+  assert.equal(account.profile.level, 100);
+  const deck = [...DEFAULT_DECK.slice(0, 7), 'data-barrier'];
+  const saved = await local.saveDecks(account.token, [deck, null, null], 0);
+  assert.equal(saved.level, 100);
+  assert.deepEqual(saved.decks[0], deck);
+  const ordinary = createProfileStore('');
+  assert.equal((await ordinary.createGuest('일반')).profile.level, 1);
 });
 
 test('level thresholds and duplicate awards', async () => {

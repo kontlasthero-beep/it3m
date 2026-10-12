@@ -1,4 +1,4 @@
-const CACHE_NAME = 'table-curling-v40';
+const CACHE_NAME = 'table-curling-v43';
 const APP_FILES = [
   './',
   './index.html',
@@ -25,6 +25,7 @@ const APP_FILES = [
   './Card_illustration/Load.png',
   './Card_illustration/Bluffing.png',
   './Card_illustration/Escape.png',
+  './Card_illustration/Data Barrier-v5.png',
   './영웅 초상화/trap master.png',
   './영웅 초상화/hunter.png',
   './영웅 초상화/big boy.png',
@@ -56,6 +57,16 @@ self.addEventListener('fetch', event => {
   // Room lists, health checks and credentials must never come from the offline cache.
   if (new URL(event.request.url).pathname.startsWith('/api/')) {
     event.respondWith(fetch(event.request, { cache: 'no-store' }));
+    return;
+  }
+  if (event.request.mode === 'navigate') {
+    event.respondWith(fetch(event.request).then(response => {
+      if (response.ok) {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+      }
+      return response;
+    }).catch(() => caches.match(event.request)));
     return;
   }
   event.respondWith(

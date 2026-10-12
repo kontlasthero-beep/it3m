@@ -6,6 +6,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "dev:level100": "node local-level100.js",
     "test": "node --test tests/*.test.cjs"
   },
   "engines": {

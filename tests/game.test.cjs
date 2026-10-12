@@ -498,7 +498,7 @@ test('tutorial lessons cover every card and trigger; practice uses fixed hands w
       const index=lessons.findIndex(l=>l.kind==='card' && l.elementId===card.id);
       assert.ok(index>=0); loadTutorialLesson(index);
       assert.equal(state.hands[0][0].id,card.id); assert.equal(state.turnDeadline,null);
-      if(card.id!=='brick') {
+      if(!['brick','data-barrier'].includes(card.id)) {
         for(let use=0; use<(lessons[index].requiredUses||1); use++) {
           assert.equal(useCard(state.hands[0][0].instanceId,0,turns.currentUnit),true);
         }
@@ -506,6 +506,9 @@ test('tutorial lessons cover every card and trigger; practice uses fixed hands w
           if(card.id==='reposition') { startPowerMeter(); lockPowerMeter(.5); }
           state.aimPoint={x:turns.currentUnit.x+100,y:turns.currentUnit.y}; launchCurrentUnit();
         }
+        assert.equal(state.tutorial.complete,true);
+      } else {
+        assert.equal(placeStructureCard(state.hands[0][0].instanceId,0,{x:500,y:355}),true);
         assert.equal(state.tutorial.complete,true);
       }
     }
@@ -636,14 +639,15 @@ test('rollout prediction follows the ice and moving-wall map dynamics', () => {
 test('AI tiers use their names, rewards, and progressively wider card sets', () => {
   const g = game();
   g.run(`for (const [difficulty, name, fame, count] of [
-      ['easy','네오',25,7], ['normal','뉴트론',35,8], ['hard','AAB',75,9]]) {
+      ['easy','네오',25,7], ['normal','뉴트론',35,9], ['hard','AAB',75,10]]) {
       selectAiOpponent(difficulty); startAiGame();
       assert.equal(PLAYER[1].name,name);
       assert.equal(aiLevel().fame,fame);
       assert.equal(aiLevel().cards.length,count);
       assert.equal(state.playerDecks[1].length,8);
       assert.ok(state.playerDecks[1].every(id=>aiCanUseCard(id)));
-      assert.equal(state.playerLevels[1],difficulty==='hard'?2:1);
+      assert.equal(state.playerLevels[1],difficulty==='easy'?1:2);
+      assert.equal(state.playerDecks[1].includes('data-barrier'),difficulty!=='easy');
     }`);
 });
 
@@ -1046,4 +1050,66 @@ test('hero portraits appear on the matching selection cards and catalog entries'
   const entries = g.elements.get('#catalogList').children;
   assert.equal(entries.length, portraits.length);
   entries.forEach((entry, index) => assert.equal(entry.children[0].children[0].src, portraits[index]));
+});
+
+test('data barrier unlocks at level two, appears locked in the catalog, and uses the final art', () => {
+  const g = game();
+  g.run(`state.playerLevels=[1,1]; renderCatalog('cards');
+    assert.equal(deckCard('data-barrier').unlockLevel,2);
+    assert.equal(CARD_PRESENTATION['data-barrier'].art,'Card_illustration/Data Barrier-v5.png');
+    assert.equal(CARD_DESCRIPTIONS['data-barrier'],'내 스톤만 통과 가능한 특수 장벽을 배치합니다. 장벽은 다음 상대 턴까지 유지됩니다.');
+    assert.equal(isCardUnlocked(deckCard('data-barrier'),0),false);
+    state.playerLevels[0]=2; assert.equal(isCardUnlocked(deckCard('data-barrier'),0),true);`);
+  assert.ok(fs.existsSync(path.join(__dirname, '../Card_illustration/Data Barrier-v5.png')));
+});
+
+test('data barrier is fixed, friendly stones pass, enemies collide, and bullets destroy it', () => {
+  const g = game();
+  g.run(`state.currentMap=MAPS[0]; state.playerLevels=[2,2]; turns.reset(0);
+    turns.createCurrentUnit(); state.phase='aiming';
+    state.hands[0]=[{...deckCard('data-barrier'),instanceId:'barrier-card'}];
+    assert.equal(placeStructureCard('barrier-card',0,{x:500,y:355}),true);
+    const barrier=state.bricks[0]; assert.equal(barrier.barrier,true);
+    assert.equal(barrier.width,18); assert.equal(barrier.height,64);
+    const own=new CurlingUnit({id:'own',owner:0,turnNumber:1,x:500,y:355});
+    own.status='resting'; own.vx=-100; state.units=[own];
+    resolveBrickCollisions(); assert.equal(own.x,500); assert.equal(own.vx,-100);
+    const enemy=new CurlingUnit({id:'enemy',owner:1,turnNumber:1,x:500,y:355});
+    enemy.status='resting'; enemy.vx=-100; state.units=[enemy];
+    resolveBrickCollisions(); assert.notEqual(enemy.x,500);
+    assert.equal(barrier.x,500); assert.equal(barrier.y,355);
+    triggerPulse(enemy); triggerBlackHole(enemy); barrier.update(.5);
+    assert.equal(barrier.x,500); assert.equal(barrier.y,355);
+    state.bullets=[{x:460,y:355,vx:900,vy:0,radius:7,sourceUnitId:'enemy',outsideTime:0}];
+    updateBullets(.1); assert.equal(state.bricks.length,0); assert.equal(state.bullets.length,0);`);
+});
+
+test('data barrier survives its owner turn, expires at the next opponent turn end, and syncs online', () => {
+  const {host, guest, send} = onlinePair();
+  host.run(`state.playerLevels=[2,2]; state.hands[1]=[{...deckCard('data-barrier'),instanceId:'online-barrier'}];
+    assert.equal(placeStructureCard('online-barrier',1,{x:500,y:355}),true);
+    assert.equal(state.bricks[0].expiresAtTurn,turns.globalTurn+2);`);
+  send(2);
+  guest.run(`assert.equal(state.bricks.length,1); assert.equal(state.bricks[0].barrier,true);
+    assert.equal(state.bricks[0].owner,1);`);
+  host.run(`turns.finishCurrentTurn(); assert.equal(state.bricks.length,1);
+    turns.finishCurrentTurn(); assert.equal(state.bricks.length,0);`);
+  send(3);
+  guest.run(`assert.equal(state.bricks.length,0);`);
+});
+
+test('Neutron and AAB can spend the data barrier on a legal AI turn, but Neo cannot', () => {
+  for (const difficulty of ['easy', 'normal', 'hard']) {
+    const g = game();
+    g.run(`state.aiMode=true; state.aiOwner=1; state.aiDifficulty='${difficulty}';
+      state.aiStyle='controller'; state.playerLevels=[2,${difficulty === 'easy' ? 1 : 2}];
+      state.currentMap=MAPS[0]; turns.reset(1); turns.createCurrentUnit(); state.phase='aiming';
+      const enemy=new CurlingUnit({id:'target',owner:0,turnNumber:1,x:550,y:355});
+      enemy.status='resting'; state.units.push(enemy);
+      state.hands[1]=[{...deckCard('data-barrier'),instanceId:'ai-barrier'}];
+      Math.random=()=>0;
+      assert.equal(aiPlaceBrick(),${difficulty !== 'easy'});
+      assert.equal(state.bricks.length,${difficulty === 'easy' ? 0 : 1});
+      if(state.bricks.length) assert.equal(state.bricks[0].barrier,true);`);
+  }
 });

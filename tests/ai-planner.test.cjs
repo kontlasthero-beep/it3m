@@ -126,3 +126,17 @@ test('trigger placement weighs the follow-up shot and opponent counterplay', () 
   assert.equal(plan.trigger?.x, 600);
   assert.equal(snapshot.triggers.length, 0);
 });
+
+test('rollouts keep data barriers fixed and let only their owner pass through', () => {
+  const snapshot = board();
+  snapshot.units[0].y = 500;
+  snapshot.bricks = [{x:950,y:355,vx:0,vy:0,width:18,height:64,mass:2,
+    restitution:.58,frictionMultiplier:1,barrier:true,owner:1}];
+  const shot = {dx:-1,dy:0,power:.65};
+  const friendly = planner.simulate(snapshot,shot);
+  snapshot.bricks[0].owner = 0;
+  const blocked = planner.simulate(snapshot,shot);
+  assert.equal(friendly.world.bricks[0].x,950);
+  assert.equal(blocked.world.bricks[0].x,950);
+  assert.ok(friendly.world.units[1].x < blocked.world.units[1].x - 50);
+});

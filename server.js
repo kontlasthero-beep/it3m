@@ -11,7 +11,9 @@ const PORT = Number(process.env.PORT) || 4173;
 const ROOM_CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const MAP_IDS = ['classic', 'ice', 'moving-walls', 'items'];
 const rooms = new Map();
-const profiles = createProfileStore(process.env.DATABASE_URL);
+const LOCAL_TEST_LEVEL = !process.env.DATABASE_URL && process.env.NODE_ENV !== 'production' &&
+  process.env.UCC_LOCAL_TEST_LEVEL === '100' ? 100 : null;
+const profiles = createProfileStore(process.env.DATABASE_URL, { localTestLevel: LOCAL_TEST_LEVEL });
 const loginAttempts = new Map();
 const webSocketServer = new WebSocketServer({ noServer: true, maxPayload: 2 * 1024 * 1024, perMessageDeflate: false });
 const mimeTypes = {
@@ -629,7 +631,8 @@ setInterval(() => {
   for (const [code, room] of rooms) if (room.updatedAt < cutoff) rooms.delete(code);
 }, 10 * 60 * 1000).unref();
 
-server.listen(PORT, '0.0.0.0', () => console.log(`Underhanded Curling Club listening on port ${PORT}`));
+server.listen(PORT, LOCAL_TEST_LEVEL ? '127.0.0.1' : '0.0.0.0',
+  () => console.log(`Underhanded Curling Club listening on port ${PORT}${LOCAL_TEST_LEVEL ? ' (local test: Lv 100)' : ''}`));
 
 process.once('SIGTERM', () => {
   for (const socket of webSocketServer.clients) {

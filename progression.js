@@ -122,7 +122,7 @@ function matchOutcome(rounds) {
   return { winner, wins, totals };
 }
 
-function createMemoryStore(now = Date.now) {
+function createMemoryStore(now = Date.now, localTestLevel = null) {
   const profiles = new Map();
   const usernames = new Map();
   const tokens = new Map();
@@ -130,6 +130,13 @@ function createMemoryStore(now = Date.now) {
   const aiMatches = new Map();
   const pending = new Set();
   const lookup = token => profiles.get(tokens.get(tokenHash(token)));
+  const profileView = row => {
+    if (localTestLevel == null) return presentProfile(row);
+    const levelStart = fameAtLevel(localTestLevel);
+    const nextLevel = fameAtLevel(localTestLevel + 1);
+    const fame = levelStart + row.fame % (nextLevel - levelStart);
+    return presentProfile({ ...row, fame });
+  };
   return {
     persistent: false,
     async createGuest(name) {
@@ -138,7 +145,7 @@ function createMemoryStore(now = Date.now) {
         played: 0, wins: 0, losses: 0, draws: 0 };
       profiles.set(row.id, row);
       tokens.set(tokenHash(token), row.id);
-      return { token, profile: presentProfile(row) };
+      return { token, profile: profileView(row) };
     },
     async register(usernameInput, passwordInput, nameInput) {
       const username = normalizeUsername(usernameInput);
@@ -154,7 +161,7 @@ function createMemoryStore(now = Date.now) {
         profiles.set(row.id, row);
         usernames.set(username, row.id);
         tokens.set(tokenHash(token), row.id);
-        return { token, profile: presentProfile(row) };
+        return { token, profile: profileView(row) };
       } finally { pending.delete(username); }
     },
     async login(usernameInput, passwordInput) {
@@ -162,29 +169,29 @@ function createMemoryStore(now = Date.now) {
       if (!row || !(await verifyPassword(String(passwordInput || ''), row.passwordHash))) return null;
       const token = newSession();
       tokens.set(tokenHash(token), row.id);
-      return { token, profile: presentProfile(row) };
+      return { token, profile: profileView(row) };
     },
     async findByToken(token) {
       const row = lookup(token);
-      return row ? { internalId: row.id, profile: presentProfile(row) } : null;
+      return row ? { internalId: row.id, profile: profileView(row) } : null;
     },
     async rename(token, name) {
       const row = lookup(token);
       if (!row) return null;
       row.name = normalizeName(name);
-      return presentProfile(row);
+      return profileView(row);
     },
     async saveDecks(token, decks, activePreset) {
       const row = lookup(token);
       if (!row?.username) return null;
-      const level = presentProfile(row).level;
+      const level = profileView(row).level;
       if (!Array.isArray(decks) || decks.length !== 3 ||
           decks.some(deck => deck !== null && !validateDeck(deck, level)) ||
           !Number.isInteger(activePreset) || activePreset < 0 || activePreset > 2)
         throw new Error('가방은 8장으로 구성하고, 한 종류만 두 장 넣을 수 있습니다.');
       row.decks = decks.map(deck => deck ? [...deck] : null);
       row.activePreset = activePreset;
-      return presentProfile(row);
+      return profileView(row);
     },
     async logout(token) { tokens.delete(tokenHash(token)); },
     async startAiMatch(token, difficulty) {
@@ -200,12 +207,12 @@ function createMemoryStore(now = Date.now) {
       const match = aiMatches.get(matchId);
       if (!match || match.profileId !== row.id) throw new Error('AI 경기 기록을 찾을 수 없습니다.');
       if (match.forfeited) throw new Error('AI 경기는 포기되었습니다.');
-      if (match.award) return { ...match.award, profile: presentProfile(row) };
+      if (match.award) return { ...match.award, profile: profileView(row) };
       validateAiVictory(scores);
       if (now() - match.startedAt < AI_MIN_MATCH_MS) throw new Error('AI 경기가 아직 완료되지 않았습니다.');
-      match.award = { gained: AI_WIN_FAME[match.difficulty], previousLevel: presentProfile(row).level };
+      match.award = { gained: AI_WIN_FAME[match.difficulty], previousLevel: profileView(row).level };
       row.fame += match.award.gained;
-      return { ...match.award, profile: presentProfile(row) };
+      return { ...match.award, profile: profileView(row) };
     },
     async forfeitAiMatch(token, matchId) {
       const row = lookup(token);
@@ -224,7 +231,7 @@ function createMemoryStore(now = Date.now) {
         let record = awards.get(key);
         if (!record) {
           const gained = PLAY_FAME + (winner === index ? WIN_FAME : 0);
-          record = { gained, previousLevel: presentProfile(row).level };
+          record = { gained, previousLevel: profileView(row).level };
           awards.set(key, record);
           row.fame += gained;
           row.played += 1;
@@ -232,7 +239,7 @@ function createMemoryStore(now = Date.now) {
           else if (winner === index) row.wins += 1;
           else row.losses += 1;
         }
-        return { gained: record.gained, previousLevel: record.previousLevel, profile: presentProfile(row) };
+        return { gained: record.gained, previousLevel: record.previousLevel, profile: profileView(row) };
       });
     }
   };
@@ -470,4 +477,4 @@ function createPostgresStore(connectionString) {
   };
 }
 
-module.exports = { createProfileStore: (url, options = {}) => url ? createPostgresStore(url) : createMemoryStore(options.now), fameAtLevel, matchOutcome, parseBearer };
+module.exports = { createProfileStore: (url, options = {}) => url ? createPostgresStore(url) : createMemoryStore(options.now, options.localTestLevel), fameAtLevel, matchOutcome, parseBearer };

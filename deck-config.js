@@ -1,6 +1,6 @@
 const CARD_LEVELS = Object.freeze({
   hardening: 1, guard: 1, pulse: 1, reposition: 1, brick: 1,
-  blackhole: 1, ammo: 1, bluffing: 1, escape: 2
+  blackhole: 1, ammo: 1, bluffing: 1, escape: 2, 'data-barrier': 2
 });
 
 const DEFAULT_DECK = Object.freeze([

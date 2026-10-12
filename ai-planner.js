@@ -34,7 +34,7 @@
     const stacks = unit.ability?.stacks?.hardening ?? (unit.ability?.hardening ? 1 : 0);
     let multiplier = unit.frictionMultiplier ?? 3 ** stacks;
     if (!phased(unit, world.turn)) for (const brick of world.bricks) {
-      if (Math.abs(unit.x - brick.x) <= brick.width / 2 + unit.radius &&
+      if (!(brick.barrier && brick.owner === unit.owner) && Math.abs(unit.x - brick.x) <= brick.width / 2 + unit.radius &&
           Math.abs(unit.y - brick.y) <= brick.height / 2 + unit.radius) multiplier += (brick.frictionMultiplier || 1.5) - 1;
     }
     return world.friction * multiplier * (unit.heroFriction || 1) * (unit.openingFrictionMultiplier || 1);
@@ -73,7 +73,7 @@
 
   function pulse(world, source, range, impulse) {
     for (const target of [...world.units, ...world.bricks]) {
-      if (target === source || target.status === 'fallen' || target.status === 'ready') continue;
+      if (target === source || target.barrier || target.status === 'fallen' || target.status === 'ready') continue;
       const dx = target.x - source.x, dy = target.y - source.y;
       const distance = Math.hypot(dx, dy);
       if (distance > range) continue;
@@ -88,7 +88,7 @@
   function blackhole(world, source, range) {
     source.fluidTimer = .85;
     for (const target of [...world.units, ...world.bricks]) {
-      if (target === source || target.status === 'fallen' || target.status === 'ready') continue;
+      if (target === source || target.barrier || target.status === 'fallen' || target.status === 'ready') continue;
       const dx = source.x - target.x, dy = source.y - target.y;
       const distance = Math.hypot(dx, dy);
       if (distance > range || distance < .001) continue;
@@ -161,7 +161,7 @@
   }
 
   function collideRect(unit, rect, world, moving, brick) {
-    if (!active(unit) || phased(unit, world.turn)) return;
+    if (!active(unit) || phased(unit, world.turn) || (brick && rect.barrier && rect.owner === unit.owner)) return;
     const x = clamp(unit.x, rect.x - rect.width / 2, rect.x + rect.width / 2);
     const y = clamp(unit.y, rect.y - rect.height / 2, rect.y + rect.height / 2);
     let nx = unit.x - x, ny = unit.y - y;
@@ -174,15 +174,15 @@
       else { nx = 0; ny = unit.y < rect.y ? -1 : 1; distance = unit.radius - vertical; }
     } else { nx /= distance; ny /= distance; }
     const correction = unit.radius - distance;
-    const unitShare = brick ? (rect.mass || 2) / (1 + (rect.mass || 2)) : 1;
+    const unitShare = brick && !rect.barrier ? (rect.mass || 2) / (1 + (rect.mass || 2)) : 1;
     unit.x += nx * correction * unitShare; unit.y += ny * correction * unitShare;
-    if (brick) { rect.x -= nx * correction * (1 - unitShare); rect.y -= ny * correction * (1 - unitShare); }
+    if (brick && !rect.barrier) { rect.x -= nx * correction * (1 - unitShare); rect.y -= ny * correction * (1 - unitShare); }
     const toward = (unit.vx - rect.vx) * nx + (unit.vy - rect.vy) * ny;
     if (toward < 0) {
       const impulse = -(1 + (brick ? rect.restitution || .58 : RESTITUTION)) * toward /
-        (brick ? 1 + 1 / (rect.mass || 2) : 1);
+        (brick && !rect.barrier ? 1 + 1 / (rect.mass || 2) : 1);
       unit.vx += impulse * nx; unit.vy += impulse * ny;
-      if (brick) { rect.vx -= impulse * nx / (rect.mass || 2); rect.vy -= impulse * ny / (rect.mass || 2); }
+      if (brick && !rect.barrier) { rect.vx -= impulse * nx / (rect.mass || 2); rect.vy -= impulse * ny / (rect.mass || 2); }
       for (const pending of unit.pendingPulseTriggers || []) pulse(world, unit, pending.range, pending.impulse);
       unit.pendingPulseTriggers = [];
     }
@@ -192,6 +192,7 @@
   function step(world) {
     world.mapTime += STEP;
     for (const brick of world.bricks) {
+      if (brick.barrier) { brick.vx = brick.vy = 0; continue; }
       brick.x += brick.vx * STEP; brick.y += brick.vy * STEP;
       const drag = Math.pow(Math.max(0, 1 - world.friction * (brick.frictionMultiplier || 1.5)), STEP * 60);
       brick.vx *= drag; brick.vy *= drag;
