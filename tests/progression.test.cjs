@@ -6,6 +6,25 @@ const net = require('node:net');
 const path = require('node:path');
 const { WebSocket } = require('ws');
 const { createProfileStore, fameAtLevel, matchOutcome } = require('../progression');
+const { DEFAULT_DECK, validateDeck, deckForPreset } = require('../deck-config');
+
+test('eight-card bags allow one duplicate and respect unlock levels', async () => {
+  const doubleHardening = ['hardening', 'hardening', 'guard', 'pulse', 'reposition', 'brick', 'blackhole', 'ammo'];
+  assert.equal(validateDeck(DEFAULT_DECK, 1), true);
+  assert.equal(validateDeck(doubleHardening, 1), true);
+  assert.equal(validateDeck(['hardening', 'hardening', 'guard', 'guard', 'pulse', 'brick', 'ammo', 'bluffing'], 1), false);
+  assert.equal(validateDeck([...DEFAULT_DECK.slice(0, 7), 'escape'], 1), false);
+  assert.equal(validateDeck([...DEFAULT_DECK.slice(0, 7), 'escape'], 2), true);
+  assert.equal(validateDeck(DEFAULT_DECK.slice(0, 7), 2), false);
+  assert.deepEqual(deckForPreset([null, null, null], 0, 1), DEFAULT_DECK);
+  const store = createProfileStore('');
+  const account = await store.register('deck_owner', 'long-password', 'DECK');
+  await assert.rejects(store.saveDecks(account.token, [[...DEFAULT_DECK.slice(0, 7), 'escape'], null, null], 0), /가방은/);
+  const saved = await store.saveDecks(account.token, [null, doubleHardening, null], 1);
+  assert.deepEqual(saved.decks[1], doubleHardening);
+  assert.equal(saved.activePreset, 1);
+  assert.deepEqual((await store.login('deck_owner', 'long-password')).profile.decks[1], doubleHardening);
+});
 
 test('level thresholds and duplicate awards', async () => {
   const store = createProfileStore('');
@@ -72,13 +91,21 @@ test('accounts and online match fame are bound to room participants', { timeout:
   assert.equal(hostProfile.persistent, false);
   assert.equal((await api('/api/profile', undefined, null, 'GET')).status, 401);
   assert.equal((await api('/api/profile', { name: 'NEW HOST' }, hostProfile.token, 'PATCH')).data.profile.name, 'NEW HOST');
+  const hostBag = ['hardening', 'hardening', 'guard', 'pulse', 'reposition', 'brick', 'blackhole', 'ammo'];
+  const challengerBag = ['guard', 'guard', 'hardening', 'pulse', 'reposition', 'brick', 'blackhole', 'bluffing'];
+  assert.equal((await api('/api/profile/decks', { decks: [hostBag, null, null], activePreset: 0 }, hostProfile.token, 'PUT')).status, 200);
+  assert.equal((await api('/api/profile/decks', { decks: [challengerBag, null, null], activePreset: 0 }, challengerProfile.token, 'PUT')).status, 200);
+  assert.equal((await api('/api/profile/decks', { decks: [[...hostBag.slice(0, 7), 'escape'], null, null], activePreset: 0 }, hostProfile.token, 'PUT')).status, 400);
 
   assert.equal((await api('/api/accounts/register', { username: 'HOST_ACCOUNT', password: 'another-password', name: 'DOUBLE' })).status, 400);
   assert.equal((await api('/api/rooms', { isPublic: true })).status, 401);
   const host = (await api('/api/rooms', { isPublic: true }, hostProfile.token)).data;
+  assert.deepEqual(host.room.host.deck, hostBag);
   const roomPath = `/api/rooms/${host.code}`;
   assert.equal((await api(`${roomPath}/join`, {}, hostProfile.token)).status, 409);
   const challenger = (await api(`${roomPath}/join`, {}, challengerProfile.token)).data;
+  assert.deepEqual(challenger.room.challenger.deck, challengerBag);
+  assert.deepEqual(challenger.room.host.deck, hostBag);
   await api(`${roomPath}/map`, { token: host.token, mapId: 'classic' });
   await api(`${roomPath}/map`, { token: challenger.token, mapId: 'ice' });
   const started = await api(`${roomPath}/start`, { token: host.token });

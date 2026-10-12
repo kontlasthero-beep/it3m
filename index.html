@@ -356,6 +356,19 @@
     @keyframes trigger-icon-rotation { to { transform: rotate(360deg); } }
     .trigger-tool[disabled] { opacity: .42; cursor: not-allowed; }
     .trigger-tool[disabled]:hover { filter: none; }
+    .game-deck-button { position: relative; flex: 0 0 50px; width: 50px; height: 54px; padding: 0; border-color: #77948d; background: #18322e; color: #e1d094; }
+    .game-deck-button:hover { border-color: #e1d094; background: #25443e; }
+    .game-deck-button .stack-card { position: absolute; top: calc(7px - var(--depth) * .7px); left: calc(3px + var(--depth) * 2px); width: 30px; height: 38px; border: 1px solid #c9b77b; border-radius: 3px; background: linear-gradient(145deg, #344b46, #172725 65%); box-shadow: 1px 2px 2px rgba(0,0,0,.45); pointer-events: none; }
+    .game-deck-button .stack-card::after { content: ''; position: absolute; inset: 4px; border: 1px solid rgba(218, 200, 139, .64); background: linear-gradient(135deg, transparent 46%, rgba(218, 200, 139, .42) 48%, rgba(218, 200, 139, .42) 52%, transparent 54%); }
+    .game-deck-button.empty .stack-card { opacity: .3; border-style: dashed; box-shadow: none; }
+    .game-deck-button .stack-count { position: absolute; right: 1px; bottom: 0; min-width: 17px; padding: 1px 3px; border: 1px solid #8c9c8d; border-radius: 3px; background: #0b1a1b; color: #f4f0e6; font-size: 10px; font-variant-numeric: tabular-nums; line-height: 1.2; pointer-events: none; }
+    .game-deck-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; margin: 14px 0; }
+    .game-deck-list .deck-card { cursor: default; }
+    .game-deck-list .deck-card.drawn { opacity: .42; filter: grayscale(1); }
+    .game-deck-list .deck-card .card-face { height: 135px; }
+    .game-deck-list .deck-card .card-art { height: 70%; }
+    .game-deck-list .deck-card .card-name { padding: 4px; font-size: 11px; text-align: center; }
+    .game-deck-list .deck-card .card-rules { display: none; }
     .ability-card { position: relative; flex: 0 0 84px; width: 84px; height: 108px; padding: 0; border: 0; border-radius: 5px; color: var(--ink); touch-action: none; user-select: none; }
     .card-face { display: flex; flex-direction: column; width: 100%; height: 100%; overflow: hidden; border: 1px solid #83928c; border-radius: 5px; background: #152226; color: #f4f0e6; box-shadow: 0 3px 8px rgba(0,0,0,.25); text-align: left; }
     .card-art { display: block; width: 100%; height: 43%; flex: 0 0 auto; object-fit: cover; object-position: center; pointer-events: none; }
@@ -416,6 +429,47 @@
     .match-fame-reward { margin: 14px 0; color: #f4d487; font-weight: 700; }
     .home-menu { display: grid; gap: 10px; }
     .home-menu button { min-height: 52px; font-size: 17px; }
+    .deck-entry-button { width: 100%; margin-top: 10px; }
+    .deck-dialog { width: min(1120px, 100%); text-align: left; }
+    .deck-layout { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(260px, 1fr); gap: 18px; margin-top: 16px; }
+    .deck-section { min-width: 0; }
+    .deck-section h3 { margin: 0 0 10px; font-size: 18px; }
+    .deck-pool { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 9px; max-height: min(64dvh, 610px); padding: 18px; overflow-y: auto; }
+    .deck-card { position: relative; display: block; width: 100%; min-width: 0; padding: 0; border-radius: 5px; background: transparent; text-align: left; touch-action: none; cursor: grab; }
+    .deck-card .card-face { height: 168px; }
+    .deck-card .card-art { height: 67%; }
+    .deck-card .card-name { padding: 6px; font-size: 13px; text-align: center; }
+    .deck-card .card-rules { display: none; }
+    .deck-card.bonus-ready { box-shadow: 0 0 0 2px rgba(185, 140, 255, .5), 0 0 15px rgba(159, 89, 226, .5); }
+    .deck-card.unavailable { opacity: .38; filter: grayscale(1); cursor: not-allowed; }
+    .deck-card.locked { opacity: .42; filter: grayscale(1) blur(1px); cursor: not-allowed; }
+    .deck-bag { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; min-height: 230px; padding: 10px; border: 1px dashed #79938c; border-radius: 5px; align-content: start; }
+    .deck-bag.drop-ready, .deck-pool.drop-ready { outline: 2px solid #9de5c8; outline-offset: 2px; }
+    .deck-bag .deck-card .card-face { height: 102px; }
+    .deck-bag .deck-card .card-art { height: 73%; }
+    .deck-bag .deck-card .card-name { min-height: 25px; padding: 3px; font-size: 10px; }
+    .deck-count { color: var(--muted); font-size: 13px; }
+    .deck-presets { display: flex; gap: 7px; margin: 12px 0; }
+    .deck-presets button { width: 38px; height: 38px; padding: 0; }
+    .deck-presets button[aria-pressed="true"] { border-color: #8ce6cf; background: #247667; }
+    .deck-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    #deckSaveButton:disabled { border-color: #5c6a69; background: #39484a; color: #abb7b5; box-shadow: none; opacity: 1; cursor: not-allowed; }
+    .deck-status { min-height: 24px; color: #f1c275; font-size: 13px; }
+    .deck-drag-ghost { position: fixed; z-index: 95; width: 100px; height: 130px; pointer-events: none; opacity: .9; transform: translate(-50%, -50%); }
+    .deck-drag-ghost .card-face { height: 100%; }
+    .deck-drag-ghost .card-art { height: 75%; }
+    .deck-drag-ghost .card-name { padding: 4px; font-size: 11px; text-align: center; }
+    .deck-drag-ghost .card-rules { display: none; }
+    .deck-drag-ghost.from-bag { width: 145px; height: 200px; }
+    .deck-drag-ghost.from-bag .card-art { height: 60%; }
+    .deck-drag-ghost.from-bag .card-rules { display: block; font-size: 10px; }
+    .local-deck-choice { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    @media (max-width: 680px) { .deck-layout { grid-template-columns: 1fr; } .deck-pool { max-height: 30dvh; } .deck-bag { min-height: 170px; } }
+    @media (orientation: landscape) and (max-height: 560px) and (pointer: coarse) {
+      .deck-dialog { width: 100%; max-width: none; }
+      .deck-layout { grid-template-columns: 1fr; }
+      .deck-pool { max-height: 28dvh; }
+    }
     .home-account { width: 100%; margin-top: 10px; }
     .account-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
     .account-actions button { min-width: 0; min-height: 46px; padding: 8px; }
@@ -658,6 +712,7 @@
               <progress id="guestProfileProgress" max="100" value="0" aria-label="다음 레벨 진행도"></progress>
             </div>
             <div class="home-menu"><button class="primary" id="openPlayMenuButton" type="button">게임 시작</button><button id="openTutorialButton" type="button">튜토리얼</button><button id="openCatalogButton" type="button">도감</button></div>
+            <button class="deck-entry-button" id="openHomeDeckButton" type="button">카드 덱 만들기</button>
             <button class="home-account" id="openAccountButton" type="button" hidden>계정 설정</button>
           </div>
           <div class="start-screen" id="accountScreen">
@@ -689,6 +744,7 @@
               <button class="menu-local" id="openLocalScreenButton" type="button">로컬 2인 플레이</button>
               <button class="menu-online" id="createRoomButton" type="button">온라인 방 만들기</button>
             </div>
+            <button class="deck-entry-button" id="openMenuDeckButton" type="button">카드 덱 만들기</button>
             <button class="home-return" id="playMenuHomeButton" type="button">← 시작 화면으로 돌아가기</button>
           </div>
           <div class="start-screen" id="browseRoomsScreen" hidden>
@@ -718,6 +774,7 @@
             <div class="start-form">
               <label>플레이어 1 닉네임<input id="localPlayer1NameInput" maxlength="20" value="플레이어 1" autocomplete="off"></label>
               <label>플레이어 2 닉네임<input id="localPlayer2NameInput" maxlength="20" value="플레이어 2" autocomplete="off"></label>
+              <div class="local-deck-choice"><label>플레이어 1 가방<select id="localDeck0"></select></label><label>플레이어 2 가방<select id="localDeck1"></select></label></div>
               <button class="primary" id="startButton" type="button">맵 선택</button>
               <div class="start-form-actions"><button class="backToStartMenuButton" type="button">뒤로</button></div>
             </div>
@@ -794,8 +851,8 @@
       </div>
     </section>
     <section class="hands" aria-label="플레이어 카드">
-      <div class="hand-panel" id="handPanel0"><div class="hand-title">플레이어 1 카드</div><div class="hand-row"><div class="hand-cards" id="hand0"></div><button class="trigger-tool" data-owner="0" type="button" aria-label="트리거 배치, 남은 횟수 1" disabled><img src="Trigger_illustration/v3-simple/empty.png" alt="" draggable="false"><span class="trigger-count" aria-hidden="true">1</span></button></div></div>
-      <div class="hand-panel" id="handPanel1"><div class="hand-title">플레이어 2 카드</div><div class="hand-row"><div class="hand-cards" id="hand1"></div><button class="trigger-tool" data-owner="1" type="button" aria-label="트리거 배치, 남은 횟수 1" disabled><img src="Trigger_illustration/v3-simple/empty.png" alt="" draggable="false"><span class="trigger-count" aria-hidden="true">1</span></button></div></div>
+      <div class="hand-panel" id="handPanel0"><div class="hand-title">플레이어 1 카드</div><div class="hand-row"><div class="hand-cards" id="hand0"></div><button class="trigger-tool" data-owner="0" type="button" aria-label="트리거 배치, 남은 횟수 1" disabled><img src="Trigger_illustration/v3-simple/empty.png" alt="" draggable="false"><span class="trigger-count" aria-hidden="true">1</span></button><button class="game-deck-button" data-owner="0" type="button" title="플레이어 1의 가방" aria-label="플레이어 1의 가방"></button></div></div>
+      <div class="hand-panel" id="handPanel1"><div class="hand-title">플레이어 2 카드</div><div class="hand-row"><div class="hand-cards" id="hand1"></div><button class="trigger-tool" data-owner="1" type="button" aria-label="트리거 배치, 남은 횟수 1" disabled><img src="Trigger_illustration/v3-simple/empty.png" alt="" draggable="false"><span class="trigger-count" aria-hidden="true">1</span></button><button class="game-deck-button" data-owner="1" type="button" title="플레이어 2의 가방" aria-label="플레이어 2의 가방"></button></div></div>
     </section>
   </main>
 
@@ -806,6 +863,25 @@
       <div class="catalog-header"><h2 id="catalogTitle">도감</h2><button id="catalogHomeButton" type="button">← 시작 화면으로 돌아가기</button></div>
       <div class="catalog-tabs" role="tablist" aria-label="도감 종류"><button id="cardCatalogTab" type="button" role="tab" aria-selected="true" aria-controls="catalogList">카드 도감</button><button id="triggerCatalogTab" type="button" role="tab" aria-selected="false" aria-controls="catalogList">트리거 도감</button><button id="heroCatalogTab" type="button" role="tab" aria-selected="false" aria-controls="catalogList">영웅 능력 도감</button></div>
       <div class="catalog-list" id="catalogList" role="tabpanel" aria-labelledby="cardCatalogTab"></div>
+    </div>
+  </div>
+  <div class="overlay" id="deckOverlay" hidden>
+    <div class="dialog deck-dialog" role="dialog" aria-modal="true" aria-labelledby="deckTitle">
+      <div class="catalog-header"><h2 id="deckTitle">카드 덱 만들기</h2><button id="deckBackButton" type="button">돌아가기</button></div>
+      <div class="deck-layout">
+        <section class="deck-section"><h3>보유 카드</h3><div class="deck-pool" id="deckPool"></div></section>
+        <section class="deck-section"><h3>가방 <span class="deck-count" id="deckCount">0 / 8</span></h3><div class="deck-bag" id="deckBag" aria-label="가방, 최대 8장"></div>
+          <div class="deck-presets" id="deckPresets" aria-label="가방 프리셋"></div>
+          <div class="deck-actions"><button class="primary" id="deckSaveButton" type="button" disabled>저장</button><button id="deckResetButton" type="button">카드 덱 초기화</button></div>
+          <p class="deck-status" id="deckStatus" role="status"></p>
+        </section>
+      </div>
+    </div>
+  </div>
+  <div class="overlay" id="gameDeckOverlay" hidden>
+    <div class="dialog deck-dialog" role="dialog" aria-modal="true" aria-labelledby="gameDeckTitle">
+      <div class="catalog-header"><h2 id="gameDeckTitle">가방</h2><button id="gameDeckBackButton" type="button">돌아가기</button></div>
+      <div class="game-deck-list" id="gameDeckList"></div>
     </div>
   </div>
   <div class="overlay" id="tutorialSettingsOverlay" hidden>
@@ -890,6 +966,19 @@
       const accountStats = document.querySelector('#accountStats');
       const profileNicknameInput = document.querySelector('#profileNicknameInput');
       const localPlayerNameInputs = [document.querySelector('#localPlayer1NameInput'), document.querySelector('#localPlayer2NameInput')];
+      const localDeckSelects = [document.querySelector('#localDeck0'), document.querySelector('#localDeck1')];
+      const deckOverlay = document.querySelector('#deckOverlay');
+      const deckPool = document.querySelector('#deckPool');
+      const deckBag = document.querySelector('#deckBag');
+      const deckPresets = document.querySelector('#deckPresets');
+      const deckCount = document.querySelector('#deckCount');
+      const deckSaveButton = document.querySelector('#deckSaveButton');
+      const deckResetButton = document.querySelector('#deckResetButton');
+      const deckStatus = document.querySelector('#deckStatus');
+      const gameDeckOverlay = document.querySelector('#gameDeckOverlay');
+      const gameDeckList = document.querySelector('#gameDeckList');
+      const gameDeckTitle = document.querySelector('#gameDeckTitle');
+      const gameDeckButtons = [...document.querySelectorAll('.game-deck-button')];
       const startScreens = [...document.querySelectorAll('.start-screen')];
       const startScreenDescription = document.querySelector('#startScreenDescription');
       const localPlayScreenButton = document.querySelector('#openLocalScreenButton');
@@ -1114,6 +1203,28 @@
 
       // Card and trigger lessons/catalog entries follow the gameplay registries automatically.
       function cardDefinitions() { return [...new Map(CARDS.map(card => [card.id, card])).values()]; }
+      const DEFAULT_DECK_IDS = ['brick', 'hardening', 'ammo', 'guard', 'pulse', 'blackhole', 'bluffing', 'reposition'];
+      let savedDecks = [null, null, null];
+      let deckDrafts = [null, null, null];
+      let activeDeckPreset = 0;
+      let deckReturnScreen = 'homeScreen';
+      let deckDrag = null;
+      function deckIsValid(cards, level = guestProfile?.level || 1) {
+        if (!Array.isArray(cards) || cards.length !== 8) return false;
+        const counts = new Map();
+        for (const id of cards) {
+          const card = cardDefinitions().find(item => item.id === id);
+          if (!card || (card.unlockLevel || 1) > level) return false;
+          counts.set(id, (counts.get(id) || 0) + 1);
+          if (counts.get(id) > 2) return false;
+        }
+        return [...counts.values()].filter(count => count === 2).length <= 1;
+      }
+      function selectedDeck(preset, level = guestProfile?.level || 1) {
+        const deck = savedDecks[preset];
+        return deckIsValid(deck, level) ? [...deck] : [...DEFAULT_DECK_IDS];
+      }
+      function deckCard(id) { return cardDefinitions().find(item => item.id === id); }
       function playerLevel(owner) { return Math.max(1, Number(state.playerLevels?.[owner]) || 1); }
       function isCardUnlocked(card, owner) { return playerLevel(owner) >= (card.unlockLevel || 1); }
       function tutorialLessons() {
@@ -1182,7 +1293,8 @@
         cardDrawTimer: null,
         dealOwner: 0,
         lastDealtCardName: '',
-        deck: [],
+        decks: [[], []],
+        playerDecks: [[...DEFAULT_DECK_IDS], [...DEFAULT_DECK_IDS]],
         nextCardId: 0,
         hands: [[], []],
         cardDrag: null,
@@ -1436,7 +1548,7 @@
         onlineInterpolation = null;
         onlineLastSnapshotAt = null;
         Object.assign(state, { units: [], bricks: [], bullets: [], triggers: [], particles: [], effects: [],
-          hands: [[], []], deck: [], fallPoints: [0, 0], escapePoints: [0, 0], playerLevels: [guestProfile?.level || 1, guestProfile?.level || 1], triggerPlacementUsed: [false, false], triggerPlacementCount: [0, 0],
+          hands: [[], []], decks: [[], []], playerDecks: [[], []], fallPoints: [0, 0], escapePoints: [0, 0], playerLevels: [guestProfile?.level || 1, guestProfile?.level || 1], triggerPlacementUsed: [false, false], triggerPlacementCount: [0, 0],
           heroOffers: [[], []], heroChoices: [null, null], heroDeadline: null, heroSelectionMode: null,
           heroSelectionOwner: 0, heroTransitionTimer: null, heroPendingChoice: null, heroCardDraws: [0, 0],
           aiming: false, aimPoint: null, aimTension: 0, powerMeter: null, repositionUnit: null, repositionMode: null,
@@ -2164,9 +2276,10 @@
           turns.playerIndex === owner && turns.playerTurn === CONFIG.maxTurnsPerPlayer ? hero?.lastCard : null;
         let card = forcedId ? { ...cardDefinitions().find(item => item.id === forcedId) } : null;
         if (!card) {
-          for (let index = state.deck.length - 1; index >= 0; index -= 1) {
-            if (!isCardUnlocked(state.deck[index], owner)) continue;
-            card = state.deck.splice(index, 1)[0];
+          const deck = state.decks[owner];
+          for (let index = deck.length - 1; index >= 0; index -= 1) {
+            if (!isCardUnlocked(deck[index], owner)) continue;
+            card = deck.splice(index, 1)[0];
             break;
           }
         }
@@ -2214,18 +2327,26 @@
       function updateCardDrawVisual(now) {
         if (!cardDrawVisual || dealOverlay.hidden) return;
         const elapsed = now - cardDrawVisual.startedAt;
-        const progress = Math.max(0, Math.min(1, (elapsed - CARD_DRAW_HOLD_MS) / (CARD_DRAW_DURATION_MS - CARD_DRAW_HOLD_MS)));
-        const eased = progress * progress * (3 - 2 * progress);
+        const enter = Math.max(0, Math.min(1, elapsed / 280));
+        const exit = Math.max(0, Math.min(1, (elapsed - CARD_DRAW_HOLD_MS) / (CARD_DRAW_DURATION_MS - CARD_DRAW_HOLD_MS)));
+        const ease = value => value * value * (3 - 2 * value);
         const target = handEls[cardDrawVisual.owner].getBoundingClientRect();
+        const source = gameDeckButtons[cardDrawVisual.owner]?.getBoundingClientRect() || target;
         const width = window.innerWidth || 1200;
         const height = window.innerHeight || 710;
         const x = Math.min(width - 42, Math.max(42, target.left + Math.min(target.width / 2, 42 + state.hands[cardDrawVisual.owner].length * 90)));
         const y = Math.min(height - 54, Math.max(54, target.top + target.height / 2));
-        dealCard.style.left = `${width / 2 + (x - width / 2) * eased}px`;
-        dealCard.style.top = `${height / 2 + (y - height / 2) * eased}px`;
-        dealCard.style.transform = `translate(-50%, -50%) scale(${1 - .67 * eased})`;
-        dealCard.style.opacity = String(1 - .3 * eased);
-        dealPlayer.style.opacity = String(1 - eased);
+        const sourceX = Math.min(width - 30, Math.max(30, source.left + source.width / 2));
+        const sourceY = Math.min(height - 35, Math.max(35, source.top + source.height / 2));
+        const towardCenter = ease(enter);
+        const towardHand = ease(exit);
+        const centerX = sourceX + (width / 2 - sourceX) * towardCenter;
+        const centerY = sourceY + (height / 2 - sourceY) * towardCenter;
+        dealCard.style.left = `${centerX + (x - width / 2) * towardHand}px`;
+        dealCard.style.top = `${centerY + (y - height / 2) * towardHand}px`;
+        dealCard.style.transform = `translate(-50%, -50%) scale(${(.22 + .78 * towardCenter) * (1 - .67 * towardHand)})`;
+        dealCard.style.opacity = String((.7 + .3 * towardCenter) * (1 - .3 * towardHand));
+        dealPlayer.style.opacity = String(towardCenter * (1 - towardHand));
       }
 
       function remainingTriggerPlacements(owner) {
@@ -2251,6 +2372,28 @@
         });
       }
 
+      function updateGameDeckButtons() {
+        gameDeckButtons.forEach((button, owner) => {
+          const remaining = state.decks[owner]?.length || 0;
+          if (button.dataset.remaining === String(remaining)) return;
+          button.dataset.remaining = String(remaining);
+          button.classList.toggle('empty', remaining === 0);
+          const layers = Array.from({ length: Math.max(1, Math.min(remaining, 8)) }, (_, depth) => {
+            const card = document.createElement('span');
+            card.className = 'stack-card';
+            card.style.setProperty('--depth', depth);
+            card.setAttribute('aria-hidden', 'true');
+            return card;
+          });
+          const count = document.createElement('span');
+          count.className = 'stack-count';
+          count.textContent = String(remaining);
+          count.setAttribute('aria-hidden', 'true');
+          button.replaceChildren(...layers, count);
+          button.setAttribute('aria-label', `${PLAYER[owner].name}의 가방, 남은 카드 ${remaining}장`);
+        });
+      }
+
       function updateHud() {
         const scores = calculateScores();
         scores.forEach((result, index) => {
@@ -2272,6 +2415,7 @@
         actionHint.textContent = state.phase === 'sliding' ? '스톤이 움직이는 중' : state.phase === 'turn-ready' ? '턴을 마치거나 카드를 사용하세요' : state.phase === 'reposition' && state.repositionMode === 'ammo' ? '총알 장전: 당겨서 발사' : state.phase === 'trigger-select' ? '트리거 종류를 선택하세요' : needsPowerMeter() && state.powerMeter?.stage === 'locked' ? '스톤을 드래그해 방향을 지정하세요' : needsPowerMeter() && state.powerMeter?.stage === 'spinning' ? '미터를 보고 파워를 결정하세요' : '스톤 아래 발사 버튼을 누르세요';
         handPanels.forEach((panel, index) => panel.classList.toggle('current', !turns.isComplete && index === turns.playerIndex));
         updateTriggerTools();
+        updateGameDeckButtons();
         updateMatchHud();
         renderPowerControl();
         if (turns.isComplete) return;
@@ -3465,6 +3609,9 @@
 
       function renderGuestProfile(profile, persistent) {
         guestProfile = profile;
+        savedDecks = Array.isArray(profile.decks) ? profile.decks.map(cards => cards ? [...cards] : null) : [null, null, null];
+        activeDeckPreset = Number.isInteger(profile.activePreset) ? profile.activePreset : 0;
+        refreshLocalDeckSelects();
         guestProfilePersistent = persistent;
         guestProfileElement.hidden = false;
         guestProfileName.textContent = profile.name;
@@ -3548,6 +3695,10 @@
         playerLabelEls.forEach((label, index) => { label.textContent = `${PLAYER[index].name} · 스톤 ${CONFIG.maxTurnsPerPlayer}개`; });
         remainingPanelEls.forEach((panel, index) => {
           panel.firstChild.textContent = `${PLAYER[index].name} 남은 스톤`;
+        });
+        gameDeckButtons.forEach((button, index) => {
+          button.title = `${PLAYER[index].name}의 가방`;
+          button.setAttribute('aria-label', `${button.title}, 남은 카드 ${state.decks[index]?.length || 0}장`);
         });
         updateHud();
       }
@@ -4175,7 +4326,8 @@
             owner: state.heroSelectionOwner,
             remaining: state.heroDeadline == null ? null : Math.max(0, state.heroDeadline - Date.now())
           },
-          deck: [],
+          decks: state.decks.map(deck => deck.map(card => ({ ...card }))),
+          playerDecks: state.playerDecks.map(deck => [...deck]),
           hands: state.hands.map(hand => hand.map(card => ({ ...card }))),
           powerMeter: state.powerMeter ? { ...state.powerMeter } : null,
           nextCardId: state.nextCardId,
@@ -4304,7 +4456,8 @@
           state.heroDeadline = snapshot.hero.remaining == null ? null : Date.now() + snapshot.hero.remaining;
           if (state.heroChoices[onlineSession.playerIndex]) state.heroPendingChoice = null;
         }
-        state.deck = snapshot.deck;
+        state.decks = snapshot.decks || [[], []];
+        state.playerDecks = snapshot.playerDecks || state.playerDecks;
         state.hands = snapshot.hands;
         state.nextCardId = snapshot.nextCardId;
         state.currentMap = currentMap;
@@ -4436,6 +4589,8 @@
         state.selectedMap = map;
         state.currentMap = map;
         state.mapTime = 0;
+        state.playerDecks = [onlineSession.room?.host?.deck, onlineSession.room?.challenger?.deck]
+          .map(ids => Array.isArray(ids) && ids.length === 8 ? [...ids] : [...DEFAULT_DECK_IDS]);
         mapIndicator.textContent = `${map.name} · ${roundIndex + 1}라운드`;
         mapSelectOverlay.hidden = true;
         startOverlay.hidden = true;
@@ -4549,6 +4704,8 @@
         PLAYER[1].name = localPlayerNameInputs[1].value.trim().slice(0, 20) || '플레이어 2';
         const localLevel = guestProfile?.level || 1;
         state.playerLevels = [localLevel, localLevel];
+        state.playerDecks = localDeckSelects.map(select => select.value === '-1'
+          ? [...DEFAULT_DECK_IDS] : selectedDeck(Number(select.value), localLevel));
         updatePlayerNames();
         openMapSelection('start');
       }
@@ -4558,11 +4715,14 @@
         hideCardInspector();
         turns.reset(roundStartingPlayer());
         state.heroCardDraws = [0, 0];
-        state.deck = CARDS.map(card => ({ ...card }));
-        for (let i = state.deck.length - 1; i > 0; i -= 1) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [state.deck[i], state.deck[j]] = [state.deck[j], state.deck[i]];
-        }
+        state.decks = state.playerDecks.map(ids => {
+          const deck = ids.map(id => ({ ...deckCard(id) }));
+          for (let i = deck.length - 1; i > 0; i -= 1) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [deck[i], deck[j]] = [deck[j], deck[i]];
+          }
+          return deck;
+        });
         state.nextCardId = 0;
         state.hands = [[], []];
         state.triggerPlacementUsed = [false, false];
@@ -4595,6 +4755,190 @@
         rules.textContent = CARD_DESCRIPTIONS[card.id] || '';
         face.append(art, name, rules);
         return face;
+      }
+
+      function refreshLocalDeckSelects() {
+        localDeckSelects.forEach((select, owner) => {
+          const previous = select.value || (owner === 0 ? String(activeDeckPreset) : '-1');
+          const choices = [{ label: '기본 덱', value: '-1' }];
+          savedDecks.forEach((cards, index) => {
+            if (deckIsValid(cards)) choices.push({ label: `가방 ${index + 1}`, value: String(index) });
+          });
+          select.replaceChildren(...choices.map(choice => {
+            const option = document.createElement('option');
+            option.value = choice.value;
+            option.textContent = choice.label;
+            return option;
+          }));
+          select.value = choices.some(choice => choice.value === previous) ? previous : '-1';
+        });
+      }
+
+      function renderDeckEditor() {
+        const draft = deckDrafts[activeDeckPreset] || [];
+        const counts = new Map();
+        draft.forEach(id => counts.set(id, (counts.get(id) || 0) + 1));
+        const doubled = [...counts.values()].some(count => count === 2);
+        deckCount.textContent = `${draft.length} / 8`;
+        deckSaveButton.disabled = !deckIsValid(draft);
+        deckPresets.replaceChildren(...[0, 1, 2].map(index => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.textContent = String(index + 1);
+          button.setAttribute('aria-pressed', String(index === activeDeckPreset));
+          button.title = savedDecks[index] ? `가방 ${index + 1} 저장됨` : `가방 ${index + 1} 비어 있음`;
+          button.addEventListener('click', () => selectDeckPreset(index));
+          return button;
+        }));
+        deckPool.replaceChildren(...cardDefinitions()
+          .filter(card => (card.unlockLevel || 1) <= (guestProfile?.level || 1))
+          .map(card => {
+            const count = counts.get(card.id) || 0;
+            const unavailable = draft.length >= 8 || count >= 2 || (count === 1 && doubled);
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = `deck-card${count === 1 && !doubled && draft.length < 8 ? ' bonus-ready' : ''}${count && doubled || unavailable ? ' unavailable' : ''}`;
+            button.dataset.deckId = card.id;
+            button.dataset.deckSource = 'pool';
+            button.disabled = unavailable;
+            button.title = `${card.name} · ${CARD_DESCRIPTIONS[card.id]}`;
+            button.append(createCardFace(card));
+            return button;
+          }));
+        deckBag.replaceChildren(...Array.from({ length: 8 }, (_, index) => {
+          const id = draft[index];
+          if (!id) {
+            const slot = document.createElement('div');
+            slot.className = 'deck-empty-slot';
+            slot.style.cssText = 'min-height:102px;border:1px dashed #526a65;border-radius:4px';
+            return slot;
+          }
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'deck-card';
+          button.dataset.deckId = id;
+          button.dataset.deckIndex = String(index);
+          button.dataset.deckSource = 'bag';
+          button.title = `${deckCard(id).name} · 가방에서 빼기`;
+          button.append(createCardFace(deckCard(id)));
+          return button;
+        }));
+      }
+
+      function addDeckCard(id) {
+        const draft = deckDrafts[activeDeckPreset] ||= [];
+        const count = draft.filter(item => item === id).length;
+        if (draft.length >= 8 || count >= 2 || (count && draft.some(item => draft.filter(other => other === item).length > 1))) return;
+        draft.push(id);
+        deckStatus.textContent = '';
+        renderDeckEditor();
+      }
+
+      function removeDeckCard(index) {
+        const draft = deckDrafts[activeDeckPreset];
+        if (!draft || index < 0 || index >= draft.length) return;
+        draft.splice(index, 1);
+        deckStatus.textContent = '';
+        renderDeckEditor();
+      }
+
+      async function persistDeckSettings(nextDecks, nextPreset) {
+        if (guestProfile?.username && guestToken) {
+          const response = await fetch('/api/profile/decks', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${guestToken}` },
+            body: JSON.stringify({ decks: nextDecks, activePreset: nextPreset })
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(data.error || '가방 저장에 실패했습니다.');
+          guestProfile = data.profile;
+        }
+        savedDecks = nextDecks.map(cards => cards ? [...cards] : null);
+        activeDeckPreset = nextPreset;
+        refreshLocalDeckSelects();
+      }
+
+      async function selectDeckPreset(index) {
+        if (index === activeDeckPreset) return;
+        try {
+          await persistDeckSettings(savedDecks, index);
+          if (!deckDrafts[index]) deckDrafts[index] = savedDecks[index] ? [...savedDecks[index]] : [];
+          deckStatus.textContent = savedDecks[index] ? '' : '저장한 가방이 없으면 기본 덱으로 플레이합니다.';
+          renderDeckEditor();
+        } catch (error) { deckStatus.textContent = error.message; }
+      }
+
+      function openDeckEditor(fromScreen) {
+        deckReturnScreen = fromScreen;
+        deckDrafts = savedDecks.map(cards => cards ? [...cards] : []);
+        deckStatus.textContent = savedDecks[activeDeckPreset] ? '' : '저장한 가방이 없으면 기본 덱으로 플레이합니다.';
+        renderDeckEditor();
+        startOverlay.hidden = true;
+        deckOverlay.hidden = false;
+      }
+
+      function closeDeckEditor() {
+        deckOverlay.hidden = true;
+        startOverlay.hidden = false;
+        showStartScreen(deckReturnScreen);
+      }
+
+      function beginDeckDrag(event) {
+        const cardElement = event.target.closest('.deck-card[data-deck-id]');
+        if (!cardElement || cardElement.disabled || deckOverlay.hidden) return;
+        event.preventDefault();
+        deckDrag = {
+          id: cardElement.dataset.deckId, source: cardElement.dataset.deckSource,
+          index: Number(cardElement.dataset.deckIndex), pointerId: event.pointerId,
+          startX: event.clientX, startY: event.clientY, ghost: null
+        };
+      }
+
+      function moveDeckDrag(event) {
+        if (!deckDrag || deckDrag.pointerId !== event.pointerId) return;
+        if (!deckDrag.ghost && Math.hypot(event.clientX - deckDrag.startX, event.clientY - deckDrag.startY) > 6) {
+          const ghost = document.createElement('div');
+          ghost.className = `deck-drag-ghost${deckDrag.source === 'bag' ? ' from-bag' : ''}`;
+          ghost.append(createCardFace(deckCard(deckDrag.id)));
+          document.body.append(ghost);
+          deckDrag.ghost = ghost;
+        }
+        if (!deckDrag.ghost) return;
+        deckDrag.ghost.style.left = `${event.clientX}px`;
+        deckDrag.ghost.style.top = `${event.clientY}px`;
+        deckBag.classList.toggle('drop-ready', deckDrag.source === 'pool' && deckBag.contains(document.elementFromPoint(event.clientX, event.clientY)));
+        deckPool.classList.toggle('drop-ready', deckDrag.source === 'bag' && deckPool.contains(document.elementFromPoint(event.clientX, event.clientY)));
+      }
+
+      function finishDeckDrag(event) {
+        if (!deckDrag || deckDrag.pointerId !== event.pointerId) return;
+        const target = document.elementFromPoint(event.clientX, event.clientY);
+        const moved = Boolean(deckDrag.ghost);
+        deckDrag.ghost?.remove();
+        deckBag.classList.remove('drop-ready');
+        deckPool.classList.remove('drop-ready');
+        if (deckDrag.source === 'pool' && (!moved || deckBag.contains(target))) addDeckCard(deckDrag.id);
+        if (deckDrag.source === 'bag' && (!moved || deckPool.contains(target))) removeDeckCard(deckDrag.index);
+        deckDrag = null;
+      }
+
+      function openGameDeck(owner) {
+        if (!state.playerDecks[owner]?.length) return;
+        hideCardInspector();
+        gameDeckTitle.textContent = `${PLAYER[owner].name}의 가방`;
+        const remaining = new Map();
+        for (const card of state.decks[owner] || []) remaining.set(card.id, (remaining.get(card.id) || 0) + 1);
+        gameDeckList.replaceChildren(...state.playerDecks[owner].map(id => {
+          const card = deckCard(id);
+          const inBag = remaining.get(id) || 0;
+          if (inBag) remaining.set(id, inBag - 1);
+          const tile = document.createElement('div');
+          tile.className = `deck-card${inBag ? '' : ' drawn'}`;
+          tile.title = `${card.name} · ${inBag ? '가방에 남음' : '이미 뽑음'}`;
+          tile.append(createCardFace(card));
+          return tile;
+        }));
+        gameDeckOverlay.hidden = false;
       }
 
       function hideCardInspector() {
@@ -5477,6 +5821,53 @@
       document.querySelector('#openPlayMenuButton').addEventListener('click', () => showStartScreen('startMenu'));
       document.querySelector('#openTutorialButton').addEventListener('click', startTutorial);
       document.querySelector('#openCatalogButton').addEventListener('click', openCatalog);
+      document.querySelector('#openHomeDeckButton').addEventListener('click', () => openDeckEditor('homeScreen'));
+      document.querySelector('#openMenuDeckButton').addEventListener('click', () => openDeckEditor('startMenu'));
+      document.querySelector('#deckBackButton').addEventListener('click', closeDeckEditor);
+      deckSaveButton.addEventListener('click', async () => {
+        const cards = deckDrafts[activeDeckPreset];
+        if (!deckIsValid(cards)) return;
+        deckSaveButton.disabled = true;
+        try {
+          const next = savedDecks.map((deck, index) => index === activeDeckPreset ? [...cards] : deck);
+          await persistDeckSettings(next, activeDeckPreset);
+          deckStatus.textContent = `가방 ${activeDeckPreset + 1}을 저장했습니다.`;
+          renderDeckEditor();
+        } catch (error) {
+          deckStatus.textContent = error.message;
+          renderDeckEditor();
+        }
+      });
+      deckResetButton.addEventListener('click', async () => {
+        try {
+          const next = savedDecks.map((deck, index) => index === activeDeckPreset ? null : deck);
+          await persistDeckSettings(next, activeDeckPreset);
+          deckDrafts[activeDeckPreset] = [];
+          deckStatus.textContent = '가방을 비웠습니다. 저장한 가방이 없으면 기본 덱으로 플레이합니다.';
+          renderDeckEditor();
+        } catch (error) { deckStatus.textContent = error.message; }
+      });
+      deckPool.addEventListener('pointerdown', beginDeckDrag);
+      deckBag.addEventListener('pointerdown', beginDeckDrag);
+      for (const zone of [deckPool, deckBag]) zone.addEventListener('click', event => {
+        if (event.detail !== 0) return;
+        const card = event.target.closest('.deck-card[data-deck-id]');
+        if (!card) return;
+        if (card.dataset.deckSource === 'pool' && !card.disabled) addDeckCard(card.dataset.deckId);
+        if (card.dataset.deckSource === 'bag') removeDeckCard(Number(card.dataset.deckIndex));
+      });
+      document.addEventListener('pointermove', moveDeckDrag);
+      document.addEventListener('pointerup', finishDeckDrag);
+      document.addEventListener('pointercancel', event => {
+        if (!deckDrag || deckDrag.pointerId !== event.pointerId) return;
+        deckDrag.ghost?.remove();
+        deckDrag = null;
+        deckBag.classList.remove('drop-ready');
+        deckPool.classList.remove('drop-ready');
+      });
+      gameDeckButtons.forEach(button => button.addEventListener('click', () => openGameDeck(Number(button.dataset.owner))));
+      document.querySelector('#gameDeckBackButton').addEventListener('click', () => { gameDeckOverlay.hidden = true; });
+      refreshLocalDeckSelects();
       openAccountButton.addEventListener('click', () => {
         if (guestProfile?.username) showStartScreen('accountSettingsScreen');
         else showAccountScreen();
@@ -5530,6 +5921,10 @@
         const token = guestToken;
         guestToken = null;
         guestProfile = null;
+        savedDecks = [null, null, null];
+        deckDrafts = [null, null, null];
+        activeDeckPreset = 0;
+        refreshLocalDeckSelects();
         state.playerLevels = [1, 1];
         guestProfileElement.hidden = true;
         openAccountButton.hidden = true;
@@ -5598,6 +5993,8 @@
         roomCodeInput.focus();
       });
       localPlayScreenButton.addEventListener('click', () => {
+        refreshLocalDeckSelects();
+        if (deckIsValid(savedDecks[activeDeckPreset])) localDeckSelects[0].value = String(activeDeckPreset);
         showStartScreen('localPlayScreen');
         localPlayerNameInputs[0].focus();
       });

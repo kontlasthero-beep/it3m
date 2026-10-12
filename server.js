@@ -4,6 +4,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { WebSocket, WebSocketServer } = require('ws');
 const { createProfileStore, matchOutcome, parseBearer } = require('./progression');
+const { deckForPreset } = require('./deck-config');
 
 const ROOT = __dirname;
 const PORT = Number(process.env.PORT) || 4173;
@@ -86,8 +87,8 @@ function roomView(room) {
   return {
     code: room.code,
     status: room.status,
-    host: { name: room.host.name, level: room.host.level, mapId: room.host.mapId },
-    challenger: room.challenger ? { name: room.challenger.name, level: room.challenger.level, mapId: room.challenger.mapId } : null,
+    host: { name: room.host.name, level: room.host.level, deck: room.host.deck, mapId: room.host.mapId },
+    challenger: room.challenger ? { name: room.challenger.name, level: room.challenger.level, deck: room.challenger.deck, mapId: room.challenger.mapId } : null,
     seriesMaps: room.seriesMaps,
     matchId: room.matchId || null,
     snapshotRevision: room.snapshotRevision,
@@ -327,6 +328,20 @@ async function handleApi(request, response, url) {
       return fail(response, 503, '프로필 저장소를 사용할 수 없습니다.');
     }
   }
+  if (request.method === 'PUT' && url.pathname === '/api/profile/decks') {
+    const token = parseBearer(request.headers.authorization);
+    if (!token) return fail(response, 401, '프로필 인증이 필요합니다.');
+    const data = await readJson(request);
+    try {
+      const profile = await profiles.saveDecks(token, data.decks, data.activePreset);
+      if (!profile) return fail(response, 401, '계정 로그인이 필요합니다.');
+      return sendJson(response, 200, { profile, persistent: profiles.persistent });
+    } catch (error) {
+      if (error.message.includes('가방은')) return fail(response, 400, error.message);
+      console.error('Deck save failed:', error);
+      return fail(response, 503, '카드 덱을 저장할 수 없습니다.');
+    }
+  }
   if (request.method === 'GET' && url.pathname === '/api/rooms') {
     const publicRooms = [...rooms.values()]
       .filter(room => room.isPublic && room.status === 'waiting' && !room.challenger)
@@ -348,7 +363,9 @@ async function handleApi(request, response, url) {
     const token = crypto.randomBytes(24).toString('base64url');
     const room = {
       code,
-      host: { name: profile.profile.name, level: profile.profile.level, token, mapId: null, profileId: profile.internalId },
+      host: { name: profile.profile.name, level: profile.profile.level,
+        deck: deckForPreset(profile.profile.decks, profile.profile.activePreset, profile.profile.level),
+        token, mapId: null, profileId: profile.internalId },
       isPublic: data.isPublic === true,
       passwordHash: createPasswordHash(password),
       createdAt: Date.now(),
@@ -390,7 +407,9 @@ async function handleApi(request, response, url) {
     if (profile.internalId === room.host.profileId) return fail(response, 409, '자신이 만든 방에는 참가할 수 없습니다.');
     if (room.status !== 'waiting' || room.challenger) return fail(response, 409, '이미 다른 도전자가 참가한 방입니다.');
     const token = crypto.randomBytes(24).toString('base64url');
-    room.challenger = { name: profile.profile.name, level: profile.profile.level, token, mapId: null, profileId: profile.internalId };
+    room.challenger = { name: profile.profile.name, level: profile.profile.level,
+      deck: deckForPreset(profile.profile.decks, profile.profile.activePreset, profile.profile.level),
+      token, mapId: null, profileId: profile.internalId };
     room.status = 'choosing';
     broadcastRoom(room);
     return sendJson(response, 200, { code: room.code, token, role: 'challenger', room: roomView(room) });

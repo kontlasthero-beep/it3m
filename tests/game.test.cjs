@@ -12,7 +12,7 @@ function game() {
   function element() {
     const attrs = {};
     return {
-      style: {}, dataset: {}, hidden: false, value: '', checked: false, width: 1200, height: 710,
+      style: { setProperty(name, value) { this[name] = value; } }, dataset: {}, hidden: false, value: '', checked: false, width: 1200, height: 710,
       classList: { add() {}, remove() {}, toggle() {} }, listeners: {}, children: [],
       addEventListener(type, callback) { this.listeners[type] = callback; },
       setAttribute(key, value) { attrs[key] = value; }, getAttribute(key) { return attrs[key]; },
@@ -131,6 +131,32 @@ test('guest timer stays frozen from host snapshots while a stone slides', () => 
   guest.run(`updateTurnTimer(); assert.ok(turnTimeRemaining()<pausedValue-2400);`);
 });
 
+test('bag stack thins after a draw and its card travels from the bag through center to hand', () => {
+  const g = game();
+  g.run(`
+    const bag = document.createElement('button');
+    bag.getBoundingClientRect = () => ({ left: 100, top: 100, width: 50, height: 54 });
+    gameDeckButtons.push(bag);
+    state.decks[0] = Array.from({ length: 8 }, () => ({ id: 'pulse' }));
+    updateGameDeckButtons();
+    assert.equal(bag.children.length, 9);
+    assert.equal(bag.dataset.remaining, '8');
+    state.decks[0].pop();
+    updateGameDeckButtons();
+    assert.equal(bag.children.length, 8);
+    assert.equal(bag.dataset.remaining, '7');
+    cardDrawVisual = { owner: 0, startedAt: performance.now() };
+    dealOverlay.hidden = false;
+    updateCardDrawVisual(performance.now());
+    assert.equal(dealCard.style.left, '125px');
+    assert.equal(dealCard.style.top, '127px');
+  `);
+  g.tick(280);
+  g.run(`updateCardDrawVisual(performance.now()); assert.equal(dealCard.style.left, '600px');`);
+  g.tick(1270);
+  g.run(`updateCardDrawVisual(performance.now()); assert.equal(dealCard.style.left, '42px');`);
+});
+
 test('online turn owner alone controls speed, including host validation', () => {
   const {host, guest, send} = onlinePair();
   host.run(`updateHud(); assert.equal(speedToggle.disabled,true);
@@ -163,23 +189,23 @@ test('ice friction rises by 20 percent and catalog uses the card illustration fi
 
 test('background draw completes exactly once and resets cancel stale draw callbacks', () => {
   const g = game();
-  g.run(`globalThis.completed=0; state.deck=[{id:'guard',name:'방호벽'}];
+  g.run(`globalThis.completed=0; state.decks[0]=[{id:'guard',name:'방호벽'}];
     drawCardForPlayer(0,()=>{completed++;state.phase='aiming';});
     assert.equal(cardDrawVisual.card.id,'guard');`);
   g.tick(1600); g.run('advanceGameClock(performance.now())'); g.flush();
   g.run(`assert.equal(completed,1); assert.equal(state.hands[0].length,1);
     assert.equal(state.hands[0][0].id,'guard');
-    state.deck=[{id:'ammo',name:'총알 장전'}]; drawCardForPlayer(0,()=>completed++); clearPracticeBoard();`);
+    state.decks[0]=[{id:'ammo',name:'총알 장전'}]; drawCardForPlayer(0,()=>completed++); clearPracticeBoard();`);
   g.tick(1600); g.run('advanceGameClock(performance.now())'); g.flush();
   g.run('assert.equal(completed,1); assert.equal(state.hands[0].length,0)');
 });
 
 test('draw snapshot shares both players cards without restarting its animation', () => {
   const {host, guest, send} = onlinePair();
-  host.run(`state.deck=[{id:'guard',name:'방호벽'}]; drawCardForPlayer(0,()=>{});
+  host.run(`state.decks[0]=[{id:'guard',name:'방호벽'}]; drawCardForPlayer(0,()=>{});
     assert.equal(createOnlineSnapshot().cardDraw.card.id,'guard');`);
   host.flush();
-  host.run(`state.deck=[{id:'hardening',name:'경질화'}]; drawCardForPlayer(1,()=>{});`);
+  host.run(`state.decks[1]=[{id:'hardening',name:'경질화'}]; drawCardForPlayer(1,()=>{});`);
   send(2);
   guest.run(`assert.equal(cardDrawVisual.card.id,'hardening'); globalThis.drawStarted=cardDrawVisual.startedAt;`);
   host.tick(50); guest.tick(50); send(3);
@@ -429,7 +455,7 @@ test('service worker bypasses even a preexisting cached room list', async () => 
 
 test('tutorial lessons cover every card and trigger; practice uses fixed hands without a timer', () => {
   const g = game();
-  g.run(`startTutorial(); assert.equal(state.tutorial.index,0); assert.equal(state.turnDeadline,null);
+  g.run(`guestProfile={level:2}; state.playerLevels=[2,2]; startTutorial(); assert.equal(state.tutorial.index,0); assert.equal(state.turnDeadline,null);
     const lessons=tutorialLessons();
     for (const card of cardDefinitions()) {
       const index=lessons.findIndex(l=>l.kind==='card' && l.elementId===card.id);
@@ -639,14 +665,47 @@ test('hero selection times out to one of the offered abilities', () => {
 
 test('hunter gets extra ammo as first and last-turn cards without consuming the deck', () => {
   const g = game();
-  g.run(`state.heroChoices[0]='hunter'; turns.reset(0); state.deck=CARDS.map(card=>({...card}));
+  g.run(`state.heroChoices[0]='hunter'; turns.reset(0); state.decks[0]=DEFAULT_DECK_IDS.map(id=>({...deckCard(id)}));
     drawCardForPlayer(0,()=>{});`);
   g.flush();
-  g.run(`assert.equal(state.hands[0][0].id,'ammo'); assert.equal(state.deck.length,CARDS.length);
+  g.run(`assert.equal(state.hands[0][0].id,'ammo'); assert.equal(state.decks[0].length,8);
     turns.globalTurn=8; drawCardForPlayer(0,()=>{});`);
   g.flush();
-  g.run(`assert.equal(state.hands[0][1].id,'ammo'); assert.equal(state.deck.length,CARDS.length);
+  g.run(`assert.equal(state.hands[0][1].id,'ammo'); assert.equal(state.decks[0].length,8);
     assert.equal(state.heroCardDraws[0],2);`);
+});
+
+test('bag editor enforces eight cards, one doubled kind, and saved local presets', () => {
+  const g = game();
+  g.run(`openDeckEditor('homeScreen');
+    assert.equal(deckSaveButton.disabled,true);
+    for(const id of DEFAULT_DECK_IDS.slice(0,7)) addDeckCard(id);
+    addDeckCard('hardening');
+    assert.equal(deckDrafts[0].length,8);
+    assert.equal(deckDrafts[0].filter(id=>id==='hardening').length,2);
+    assert.equal(deckSaveButton.disabled,false);
+    assert.equal(deckIsValid(deckDrafts[0]),true);
+    savedDecks[0]=[...deckDrafts[0]];
+    refreshLocalDeckSelects();
+    localDeckSelects[0].value='0'; localDeckSelects[1].value='-1';
+    startLocalGame();
+    assert.equal(state.playerDecks[0].filter(id=>id==='hardening').length,2);
+    assert.equal(state.playerDecks[1].filter(id=>id==='hardening').length,1);
+    assert.equal(state.playerDecks[0].length,8);`);
+});
+
+test('players draw only from their own bag and drawn cards turn gray in bag view', () => {
+  const g = game();
+  g.run(`state.playerDecks=[['guard','pulse','brick','hardening','ammo','blackhole','bluffing','reposition'], [...DEFAULT_DECK_IDS]];
+    dealCards();
+    assert.equal(state.decks[0].length,7);
+    assert.equal(state.decks[1].length,8);
+    const drawn=state.playerDecks[0].find(id=>!state.decks[0].some(card=>card.id===id));
+    openGameDeck(0);
+    assert.equal(gameDeckOverlay.hidden,false);
+    assert.equal(gameDeckList.children.length,8);
+    assert.equal(gameDeckList.children.filter(tile=>tile.className.includes('drawn')).length,1);
+    assert.equal(state.decks[1].length,8);`);
 });
 
 test('trap master gets two placements, big boy changes radius and friction, joker changes fall scoring', () => {
