@@ -11,8 +11,7 @@ const PORT = Number(process.env.PORT) || 4173;
 const ROOM_CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const MAP_IDS = ['classic', 'ice', 'moving-walls', 'items'];
 const rooms = new Map();
-const LOCAL_TEST_LEVEL = !process.env.DATABASE_URL && process.env.NODE_ENV !== 'production' &&
-  process.env.UCC_LOCAL_TEST_LEVEL === '100' ? 100 : null;
+const LOCAL_TEST_LEVEL = !process.env.DATABASE_URL && process.env.NODE_ENV !== 'production' ? 100 : null;
 const profiles = createProfileStore(process.env.DATABASE_URL, { localTestLevel: LOCAL_TEST_LEVEL });
 const loginAttempts = new Map();
 const webSocketServer = new WebSocketServer({ noServer: true, maxPayload: 2 * 1024 * 1024, perMessageDeflate: false });

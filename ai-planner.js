@@ -6,10 +6,14 @@
   const STOP_SPEED = 12;
   const STEP = 1 / 120;
   const SETTINGS = {
-    easy: { candidates: 132, offsets: [.88, .96, 1.04, 1.12], replyCount: 8, finalists: 5, cardDepth: 1, uncertainty: .035 },
-    normal: { candidates: 192, offsets: [.86, .94, 1.02, 1.1, 1.18], replyCount: 10, finalists: 7, cardDepth: 2, uncertainty: .015 },
-    hard: { candidates: 280, offsets: [.84, .92, 1, 1.08, 1.16], replyCount: 12, finalists: 10, cardDepth: 3, uncertainty: .004 }
+    easy: { candidates: 132, offsets: [.88, .96, 1.04, 1.12], replyCount: 8, finalists: 5, cardDepth: 1, uncertainty: .035,
+      lookaheadDepth: 0, lookaheadCandidates: 0, lookaheadReplyCount: 0 },
+    normal: { candidates: 240, offsets: [.84, .92, 1, 1.08, 1.16], replyCount: 12, finalists: 8, cardDepth: 2, uncertainty: .008,
+      lookaheadDepth: 1, lookaheadCandidates: 3, lookaheadReplyCount: 2, lookaheadBranches: 1 },
+    hard: { candidates: 560, offsets: [.76, .84, .92, 1, 1.08, 1.16, 1.24], replyCount: 18, finalists: 14, cardDepth: 4, uncertainty: .001,
+      lookaheadDepth: 2, lookaheadCandidates: 3, lookaheadReplyCount: 3, lookaheadBranches: 1 }
   };
+  const DEFAULT_WEIGHTS = { knockout: 1.12, replyRisk: .78, cardCost: 5.5, lookahead: .58 };
 
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
   const active = unit => unit.status !== 'fallen' && unit.status !== 'ready';
@@ -265,16 +269,30 @@
         const angle = ability.guardAngle + index * Math.PI * 2 / count;
         const sx = source.x + Math.cos(angle) * orbit, sy = source.y + Math.sin(angle) * orbit;
         const svx = -Math.sin(angle) * orbit * 1.6875, svy = Math.cos(angle) * orbit * 1.6875;
-        for (const target of world.units) {
-          if (target === source || !active(target) || phased(target, world.turn)) continue;
-          const dx = target.x - sx, dy = target.y - sy;
-          const distance = Math.hypot(dx, dy) || .001;
-          if (distance >= target.radius + satRadius) continue;
+        for (const target of [...world.units, ...world.bricks]) {
+          if (target === source || target.barrier || target.status === 'fallen' || target.status === 'ready' ||
+              (target.radius && phased(target, world.turn))) continue;
+          const isBrick = Boolean(target.width);
+          const closestX = isBrick ? clamp(sx, target.x - target.width / 2, target.x + target.width / 2) : target.x;
+          const closestY = isBrick ? clamp(sy, target.y - target.height / 2, target.y + target.height / 2) : target.y;
+          let dx = closestX - sx, dy = closestY - sy;
+          let distance = Math.hypot(dx, dy);
+          const minimum = satRadius + (isBrick ? 0 : target.radius);
+          if (distance >= minimum) continue;
+          if (distance < .001) {
+            dx = target.x < sx ? -1 : 1;
+            dy = 0;
+            distance = 1;
+          }
           const nx = dx / distance, ny = dy / distance;
-          target.x += nx * (target.radius + satRadius - distance);
-          target.y += ny * (target.radius + satRadius - distance);
+          const overlap = minimum - distance;
+          target.x += nx * overlap;
+          target.y += ny * overlap;
           const toward = (target.vx - svx) * nx + (target.vy - svy) * ny;
-          if (toward < 0) { target.vx -= (1 + RESTITUTION) * toward * nx; target.vy -= (1 + RESTITUTION) * toward * ny; }
+          if (toward < 0) {
+            target.vx -= (1 + RESTITUTION) * toward * nx;
+            target.vy -= (1 + RESTITUTION) * toward * ny;
+          }
           if (target.status === 'resting' && Math.hypot(target.vx, target.vy) > STOP_SPEED) target.status = 'sliding';
         }
       }
@@ -323,6 +341,13 @@
       if (other.id === unit.id || !active(other)) continue;
       for (const dy of [0, -other.radius * .7, other.radius * .7])
         targets.push({ x: other.x + (random() - .5) * 22, y: other.y + dy });
+      if (other.owner !== unit.owner && other.ability?.guard) {
+        const orbit = other.radius * 1.875;
+        for (let index = 0; index < 8; index += 1) {
+          const angle = index * Math.PI / 4;
+          targets.push({ x: other.x + Math.cos(angle) * orbit, y: other.y + Math.sin(angle) * orbit });
+        }
+      }
     }
     if (snapshot.triggers.length) for (const trigger of snapshot.triggers)
       targets.push({ x: trigger.x, y: trigger.y });
@@ -432,13 +457,125 @@
     return choice;
   }
 
-  function plan(snapshot, difficulty = 'normal') {
-    const settings = SETTINGS[difficulty] || SETTINGS.normal;
+  function lookahead(world, actor, difficulty, depth, options, spent = []) {
+    if (depth <= 0) return 0;
+    const future = cloneWorld(world);
+    const priorLaunch = future.units.find(unit => unit.id === future.launchId);
+    const id = `lookahead-${actor}-${future.turn}-${depth}`;
+    future.actor = actor;
+    future.turn += 2;
+    future.launchId = id;
+    future.units.push({ id, owner: actor, x: TABLE.launchX, y: 355, vx: 0, vy: 0,
+      radius: priorLaunch?.radius || 29, status: 'ready', heroFriction: priorLaunch?.heroFriction || 1,
+      powerScale: priorLaunch?.powerScale || 1, fallPenalty: priorLaunch?.fallPenalty || 0,
+      pendingPulseTriggers: [] });
+    const settings = options.settings;
+    const offsets = difficulty === 'hard' ? [.88, 1, 1.12] : [.92, 1.08];
+    const candidateShots = candidates(future, settings.lookaheadCandidates, offsets);
+    const baseline = score(future);
+    const available = (options.hand || []).filter(card => !spent.includes(card));
+    const cardOrder = ['blackhole', 'pulse', 'guard', 'hardening', 'bluffing'];
+    const cards = available.sort((a, b) => cardOrder.indexOf(a) - cardOrder.indexOf(b))
+      .slice(0, difficulty === 'hard' ? 3 : 2);
+    const targets = future.units.filter(unit => unit.owner === actor && active(unit) && unit.id !== id)
+      .sort((a, b) => a.x - b.x).slice(0, 2);
+    let best = 0;
+    const branches = [];
+    const stride = Math.max(1, Math.ceil(candidateShots.length / settings.lookaheadCandidates));
+    for (let index = 0; index < candidateShots.length; index += stride) {
+      const shot = candidateShots[index];
+      const variants = [[]];
+      for (const card of cards) {
+        if (card === 'blackhole') variants.push([{ card, at: .7 }], [{ card, at: 1 }]);
+        else if (card === 'pulse' || card === 'bluffing') variants.push([{ card, at: 0 }]);
+        else if (card === 'guard' || card === 'hardening') {
+          const target = targets[0] || future.units.find(unit => unit.id === id);
+          variants.push([{ card, at: 0, targetId: target.id }]);
+        }
+      }
+      for (const tactics of variants) {
+        const result = simulate(future, shot, 8, tactics);
+        const nextScore = result.scores[actor] - result.scores[1 - actor];
+        const baseScore = baseline[actor] - baseline[1 - actor];
+        const knocked = future.units.filter(unit => unit.owner !== actor && active(unit)).length -
+          result.world.units.filter(unit => unit.owner !== actor && active(unit)).length;
+        const risk = result.world.turn < 9 ? replyRisk(result.world, actor,
+          settings.lookaheadReplyCount, options.enemyHand || [], difficulty === 'hard') : 0;
+        const cardPenalty = tactics.length * options.weights.cardCost;
+        const value = nextScore - baseScore + knocked * (future.koPoints || 25) * options.weights.knockout -
+          risk * options.weights.replyRisk - cardPenalty;
+        if (depth > 1) branches.push({ value, world: result.world,
+          spent: [...spent, ...tactics.map(tactic => tactic.card)] });
+        else best = Math.max(best, value);
+      }
+    }
+    if (depth > 1) {
+      branches.sort((a, b) => b.value - a.value);
+      for (const branch of branches.slice(0, settings.lookaheadBranches || 1)) {
+        const continuation = lookahead(branch.world, actor, difficulty, depth - 1, options, branch.spent);
+        best = Math.max(best, branch.value + continuation * options.weights.lookahead);
+      }
+    }
+    return best;
+  }
+
+  function chooseStructure(snapshot, difficulty, settings, weights) {
+    const points = (snapshot.structureCandidates || []).filter(point =>
+      !(snapshot.triggers || []).some(trigger => Math.hypot(point.x - trigger.x, point.y - trigger.y) < 45));
+    const hand = [...new Set(snapshot.hand || [])].filter(card => card === 'brick' || card === 'data-barrier');
+    if (!points.length || !hand.length || snapshot.hasReply === false) return null;
+    const actor = snapshot.actor;
+    const enemyHand = snapshot.enemyHand || [];
+    const offsets = [.9, 1.1];
+    const valueAfterSetup = world => {
+      const base = score(world);
+      const shots = candidates(world, settings.structureCandidates || 4, offsets);
+      let best = -Infinity;
+      const stride = Math.max(1, Math.ceil(shots.length / (settings.structureCandidates || 4)));
+      for (let index = 0; index < shots.length; index += stride) {
+        const result = simulate(world, shots[index], 8);
+        const delta = (result.scores[actor] - result.scores[1 - actor]) -
+          (base[actor] - base[1 - actor]);
+        const knocked = world.units.filter(unit => unit.owner !== actor && active(unit)).length -
+          result.world.units.filter(unit => unit.owner !== actor && active(unit)).length;
+        const risk = replyRisk(result.world, actor, settings.structureReplyCount || 2,
+          enemyHand, difficulty === 'hard');
+        best = Math.max(best, delta + knocked * (world.koPoints || 25) * weights.knockout -
+          risk * weights.replyRisk);
+      }
+      return best;
+    };
+    const baseline = valueAfterSetup(snapshot);
+    let selected = null;
+    let bestGain = 4;
+    for (const card of hand) for (const point of points.slice(0, 6)) {
+      const trial = cloneWorld(snapshot);
+      trial.bricks.push({ id: `planned-${card}`, ...point, owner: actor, barrier: card === 'data-barrier',
+        expiresAtTurn: card === 'data-barrier' ? snapshot.turn + 2 : null,
+        width: 18, height: 64, mass: 2, restitution: .58, frictionMultiplier: card === 'data-barrier' ? 1 : 1.5,
+        vx: 0, vy: 0 });
+      const gain = valueAfterSetup(trial) - baseline - weights.cardCost;
+      if (gain > bestGain) { bestGain = gain; selected = { ...point, type: card, value: gain }; }
+    }
+    return selected;
+  }
+
+  function plan(snapshot, difficulty = 'normal', tuning = {}) {
+    const settings = { ...(SETTINGS[difficulty] || SETTINGS.normal), ...(tuning.settings || {}) };
+    const weights = { ...DEFAULT_WEIGHTS, ...(tuning.weights || snapshot.aiWeights || {}) };
+    const options = { settings, weights, hand: snapshot.hand || [], enemyHand: snapshot.enemyHand || [] };
     const actor = snapshot.actor;
     const enemyHand = snapshot.enemyHand || [];
     const useEnemyCards = difficulty === 'hard';
     const trigger = chooseTrigger(snapshot, settings, enemyHand, useEnemyCards);
     if (trigger) snapshot = { ...snapshot, triggers: [...snapshot.triggers, trigger] };
+    const structure = difficulty === 'easy' ? null : chooseStructure(snapshot, difficulty, settings, weights);
+    if (structure) snapshot = { ...snapshot, bricks: [...snapshot.bricks, {
+      id: `planned-${structure.type}`, x: structure.x, y: structure.y, owner: actor,
+      barrier: structure.type === 'data-barrier', expiresAtTurn: structure.type === 'data-barrier' ? snapshot.turn + 2 : null,
+      width: 18, height: 64, mass: 2, restitution: .58,
+      frictionMultiplier: structure.type === 'data-barrier' ? 1 : 1.5, vx: 0, vy: 0
+    }] };
     const baseline = score(snapshot);
     const shots = candidates(snapshot, settings.candidates, settings.offsets);
     const ranked = [];
@@ -457,7 +594,8 @@
       const styleBonus = snapshot.style === 'attacker' ? knocked * 10 :
         snapshot.style === 'controller' ? trapped * 5 :
           snapshot.style === 'defender' ? -exposed * 5 : 0;
-      ranked.push({ shot, result, value: delta + styleBonus -
+      const knockoutPriority = knocked * (snapshot.koPoints || 25) * weights.knockout;
+      ranked.push({ shot, result, value: delta + knockoutPriority + styleBonus -
         exposed * (difficulty === 'easy' ? 0 : 2) });
     }
     ranked.sort((a, b) => b.value - a.value);
@@ -475,8 +613,8 @@
         if (card === 'hardening' || card === 'guard' || card === 'bluffing')
           for (const target of protectedStones)
             variants.push([{ card, at: 0, targetId: target.id }]);
-        if (card === 'blackhole' || card === 'hardening' || card === 'pulse')
-          variants.push([{ card, at: card === 'blackhole' ? 1 : .7 }]);
+        if (card === 'blackhole') variants.push([{ card, at: .7 }], [{ card, at: 1 }]);
+        else if (card === 'hardening' || card === 'pulse') variants.push([{ card, at: .7 }]);
       }
       if (settings.cardDepth > 1) for (const first of hand) for (const second of hand) {
         if (first === second || !['guard', 'bluffing', 'pulse'].includes(first) ||
@@ -492,12 +630,24 @@
             { card: first, at: 0 }, { card: second, at: second === 'blackhole' ? 1 : .7 }]);
         }
       }
+      if (settings.cardDepth > 3 && protectedStones.length &&
+          hand.includes('guard') && hand.includes('pulse') && hand.includes('blackhole') && hand.includes('hardening')) {
+        variants.push([
+          { card: 'guard', at: 0, targetId: protectedStones[0].id },
+          { card: 'hardening', at: 0, targetId: protectedStones[0].id },
+          { card: 'pulse', at: 0 },
+          { card: 'blackhole', at: 1 }
+        ]);
+      }
       const assessed = [];
       for (const tactics of variants) {
         const result = tactics.length ? simulate(snapshot, entry.shot, difficulty === 'hard' ? 9 : 8, tactics) : entry.result;
         const immediate = (result.scores[actor] - result.scores[1 - actor]) -
           (baseline[actor] - baseline[1 - actor]);
-        assessed.push({ result, immediate, tactics, rough: immediate - tactics.length * 5 });
+        const knocked = enemiesBefore - result.world.units.filter(unit => unit.owner !== actor && active(unit)).length;
+        const knockoutPriority = knocked * (snapshot.koPoints || 25) * (difficulty === 'hard' ? 1.25 : .5);
+        assessed.push({ result, immediate, tactics,
+          rough: immediate + knockoutPriority - tactics.length * weights.cardCost });
       }
       assessed.sort((a, b) => b.rough - a.rough);
       const shortlist = assessed.slice(0, difficulty === 'hard' ? 3 : 2);
@@ -506,21 +656,37 @@
           tactic.card === card && tactic.targetId));
         if (defensive && !shortlist.includes(defensive)) shortlist.push(defensive);
       }
-      for (const { result, immediate, tactics } of shortlist) {
+    for (const [choiceIndex, { result, immediate, tactics }] of shortlist.entries()) {
         const risk = snapshot.hasReply === false ? 0 :
           replyRisk(result.world, actor, settings.replyCount, enemyHand, useEnemyCards);
-        const value = immediate - risk * (snapshot.style === 'defender' ? .7 : .5) - tactics.length * 5 +
+        const knocked = enemiesBefore - result.world.units.filter(unit => unit.owner !== actor && active(unit)).length;
+        const knockoutPriority = knocked * (snapshot.koPoints || 25) * weights.knockout;
+        const riskWeight = weights.replyRisk * (snapshot.style === 'defender' ? 1.4 : 1);
+        const value = immediate + knockoutPriority -
+          risk * riskWeight - tactics.length * weights.cardCost +
           (Math.sin((snapshot.seed || 1) + entry.shot.power * 97 + entry.shot.dy * 37) * .5 + .5) *
           settings.uncertainty * 50;
-        if (!best || value > best.value) best = { shot: entry.shot, value, tactics };
+        const futureValue = choiceIndex < 2 && difficulty === 'hard' ? lookahead(result.world, actor, difficulty,
+          settings.lookaheadDepth, options, tactics.map(tactic => tactic.card)) :
+          choiceIndex < 2 && difficulty === 'normal' ? lookahead(result.world, actor, difficulty, settings.lookaheadDepth, options,
+            tactics.map(tactic => tactic.card)) * .55 : 0;
+        if (!best || value + futureValue > best.value)
+          best = { shot: entry.shot, value: value + futureValue, tactics, futureValue, knocked };
       }
     }
     const choice = best?.shot || { dx: -1, dy: 0, power: .5 };
-    return { ...choice, evaluated: shots.length, score: best?.value || 0,
-      tactics: best?.tactics || [], trigger };
+    const intent = structure ? (structure.type === 'data-barrier' ? '상대 진입로를 차단' : '충돌 경로에 구조물 배치') :
+      trigger ? `${trigger.type} 트리거로 다음 수 준비` :
+        best?.tactics?.length ? ({ guard: '주요 스톤의 방어선 강화', hardening: '득점 스톤의 위치 고정',
+          pulse: '근접한 상대를 지속 압박', blackhole: '상대를 충돌 궤도로 끌어들임',
+          bluffing: '충돌을 피해 빈 경로로 진입' }[best.tactics[0].card] || '카드 연계 수') :
+          best?.knocked ? '상대 스톤 제거를 노림' : '득점 위치와 반격 위험을 함께 계산';
+    return { ...choice, evaluated: shots.length, searchDepth: settings.cardDepth + settings.lookaheadDepth,
+      futureValue: best?.futureValue || 0, score: best?.value || 0,
+      tactics: best?.tactics || [], trigger, structure, intent };
   }
 
-  const api = { cloneWorld, simulate, plan, score, replyRisk };
+  const api = { cloneWorld, simulate, plan, score, replyRisk, settings: SETTINGS, defaultWeights: DEFAULT_WEIGHTS };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.UCCAiPlanner = api;
 })(typeof self !== 'undefined' ? self : globalThis);

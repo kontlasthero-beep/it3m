@@ -116,6 +116,13 @@ test('stone motion freezes turn time and the countdown resumes at the saved valu
     assert.ok(turnTimeRemaining() < beforePause-2900);`);
 });
 
+test('AI planning does not consume the human turn countdown', () => {
+  const g = game();
+  g.run(`state.aiMode=true; state.aiOwner=turns.playerIndex; state.turnDeadline=Date.now()+5000;
+    assert.equal(isTurnTimerPaused(),true);
+    state.aiOwner=1-turns.playerIndex; assert.equal(isTurnTimerPaused(),false);`);
+});
+
 test('guest timer stays frozen from host snapshots while a stone slides', () => {
   const {host, guest, send} = onlinePair();
   host.run(`turns.currentUnit.status='sliding'; state.phase='sliding'; updateTurnTimer();`);
@@ -576,6 +583,49 @@ test('AI applies a planned defense to an earlier stone and schedules its flight 
     updateAiPlayer(2100);
     assert.equal(state.hands[1].length,0);
     assert.ok(turns.currentUnit.fluidTimer>0);`);
+});
+
+test('AI places a model-selected data barrier and explains the lane denial', () => {
+  const g = game();
+  g.context.UCCAiPlanner = aiPlanner;
+  const result = g.run(`state.aiMode=true; state.aiOwner=1; state.aiDifficulty='normal';
+    state.playerLevels=[1,2]; state.currentMap=MAPS[0]; turns.reset(1); state.phase='aiming';
+    const enemy=new CurlingUnit({id:'enemy',owner:0,turnNumber:1,x:360,y:355}); enemy.status='resting';
+    state.units=[enemy]; turns.createCurrentUnit();
+    state.hands[1]=[{...deckCard('data-barrier'),instanceId:'planned-barrier'}];
+    const snapshot=aiPlannerSnapshot(turns.currentUnit); const result=UCCAiPlanner.plan(snapshot,'normal');
+    const action={plan:aiPlanToAim(turns.currentUnit,result)};
+    aiApplyPlannedSetup(action,turns.currentUnit);
+    ({type:state.bricks[0]?.barrier,intent:action.intent,remaining:state.hands[1].length,
+      planned:result.structure,candidates:snapshot.structureCandidates});`);
+  assert.equal(result.type, true);
+  assert.match(result.intent, /진입로/);
+  assert.equal(result.remaining, 0);
+});
+
+test('follow-up cards are selected by strategic utility rather than random chance', () => {
+  const escapeGame = game();
+  const escape = escapeGame.run(`state.aiMode=true; state.aiOwner=1; state.aiDifficulty='hard';
+    state.aiAction={}; state.playerLevels=[1,2]; turns.reset(1); state.phase='turn-ready'; turns.createCurrentUnit();
+    turns.currentUnit.status='resting';
+    const poor=new CurlingUnit({id:'poor',owner:1,turnNumber:1,x:1050,y:355}); poor.status='resting';
+    state.units.push(poor); state.hands[1]=[{...deckCard('escape'),instanceId:'escape'}];
+    const used=aiUseFollowUpCard(turns.currentUnit);
+    ({used,removed:poor.removedByEscape,points:state.escapePoints[1],intent:state.aiAction?.intent});`);
+  assert.equal(escape.used, true);
+  assert.ok(escape.removed || escapeGame.run("state.units.some(item=>item.owner===1 && item.removedByEscape)"));
+  assert.equal(escape.points, 10);
+  assert.match(escape.intent, /확정 점수/);
+
+  const ammoGame = game();
+  const ammo = ammoGame.run(`state.aiMode=true; state.aiOwner=1; state.aiDifficulty='hard';
+    state.aiAction={}; state.playerLevels=[1,2]; turns.reset(1); state.phase='turn-ready'; turns.createCurrentUnit();
+    turns.currentUnit.status='resting'; turns.currentUnit.x=800;
+    const enemy=new CurlingUnit({id:'enemy',owner:0,turnNumber:1,x:600,y:355}); enemy.status='resting';
+    state.units.push(enemy); state.hands[1]=[{...deckCard('ammo'),instanceId:'ammo'}];
+    ({used:aiUseFollowUpCard(turns.currentUnit),mode:state.repositionMode});`);
+  assert.equal(ammo.used, true);
+  assert.equal(ammo.mode, 'ammo');
 });
 
 test('AI difficulty changes planning breadth and launch precision', () => {
@@ -1082,6 +1132,16 @@ test('data barrier is fixed, friendly stones pass, enemies collide, and bullets 
     assert.equal(barrier.x,500); assert.equal(barrier.y,355);
     state.bullets=[{x:460,y:355,vx:900,vy:0,radius:7,sourceUnitId:'enemy',outsideTime:0}];
     updateBullets(.1); assert.equal(state.bricks.length,0); assert.equal(state.bullets.length,0);`);
+});
+
+test('data barriers continuously emit capped cyan particles', () => {
+  const g = game();
+  g.run(`state.bricks=[new BrickUnit({x:500,y:355,owner:0,barrier:true})];
+    state.particles=[]; emitBarrierParticles(.5);
+    assert.ok(state.particles.length >= 4);
+    assert.ok(state.particles.every(particle => particle.barrierParticle));
+    state.particles=Array.from({length:240},()=>({life:1,vx:0,vy:0}));
+    emitBarrierParticles(.5); assert.ok(state.particles.length<=240);`);
 });
 
 test('data barrier survives its owner turn, expires at the next opponent turn end, and syncs online', () => {

@@ -2305,6 +2305,7 @@
 
       function isTurnTimerPaused() {
         if (onlineSession?.started && onlineSession.role === 'challenger') return state.turnPausedByHost;
+        if (state.aiMode && turns.playerIndex === state.aiOwner) return true;
         return state.units.some(unit => unit.status === 'sliding');
       }
 
@@ -2544,7 +2545,8 @@
         endTurnButton.disabled = state.phase !== 'turn-ready' || state.bullets.length > 0 || !canControlPlayer(turns.playerIndex);
         speedToggle.disabled = !canChangeSpeed();
         actionHint.textContent = state.phase === 'sliding' ? '스톤이 움직이는 중' : state.phase === 'turn-ready' ? '턴을 마치거나 카드를 사용하세요' : state.phase === 'reposition' && state.repositionMode === 'ammo' ? '총알 장전: 당겨서 발사' : state.phase === 'trigger-select' ? '트리거 종류를 선택하세요' : needsPowerMeter() && state.powerMeter?.stage === 'locked' ? '스톤을 드래그해 방향을 지정하세요' : needsPowerMeter() && state.powerMeter?.stage === 'spinning' ? '미터를 보고 파워를 결정하세요' : '스톤 아래 발사 버튼을 누르세요';
-        if (state.aiMode && turns.playerIndex === state.aiOwner && !turns.isComplete) actionHint.textContent = '클럽 AI가 수를 계산하는 중';
+        if (state.aiMode && turns.playerIndex === state.aiOwner && !turns.isComplete)
+          actionHint.textContent = `${aiLevel().name} · 수를 계산하는 중`;
         handPanels.forEach((panel, index) => panel.classList.toggle('current', !turns.isComplete && index === turns.playerIndex));
         updateTriggerTools();
         updateGameDeckButtons();
@@ -2839,6 +2841,18 @@
               Math.hypot(item.x - point.x, item.y - point.y) < 30)) triggerCandidates.push(point);
           }
         }
+        const structureCandidates = [];
+        if (state.hands[unit.owner].some(card => ['brick', 'data-barrier'].includes(card.id) && isCardUnlocked(card, unit.owner))) {
+          const enemies = state.units.filter(item => item.owner !== unit.owner && item.isOnTable && item.status !== 'ready')
+            .sort((a, b) => a.x - b.x).slice(0, 2);
+          for (const enemy of enemies) for (const lead of [82, 145, 210]) for (const offset of [-54, 0, 54]) {
+            const point = { x: Math.min(brickDropLimitX() - 20, Math.max(TABLE.left + 20, enemy.x + lead)),
+              y: Math.max(TABLE.top + 34, Math.min(TABLE.bottom - 34, enemy.y + offset)) };
+            if (canPlaceBrick(point) && !structureCandidates.some(item => Math.hypot(item.x - point.x, item.y - point.y) < 24))
+              structureCandidates.push(point);
+            if (structureCandidates.length >= 6) break;
+          }
+        }
         return {
           actor: unit.owner, turn: turns.globalTurn, launchId: unit.id, style: state.aiStyle,
           seed: (turns.globalTurn + 1) * 997 + Math.floor(state.mapTime * 100) +
@@ -2857,7 +2871,7 @@
           hand: state.hands[unit.owner].filter(card => aiCanUseCard(card.id) && isCardUnlocked(card, unit.owner))
             .map(card => card.id),
           enemyHand: state.hands[1 - unit.owner].map(card => card.id),
-          triggerCandidates,
+          triggerCandidates, structureCandidates,
           points: [0, 1].map(owner => state.fallPoints[owner] + state.escapePoints[owner]),
           units: state.units.map(item => ({
             id: item.id, owner: item.owner, x: item.x, y: item.y, vx: item.vx, vy: item.vy,
@@ -2871,7 +2885,7 @@
             fallPenalty: heroRule(item.owner, 'fallPenalty', 0)
           })),
           bricks: state.bricks.map(brick => ({ x: brick.x, y: brick.y, vx: brick.vx, vy: brick.vy,
-            owner: brick.owner, barrier: brick.barrier, expiresAtTurn: brick.expiresAtTurn,
+            owner: brick.owner, barrier: brick.barrier, expiresAtTurn: brick.expiresAtTurn, particleTimer: brick.particleTimer,
             width: brick.width, height: brick.height, mass: brick.mass,
             restitution: brick.restitution, frictionMultiplier: brick.frictionMultiplier })),
           triggers: state.triggers.map(trigger => ({ x: trigger.x, y: trigger.y, radius: trigger.radius,
@@ -2913,7 +2927,7 @@
           });
         }
         return new Promise(resolve => setTimeout(() => {
-          try { resolve(planner.plan(snapshot, 'easy')); }
+          try { resolve(planner.plan(snapshot, state.aiDifficulty)); }
           catch { resolve(null); }
         }, 0));
       }
@@ -2923,10 +2937,17 @@
             !Number.isFinite(result.power)) return null;
         return { aimPoint: { x: unit.x - result.dx * CONFIG.directionPullDistance,
           y: unit.y - result.dy * CONFIG.directionPullDistance }, power: result.power,
-          tactics: result.tactics || [], trigger: result.trigger || null };
+          tactics: result.tactics || [], trigger: result.trigger || null,
+          structure: result.structure || null, intent: result.intent || null };
       }
 
       function aiApplyPlannedSetup(action, unit) {
+        action.intent = action.plan?.intent || action.intent;
+        const structure = action.plan?.structure;
+        if (structure) {
+          const card = state.hands[unit.owner].find(item => item.id === structure.type);
+          if (card) placeStructureCard(card.instanceId, unit.owner, structure);
+        }
         const trigger = action.plan?.trigger;
         if (trigger && remainingTriggerPlacements(unit.owner) > 0 && canPlaceItemTrigger(trigger)) {
           const type = ITEM_TRIGGERS.find(item => item.id === trigger.type);
@@ -3115,30 +3136,90 @@
         return false;
       }
 
-      function aiUseFollowUpCard(unit) {
-        if (Math.random() > aiLevel().cardChance) return false;
-        const owner = state.aiOwner;
-        const enemies = state.units.filter(item => item.owner !== owner && item.isOnTable && item.status !== 'ready');
-        const allies = state.units.filter(item => item.owner === owner && item.isOnTable && item.status === 'resting');
-        const weak = [...allies].sort((a, b) => b.x - a.x)[0];
-        const strong = [...allies].sort((a, b) => a.x - b.x)[0];
-        const choices = [
-          ['escape', weak && weak.x > TABLE.right - 100 ? weak : null],
-          ['pulse', allies.find(item => enemies.some(enemy => Math.hypot(item.x - enemy.x, item.y - enemy.y) < PULSE_RANGE * .85))],
-          ['blackhole', allies.find(item => enemies.some(enemy => Math.hypot(item.x - enemy.x, item.y - enemy.y) < BLACK_HOLE.range))],
-          ['hardening', strong && strong.x < TABLE.goalX + 240 ? strong : null],
-          ['guard', strong],
-          ['ammo', enemies.length ? unit : null],
-          ['reposition', weak && weak.x > TABLE.goalX + 330 ? weak : null]
-        ];
-        if (state.aiStyle === 'attacker') choices.sort((a, b) => ['ammo', 'pulse', 'blackhole'].indexOf(a[0]) === -1 ? 1 :
-          ['ammo', 'pulse', 'blackhole'].indexOf(b[0]) === -1 ? -1 : 0);
-        for (const [id, target] of choices) {
-          if (!target || !aiCanUseCard(id)) continue;
-          const card = state.hands[owner].find(item => item.id === id);
-          if (card && useCard(card.instanceId, owner, target)) return true;
+      function aiUnitPositionValue(unit) {
+        if (!unit || unit.status === 'fallen') return 0;
+        if (unit.x < TABLE.left + unit.radius || unit.x > TABLE.right - unit.radius ||
+            unit.y < TABLE.top + unit.radius || unit.y > TABLE.bottom - unit.radius) return -35;
+        return Math.max(0, 100 * (1 - (unit.x - TABLE.goalX) / (TABLE.right - TABLE.goalX)));
+      }
+
+      function aiProjectedShotValue(unit, plan) {
+        const dx = unit.x - plan.aimPoint.x, dy = unit.y - plan.aimPoint.y;
+        const result = aiPredictShot(unit, dx, dy, plan.power);
+        let value = result.x >= TABLE.left + unit.radius && result.x <= TABLE.right - unit.radius &&
+          result.y >= TABLE.top + unit.radius && result.y <= TABLE.bottom - unit.radius ?
+          aiUnitPositionValue({ ...unit, x: result.x, y: result.y }) : -45;
+        if (result.hit) value += result.hit.owner === unit.owner ? -35 :
+          24 + (result.hit.x < TABLE.goalX + 150 ? 22 : 0);
+        if (result.blocked) value -= 22;
+        if (result.trigger) value += 8;
+        return value;
+      }
+
+      function aiAmmoValue(unit) {
+        const owner = unit.owner;
+        const targets = state.units.filter(item => item.owner !== owner && item.isOnTable && item.status !== 'ready')
+          .sort((a, b) => a.x - b.x);
+        let best = 0;
+        for (const enemy of targets) {
+          const dx = enemy.x - unit.x, dy = enemy.y - unit.y;
+          const lengthSq = dx * dx + dy * dy;
+          const distance = Math.sqrt(lengthSq);
+          if (distance > 1050) continue;
+          const alliesBlocking = state.units.some(item => item.owner === owner && item !== unit && item.isOnTable &&
+            item.status !== 'ready' && (() => {
+              const t = ((item.x - unit.x) * dx + (item.y - unit.y) * dy) / lengthSq;
+              if (t <= 0 || t >= 1) return false;
+              return Math.hypot(item.x - (unit.x + dx * t), item.y - (unit.y + dy * t)) < item.radius + 6;
+            })());
+          if (alliesBlocking) continue;
+          const guardThreat = enemy.ability?.guard ? 10 : 0;
+          const knockoutChance = enemy.x < TABLE.goalX + 140 ? 30 : enemy.x < TABLE.goalX + 250 ? 17 : 0;
+          let obstructionValue = 0;
+          for (const brick of state.bricks) {
+            const t = ((brick.x - unit.x) * dx + (brick.y - unit.y) * dy) / lengthSq;
+            if (t <= 0 || t >= 1) continue;
+            const nearRay = Math.hypot(brick.x - (unit.x + dx * t), brick.y - (unit.y + dy * t));
+            if (nearRay < brick.width / 2 + 7 && nearRay < 40)
+              obstructionValue = brick.barrier && brick.owner !== owner ? 14 : 4;
+          }
+          best = Math.max(best, 14 + knockoutChance + guardThreat + obstructionValue - Math.max(0, distance - 700) / 90);
         }
-        return false;
+        return best;
+      }
+
+      function aiUseFollowUpCard(unit) {
+        const owner = state.aiOwner;
+        const hand = state.hands[owner];
+        const allies = state.units.filter(item => item.owner === owner && item.isOnTable && item.status === 'resting');
+        const options = [];
+        const add = (id, target, utility, reason) => {
+          if (target && utility > 0 && aiCanUseCard(id) && hand.some(card => card.id === id))
+            options.push({ id, target, utility, reason });
+        };
+
+        for (const ally of allies) {
+          const positionValue = aiUnitPositionValue(ally);
+          add('escape', ally, 10 - positionValue + (ally.x > TABLE.right - 110 ? 4 : 0), '낮은 점수를 확정 점수로 전환');
+          if (ally.activeSpecial || ally.relaunchUsed) continue;
+          const repositionPlan = aiShotPlan(ally);
+          const improvement = aiProjectedShotValue(ally, repositionPlan) - positionValue;
+          const styleBonus = state.aiStyle === 'attacker' ? 4 : state.aiStyle === 'controller' ? 2 : 0;
+          add('reposition', ally, improvement + styleBonus - 12, '불리한 스톤의 위치를 다시 설계');
+        }
+
+        if (unit?.status === 'resting' && !unit.activeSpecial && !unit.relaunchUsed) {
+          const ammoPressure = aiAmmoValue(unit);
+          add('ammo', unit, ammoPressure - 10, '상대 스톤 또는 방호 장치를 직접 타격');
+        }
+        options.sort((a, b) => b.utility - a.utility);
+        const choice = options[0];
+        if (!choice) return false;
+        const card = hand.find(item => item.id === choice.id);
+        if (!card || !useCard(card.instanceId, owner, choice.target)) return false;
+        if (state.aiAction) state.aiAction.intent = choice.reason;
+        updateHud();
+        return true;
       }
 
       function aiUseInFlightCard() {
@@ -3196,7 +3277,7 @@
           }
           if (!action.prepared && state.phase === 'aiming') {
             action.prepared = true;
-            aiPlaceBrick();
+            if (!globalThis.UCCAiPlanner) aiPlaceBrick();
           }
           if (!state.powerMeter) {
             if (!globalThis.UCCAiPlanner) {
@@ -3209,13 +3290,14 @@
               requestAiShotPlan(unit).then(result => {
                 if (state.aiAction !== action || state.powerMeter || !result) return;
                 action.plan = aiPlanToAim(unit, result);
-                if (action.plan) action.planSource = 'simulation';
+                if (action.plan) { action.planSource = 'simulation'; action.intent = action.plan.intent; updateHud(); }
                 action.planPending = false;
               });
               action.deadline = timestamp + 60;
               return;
             }
-            if (!action.plan && timestamp - action.planStartedAt < 1600) {
+            const plannerWait = state.aiDifficulty === 'hard' ? 30000 : state.aiDifficulty === 'normal' ? 8000 : 2500;
+            if (!action.plan && timestamp - action.planStartedAt < plannerWait) {
               action.deadline = timestamp + 60;
               return;
             }
@@ -3406,6 +3488,7 @@
       function update(dt, timestamp, refreshHud = true) {
         state.bricks.forEach(brick => brick.update(dt));
         state.units.forEach(unit => unit.update(dt));
+        emitBarrierParticles(dt);
         if (state.triggers.length) collectItemTriggers();
         resolveCollisions();
         resolveBrickCollisions();
@@ -4264,6 +4347,21 @@
       }
 
       function renderGuestProfile(profile, persistent) {
+        if (['localhost', '127.0.0.1'].includes(location.hostname) && !profile.username) {
+          const fameAtLevel = level => {
+            let total = 0;
+            let required = 100;
+            for (let current = 1; current < level; current += 1) {
+              total += required;
+              required += 20 + current * 5;
+            }
+            return total;
+          };
+          const levelStart = fameAtLevel(100);
+          const nextLevel = fameAtLevel(101);
+          profile = { ...profile, fame: levelStart + (Number(profile.fame) || 0) % (nextLevel - levelStart),
+            level: 100, levelStart, nextLevel };
+        }
         guestProfile = profile;
         savedDecks = Array.isArray(profile.decks) ? profile.decks.map(cards => cards ? [...cards] : null) : [null, null, null];
         activeDeckPreset = Number.isInteger(profile.activePreset) ? profile.activePreset : 0;
@@ -4277,7 +4375,9 @@
         guestProfileProgress.value = profile.fame - profile.levelStart;
         if (!onlineSession?.started) state.playerLevels = [profile.level, profile.level];
         openAccountButton.hidden = false;
-        accountIdentity.textContent = `계정 ID ${profile.username} · 플레이어 ID ${profile.id}`;
+        accountIdentity.textContent = profile.username
+          ? `계정 ID ${profile.username} · 플레이어 ID ${profile.id}`
+          : `게스트 · 플레이어 ID ${profile.id}`;
         accountStats.replaceChildren(...[
           ['경기', profile.played], ['승리', profile.wins], ['패배', profile.losses], ['무승부', profile.draws]
         ].map(([label, value]) => {
@@ -4310,7 +4410,7 @@
           }
           if (!response.ok) throw new Error(`Profile request failed (${response.status})`);
           const data = await response.json();
-          if (!data.profile?.username) return null;
+          if (!data.profile || (!data.profile.username && !['localhost', '127.0.0.1'].includes(location.hostname))) return null;
           renderGuestProfile(data.profile, data.persistent);
           return data.profile;
         })().catch(error => {
@@ -5902,11 +6002,33 @@
         }
       }
 
+      function emitBarrierParticles(dt) {
+        for (const barrier of state.bricks) {
+          if (!barrier.barrier) continue;
+          barrier.particleTimer = (barrier.particleTimer || 0) + dt;
+          while (barrier.particleTimer >= .09) {
+            barrier.particleTimer -= .09;
+            const side = Math.random() < .5 ? -1 : 1;
+            state.particles.push({
+              x: barrier.x + side * (barrier.width / 2 + Math.random() * 5),
+              y: barrier.y + (Math.random() - .5) * barrier.height,
+              vx: side * (12 + Math.random() * 28),
+              vy: (Math.random() - .5) * 50,
+              life: .24 + Math.random() * .22,
+              size: 1.5 + Math.random() * 2.5,
+              color: Math.random() < .35 ? '#d6ffff' : '#72e4df',
+              barrierParticle: true
+            });
+          }
+        }
+        if (state.particles.length > 240) state.particles.splice(0, state.particles.length - 240);
+      }
+
       function updateParticles(dt) {
         state.particles = state.particles.filter(particle => {
           particle.x += particle.vx * dt;
           particle.y += particle.vy * dt;
-          particle.vy += 720 * dt;
+          if (!particle.barrierParticle) particle.vy += 720 * dt;
           particle.life -= dt;
           return particle.life > 0;
         });
@@ -6109,15 +6231,62 @@
         }
         ctx.fillStyle = brick.barrier ? '#17454c' : '#59666b';
         ctx.fillRect(brick.x - brick.width / 2, brick.y - brick.height / 2, brick.width, brick.height);
-        ctx.strokeStyle = brick.barrier ? '#98eeee' : '#c3d0ce';
+        ctx.strokeStyle = brick.barrier ? 'rgba(152, 238, 238, 0.52)' : '#c3d0ce';
         ctx.lineWidth = 2;
         ctx.strokeRect(brick.x - brick.width / 2, brick.y - brick.height / 2, brick.width, brick.height);
         if (brick.barrier) {
-          ctx.globalAlpha *= .7;
-          ctx.fillStyle = '#b9fbef';
-          for (let y = -brick.height / 2 + 6; y < brick.height / 2 - 2; y += 10) {
-            ctx.fillRect(brick.x - brick.width / 2 + (Math.floor(y / 10) % 2 ? 7 : 3), brick.y + y, 5, 3);
+          const left = brick.x - brick.width / 2 + 2;
+          const top = brick.y - brick.height / 2 + 2;
+          const width = Math.max(0, brick.width - 4);
+          const height = Math.max(0, brick.height - 4);
+          const time = performance.now() / 1000;
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(left, top, width, height);
+          ctx.clip();
+
+          // Data traces fade to zero at the loop boundary, so each reset is invisible.
+          for (let i = 0; i < 4; i += 1) {
+            const phase = (time * .2 + i / 4) % 1;
+            const y = top + phase * height;
+            const fade = Math.sin(Math.PI * phase) ** 2;
+            const drift = Math.sin(time * 1.3 + i * 2.1) * Math.min(5, width * .08);
+            ctx.globalAlpha = alpha * fade * .3;
+            ctx.strokeStyle = i % 2 ? '#a5f3ec' : '#d3fff6';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(left, y);
+            ctx.lineTo(brick.x - width * .12 + drift, y - 2);
+            ctx.lineTo(brick.x + width * .2 + drift, y + 1);
+            ctx.lineTo(left + width, y - 1);
+            ctx.stroke();
           }
+
+          for (let i = 0; i < 3; i += 1) {
+            const phase = (time * .14 + i / 3) % 1;
+            const x = left + phase * width;
+            const fade = Math.sin(Math.PI * phase) ** 2;
+            const drift = Math.sin(time * .9 + i * 1.7) * Math.min(4, height * .1);
+            ctx.globalAlpha = alpha * fade * .22;
+            ctx.strokeStyle = '#b8fff4';
+            ctx.beginPath();
+            ctx.moveTo(x - 2, top);
+            ctx.lineTo(x + 1, brick.y + drift);
+            ctx.lineTo(x - 1, top + height);
+            ctx.stroke();
+          }
+
+          ctx.globalAlpha = alpha * .18;
+          ctx.fillStyle = '#c5fff3';
+          for (let i = 0; i < 7; i += 1) {
+            const phase = (time * (.12 + i % 3 * .025) + i * .173) % 1;
+            const x = left + phase * width;
+            const y = top + ((i * 37 + Math.floor(time * 9)) % Math.max(1, height));
+            const fade = Math.sin(Math.PI * phase) ** 2;
+            ctx.globalAlpha = alpha * fade * .35;
+            ctx.fillRect(x, y, 2, 2);
+          }
+          ctx.restore();
         }
         ctx.restore();
       }
@@ -6673,6 +6842,8 @@
           if (['localhost', '127.0.0.1'].includes(location.hostname)) {
             const name = aiPlayerName();
             const guest = await postOnlineRequest('/api/profiles/guest', { name });
+            guestToken = guest.token;
+            try { localStorage.setItem('ucc.accountToken.v1', guestToken); } catch {}
             renderGuestProfile(guest.profile, guest.persistent);
           }
           showStartScreen('homeScreen');

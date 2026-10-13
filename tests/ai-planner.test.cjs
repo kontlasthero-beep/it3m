@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const planner = require('../ai-planner.js');
+const { SCENARIOS, summarizePlan } = require('../tools/ai-tactical-bench.cjs');
 
 function board(map = 'classic') {
   return {
@@ -99,7 +100,7 @@ test('AAB counterplay models the opponent hand and defensive cards on earlier st
   assert.ok(planner.replyRisk(hardened, 1, 8) < planner.replyRisk(defensible, 1, 8));
 });
 
-test('AAB can choose a two-card sequence around a collision', () => {
+test('AAB searches deeper card lines around collisions without forcing a weaker combo', () => {
   const snapshot = board();
   snapshot.units[0].x = 250;
   snapshot.units[0].y = 280;
@@ -108,9 +109,22 @@ test('AAB can choose a two-card sequence around a collision', () => {
   snapshot.hasReply = true;
   snapshot.hand = ['blackhole', 'hardening', 'pulse', 'guard'];
   const plan = planner.plan(snapshot, 'hard');
-  assert.equal(plan.tactics.length, 2);
-  assert.equal(new Set(plan.tactics.map(tactic => tactic.card)).size, 2);
-  assert.ok(plan.tactics.some(tactic => tactic.at > 0));
+  assert.equal(plan.searchDepth, 6);
+  assert.ok(Number.isFinite(plan.futureValue));
+  assert.ok(plan.tactics.length <= 4);
+  assert.equal(new Set(plan.tactics.map(tactic => tactic.card)).size, plan.tactics.length);
+});
+
+test('AAB evaluates two later own stones while Neutron uses a shallower horizon', () => {
+  const snapshot = board();
+  snapshot.hand = ['hardening', 'guard', 'pulse', 'blackhole'];
+  snapshot.hasReply = true;
+  const neutron = planner.plan(snapshot, 'normal');
+  const aab = planner.plan(snapshot, 'hard');
+  assert.equal(neutron.searchDepth, 3);
+  assert.equal(aab.searchDepth, 6);
+  assert.ok(Number.isFinite(aab.futureValue));
+  assert.ok(aab.evaluated > neutron.evaluated);
 });
 
 test('trigger placement weighs the follow-up shot and opponent counterplay', () => {
@@ -127,6 +141,18 @@ test('trigger placement weighs the follow-up shot and opponent counterplay', () 
   assert.equal(snapshot.triggers.length, 0);
 });
 
+test('Neutron and AAB use a data barrier only when it meaningfully reduces the reply lane', () => {
+  const snapshot = board();
+  snapshot.units[0].x = 360;
+  snapshot.hasReply = true;
+  snapshot.hand = ['data-barrier'];
+  snapshot.structureCandidates = [{ x: 600, y: 355 }, { x: 600, y: 465 }];
+  const plan = planner.plan(snapshot, 'normal');
+  assert.equal(plan.structure?.type, 'data-barrier');
+  assert.equal(plan.structure?.x, 600);
+  assert.match(plan.intent, /진입로/);
+});
+
 test('rollouts keep data barriers fixed and let only their owner pass through', () => {
   const snapshot = board();
   snapshot.units[0].y = 500;
@@ -139,4 +165,34 @@ test('rollouts keep data barriers fixed and let only their owner pass through', 
   assert.equal(friendly.world.bricks[0].x,950);
   assert.equal(blocked.world.bricks[0].x,950);
   assert.ok(friendly.world.units[1].x < blocked.world.units[1].x - 50);
+});
+
+test('guard satellites repel stones and movable bricks in the rollout', () => {
+  const snapshot = board();
+  snapshot.units[0] = { ...snapshot.units[0], x: 800, ability: {
+    guard: true, guardAngle: 0, stacks: { guard: 1 }, destroyedGuardSatellites: []
+  } };
+  snapshot.units[1].y = 500;
+  snapshot.bricks = [{ x: 854, y: 355, vx: 0, vy: 0, width: 18, height: 18,
+    mass: 2, restitution: .58, frictionMultiplier: 1.5 }];
+  const result = planner.simulate(snapshot, { dx: -1, dy: 0, power: .06 });
+  assert.notEqual(result.world.bricks[0].x, snapshot.bricks[0].x);
+
+  const attack = board();
+  attack.units[0] = { ...attack.units[0], x: 800, ability: {
+    guard: true, guardAngle: 0, stacks: { guard: 1 }, destroyedGuardSatellites: []
+  } };
+  const guarded = planner.simulate(attack, { dx: -1, dy: 0, power: .55 });
+  delete attack.units[0].ability;
+  const exposed = planner.simulate(attack, { dx: -1, dy: 0, power: .55 });
+  assert.notEqual(guarded.world.units[1].x, exposed.world.units[1].x);
+});
+
+test('AAB chooses the black-hole timing that changes a close-range board state', () => {
+  const fixture = SCENARIOS.find(item => item.name === 'close-range-removal');
+  const report = summarizePlan(fixture, 'hard');
+  assert.ok(report.choice.cards.includes('blackhole'));
+  assert.equal(report.choice.cardTiming.find(item => item.card === 'blackhole').at, .7);
+  assert.ok(report.counterfactual.scoreDeltaFromCards > 0);
+  assert.ok(report.counterfactual.totalUnitDisplacementFromCards > 0);
 });
