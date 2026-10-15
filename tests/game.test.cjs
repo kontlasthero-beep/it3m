@@ -457,6 +457,21 @@ test('power meter is faster and irregular while the scoreboard shows scores with
   assert.match(fs.readFileSync(path.join(__dirname,'../index.html'),'utf8'),/stone-blue\.png" alt="" aria-hidden="true" draggable="false"/);
 });
 
+test('hand labels show each player name and selected hero description; inactive hand is grayscale without fading', () => {
+  const g = game();
+  g.run(`PLAYER[0].name='레나'; PLAYER[1].name='클럽 AI';
+    state.heroChoices=['hunter','joker']; updateHud();
+    assert.equal(document.querySelector('#handOwner0').textContent,'레나');
+    assert.equal(document.querySelector('#handHero0').textContent,'헌터');
+    assert.equal(document.querySelector('#handHero0').getAttribute('data-description'),HEROES.find(hero=>hero.id==='hunter').description);
+    assert.equal(document.querySelector('#handHero0').hidden,false);
+    assert.equal(document.querySelector('#handOwner1').textContent,'클럽 AI');
+    assert.equal(document.querySelector('#handHero1').textContent,'조커');`);
+  const html = fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
+  assert.match(html,/\.hand-hero-name:hover::after, \.hand-hero-name:focus-visible::after/);
+  assert.match(html,/\.hand-panel:not\(\.current\) \{ filter: grayscale\(\.82\); transform: scaleY\(\.96\); \}/);
+});
+
 test('bluffing ignores stones, bricks, bullets, guards and map walls until the opponent turn ends', () => {
   const g = game();
   g.run(`turns.reset(0); const cap=turns.createCurrentUnit(); cap.status='resting';

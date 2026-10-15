@@ -402,6 +402,11 @@
     .hand-panel.current { border-color: var(--accent); }
     @keyframes active-hand-pulse { 0%, 100% { box-shadow: 0 -10px 26px rgba(0,0,0,.66), 0 12px 30px rgba(0,0,0,.52), 0 0 10px rgba(101,214,189,.12), inset 0 1px 0 rgba(227,205,151,.12); } 50% { box-shadow: 0 -10px 26px rgba(0,0,0,.66), 0 12px 30px rgba(0,0,0,.52), 0 0 18px rgba(101,214,189,.3), inset 0 1px 0 rgba(227,205,151,.12); } }
     .hand-title { margin-bottom: 8px; color: var(--muted); font-size: 13px; }
+    .hand-owner-name { color: #e8eee8; font-weight: 700; }
+    .hand-hero-name { position: relative; display: inline-block; color: var(--accent); font-weight: 700; cursor: help; }
+    .hand-hero-name::before { content: ' · '; color: var(--muted); font-weight: 400; }
+    .hand-hero-name::after { content: attr(data-description); position: absolute; z-index: 35; left: 0; bottom: calc(100% + 8px); width: min(260px, 70vw); padding: 9px 11px; border: 1px solid #66817a; border-radius: 4px; background: #101a1c; box-shadow: 0 8px 24px rgba(0,0,0,.55); color: #e8eee8; font-size: 12px; font-weight: 500; line-height: 1.45; white-space: normal; opacity: 0; visibility: hidden; transform: translateY(3px); transition: opacity .12s ease, transform .12s ease, visibility .12s; pointer-events: none; }
+    .hand-hero-name:hover::after, .hand-hero-name:focus-visible::after { opacity: 1; visibility: visible; transform: none; }
     .hand-cards { display: flex; flex-wrap: wrap; gap: 7px; min-height: 108px; }
     .hand-row { display: flex; align-items: flex-start; gap: 10px; }
     .hand-row .hand-cards { flex: 1; }
@@ -477,7 +482,7 @@
     body.game-active .hands.active-p2 { grid-template-columns: minmax(0, .88fr) minmax(0, 1.12fr); }
     body.game-active .hand-panel { padding: 8px 10px; border-color: #63736b; background: rgba(13, 24, 25, .97); box-shadow: 0 -10px 26px rgba(0,0,0,.66), 0 12px 30px rgba(0,0,0,.52), inset 0 1px 0 rgba(227,205,151,.12); backdrop-filter: blur(5px); transition: transform .18s ease, filter .18s ease, opacity .18s ease, box-shadow .18s ease; }
     body.game-active .hand-panel.current { position: relative; z-index: 1; border-color: var(--accent); transform: scaleY(1.04); animation: active-hand-pulse 3s ease-in-out infinite; }
-    body.game-active .hand-panel:not(.current) { filter: grayscale(.82); opacity: .64; transform: scaleY(.96); }
+    body.game-active .hand-panel:not(.current) { filter: grayscale(.82); transform: scaleY(.96); }
     body.game-active .hand-title { margin-bottom: 4px; font-size: 11px; }
     body.game-active .hand-row { align-items: center; gap: 6px; }
     body.game-active .hand-row .hand-cards { min-height: 100px; }
@@ -1004,8 +1009,8 @@
       </div>
     </section>
     <section class="hands" aria-label="플레이어 카드">
-      <div class="hand-panel" id="handPanel0"><div class="hand-title">플레이어 1 카드</div><div class="hand-row"><div class="hand-cards" id="hand0"></div><button class="trigger-tool" data-owner="0" type="button" aria-label="트리거 배치, 남은 횟수 1" disabled><img src="Trigger_illustration/v3-simple/empty.png" alt="" draggable="false"><span class="trigger-count" aria-hidden="true">1</span></button><button class="game-deck-button" data-owner="0" type="button" title="플레이어 1의 가방" aria-label="플레이어 1의 가방"></button></div></div>
-      <div class="hand-panel" id="handPanel1"><div class="hand-title">플레이어 2 카드</div><div class="hand-row"><div class="hand-cards" id="hand1"></div><button class="trigger-tool" data-owner="1" type="button" aria-label="트리거 배치, 남은 횟수 1" disabled><img src="Trigger_illustration/v3-simple/empty.png" alt="" draggable="false"><span class="trigger-count" aria-hidden="true">1</span></button><button class="game-deck-button" data-owner="1" type="button" title="플레이어 2의 가방" aria-label="플레이어 2의 가방"></button></div></div>
+      <div class="hand-panel" id="handPanel0"><div class="hand-title"><span class="hand-owner-name" id="handOwner0">플레이어 1</span><span class="hand-hero-name" id="handHero0" hidden tabindex="0"></span></div><div class="hand-row"><div class="hand-cards" id="hand0"></div><button class="trigger-tool" data-owner="0" type="button" aria-label="트리거 배치, 남은 횟수 1" disabled><img src="Trigger_illustration/v3-simple/empty.png" alt="" draggable="false"><span class="trigger-count" aria-hidden="true">1</span></button><button class="game-deck-button" data-owner="0" type="button" title="플레이어 1의 가방" aria-label="플레이어 1의 가방"></button></div></div>
+      <div class="hand-panel" id="handPanel1"><div class="hand-title"><span class="hand-owner-name" id="handOwner1">플레이어 2</span><span class="hand-hero-name" id="handHero1" hidden tabindex="0"></span></div><div class="hand-row"><div class="hand-cards" id="hand1"></div><button class="trigger-tool" data-owner="1" type="button" aria-label="트리거 배치, 남은 횟수 1" disabled><img src="Trigger_illustration/v3-simple/empty.png" alt="" draggable="false"><span class="trigger-count" aria-hidden="true">1</span></button><button class="game-deck-button" data-owner="1" type="button" title="플레이어 2의 가방" aria-label="플레이어 2의 가방"></button></div></div>
     </section>
   </main>
 
@@ -1211,6 +1216,8 @@
       const dealCard = document.querySelector('#dealCard');
       const handEls = [document.querySelector('#hand0'), document.querySelector('#hand1')];
       const handPanels = [document.querySelector('#handPanel0'), document.querySelector('#handPanel1')];
+      const handOwnerEls = [document.querySelector('#handOwner0'), document.querySelector('#handOwner1')];
+      const handHeroEls = [document.querySelector('#handHero0'), document.querySelector('#handHero1')];
       const handsElement = document.querySelector('.hands');
       const triggerToolButtons = [...document.querySelectorAll('.trigger-tool')];
       const gameSettingsOverlay = document.querySelector('#gameSettingsOverlay');
@@ -2653,6 +2660,12 @@
           scoreEls[index].dataset.scoreDetail = breakdown;
           scoreEls[index].setAttribute('aria-label', `${PLAYER[index].name} ${result.score}점. ${details.join('. ')}`);
           const hero = heroFor(index);
+          handOwnerEls[index].textContent = PLAYER[index].name;
+          handHeroEls[index].hidden = !hero;
+          handHeroEls[index].textContent = hero?.name || '';
+          handHeroEls[index].setAttribute('data-description', hero?.description || '');
+          handHeroEls[index].setAttribute('aria-label', hero ? `${hero.name}: ${hero.description}` : '');
+          handHeroEls[index].title = hero?.description || '';
           heroBadges[index].hidden = !hero;
           heroBadges[index].textContent = hero ? `영웅 · ${hero.name}` : '';
           heroBadges[index].title = hero?.description || '';
