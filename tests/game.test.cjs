@@ -183,9 +183,9 @@ test('online turn owner alone controls speed, including host validation', () => 
     speedToggle.listeners.click(); assert.equal(state.speedLevel,old);`);
 });
 
-test('ice friction rises by 20 percent and catalog uses the card illustration files', () => {
+test('ice friction is 80 percent of classic and catalog uses the card illustration files', () => {
   const g = game();
-  g.run(`assert.ok(Math.abs(MAPS[1].friction/.007115625-1.2)<1e-10);
+  g.run(`assert.ok(Math.abs(MAPS[1].friction/MAPS[0].friction-.8)<1e-10);
     renderCatalog('cards');
     const cards=cardDefinitions();
     cards.forEach((card,index)=>{
@@ -193,6 +193,43 @@ test('ice friction rises by 20 percent and catalog uses the card illustration fi
       assert.equal(image.src,CARD_PRESENTATION[card.id].art);
       assert.equal(image.dataset.cardId,card.id);
     });`);
+});
+
+test('map backgrounds show the full concept art while aligning the visible edge to the fall bounds', () => {
+  const g = game();
+  const config = JSON.parse(g.run(`JSON.stringify(MAP_BACKGROUND_CONFIG)`));
+  for (const mapId of ['classic','ice','moving-walls']) {
+    assert.ok(fs.existsSync(path.join(__dirname, '..', config[mapId].src)));
+  }
+  g.run(`state.currentMap=MAPS[0];
+    mapBackgroundImages.classic={src:'classic.png',complete:true,naturalWidth:1642,naturalHeight:958};
+    globalThis.backgroundDraws=[]; globalThis.fillRects=[]; globalThis.strokeRects=[];
+    ctx.drawImage=(...args)=>backgroundDraws.push(args);
+    ctx.fillRect=(...args)=>fillRects.push(args);
+    ctx.strokeRect=(...args)=>strokeRects.push(args);
+    drawTable();`);
+  assert.equal(g.run('backgroundDraws.length'), 3);
+  const slices = JSON.parse(g.run(`JSON.stringify(backgroundDraws.map(args=>args.slice(1)))`));
+  const imageTop = 68 - .089 * (594 / .78);
+  const imageHeight = 594 / .78;
+  assert.deepEqual(slices.map(args=>args.slice(4)), [[0,imageTop,88,imageHeight],
+    [88,imageTop,1024,imageHeight], [1112,imageTop,88,imageHeight]]);
+  assert.ok(Math.abs(slices[1][0] - 1642*.042) < .001);
+  assert.ok(Math.abs(slices[1][2] - 1642*.90) < .001);
+  assert.ok(Math.abs(slices[1][1] - 0) < .001);
+  assert.ok(Math.abs(slices[1][3] - 958) < .001);
+  assert.equal(g.run('strokeRects.length'), 0);
+  assert.ok(!JSON.parse(g.run('JSON.stringify(fillRects)')).some(([x,y,w,h]) => x === 66 && y === 36 && w === 1068 && h === 638));
+});
+
+test('a stone falls as soon as its center crosses the visible table edge', () => {
+  const g = game();
+  g.run(`turns.reset(0);
+    const cap=new CurlingUnit({id:'edge',owner:0,turnNumber:1,x:TABLE.left,y:365});
+    cap.status='sliding'; cap.vx=-100; state.units=[cap];
+    cap.update(0); assert.equal(cap.status,'sliding');
+    cap.update(.02); assert.equal(cap.status,'fallen');
+    assert.ok(cap.x < TABLE.left && cap.x > TABLE.left-cap.radius);`);
 });
 
 test('background draw completes exactly once and resets cancel stale draw callbacks', () => {
@@ -284,20 +321,30 @@ test('opponent aiming remains display-only and cannot suppress incoming updates'
   guest.run(`assert.equal(state.aiming,false); assert.equal(state.phase,'sliding'); assert.equal(onlineSession.snapshotRevision,3);`);
 });
 
-test('ammo aims linearly without shaking or stretch cues and launches at 300 percent', () => {
+test('ammo aims without shaking and always launches at 300 percent maximum speed', () => {
   const g = game();
-  g.run(`turns.createCurrentUnit(); const cap=turns.currentUnit; cap.status='resting';
-    state.hands[0]=[{id:'ammo',name:'Ammo',instanceId:'ammo1'}]; state.phase='turn-ready';
-    assert.equal(useCard('ammo1',0,cap),true); state.aiming=true;
-    updateAimFromInput(cap,{x:cap.x+CONFIG.maxPullDistance*.9,y:cap.y});
-    assert.ok(Math.abs(state.aimTension-.9)<1e-10);
-    updateAimFromInput(cap,{x:cap.x+CONFIG.maxPullDistance*2,y:cap.y});
-    assert.equal(state.aimTension,1); drawAim(); globalThis.firstPath=aimPath.getAttribute('d');`);
+  g.run(`turns.createCurrentUnit(); globalThis.cap=turns.currentUnit; cap.status='resting';
+    globalThis.fireAtPull=(instanceId,ratio)=>{
+      state.phase='turn-ready'; state.repositionMode=null; state.repositionUnit=null;
+      state.hands[0]=[{id:'ammo',name:'Ammo',instanceId}];
+      assert.equal(useCard(instanceId,0,cap),true); state.aiming=true;
+      updateAimFromInput(cap,{x:cap.x+CONFIG.maxPullDistance*ratio,y:cap.y});
+      const tension=state.aimTension; drawAim(); const path=aimPath.getAttribute('d'); drawAim();
+      assert.equal(aimPath.getAttribute('d'),path);
+      launchCurrentUnit();
+      return {tension,speed:Math.hypot(state.bullets.at(-1).vx,state.bullets.at(-1).vy)};
+    };
+    globalThis.lowPullShot=fireAtPull('ammo1',.15);
+    assert.ok(Math.abs(lowPullShot.tension-.15)<1e-10);
+    assert.equal(lowPullShot.speed,CONFIG.maxLaunchSpeed*3);
+    assert.equal(state.phase,'sliding');`);
   g.tick(50);
-  g.run(`drawAim(); assert.equal(aimPath.getAttribute('d'),firstPath);
-    assert.ok(!sounds.includes('elasticStretch')); launchCurrentUnit();
-    assert.equal(state.bullets.length,1);
-    assert.equal(Math.hypot(state.bullets[0].vx,state.bullets[0].vy),CONFIG.maxLaunchSpeed*3);
+  g.run(`assert.ok(!sounds.includes('elasticStretch'));
+    state.bullets=[]; cap.activeSpecial=null;
+    globalThis.highPullShot=fireAtPull('ammo2',.95);
+    assert.ok(Math.abs(highPullShot.tension-.95)<1e-10);
+    assert.equal(highPullShot.speed,lowPullShot.speed);
+    assert.equal(highPullShot.speed,CONFIG.maxLaunchSpeed*3);
     assert.equal(turns.currentUnit.vx,0); assert.ok(sounds.includes('ammoFire')); assert.ok(!sounds.includes('launch'));`);
 });
 
@@ -399,9 +446,15 @@ test('power meter is faster and irregular while the scoreboard shows scores with
     const firstRate=(state.powerMeter.value-.12)/.1;
     updatePowerMeter(1200); const nextRate=(state.powerMeter.value-.12-firstRate*.1)/.1;
     assert.notEqual(firstRate,nextRate);
-    updateHud(); assert.match(scoreEls[0].textContent,/^점수 /);
-    assert.doesNotMatch(scoreEls[0].textContent,/거리/);
+    const cap=turns.currentUnit; cap.status='resting'; cap.x=TABLE.goalX+(TABLE.right-TABLE.goalX)*.25;
+    state.fallPoints[0]=25; updateHud(); assert.equal(scoreEls[0].textContent,'100점');
+    assert.deepEqual(scoreEls[0].dataset.scoreDetail.split(String.fromCharCode(10)),['1번째 스톤 75점','낙사·처치 등 추가 점수 +25점','합계 100점']);
+    updatePlayerNames();
+    assert.equal(playerLabelEls[0].textContent,PLAYER[0].name);
+    assert.equal(remainingEls[0].getAttribute('aria-label'),PLAYER[0].name+' 남은 스톤 4개');
+    assert.doesNotMatch(scoreEls[0].textContent,/거리|낙사|탈출/);
     assert.doesNotMatch(HEROES.find(hero=>hero.id==='big-boy').description,/파워 미터/);`);
+  assert.match(fs.readFileSync(path.join(__dirname,'../index.html'),'utf8'),/stone-blue\.png" alt="" aria-hidden="true" draggable="false"/);
 });
 
 test('bluffing ignores stones, bricks, bullets, guards and map walls until the opponent turn ends', () => {
@@ -528,12 +581,13 @@ test('tutorial lessons cover every card and trigger; practice uses fixed hands w
 
 test('unified game settings pause tutorial movement, return home clears practice, and normal play restores timed turns', () => {
   const g = game();
+  assert.doesNotMatch(fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8'), /id="closeGameSettingsButton"/);
   g.run(`setSpeedLevel(0); startTutorial(); loadTutorialLesson(tutorialLessons().findIndex(l=>l.id==='walls'));
     turns.currentUnit.launch(-200,0); state.phase='sliding';
     document.querySelector('#gameSettingsButton').listeners.click(); const x=turns.currentUnit.x;
     assert.equal(document.querySelector('#tutorialSettingsActions').hidden,false);
     gameLoop(1100); assert.equal(turns.currentUnit.x,x);
-    document.querySelector('#closeGameSettingsButton').listeners.click(); gameLoop(1150);
+    gameSettingsOverlay.hidden=true; gameLoop(1150);
     assert.ok(turns.currentUnit.x<x);
     returnToHome(); assert.equal(state.tutorial,null); assert.equal(state.phase,'intro');
     assert.equal(state.units.length,0); assert.equal(state.hands[0].length,0);
@@ -713,6 +767,24 @@ test('AI selection requires a portrait choice and uses the account or a stable r
     startAiGame(); assert.equal(PLAYER[0].name,'설정한 이름');`);
 });
 
+test('local guest and account profiles are presented at level 100, including file-open mode', () => {
+  const g = game();
+  g.context.location.hostname = 'localhost';
+  g.run(`document.createElement=()=>({append(){}});
+    accountStats.replaceChildren=()=>{};
+    [...localDeckSelects,aiDeckSelect].forEach(select=>select.replaceChildren=()=>{});
+    renderGuestProfile({id:'LOCAL-ACCOUNT',username:'player_one',name:'로컬 계정',fame:0,level:1,
+    levelStart:0,nextLevel:100,played:0,wins:0,losses:0,draws:0,decks:[null,null,null],activePreset:0},true);
+    assert.equal(guestProfile.level,100);
+    assert.equal(state.playerLevels[0],100);
+    assert.match(document.querySelector('#guestProfileMeta').textContent,/Lv 100/);`);
+  g.context.location.protocol = 'file:';
+  g.run(`renderGuestProfile(createLocalGuestProfile('로컬 게스트'),false);
+    assert.equal(guestProfile.username,null);
+    assert.equal(guestProfile.level,100);
+    assert.match(document.querySelector('#guestProfileMeta').textContent,/Lv 100/);`);
+});
+
 test('AI result offers a lobby exit without losing a pending account award', async () => {
   const g = game();
   g.run(`state.aiMode=true; state.phase='aiming'; turns.reset(0); turns.createCurrentUnit();
@@ -751,6 +823,26 @@ test('AI settings require confirmation before forfeiting and record the forfeitu
   g.run(`assert.equal(requests.length,1);
     assert.equal(requests[0].url,'/api/ai-matches/match-id/forfeit');
     assert.equal(requests[0].options.headers.Authorization,'Bearer token');`);
+});
+
+test('settings map cell contains the settings control and online exit confirms room leave', async () => {
+  const g = game();
+  g.run(`state.aiMode=false; state.phase='aiming';
+    onlineSession={code:'ABC123',token:'room-token'};
+    globalThis.leftRoom=null;
+    closeOnlineSocket=()=>{};
+    postOnlineRequest=(url,body)=>{ leftRoom={url,body}; return Promise.resolve({ok:true}); };
+    document.querySelector('#gameSettingsButton').listeners.click();
+    assert.equal(gameLeaveActions.hidden,false);
+    gameLeaveButton.listeners.click();
+    assert.match(gameLeavePrompt.textContent,/온라인 대전에서 나가면 패배 처리/);
+    document.querySelector('#gameLeaveConfirmButton').listeners.click();
+    assert.equal(onlineSession,null); assert.equal(state.phase,'intro');`);
+  g.run(`assert.equal(leftRoom.url,'/api/rooms/ABC123/leave');
+    assert.deepEqual(leftRoom.body,{token:'room-token'});`);
+  const html = require('node:fs').readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');
+  assert.match(html,/<div class="board-map">[\s\S]*?id="gameSettingsButton"/);
+  assert.doesNotMatch(html,/<div class="status-controls">[\s\S]*?id="gameSettingsButton"/);
 });
 
 test('AI style changes hero priorities and can place a legal trigger only within its limit', () => {
@@ -1134,12 +1226,35 @@ test('data barrier is fixed, friendly stones pass, enemies collide, and bullets 
     updateBullets(.1); assert.equal(state.bricks.length,0); assert.equal(state.bullets.length,0);`);
 });
 
-test('data barriers continuously emit capped cyan particles', () => {
+test('data barriers use player-relative colors and expose structure hover descriptions', () => {
   const g = game();
-  g.run(`state.bricks=[new BrickUnit({x:500,y:355,owner:0,barrier:true})];
+  g.run(`onlineSession={started:true,playerIndex:0};
+    const ownPalette=getBarrierPalette({owner:0});
+    const enemyPalette=getBarrierPalette({owner:1});
+    assert.equal(ownPalette.fill,'#17454c');
+    assert.equal(enemyPalette.fill,'#4b252b');
+    assert.match(enemyPalette.outline,/255, 150, 160/);
+    const canvas=document.querySelector('#game');
+    canvas.parentElement=document.createElement('div');
+    state.phase='turn-ready';
+    state.bricks=[new BrickUnit({x:500,y:355,owner:1,barrier:true}),
+      new BrickUnit({x:600,y:355,owner:1,barrier:false})];
+    updateEntityTooltip({clientX:500,clientY:355,pointerType:'mouse'});
+    assert.equal(document.querySelector('#entityTooltipTitle').textContent,'데이터 장벽');
+    assert.equal(document.querySelector('#entityTooltipDetail').textContent,'자신의 스톤만 통과할 수 있는 이동 불가능한 구조물입니다.');
+    updateEntityTooltip({clientX:600,clientY:355,pointerType:'mouse'});
+    assert.equal(document.querySelector('#entityTooltipTitle').textContent,'벽돌 유닛');
+    assert.equal(document.querySelector('#entityTooltipDetail').textContent,'충돌 판정이 있고, 밀려날 수 있는 벽돌 유닛입니다.');`);
+});
+
+test('data barriers continuously emit owner-colored capped particles', () => {
+  const g = game();
+  g.run(`onlineSession={started:true,playerIndex:0};
+    state.bricks=[new BrickUnit({x:500,y:355,owner:0,barrier:true}),new BrickUnit({x:600,y:355,owner:1,barrier:true})];
     state.particles=[]; emitBarrierParticles(.5);
-    assert.ok(state.particles.length >= 4);
+    assert.ok(state.particles.length >= 8);
     assert.ok(state.particles.every(particle => particle.barrierParticle));
+    assert.ok(state.particles.some(particle => ['#ffe1e3','#f07882'].includes(particle.color)));
     state.particles=Array.from({length:240},()=>({life:1,vx:0,vy:0}));
     emitBarrierParticles(.5); assert.ok(state.particles.length<=240);`);
 });

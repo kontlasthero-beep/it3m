@@ -1,7 +1,7 @@
 (function (root) {
   'use strict';
 
-  const TABLE = { left: 88, right: 1112, top: 58, bottom: 652, goalX: 108, launchX: 1060 };
+  const TABLE = { left: 88, right: 1112, top: 68, bottom: 662, goalX: 108, launchX: 1060 };
   const RESTITUTION = .84;
   const STOP_SPEED = 12;
   const STEP = 1 / 120;
@@ -228,8 +228,8 @@
       const drag = Math.pow(Math.max(0, 1 - friction(world, unit)), STEP * 60);
       unit.vx *= drag; unit.vy *= drag;
       if (Math.hypot(unit.vx, unit.vy) < STOP_SPEED) { unit.vx = unit.vy = 0; unit.status = 'resting'; }
-      if (unit.x < TABLE.left - unit.radius || unit.x > TABLE.right + unit.radius ||
-          unit.y < TABLE.top - unit.radius || unit.y > TABLE.bottom + unit.radius) { fall(world, unit); continue; }
+      if (unit.x < TABLE.left || unit.x > TABLE.right ||
+          unit.y < TABLE.top || unit.y > TABLE.bottom) { fall(world, unit); continue; }
       for (let index = world.triggers.length - 1; index >= 0; index -= 1) {
         const trigger = world.triggers[index];
         const dx = unit.x - oldX, dy = unit.y - oldY;
@@ -298,8 +298,8 @@
       }
     }
     for (const unit of world.units) {
-      if (unit.status !== 'fallen' && (unit.x < TABLE.left - unit.radius || unit.x > TABLE.right + unit.radius ||
-          unit.y < TABLE.top - unit.radius || unit.y > TABLE.bottom + unit.radius)) fall(world, unit);
+      if (unit.status !== 'fallen' && (unit.x < TABLE.left || unit.x > TABLE.right ||
+          unit.y < TABLE.top || unit.y > TABLE.bottom)) fall(world, unit);
     }
   }
 
@@ -373,7 +373,7 @@
     reply.turn += 1;
     reply.launchId = 'reply';
     reply.koPoints = world.replyKoPoints || 25;
-    reply.units.push({ id: 'reply', owner: enemy, x: TABLE.launchX, y: 355,
+    reply.units.push({ id: 'reply', owner: enemy, x: TABLE.launchX, y: 365,
       radius: world.replyStone?.radius || 29, status: 'ready', vx: 0, vy: 0,
       heroFriction: world.replyStone?.heroFriction || 1,
       powerScale: world.replyStone?.powerScale || 1,
@@ -388,7 +388,7 @@
     const oldEnemy = world.units.filter(unit => unit.owner === enemy && active(unit))
       .sort((a, b) => a.x - b.x)[0];
     for (const target of targets) for (const lateral of [0, -target.radius * .6, target.radius * .6]) {
-      const dx = target.x - TABLE.launchX, dy = target.y + lateral - 355;
+      const dx = target.x - TABLE.launchX, dy = target.y + lateral - 365;
       const length = Math.hypot(dx, dy) || 1;
       const base = length * -60 * Math.log(clamp(1 - reply.friction *
         (reply.units.at(-1).heroFriction || 1), .001, .999)) /
@@ -424,7 +424,7 @@
     if (!snapshot.triggerCandidates?.length) return null;
     const launcher = snapshot.units.find(unit => unit.id === snapshot.launchId);
     if (!launcher) return null;
-    const probes = [355, 245, 465].map(y => {
+    const probes = [365, 255, 475].map(y => {
       const dx = TABLE.goalX + 130 - launcher.x, dy = y - launcher.y;
       const length = Math.hypot(dx, dy) || 1;
       const power = clamp(length * -60 * Math.log(clamp(1 - snapshot.friction *
@@ -465,7 +465,7 @@
     future.actor = actor;
     future.turn += 2;
     future.launchId = id;
-    future.units.push({ id, owner: actor, x: TABLE.launchX, y: 355, vx: 0, vy: 0,
+    future.units.push({ id, owner: actor, x: TABLE.launchX, y: 365, vx: 0, vy: 0,
       radius: priorLaunch?.radius || 29, status: 'ready', heroFriction: priorLaunch?.heroFriction || 1,
       powerScale: priorLaunch?.powerScale || 1, fallPenalty: priorLaunch?.fallPenalty || 0,
       pendingPulseTriggers: [] });

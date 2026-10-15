@@ -117,7 +117,7 @@ test('accounts and online match fame are bound to room participants', { timeout:
   const port = reservation.address().port;
   await new Promise(resolve => reservation.close(resolve));
   const child = spawn(process.execPath, ['server.js'], {
-    cwd: path.join(__dirname, '..'), env: { ...process.env, PORT: String(port), DATABASE_URL: '' },
+    cwd: path.join(__dirname, '..'), env: { ...process.env, PORT: String(port), DATABASE_URL: '', NODE_ENV: 'production' },
     stdio: ['ignore', 'pipe', 'pipe']
   });
   t.after(async () => {

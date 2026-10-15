@@ -13,7 +13,7 @@ const QUICK_SEARCH = { candidates: 24, offsets: [.9, 1, 1.1], replyCount: 3, fin
 const DECK = ['hardening', 'guard', 'pulse', 'blackhole', 'bluffing', 'brick', 'data-barrier'];
 const MAPS = [
   { friction: .020625, walls: false },
-  { friction: .00853875, walls: false },
+  { friction: .0165, walls: false },
   { friction: .020625, walls: true }
 ];
 
@@ -39,7 +39,7 @@ function playGame(profileA, profileB, seed, startingPlayer) {
   const actions = [emptyActions(), emptyActions()];
   for (let turn = 0; turn < 10; turn += 1) {
     const owner = (startingPlayer + turn) % 2;
-    const unit = { id: `stone-${turn}`, owner, x: 1060, y: 355, vx: 0, vy: 0, radius: 29,
+    const unit = { id: `stone-${turn}`, owner, x: 1060, y: 365, vx: 0, vy: 0, radius: 29,
       status: 'ready', heroFriction: 1, powerScale: 1, fallPenalty: 0, pendingPulseTriggers: [] };
     world.actor = owner; world.turn = turn; world.launchId = unit.id; world.hasReply = turn < 9;
     world.units.push(unit);
@@ -81,7 +81,7 @@ function playGame(profileA, profileB, seed, startingPlayer) {
   const totals = planner.score(world);
   return { winner: totals[0] === totals[1] ? -1 : totals[0] > totals[1] ? 0 : 1,
     margin: totals[0] - totals[1], totals, actions,
-    map: map.walls ? 'moving-walls' : map.friction < .01 ? 'ice' : 'classic' };
+    map: map.walls ? 'moving-walls' : map.friction < .02 ? 'ice' : 'classic' };
 }
 
 function emptyActions() { return { cards: {}, triggers: {}, structures: {} }; }

@@ -6,12 +6,12 @@ const { SCENARIOS, summarizePlan } = require('../tools/ai-tactical-bench.cjs');
 function board(map = 'classic') {
   return {
     actor: 1, turn: 1, launchId: 'ai', seed: 42,
-    friction: map === 'ice' ? .00853875 : .020625,
+    friction: map === 'ice' ? .0165 : .020625,
     walls: map === 'moving-walls', mapTime: 0, koPoints: 25, points: [0, 0],
     units: [
-      { id: 'enemy', owner: 0, x: 800, y: 355, vx: 0, vy: 0, radius: 29,
+      { id: 'enemy', owner: 0, x: 800, y: 365, vx: 0, vy: 0, radius: 29,
         status: 'resting', heroFriction: 1, powerScale: 1, pendingPulseTriggers: [] },
-      { id: 'ai', owner: 1, x: 1060, y: 355, vx: 0, vy: 0, radius: 29,
+      { id: 'ai', owner: 1, x: 1060, y: 365, vx: 0, vy: 0, radius: 29,
         status: 'ready', heroFriction: 1, powerScale: 1, pendingPulseTriggers: [] }
     ], bricks: [], triggers: []
   };
@@ -26,6 +26,13 @@ test('rollouts resolve impacts, knockouts and final scoring without mutating the
   assert.equal(hard.world.units[0].status, 'fallen');
   assert.equal(hard.world.points[1], 25);
   assert.equal(JSON.stringify(snapshot), original);
+});
+
+test('AI rollouts use the visible table edge as the stone fall boundary', () => {
+  const snapshot = board();
+  snapshot.units[1].x = 89;
+  const result = planner.simulate(snapshot, { dx: -1, dy: 0, power: 1 });
+  assert.equal(result.world.units[1].status, 'fallen');
 });
 
 test('all difficulties produce legal, varied shots and greater search breadth', () => {
@@ -50,7 +57,7 @@ test('the planner includes the current map and consumable triggers', () => {
     planner.simulate(walled, shot).world.units[1].x);
   assert.notEqual(planner.simulate(normal, shot).world.units[1].x,
     planner.simulate(ice, shot).world.units[1].x);
-  normal.triggers.push({ x: 1000, y: 355, radius: 14.5, type: 'hardening' });
+  normal.triggers.push({ x: 1000, y: 365, radius: 14.5, type: 'hardening' });
   const triggered = planner.simulate(normal, shot);
   assert.equal(triggered.world.triggers.length, 0);
   assert.equal(triggered.world.units[1].ability.stacks.hardening, 1);
@@ -71,9 +78,9 @@ test('counterplay risk increases when an exposed AI stone can be knocked out', (
 
 test('AAB counterplay models the opponent hand and defensive cards on earlier stones', () => {
   const snapshot = board();
-  snapshot.units[0] = { ...snapshot.units[0], id: 'own', owner: 1, x: 140, y: 355 };
-  snapshot.units[1].y = 500;
-  snapshot.units.push({ id: 'human', owner: 0, x: 400, y: 355, vx: 0, vy: 0,
+  snapshot.units[0] = { ...snapshot.units[0], id: 'own', owner: 1, x: 140, y: 365 };
+  snapshot.units[1].y = 510;
+  snapshot.units.push({ id: 'human', owner: 0, x: 400, y: 365, vx: 0, vy: 0,
     radius: 29, status: 'resting', heroFriction: 1, powerScale: 1, pendingPulseTriggers: [] });
   assert.ok(planner.replyRisk(snapshot, 1, 8, ['blackhole'], true) >
     planner.replyRisk(snapshot, 1, 8, [], false) + 10);
