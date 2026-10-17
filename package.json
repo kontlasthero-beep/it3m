@@ -2,7 +2,7 @@
   "name": "underhanded-curling-club",
   "version": "1.0.0",
   "private": true,
-  "description": "Online server for Underhanded Curling Club",
+  "description": "Second Chance online game server",
   "main": "server.js",
   "scripts": {
     "start": "node local-level100.js",

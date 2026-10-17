@@ -5,6 +5,19 @@ const path = require('node:path');
 const vm = require('node:vm');
 const aiPlanner = require('../ai-planner.js');
 
+test('Second Chance branding is consistent between the game and web poster', () => {
+  const gameHtml = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+  const posterHtml = fs.readFileSync(path.join(__dirname, '../poster.html'), 'utf8');
+  const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '../manifest.webmanifest'), 'utf8'));
+
+  assert.match(gameHtml, /<title>Second Chance<\/title>/);
+  assert.match(gameHtml, /<h1>Second Chance<\/h1>/);
+  assert.match(posterHtml, /<title>Second Chance \| 2041 기록<\/title>/);
+  assert.match(posterHtml, /<h1><span>SECOND<\/span><span>CHANCE<\/span><\/h1>/);
+  assert.equal(manifest.name, 'Second Chance');
+  assert.equal(manifest.short_name, 'Second Chance');
+});
+
 function game() {
   const elements = new Map();
   const timeouts = [];
@@ -820,19 +833,21 @@ test('AI result offers a lobby exit without losing a pending account award', asy
   g.run('assert.equal(awardRequested,true); assert.equal(guestProfile.fame,25);');
 });
 
-test('AI settings require confirmation before forfeiting and record the forfeiture', async () => {
+test('AI settings expose the shared exit control, confirm forfeiting, and record the forfeiture', async () => {
   const g = game();
   g.run(`state.aiMode=true; state.phase='aiming'; turns.reset(0); turns.createCurrentUnit();
     guestProfile={username:'member',name:'MEMBER',level:1}; guestToken='token';
     state.aiMatchToken='token'; state.aiMatchPromise=Promise.resolve('match-id');
     globalThis.requests=[]; fetch=async(url,options)=>{ requests.push({url,options}); return {ok:true}; };
     document.querySelector('#gameSettingsButton').listeners.click();
-    assert.equal(aiForfeitActions.hidden,false);
-    aiForfeitButton.listeners.click(); assert.equal(aiForfeitConfirm.hidden,false);
-    document.querySelector('#aiForfeitCancelButton').listeners.click();
-    assert.equal(state.phase,'aiming'); assert.equal(aiForfeitConfirm.hidden,true);
-    aiForfeitButton.listeners.click();
-    document.querySelector('#aiForfeitConfirmButton').listeners.click();
+    assert.equal(gameLeaveActions.hidden,false);
+    assert.equal(gameLeaveButton.textContent,'게임 포기하기');
+    gameLeaveButton.listeners.click(); assert.equal(gameLeaveConfirm.hidden,false);
+    assert.match(gameLeavePrompt.textContent,/명성치는 획득할 수 없습니다/);
+    document.querySelector('#gameLeaveCancelButton').listeners.click();
+    assert.equal(state.phase,'aiming'); assert.equal(gameLeaveConfirm.hidden,true);
+    gameLeaveButton.listeners.click();
+    document.querySelector('#gameLeaveConfirmButton').listeners.click();
     assert.equal(state.phase,'intro'); assert.equal(state.aiMode,false);`);
   await new Promise(resolve => setImmediate(resolve));
   g.run(`assert.equal(requests.length,1);
@@ -840,7 +855,7 @@ test('AI settings require confirmation before forfeiting and record the forfeitu
     assert.equal(requests[0].options.headers.Authorization,'Bearer token');`);
 });
 
-test('settings map cell contains the settings control and online exit confirms room leave', async () => {
+test('game header aligns map and settings with the title while online exit confirms room leave', async () => {
   const g = game();
   g.run(`state.aiMode=false; state.phase='aiming';
     onlineSession={code:'ABC123',token:'room-token'};
@@ -856,8 +871,13 @@ test('settings map cell contains the settings control and online exit confirms r
   g.run(`assert.equal(leftRoom.url,'/api/rooms/ABC123/leave');
     assert.deepEqual(leftRoom.body,{token:'room-token'});`);
   const html = require('node:fs').readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');
-  assert.match(html,/<div class="board-map">[\s\S]*?id="gameSettingsButton"/);
+  assert.match(html,/<section class="topbar"[\s\S]*?<h1>Second Chance<\/h1>[\s\S]*?<div class="board-map">[\s\S]*?id="gameSettingsButton"[\s\S]*?<\/section>/);
   assert.doesNotMatch(html,/<div class="status-controls">[\s\S]*?id="gameSettingsButton"/);
+  assert.match(html,/body\.game-active \.topbar \{[^}]*width: min\(100%, 71\.8vw\)/);
+  assert.match(html,/\.board-dock \{[^}]*bottom: 64px[^}]*background:/);
+  assert.doesNotMatch(html,/\.board-dock \{[^}]*border-top:/);
+  assert.match(html,/<div class="board-hud"[\s\S]*?id="panel0"[\s\S]*?id="turnTimer"[\s\S]*?id="panel1"[\s\S]*?<\/div>\s*<canvas/);
+  assert.match(html,/<div class="board-dock"[\s\S]*?id="remaining0"[\s\S]*?id="speedToggle"[\s\S]*?id="turnText"[\s\S]*?id="endTurnButton"/);
 });
 
 test('AI style changes hero priorities and can place a legal trigger only within its limit', () => {

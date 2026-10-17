@@ -631,7 +631,7 @@ setInterval(() => {
 }, 10 * 60 * 1000).unref();
 
 server.listen(PORT, LOCAL_TEST_LEVEL ? '127.0.0.1' : '0.0.0.0',
-  () => console.log(`Underhanded Curling Club listening on port ${PORT}${LOCAL_TEST_LEVEL ? ' (local test: Lv 100)' : ''}`));
+  () => console.log(`Second Chance listening on port ${PORT}${LOCAL_TEST_LEVEL ? ' (local test: Lv 100)' : ''}`));
 
 process.once('SIGTERM', () => {
   for (const socket of webSocketServer.clients) {

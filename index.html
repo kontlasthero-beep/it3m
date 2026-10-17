@@ -6,11 +6,11 @@
   <meta name="theme-color" content="#0c1315">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Underhanded Curling Club">
+  <meta name="apple-mobile-web-app-title" content="Second Chance">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
-  <title>Underhanded Curling Club</title>
+  <title>Second Chance</title>
   <style>
     :root {
       color-scheme: dark;
@@ -143,9 +143,11 @@
       background: #111b1d;
       box-shadow: 0 20px 48px rgba(0, 0, 0, .34);
     }
-    .board-hud { position: absolute; z-index: 10; inset: 0 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 10px; min-height: 54px; padding: 5px 9px; background: linear-gradient(180deg, rgba(9, 17, 18, .86), rgba(9, 17, 18, .55)); }
-    .board-hud .remaining-ui { gap: 6px; }
-    .board-hud .remaining-ui { grid-column: 1; justify-self: start; }
+    .board-hud { position: absolute; z-index: 10; inset: 0 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 10px; min-height: 54px; padding: 5px 9px; background: linear-gradient(180deg, rgba(9, 17, 18, .88), rgba(9, 17, 18, .62)); }
+    .board-hud .player-panel { display: flex; align-items: center; gap: 9px; min-width: 0; min-height: 38px; padding: 4px 9px; background: rgba(16, 29, 30, .8); }
+    .board-hud .player-panel.p2 { justify-content: flex-end; }
+    .board-hud .player-label { overflow: hidden; color: var(--ink); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+    .board-hud .player-score { flex: 0 0 auto; margin: 0; font-size: 17px; white-space: nowrap; }
     .board-hud .remaining-player { display: flex; align-items: center; gap: 6px; min-width: 0; padding: 5px 8px; border-color: rgba(147, 170, 164, .46); background: rgba(16, 29, 30, .76); font-size: 11px; white-space: nowrap; }
     .stone-count { display: inline-flex; align-items: center; gap: 2px; min-height: 24px; }
     .stone-count img { display: block; width: 20px; height: 20px; object-fit: contain; pointer-events: none; user-select: none; }
@@ -153,11 +155,17 @@
     .practice-stones { color: var(--muted); font-size: 11px; }
     .practice-stones[hidden] { display: none; }
     .board-hud .table-clock-bar { position: static; grid-column: 2; justify-self: center; min-height: 0; padding: 0; }
-    .board-hud .turn-status { grid-column: 3; justify-self: end; display: flex; align-items: center; gap: 8px; min-width: 0; margin: 0; padding: 4px 7px; border-left-width: 2px; background: rgba(17, 29, 30, .82); font-size: 11px; }
-    .board-hud .status-topline { gap: 6px; }
-    .board-hud .turn-status strong { margin: 0; font-size: 13px; white-space: nowrap; }
-    .board-hud #endTurnButton { min-height: 30px; padding: 4px 9px; border-color: #c29a55; background: #755321; color: #fff1d4; font-size: 11px; white-space: nowrap; }
-    .board-hud #endTurnButton:disabled { opacity: .48; }
+    .board-dock { position: absolute; z-index: 12; right: 0; bottom: 64px; left: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 10px; min-height: 44px; padding: 4px 9px; background: linear-gradient(0deg, rgba(8, 15, 17, .82), rgba(8, 15, 17, .58)); }
+    .board-dock .remaining-ui { display: flex; grid-column: 1; justify-self: start; gap: 6px; min-width: 0; }
+    .board-dock .remaining-player { display: flex; align-items: center; gap: 5px; min-width: 0; padding: 3px 6px; border-color: rgba(147, 170, 164, .46); background: rgba(16, 29, 30, .76); font-size: 10px; white-space: nowrap; }
+    .board-dock .remaining-player-name { display: none; }
+    .board-dock .stone-count { min-height: 22px; }
+    .board-dock .stone-count img { width: 18px; height: 18px; }
+    .board-dock .speed-toggle { grid-column: 2; justify-self: center; }
+    .board-dock .turn-status { position: relative; grid-column: 3; justify-self: end; display: flex; align-items: center; gap: 8px; min-width: 0; margin: 0; padding: 3px 7px; border-left: 2px solid var(--accent); background: rgba(17, 29, 30, .84); color: var(--muted); font-size: 11px; }
+    .board-dock .turn-status strong { margin: 0; color: var(--ink); font-size: 13px; white-space: nowrap; }
+    .board-dock #endTurnButton { min-height: 30px; padding: 4px 9px; border-color: #c29a55; background: #755321; color: #fff1d4; font-size: 11px; white-space: nowrap; }
+    .board-dock #endTurnButton:disabled { opacity: .48; }
     .power-control { position: absolute; z-index: 18; width: 112px; transform: translateX(-50%); pointer-events: none; text-align: center; }
     .power-control button { pointer-events: auto; min-height: 38px; width: 100%; font-weight: 800; }
     .power-control .power-launch { width: 58px; min-height: 28px; padding: 4px 6px; border-color: rgba(240, 200, 116, .65); background: rgba(180, 117, 34, .55); color: #fff0d6; font-size: 12px; }
@@ -452,20 +460,16 @@
     .trigger-tool[data-description]:hover { z-index: 30; }
 
     body.game-active .app { display: flex; flex-direction: column; width: min(1540px, 100%); height: 100dvh; min-height: 0; padding: 8px 14px 10px; overflow: hidden; }
-    body.game-active .topbar { flex: 0 0 auto; align-items: center; gap: 10px; margin-bottom: 6px; }
+    body.game-active .topbar { flex: 0 0 auto; align-self: center; width: min(100%, 71.8vw); align-items: center; gap: 10px; margin-bottom: 6px; }
     body.game-active h1 { font-size: 19px; }
     body.game-active .subtitle { display: none; }
-    body.game-active .scoreboard { flex: 0 0 auto; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; align-items: stretch; gap: 8px; margin-bottom: 7px; }
-    body.game-active .player-panel { min-height: 48px; padding: 5px 10px; }
-    body.game-active .player-label { color: var(--ink); font-size: 12px; font-weight: 700; }
-    body.game-active .hero-badge { margin-top: 2px; font-size: 10px; }
-    body.game-active .player-score { margin-top: 0; font-size: 19px; }
-    body.game-active .match-hud { grid-column: 3; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px 7px; min-width: 142px; min-height: 48px; margin: 0; padding: 4px 9px; }
+    body.game-active .scoreboard { display: none; }
+    body.game-active .match-hud { flex-direction: column; align-items: center; justify-content: center; gap: 2px 7px; min-width: 142px; min-height: 48px; margin: 0; padding: 4px 9px; }
     body.game-active .match-hud[hidden] { display: none; }
     body.game-active .match-hud .match-player { display: none; }
     body.game-active .match-hud strong { font-size: 12px; }
     body.game-active .match-round { padding: 2px 5px; font-size: 10px; }
-    body.game-active .board-map { position: relative; grid-column: 3; display: grid; align-content: center; justify-items: center; min-width: 142px; min-height: 48px; padding: 5px 43px 5px 9px; border: 1px solid #405451; border-radius: 4px; background: #14201e; text-align: center; }
+    body.game-active .board-map { position: relative; display: grid; align-content: center; justify-items: center; min-width: 142px; min-height: 38px; padding: 4px 43px 4px 9px; border: 1px solid #405451; border-radius: 4px; background: #14201e; text-align: center; }
     body.game-active .map-settings-button { position: absolute; top: 50%; right: 5px; z-index: 2; transform: translateY(-50%); }
     body.game-active .map-indicator { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     body.game-active .board-map .match-hud { min-width: 0; min-height: 0; padding: 0; border: 0; background: transparent; }
@@ -477,7 +481,7 @@
     body.game-active .turn-actions { gap: 8px; }
     body.game-active #actionHint { font-size: 11px; }
     body.game-active #endTurnButton { min-height: 36px; padding: 6px 14px; }
-    body.game-active .hands { position: relative; z-index: 11; align-self: center; width: calc(100% - 44px); flex: 0 0 auto; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; min-height: 0; margin-top: clamp(-110px, -7.5dvh, -65px); transition: grid-template-columns .18s ease; }
+    body.game-active .hands { position: relative; z-index: 11; align-self: center; width: min(100%, 71.8vw); flex: 0 0 auto; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; min-height: 0; margin-top: clamp(-56px, -4dvh, -42px); transition: grid-template-columns .18s ease; }
     body.game-active .hands.active-p1 { grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr); }
     body.game-active .hands.active-p2 { grid-template-columns: minmax(0, .88fr) minmax(0, 1.12fr); }
     body.game-active .hand-panel { padding: 8px 10px; border-color: #63736b; background: rgba(13, 24, 25, .97); box-shadow: 0 -10px 26px rgba(0,0,0,.66), 0 12px 30px rgba(0,0,0,.52), inset 0 1px 0 rgba(227,205,151,.12); backdrop-filter: blur(5px); transition: transform .18s ease, filter .18s ease, opacity .18s ease, box-shadow .18s ease; }
@@ -496,21 +500,26 @@
 
     @media (max-width: 700px) {
       body.game-active .app { height: auto; min-height: 100dvh; overflow: visible; padding: max(8px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom)); }
-      body.game-active .topbar { display: block; margin-bottom: 6px; }
-      body.game-active h1 { font-size: 18px; }
-      body.game-active .scoreboard { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-      body.game-active .board-map { grid-column: 1 / -1; min-height: 36px; padding-right: 43px; }
+      body.game-active .topbar { display: flex; width: 100%; align-items: center; gap: 6px; margin-bottom: 6px; }
+      body.game-active h1 { font-size: 14px; }
+      body.game-active .board-map { min-width: 108px; min-height: 34px; padding: 3px 39px 3px 6px; }
       body.game-active .match-hud { flex-direction: row; align-items: center; min-width: 0; }
       body.game-active .match-hud .match-player { display: inline-flex; }
-      body.game-active .board-hud { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px 6px; min-height: 0; padding: 4px; }
-      body.game-active .board-hud .remaining-ui { display: flex; }
-      body.game-active .board-hud .remaining-player { gap: 3px; padding: 3px 5px; font-size: 9px; }
-      body.game-active .stone-count { gap: 1px; min-height: 18px; }
-      body.game-active .stone-count img { width: 15px; height: 15px; }
+      body.game-active .board-hud { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 4px; min-height: 46px; padding: 3px 5px; }
+      body.game-active .board-hud .player-panel { gap: 4px; min-height: 32px; padding: 3px 5px; }
+      body.game-active .board-hud .player-label { display: none; }
+      body.game-active .board-hud .player-score { font-size: 14px; }
+      body.game-active .board-hud .turn-timer { min-width: 56px; padding: 3px 7px; font-size: 19px; }
+      body.game-active .board-dock { bottom: 0; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 4px; min-height: 42px; padding: 3px 5px; background: rgba(8, 15, 17, .64); }
+      body.game-active .board-dock .remaining-ui { gap: 3px; }
+      body.game-active .board-dock .remaining-player { gap: 2px; padding: 2px 3px; }
+      body.game-active .board-dock .stone-count { gap: 0; min-height: 16px; }
+      body.game-active .board-dock .stone-count img { width: 12px; height: 12px; }
+      body.game-active .board-dock .speed-toggle { min-height: 27px; padding: 3px 5px; font-size: 10px; }
+      body.game-active .board-dock .turn-status { gap: 4px; padding: 2px 4px; font-size: 10px; }
+      body.game-active .board-dock .turn-status strong { max-width: 72px; overflow: hidden; font-size: 10px; text-overflow: ellipsis; }
+      body.game-active .board-dock #endTurnButton { min-height: 27px; padding: 3px 6px; font-size: 10px; }
       body.game-active .board-map .match-hud:not([hidden]) { justify-content: center; }
-      body.game-active .board-hud .turn-status { display: flex; }
-      body.game-active .board-hud .status-topline > span { display: none; }
-      body.game-active .board-hud .turn-status strong { max-width: 92px; overflow: hidden; font-size: 10px; text-overflow: ellipsis; }
       body.game-active .game-shell { flex: 0 0 auto; aspect-ratio: 1200 / 772; min-height: 0; }
       body.game-active .game-shell > canvas { width: 100%; height: auto; max-height: none; }
       body.game-active .bottom-bar { flex-direction: row; justify-content: flex-end; }
@@ -522,7 +531,7 @@
       body.game-active .app { height: auto; min-height: 100dvh; overflow: visible; }
       body.game-active .game-shell { flex: 0 0 auto; aspect-ratio: 1200 / 772; }
       body.game-active .game-shell > canvas { width: 100%; height: auto; max-height: none; }
-      body.game-active .hands { margin-top: 5px; }
+      body.game-active .hands { width: min(100%, 71.8vw); margin-top: -18px; }
     }
     .trigger-tool[data-description]::after { content: attr(data-description); position: absolute; z-index: 31; right: 0; bottom: calc(100% + 8px); display: none; width: min(250px, 70vw); padding: 9px 11px; border: 1px solid #71847d; border-radius: 4px; background: #101a1c; color: #edf4ef; box-shadow: 0 8px 22px rgba(0,0,0,.4); font-size: 12px; font-weight: 400; line-height: 1.45; white-space: normal; pointer-events: none; }
     .trigger-tool[data-description]:hover::after { display: block; }
@@ -782,21 +791,8 @@
   <main class="app">
     <section class="topbar" aria-label="게임 정보">
       <div>
-        <h1>Underhanded Curling Club</h1>
+        <h1>Second Chance</h1>
         <p class="subtitle">왼쪽 끝선에 가까울수록 높은 점수</p>
-      </div>
-    </section>
-
-    <section class="scoreboard" aria-label="점수판">
-      <div class="player-panel p1" id="panel0">
-        <div class="player-label" id="playerLabel0">플레이어 1</div>
-        <span class="hero-badge" id="heroBadge0" hidden></span>
-        <div class="player-score" id="score0" tabindex="0" aria-label="플레이어 1 점수 0점">0점</div>
-      </div>
-      <div class="player-panel p2" id="panel1">
-        <div class="player-label" id="playerLabel1">플레이어 2</div>
-        <span class="hero-badge" id="heroBadge1" hidden></span>
-        <div class="player-score" id="score1" tabindex="0" aria-label="플레이어 2 점수 0점">0점</div>
       </div>
       <div class="board-map"><span class="map-indicator" id="mapIndicator">맵 선택 대기</span><div class="match-hud" id="matchHud" hidden aria-live="polite"><span class="match-player" id="matchPlayer0"></span><strong id="matchScore0"></strong><span class="match-separator" aria-hidden="true">:</span><strong id="matchScore1"></strong><span class="match-player p2" id="matchPlayer1"></span><span class="match-round" id="matchRound"></span></div><button class="icon-button map-settings-button" id="gameSettingsButton" type="button" aria-label="게임 설정" title="게임 설정">⚙</button></div>
     </section>
@@ -807,12 +803,34 @@
       <div class="tutorial-actions"><span id="tutorialObjective" role="status" aria-live="polite"></span><button id="tutorialRetryButton" type="button">다시 연습</button><button id="tutorialNextButton" type="button">다음 연습 →</button></div>
     </section>
     <section class="game-shell" aria-label="컬링 테이블">
-      <div class="board-hud" aria-label="테이블 상태">
+      <div class="board-hud" aria-label="플레이어 점수와 남은 시간">
+        <div class="player-panel p1" id="panel0">
+          <div class="player-label" id="playerLabel0">플레이어 1</div>
+          <span class="hero-badge" id="heroBadge0" hidden></span>
+          <div class="player-score" id="score0" tabindex="0" aria-label="플레이어 1 점수 0점">0점</div>
+        </div>
+        <div class="table-clock-bar"><div class="turn-timer" id="turnTimer" aria-label="남은 턴 시간" hidden>35</div></div>
+        <div class="player-panel p2" id="panel1">
+          <div class="player-label" id="playerLabel1">플레이어 2</div>
+          <span class="hero-badge" id="heroBadge1" hidden></span>
+          <div class="player-score" id="score1" tabindex="0" aria-label="플레이어 2 점수 0점">0점</div>
+        </div>
+      </div>
+      <canvas id="game" width="1200" height="772" aria-label="Second Chance 게임"></canvas>
+      <div class="power-control" id="powerControl" hidden>
+        <button class="power-launch" id="powerLaunchButton" type="button">발사</button>
+        <div class="power-panel" id="powerPanel" hidden>
+          <div class="power-track" id="powerTrack" role="meter" aria-label="발사 파워" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="power-needle" id="powerNeedle"></div></div>
+          <div class="power-value" id="powerValue">0%</div>
+          <button class="power-confirm" id="powerConfirmButton" type="button">결정</button>
+        </div>
+      </div>
+      <div class="board-dock" aria-label="턴 조작">
         <div class="remaining-ui">
           <div class="remaining-player p1" id="remainingPanel0"><span class="remaining-player-name" id="remainingName0">플레이어 1</span><span class="stone-count" id="remaining0" role="img" aria-label="플레이어 1 남은 스톤 5개"><img src="stone-blue.png" alt="" aria-hidden="true" draggable="false" data-stone-index="0"><img src="stone-blue.png" alt="" aria-hidden="true" draggable="false" data-stone-index="1"><img src="stone-blue.png" alt="" aria-hidden="true" draggable="false" data-stone-index="2"><img src="stone-blue.png" alt="" aria-hidden="true" draggable="false" data-stone-index="3"><img src="stone-blue.png" alt="" aria-hidden="true" draggable="false" data-stone-index="4"></span><span class="practice-stones" id="practiceRemaining0" hidden>연습</span></div>
           <div class="remaining-player p2" id="remainingPanel1"><span class="remaining-player-name" id="remainingName1">플레이어 2</span><span class="stone-count" id="remaining1" role="img" aria-label="플레이어 2 남은 스톤 5개"><img src="stone-red.png" alt="" aria-hidden="true" draggable="false" data-stone-index="0"><img src="stone-red.png" alt="" aria-hidden="true" draggable="false" data-stone-index="1"><img src="stone-red.png" alt="" aria-hidden="true" draggable="false" data-stone-index="2"><img src="stone-red.png" alt="" aria-hidden="true" draggable="false" data-stone-index="3"><img src="stone-red.png" alt="" aria-hidden="true" draggable="false" data-stone-index="4"></span><span class="practice-stones" id="practiceRemaining1" hidden>연습</span></div>
         </div>
-        <div class="table-clock-bar"><div class="turn-timer" id="turnTimer" aria-label="남은 턴 시간" hidden>35</div><button class="speed-toggle" id="speedToggle" data-speed-level="0" type="button" aria-label="게임 속도: 정상 속도" aria-pressed="false" title="게임 속도 전환"><svg viewBox="0 0 20 16" aria-hidden="true"><path data-speed-arrow="1" d="M0 2v12l7-6z"/><path data-speed-arrow="2" d="M6 2v12l7-6z"/><path data-speed-arrow="3" d="M12 2v12l7-6z"/></svg><span id="speedLabel">100%</span></button></div>
+        <button class="speed-toggle" id="speedToggle" data-speed-level="0" type="button" aria-label="게임 속도: 정상 속도" aria-pressed="false" title="게임 속도 전환"><svg viewBox="0 0 20 16" aria-hidden="true"><path data-speed-arrow="1" d="M0 2v12l7-6z"/><path data-speed-arrow="2" d="M6 2v12l7-6z"/><path data-speed-arrow="3" d="M12 2v12l7-6z"/></svg><span id="speedLabel">100%</span></button>
         <div class="turn-status">
           <strong id="turnText">게임 시작 대기</strong>
           <div class="status-controls">
@@ -832,22 +850,13 @@
           </div>
         </div>
       </div>
-      <canvas id="game" width="1200" height="772" aria-label="Underhanded Curling Club 게임"></canvas>
-      <div class="power-control" id="powerControl" hidden>
-        <button class="power-launch" id="powerLaunchButton" type="button">발사</button>
-        <div class="power-panel" id="powerPanel" hidden>
-          <div class="power-track" id="powerTrack" role="meter" aria-label="발사 파워" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="power-needle" id="powerNeedle"></div></div>
-          <div class="power-value" id="powerValue">0%</div>
-          <button class="power-confirm" id="powerConfirmButton" type="button">결정</button>
-        </div>
-      </div>
       <div class="entity-tooltip" id="entityTooltip" role="tooltip" hidden>
         <strong id="entityTooltipTitle"></strong>
         <span id="entityTooltipDetail"></span>
       </div>
       <div class="overlay" id="startOverlay">
         <div class="dialog">
-          <h2>Underhanded Curling Club</h2>
+          <h2>Second Chance</h2>
           <p id="startScreenDescription"></p>
           <div class="start-screen" id="homeScreen" hidden>
             <div class="home-stones" aria-hidden="true"><img src="stone-blue.png" alt=""><img src="stone-red.png" alt=""></div>
@@ -1055,13 +1064,6 @@
           <div class="settings-actions"><button id="gameLeaveConfirmButton" type="button">나가기</button><button id="gameLeaveCancelButton" type="button">계속 플레이</button></div>
         </div>
       </div>
-      <div class="settings-forfeit" id="aiForfeitActions" hidden>
-        <button id="aiForfeitButton" type="button">게임 포기하기</button>
-        <div id="aiForfeitConfirm" hidden>
-          <p>AI 대전을 포기하고 시작 화면으로 돌아갈까요? 이 경기의 명성치는 획득할 수 없습니다.</p>
-          <div class="settings-actions"><button id="aiForfeitConfirmButton" type="button">포기하고 나가기</button><button id="aiForfeitCancelButton" type="button">계속 플레이</button></div>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -1227,9 +1229,6 @@
       const gameLeaveButton = document.querySelector('#gameLeaveButton');
       const gameLeaveConfirm = document.querySelector('#gameLeaveConfirm');
       const gameLeavePrompt = document.querySelector('#gameLeavePrompt');
-      const aiForfeitActions = document.querySelector('#aiForfeitActions');
-      const aiForfeitConfirm = document.querySelector('#aiForfeitConfirm');
-      const aiForfeitButton = document.querySelector('#aiForfeitButton');
       const musicVolume = document.querySelector('#musicVolume');
       const sfxVolume = document.querySelector('#sfxVolume');
       const speedToggle = document.querySelector('#speedToggle');
@@ -1813,8 +1812,6 @@
         gameLeaveActions.hidden = true;
         gameLeaveConfirm.hidden = true;
         gameLeaveButton.hidden = false;
-        aiForfeitActions.hidden = true;
-        aiForfeitConfirm.hidden = true;
         gameSettingsTitle.textContent = '게임 설정';
         if (previous) {
           PLAYER.forEach((player, index) => { player.name = previous.names[index]; });
@@ -7249,19 +7246,20 @@
         }
         gameSettingsTitle.textContent = state.tutorial ? '튜토리얼 설정' : '게임 설정';
         tutorialSettingsActions.hidden = !state.tutorial;
-        gameLeaveActions.hidden = state.tutorial || state.aiMode || state.phase === 'intro' || state.phase === 'finished';
+        gameLeaveActions.hidden = state.tutorial || state.phase === 'intro' || state.phase === 'finished';
         gameLeaveConfirm.hidden = true;
         gameLeaveButton.hidden = false;
-        aiForfeitActions.hidden = !state.aiMode || state.phase === 'finished';
-        aiForfeitConfirm.hidden = true;
-        aiForfeitButton.hidden = false;
+        gameLeaveButton.textContent = state.aiMode ? '게임 포기하기' : '게임 나가기';
+        document.querySelector('#gameLeaveConfirmButton').textContent = state.aiMode ? '포기하고 나가기' : '나가기';
         gameSettingsOverlay.hidden = false;
         musicVolume.focus();
       });
       gameLeaveButton.addEventListener('click', () => {
-        gameLeavePrompt.textContent = onlineSession
-          ? '온라인 대전에서 나가면 패배 처리될 수 있습니다. 그래도 나가시겠습니까?'
-          : '현재 게임을 종료하고 로비로 돌아갈까요?';
+        gameLeavePrompt.textContent = state.aiMode
+          ? 'AI 대전을 포기하고 시작 화면으로 돌아갈까요? 이 경기의 명성치는 획득할 수 없습니다.'
+          : onlineSession
+            ? '온라인 대전에서 나가면 패배 처리될 수 있습니다. 그래도 나가시겠습니까?'
+            : '현재 게임을 종료하고 로비로 돌아갈까요?';
         gameLeaveButton.hidden = true;
         gameLeaveConfirm.hidden = false;
         document.querySelector('#gameLeaveCancelButton').focus();
@@ -7271,18 +7269,10 @@
         gameLeaveButton.hidden = false;
         gameLeaveButton.focus();
       });
-      document.querySelector('#gameLeaveConfirmButton').addEventListener('click', leaveCurrentGame);
-      aiForfeitButton.addEventListener('click', () => {
-        aiForfeitButton.hidden = true;
-        aiForfeitConfirm.hidden = false;
-        document.querySelector('#aiForfeitCancelButton').focus();
+      document.querySelector('#gameLeaveConfirmButton').addEventListener('click', () => {
+        if (state.aiMode) forfeitAiGame();
+        else leaveCurrentGame();
       });
-      document.querySelector('#aiForfeitCancelButton').addEventListener('click', () => {
-        aiForfeitConfirm.hidden = true;
-        aiForfeitButton.hidden = false;
-        aiForfeitButton.focus();
-      });
-      document.querySelector('#aiForfeitConfirmButton').addEventListener('click', forfeitAiGame);
       for (const [input, key, output] of [
         [musicVolume, 'musicVolume', document.querySelector('#musicVolumeValue')],
         [sfxVolume, 'sfxVolume', document.querySelector('#sfxVolumeValue')]
