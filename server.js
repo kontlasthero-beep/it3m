@@ -88,8 +88,8 @@ function roomView(room) {
   return {
     code: room.code,
     status: room.status,
-    host: { name: room.host.name, level: room.host.level, deck: room.host.deck, mapId: room.host.mapId },
-    challenger: room.challenger ? { name: room.challenger.name, level: room.challenger.level, deck: room.challenger.deck, mapId: room.challenger.mapId } : null,
+    host: { name: room.host.name, level: room.host.level, tutorialCompleted: room.host.tutorialCompleted, deck: room.host.deck, mapId: room.host.mapId },
+    challenger: room.challenger ? { name: room.challenger.name, level: room.challenger.level, tutorialCompleted: room.challenger.tutorialCompleted, deck: room.challenger.deck, mapId: room.challenger.mapId } : null,
     seriesMaps: room.seriesMaps,
     matchId: room.matchId || null,
     snapshotRevision: room.snapshotRevision,
@@ -329,6 +329,18 @@ async function handleApi(request, response, url) {
       return fail(response, 503, '프로필 저장소를 사용할 수 없습니다.');
     }
   }
+  if (request.method === 'POST' && url.pathname === '/api/profile/tutorial') {
+    const token = parseBearer(request.headers.authorization);
+    if (!token) return fail(response, 401, '프로필 인증이 필요합니다.');
+    try {
+      const profile = await profiles.completeTutorial(token);
+      if (!profile) return fail(response, 401, '프로필을 찾을 수 없습니다.');
+      return sendJson(response, 200, { profile, persistent: profiles.persistent });
+    } catch (error) {
+      console.error('Tutorial completion save failed:', error);
+      return fail(response, 503, '튜토리얼 완료 기록을 저장하지 못했습니다. 다시 시도하세요.');
+    }
+  }
   if (request.method === 'PUT' && url.pathname === '/api/profile/decks') {
     const token = parseBearer(request.headers.authorization);
     if (!token) return fail(response, 401, '프로필 인증이 필요합니다.');
@@ -409,8 +421,8 @@ async function handleApi(request, response, url) {
     const token = crypto.randomBytes(24).toString('base64url');
     const room = {
       code,
-      host: { name: profile.profile.name, level: profile.profile.level,
-        deck: deckForPreset(profile.profile.decks, profile.profile.activePreset, profile.profile.level),
+      host: { name: profile.profile.name, level: profile.profile.level, tutorialCompleted: profile.profile.tutorialCompleted,
+        deck: deckForPreset(profile.profile.decks, profile.profile.activePreset, profile.profile.level, profile.profile.tutorialCompleted),
         token, mapId: null, profileId: profile.internalId },
       isPublic: data.isPublic === true,
       passwordHash: createPasswordHash(password),
@@ -453,8 +465,8 @@ async function handleApi(request, response, url) {
     if (profile.internalId === room.host.profileId) return fail(response, 409, '자신이 만든 방에는 참가할 수 없습니다.');
     if (room.status !== 'waiting' || room.challenger) return fail(response, 409, '이미 다른 도전자가 참가한 방입니다.');
     const token = crypto.randomBytes(24).toString('base64url');
-    room.challenger = { name: profile.profile.name, level: profile.profile.level,
-      deck: deckForPreset(profile.profile.decks, profile.profile.activePreset, profile.profile.level),
+    room.challenger = { name: profile.profile.name, level: profile.profile.level, tutorialCompleted: profile.profile.tutorialCompleted,
+      deck: deckForPreset(profile.profile.decks, profile.profile.activePreset, profile.profile.level, profile.profile.tutorialCompleted),
       token, mapId: null, profileId: profile.internalId };
     room.status = 'choosing';
     broadcastRoom(room);

@@ -30,7 +30,7 @@ function game() {
       classList: { add() {}, remove() {}, toggle() {} }, listeners: {}, children: [],
       addEventListener(type, callback) { this.listeners[type] = callback; },
       setAttribute(key, value) { attrs[key] = value; }, getAttribute(key) { return attrs[key]; },
-      append(...items) { for (const item of items) { item.remove(); item.parentNode = this; this.children.push(item); } },
+      append(...items) { for (let item of items) { if (typeof item !== 'object') item = Object.assign(element(), { textContent: String(item) }); item.remove(); item.parentNode = this; this.children.push(item); } },
       replaceChildren(...items) { for (const item of this.children) item.parentNode = null; this.children = []; this.append(...items); },
       querySelector() { return element(); }, querySelectorAll() { return []; },
       getContext() { return new Proxy({}, { get: (target, key) => Reflect.has(target, key) ? target[key] : () => {} }); },
@@ -56,9 +56,12 @@ function game() {
     setInterval() { return 1; }, clearInterval() {}, crypto: { randomUUID: () => 'test-id' }
   });
   const html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../tutorial-story.js'), 'utf8'), context);
   const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
   vm.runInContext(script.replace(/\}\)\(\);\s*$/, 'globalThis.run = code => eval(code); })();'), context);
-  context.run(`globalThis.sounds = []; playSound = name => sounds.push(name); playFileSound = name => sounds.push(name);`);
+  context.run(`globalThis.sounds = []; playSound = name => sounds.push(name); playFileSound = name => sounds.push(name);
+    state.playerTutorialCompleted=[true,true];
+    guestProfile={name:'테스터',level:1,tutorialCompleted:true};`);
   return { run: context.run, context, elements, tick: ms => { time += ms; }, wall: ms => { wallOffset += ms; },
     flush: () => timeouts.splice(0).forEach(fn => fn()) };
 }
@@ -439,7 +442,7 @@ test('challenger power selection survives snapshots and host validates its launc
 test('power choice is shown above the stone, meter dismisses, and lock sound scales with power', () => {
   const g = game();
   g.run(`turns.createCurrentUnit(); state.phase='aiming';
-    globalThis.tones=[]; audio.sfxVolume=100; initializeAudio=()=>true;
+    globalThis.tones=[]; audio.sfxMode='synth'; audio.sfxVolume=100; initializeAudio=()=>true;
     audio.context={currentTime:0}; scheduleTone=(...args)=>tones.push(args);
     assert.equal(startPowerMeter(),true); assert.equal(lockPowerMeter(.2),true); const low=tones.at(-1);
     state.powerMeter=null; assert.equal(startPowerMeter(),true); assert.equal(lockPowerMeter(.9),true); const high=tones.at(-1);
@@ -578,50 +581,39 @@ test('service worker bypasses even a preexisting cached room list', async () => 
   assert.deepEqual(await result,{fresh:true}); assert.equal(fetched,1); assert.equal(cached,0);
 });
 
-test('tutorial lessons cover every card and trigger; practice uses fixed hands without a timer', () => {
+test('first entry opens Big Boy dialogue, collects a nickname, then reveals settings and launch practice', async () => {
   const g = game();
-  g.run(`guestProfile={level:2}; state.playerLevels=[2,2]; startTutorial(); assert.equal(state.tutorial.index,0); assert.equal(state.turnDeadline,null);
-    const lessons=tutorialLessons();
-    for (const card of cardDefinitions()) {
-      const index=lessons.findIndex(l=>l.kind==='card' && l.elementId===card.id);
-      assert.ok(index>=0); loadTutorialLesson(index);
-      assert.equal(state.hands[0][0].id,card.id); assert.equal(state.turnDeadline,null);
-      if(!['brick','data-barrier'].includes(card.id)) {
-        for(let use=0; use<(lessons[index].requiredUses||1); use++) {
-          assert.equal(useCard(state.hands[0][0].instanceId,0,turns.currentUnit),true);
-        }
-        if(['ammo','reposition'].includes(card.id)) {
-          if(card.id==='reposition') { startPowerMeter(); lockPowerMeter(.5); }
-          state.aimPoint={x:turns.currentUnit.x+100,y:turns.currentUnit.y}; launchCurrentUnit();
-        }
-        assert.equal(state.tutorial.complete,true);
-      } else {
-        assert.equal(placeStructureCard(state.hands[0][0].instanceId,0,{x:500,y:355}),true);
-        assert.equal(state.tutorial.complete,true);
-      }
-    }
-    for(const trigger of ITEM_TRIGGERS) {
-      loadTutorialLesson(lessons.findIndex(l=>l.kind==='trigger' && l.elementId===trigger.id));
-      const cap=turns.currentUnit; cap.x=state.triggers[0].x; cap.previousX=cap.x+30; cap.status='sliding'; cap.hasLaunched=true;
-      collectItemTriggers(); assert.equal(state.tutorial.complete,true); assert.equal(state.triggers.length,0);
-    }`);
+  g.run(`guestProfile={name:'신입',level:1,tutorialCompleted:false}; enterProfileLobby();
+    assert.equal(state.tutorial.index,0); assert.equal(tutorialLessons().length,4);
+    assert.equal(document.body.dataset.tutorialSettings,'false');
+    assert.equal(tutorialUI.tutorialDialogue.dataset.lineId,'welcome');
+    assert.equal(canControlPlayer(0),false);
+    advanceTutorialDialogue(); advanceTutorialDialogue(); advanceTutorialDialogue();
+    assert.equal(tutorialUI.tutorialNicknameForm.hidden,false);`);
+  await g.run("saveTutorialNickname('탐험가')");
+  g.run(`assert.equal(PLAYER[0].name,'탐험가'); assert.equal(guestProfile.name,'탐험가');
+    assert.equal(state.tutorial.settingsReady,true); assert.equal(document.body.dataset.tutorialSettings,'true');
+    assert.match(tutorialUI.tutorialDialogueText.textContent,/탐험가/);
+    while(state.tutorial.dialogue) advanceTutorialDialogue();
+    assert.equal(state.turnDeadline,null); assert.equal(canControlPlayer(0),true);
+    assert.equal(learningUI.tutorialNextButton.disabled,true);
+    assert.equal(state.hands[0].length,0); assert.equal(state.units.length,1);`);
 });
 
-test('unified game settings pause tutorial movement, return home clears practice, and normal play restores timed turns', () => {
-  const g = game();
-  assert.doesNotMatch(fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8'), /id="closeGameSettingsButton"/);
-  g.run(`setSpeedLevel(0); startTutorial(); loadTutorialLesson(tutorialLessons().findIndex(l=>l.id==='walls'));
-    turns.currentUnit.launch(-200,0); state.phase='sliding';
-    document.querySelector('#gameSettingsButton').listeners.click(); const x=turns.currentUnit.x;
-    assert.equal(document.querySelector('#tutorialSettingsActions').hidden,false);
-    gameLoop(1100); assert.equal(turns.currentUnit.x,x);
-    gameSettingsOverlay.hidden=true; gameLoop(1150);
-    assert.ok(turns.currentUnit.x<x);
-    returnToHome(); assert.equal(state.tutorial,null); assert.equal(state.phase,'intro');
-    assert.equal(state.units.length,0); assert.equal(state.hands[0].length,0);
-    assert.equal(state.speedLevel,0); assert.equal(PLAYER[0].name,'플레이어 1');
-    assert.equal(learningUI.tutorialPanel.hidden,true);
-    beginRound(); assert.equal(turns.currentUnit.owner,0); assert.ok(state.turnDeadline>Date.now());`);
+test('tutorial dialogue and settings pause practice and returning resumes the same board', () => {
+  const g=game();
+  g.run(`startTutorial(); closeTutorialDialogue(); state.tutorial.settingsReady=true;
+    loadTutorialLesson(2,false); globalThis.remaining=turnTimeRemaining();
+    document.querySelector('#gameSettingsButton').listeners.click();
+    assert.equal(gameSettingsOverlay.hidden,false); assert.equal(isTurnTimerPaused(),true);
+    turns.currentUnit.vx=-200; turns.currentUnit.status='sliding'; state.phase='sliding';
+    globalThis.oldX=turns.currentUnit.x; advanceGameClock(1000); advanceGameClock(1500);
+    assert.equal(turns.currentUnit.x,oldX);
+    closeSettingsToGame(); advanceGameClock(1800);
+    assert.ok(turns.currentUnit.x<oldX);
+    returnToHome(); assert.equal(state.tutorial,null); assert.equal(tutorialUI.tutorialDialogue.hidden,true);
+    assert.equal(state.units.length,0); assert.equal(document.body.dataset.tutorial,'false');
+    beginRound(); assert.equal(state.tutorial,null);`);
 });
 
 test('AI mode chooses a hero, owns only player two, and completes a launch without pointer input', () => {
@@ -841,11 +833,18 @@ test('AI settings expose the shared exit control, confirm forfeiting, and record
     globalThis.requests=[]; fetch=async(url,options)=>{ requests.push({url,options}); return {ok:true}; };
     document.querySelector('#gameSettingsButton').listeners.click();
     assert.equal(gameLeaveActions.hidden,false);
+    assert.equal(settingsAudioControls.hidden,false);
+    assert.equal(gameSettingsMainActions.hidden,false);
     assert.equal(gameLeaveButton.textContent,'게임 포기하기');
+    gameReturnButton.listeners.click();
+    assert.equal(gameSettingsOverlay.hidden,true); assert.equal(state.phase,'aiming');
+    document.querySelector('#gameSettingsButton').listeners.click();
     gameLeaveButton.listeners.click(); assert.equal(gameLeaveConfirm.hidden,false);
+    assert.equal(settingsAudioControls.hidden,true); assert.equal(gameSettingsMainActions.hidden,true);
     assert.match(gameLeavePrompt.textContent,/명성치는 획득할 수 없습니다/);
     document.querySelector('#gameLeaveCancelButton').listeners.click();
-    assert.equal(state.phase,'aiming'); assert.equal(gameLeaveConfirm.hidden,true);
+    assert.equal(state.phase,'aiming'); assert.equal(gameLeaveConfirm.hidden,true); assert.equal(gameSettingsOverlay.hidden,true);
+    document.querySelector('#gameSettingsButton').listeners.click();
     gameLeaveButton.listeners.click();
     document.querySelector('#gameLeaveConfirmButton').listeners.click();
     assert.equal(state.phase,'intro'); assert.equal(state.aiMode,false);`);
@@ -865,6 +864,7 @@ test('game header aligns map and settings with the title while online exit confi
     document.querySelector('#gameSettingsButton').listeners.click();
     assert.equal(gameLeaveActions.hidden,false);
     gameLeaveButton.listeners.click();
+    assert.equal(settingsAudioControls.hidden,true);
     assert.match(gameLeavePrompt.textContent,/온라인 대전에서 나가면 패배 처리/);
     document.querySelector('#gameLeaveConfirmButton').listeners.click();
     assert.equal(onlineSession,null); assert.equal(state.phase,'intro');`);
@@ -919,66 +919,61 @@ test('catalog builds all entries from live definitions and returns to the home s
     returnToHome(); assert.equal(learningUI.catalogOverlay.hidden,true); assert.equal(startOverlay.hidden,false);`);
 });
 
-test('basic tutorial objectives follow real launches, collisions, resting and turn completion', () => {
+test('launch practice accepts 80 points, rejects a short shot and gives separate fall feedback', () => {
   const g=game();
-  g.run(`startTutorial();
-    startPowerMeter(); lockPowerMeter(.5);
-    state.aimPoint={x:turns.currentUnit.x+80,y:turns.currentUnit.y}; launchCurrentUnit();
-    assert.equal(state.tutorial.complete,true);
-    loadTutorialLesson(1); assert.equal(state.tutorial.complete,false);
-    turns.currentUnit.launch(-1,0); state.phase='sliding'; update(1/60,1000);
-    assert.equal(state.tutorial.complete,true);
-    loadTutorialLesson(2);
-    const target=state.units.find(u=>u.owner===1);
-    turns.currentUnit.x=target.x+CONFIG.unitRadius*2-1;
-    turns.currentUnit.launch(-100,0); resolveCollisions();
-    assert.equal(state.tutorial.complete,true);
-    loadTutorialLesson(3); assert.ok(state.turnDeadline>Date.now()); endTurn(); assert.equal(state.tutorial.complete,false);
-    turns.currentUnit.launch(-1,0); state.phase='sliding'; update(1/60,1000); endTurn();
-    assert.equal(state.tutorial.complete,true); assert.equal(turns.globalTurn,0);`);
+  g.run(`startTutorial(); loadTutorialLesson(0,false);
+    const place=(score)=>{const u=turns.currentUnit;u.x=TABLE.goalX+(1-score/100)*(TABLE.right-TABLE.goalX);u.status='resting';u.hasLaunched=true;recordTutorialEvent('launch');evaluateTutorialOutcome();};
+    place(79); assert.equal(state.tutorial.complete,false);
+    assert.equal(tutorialUI.tutorialDialogue.dataset.lineId,'launch-short');
+    assert.equal(learningUI.tutorialNextButton.disabled,true);
+    advanceTutorialDialogue(); assert.equal(state.tutorial.attempted,false);
+    place(80); assert.equal(state.tutorial.complete,true); assert.equal(learningUI.tutorialNextButton.disabled,false);
+    assert.equal(tutorialUI.tutorialDialogue.dataset.lineId,'launch-success');
+    loadTutorialLesson(0,false); turns.currentUnit.status='fallen'; recordTutorialEvent('launch');evaluateTutorialOutcome();
+    assert.equal(tutorialUI.tutorialDialogue.dataset.lineId,'launch-fall');`);
 });
 
-test('tutorial navigation restores instructions, retry resets practice, and launch clears the aim overlay', () => {
+test('opponent practice requires a knockout and rejects losing the player stone', () => {
   const g=game();
-  g.run(`startTutorial();
-    assert.match(learningUI.tutorialInstruction.textContent,/발사 버튼을 누른 뒤/);
-    assert.equal(tutorialShowsPlacementLimit(),false);
-    const guardIndex=tutorialLessons().findIndex(lesson=>lesson.id==='card-guard');
-    learningUI.tutorialLessonSelect.listeners.change({target:{value:String(guardIndex)}});
-    assert.equal(state.tutorial.index,guardIndex);
-    assert.match(learningUI.tutorialInstruction.textContent,/위성 방호벽 2개/);
-    assert.equal(state.hands[0].length,2);
-    turns.currentUnit.x=700;
-    document.querySelector('#tutorialRetryButton').listeners.click();
-    assert.equal(turns.currentUnit.x,860);
-    assert.equal(state.hands[0].length,2);
-    assert.equal(state.tutorial.complete,false);
-    loadTutorialLesson(tutorialLessons().findIndex(lesson=>lesson.id==='card-brick'));
-    assert.equal(tutorialShowsPlacementLimit(),true);
-    loadTutorialLesson(tutorialLessons().findIndex(lesson=>lesson.kind==='trigger'));
-    assert.equal(tutorialShowsPlacementLimit(),true);
-    loadTutorialLesson(0);
-    startPowerMeter(); lockPowerMeter(.5);
-    state.aiming=true; state.aimPoint={x:turns.currentUnit.x+1,y:turns.currentUnit.y};
-    aimOverlay.style.display='block'; launchCurrentUnit();
-    assert.equal(turns.currentUnit.status,'ready');
-    assert.equal(state.aiming,false); assert.equal(aimOverlay.style.display,'none');
-    state.aiming=true; state.aimPoint={x:turns.currentUnit.x+80,y:turns.currentUnit.y};
-    aimOverlay.style.display='block'; launchCurrentUnit();
-    assert.equal(state.aiming,false); assert.equal(state.aimPoint,null);
-    assert.equal(aimOverlay.style.display,'none'); assert.equal(state.tutorial.complete,true);
-  `);
+  g.run(`startTutorial(); loadTutorialLesson(1,false);
+    recordTutorialEvent('launch'); turns.currentUnit.status='sliding'; recordTutorialEvent('collision');
+    evaluateTutorialOutcome(); assert.equal(state.tutorial.complete,false);
+    state.units.find(u=>u.owner===1).status='fallen'; evaluateTutorialOutcome();
+    assert.equal(state.tutorial.complete,true); assert.equal(tutorialUI.tutorialDialogue.dataset.lineId,'push-success');
+    loadTutorialLesson(1,false); recordTutorialEvent('launch'); turns.currentUnit.status='fallen';
+    evaluateTutorialOutcome(); assert.equal(state.tutorial.complete,false);
+    assert.equal(tutorialUI.tutorialDialogue.dataset.lineId,'push-fail');`);
 });
 
-test('tutorial timer restarts at zero without advancing the turn', () => {
+test('card practice grants one ammo, requires firing it, and retries with a fresh target and card', () => {
   const g=game();
-  g.run(`startTutorial(); loadTutorialLesson(tutorialLessons().findIndex(lesson=>lesson.id==='turn'));
-    const cap=turns.currentUnit; const turn=turns.globalTurn;
-    state.turnDeadline=Date.now()-1; updateTurnTimer();
-    assert.ok(state.turnDeadline>Date.now());
-    assert.equal(turns.currentUnit,cap); assert.equal(turns.globalTurn,turn);
-    assert.equal(cap.status,'ready');
-  `);
+  g.run(`startTutorial(); loadTutorialLesson(2,false);
+    assert.equal(state.hands[0].length,1); assert.equal(state.hands[0][0].id,'ammo');
+    assert.ok(state.turnDeadline>Date.now()); assert.equal(state.phase,'turn-ready');
+    const u=turns.currentUnit; assert.equal(useCard(state.hands[0][0].instanceId,0,u),true);
+    state.aimPoint={x:u.x+80,y:u.y}; launchCurrentUnit();
+    assert.equal(state.tutorial.ammoFired,true); assert.equal(state.tutorial.complete,false);
+    state.bullets=[]; state.units.forEach(stone=>stone.status='resting'); evaluateTutorialOutcome();
+    assert.equal(tutorialUI.tutorialDialogue.dataset.lineId,'cards-fail');
+    advanceTutorialDialogue(); assert.equal(state.hands[0].length,1); assert.equal(state.tutorial.ammoFired,false);
+    recordTutorialEvent('ammo'); state.units.find(stone=>stone.owner===1).status='fallen'; evaluateTutorialOutcome();
+    assert.equal(state.tutorial.complete,true); assert.equal(tutorialUI.tutorialDialogue.dataset.lineId,'cards-success');`);
+});
+
+test('card tutorial timeout automatically restores the exercise and pauses during dialogue', () => {
+  const g=game();
+  g.run(`startTutorial(); loadTutorialLesson(2);
+    globalThis.remaining=turnTimeRemaining();`);
+  g.wall(60000);
+  g.run(`assert.ok(Math.abs(turnTimeRemaining()-remaining)<50);
+    while(state.tutorial.dialogue) advanceTutorialDialogue();
+    turnTimeRemaining(); state.turnDeadline=Date.now()-1; updateTurnTimer();
+    assert.equal(tutorialUI.tutorialDialogue.dataset.lineId,'cards-timeout');
+    assert.equal(state.turnDeadline,null);`);
+  g.flush();
+  g.run(`assert.equal(state.tutorial.index,2); assert.equal(state.tutorial.outcomeResolved,false);
+    assert.ok(state.turnDeadline>Date.now()); assert.equal(state.hands[0][0].id,'ammo');
+    assert.equal(state.units.find(u=>u.owner===1).status,'resting'); assert.equal(turns.globalTurn,0);`);
 });
 
 test('an edge-fired bullet can reenter the table and only expires after one continuous second outside', () => {
@@ -997,18 +992,19 @@ test('an edge-fired bullet can reenter the table and only expires after one cont
   `);
 });
 
-test('speed tutorial supplies blackhole and completes only after using it in flight', () => {
-  const g = game();
-  g.run(`startTutorial(); const index=tutorialLessons().findIndex(lesson=>lesson.id==='speed-card');
-    loadTutorialLesson(index); assert.equal(state.tutorial.lesson.title,'게임 속도 조절');
-    assert.match(learningUI.tutorialInstruction.textContent,/발사 도중 블랙홀 방출 카드를 사용해 보세요/);
-    assert.equal(state.hands[0][0].id,'blackhole');
-    setSpeedLevel(2); assert.equal(state.tutorial.complete,false);
-    startPowerMeter(); lockPowerMeter(.5);
-    state.aimPoint={x:turns.currentUnit.x+80,y:turns.currentUnit.y}; launchCurrentUnit();
-    assert.equal(state.tutorial.complete,false); assert.equal(state.phase,'sliding');
-    assert.equal(useCard(state.hands[0][0].instanceId,0,turns.currentUnit),true);
-    assert.equal(state.tutorial.complete,true);`);
+test('trigger practice supplies a pulse and hardened opponent, and requires a trigger-assisted knockout', () => {
+  const g=game();
+  g.run(`startTutorial(); loadTutorialLesson(3,false);
+    const target=state.units.find(u=>u.owner===1);
+    assert.ok(target.x<TABLE.left+200); assert.equal(target.ability.stacks.hardening,1);
+    assert.equal(state.triggers[0].type.id,'pulse'); assert.ok(state.triggers[0].x>target.x);
+    assert.equal(state.triggerPlacementCount[0],0);
+    recordTutorialEvent('launch'); recordTutorialEvent('trigger'); turns.currentUnit.status='sliding';
+    evaluateTutorialOutcome(); assert.equal(state.tutorial.complete,false);
+    target.status='fallen'; evaluateTutorialOutcome(); assert.equal(state.tutorial.complete,true);
+    assert.equal(learningUI.tutorialNextButton.textContent,'튜토리얼 종료');
+    advanceTutorialDialogue(); nextTutorialStep();
+    assert.equal(tutorialUI.tutorialDialogue.dataset.lineId,'farewell');`);
 });
 
 test('pulse trigger detonates once at its cap after a unit collision', () => {
@@ -1023,6 +1019,35 @@ test('pulse trigger detonates once at its cap after a unit collision', () => {
     assert.equal(state.effects.filter(effect=>effect.type==='pulse').length,1);
     assert.equal(sounds.filter(sound=>sound==='pulseCast').length,1);
     update(.6,1600); assert.equal(sounds.filter(sound=>sound==='pulseCast').length,1);`);
+});
+
+test('release card charges until a collision, halves allied knockback, and destroys nearby structures', () => {
+  const g = game();
+  g.run(`turns.reset(0); state.phase='turn-ready';
+    const source=new CurlingUnit({id:'source',owner:0,turnNumber:1,x:620,y:350}); source.status='resting'; source.hasLaunched=true;
+    const collidingEnemy=new CurlingUnit({id:'collider',owner:1,turnNumber:1,x:565,y:350}); collidingEnemy.status='resting';
+    const ally=new CurlingUnit({id:'ally',owner:0,turnNumber:2,x:700,y:350}); ally.status='resting';
+    const bystander=new CurlingUnit({id:'bystander',owner:1,turnNumber:2,x:620,y:450}); bystander.status='resting';
+    state.units=[source,collidingEnemy,ally,bystander]; state.hands[0]=[{id:'pulse',name:'방출',instanceId:'release-card'}];
+    state.bricks=[new BrickUnit({x:680,y:350,owner:1}),{unitKind:'brick',owner:1,x:620,y:500,vx:0,vy:0,width:36,height:100,mass:Infinity,restitution:.58,barrier:true,update(){}}];
+    assert.equal(useCard('release-card',0,source),true); assert.equal(source.ability.pulse,true);
+    updateAbilityEffects(20); assert.equal(source.ability.pulse,true); assert.equal(sounds.filter(sound=>sound==='pulseCast').length,0);
+    resolveCollisions(); assert.equal(source.ability.pulse,false);
+    assert.equal(sounds.filter(sound=>sound==='pulseCast').length,1);
+    assert.equal(state.effects.filter(effect=>effect.type==='pulse').length,1);
+    assert.ok(Math.hypot(ally.vx,ally.vy)>0); assert.ok(Math.hypot(bystander.vx,bystander.vy)>Math.hypot(ally.vx,ally.vy)*1.9);
+    assert.equal(state.bricks.length,0);`);
+});
+
+test('release charge detonates on a bullet without inheriting its knockback', () => {
+  const g = game();
+  g.run(`const source=new CurlingUnit({id:'charged',owner:0,turnNumber:1,x:620,y:350}); source.status='resting'; source.hasLaunched=true;
+    source.ability={pulse:true,stacks:{}}; state.units=[source];
+    state.bullets=[{x:580,y:350,vx:400,vy:0,radius:5,mass:1,sourceUnitId:'shooter',outsideTime:0}];
+    updateBullets(.1); assert.equal(state.bullets.length,0); assert.equal(source.ability.pulse,false);
+    assert.equal(source.vx,0); assert.equal(source.vy,0);
+    assert.equal(state.effects.filter(effect=>effect.type==='pulse').length,1);
+    assert.equal(sounds.filter(sound=>sound==='pulseCast').length,1);`);
 });
 
 test('pulse trigger waits half a second without collision and each pickup detonates once', () => {
@@ -1200,15 +1225,29 @@ test('joker pays the fall penalty on an expired unlaunched turn', () => {
     assert.equal(state.units[0].status,'fallen'); assert.equal(state.fallPoints[0],-10);`);
 });
 
-test('hero tutorial opens the selector and catalog lists all abilities', () => {
-  const g = game();
-  g.run(`startTutorial(); loadTutorialLesson(tutorialLessons().findIndex(lesson=>lesson.id==='hero-selection'));
-    assert.equal(state.phase,'hero-select'); assert.equal(heroSelectOverlay.hidden,false);
-    chooseHero(0,state.heroOffers[0][0]);`);
-  g.flush();
-  g.run(`assert.equal(state.tutorial.complete,true); assert.equal(state.phase,'aiming');
-    renderCatalog('heroes'); assert.equal(learningUI.catalogList.children.length,HEROES.length);
-    assert.equal(learningUI.heroCatalogTab.getAttribute('aria-selected'),'true');`);
+test('tutorial skip unlocks reposition and adventure, while returning from skip confirmation keeps the exercise', async () => {
+  const g=game();
+  g.run(`guestProfile=createLocalGuestProfile('신입'); renderGuestProfile(guestProfile,false);
+    assert.equal(isCardUnlocked(deckCard('reposition'),0),false);
+    assert.equal(defaultPlayerDeck().includes('reposition'),false);
+    startTutorial(); closeTutorialDialogue(); state.tutorial.settingsReady=true;
+    document.querySelector('#gameSettingsButton').listeners.click();
+    document.querySelector('#tutorialSkipButton').listeners.click();
+    assert.match(gameLeavePrompt.textContent,/스킵하시겠습니까/);
+    assert.equal(settingsAudioControls.hidden,true);
+    document.querySelector('#gameLeaveCancelButton').listeners.click();
+    assert.equal(gameSettingsOverlay.hidden,true); assert.ok(state.tutorial);
+    assert.equal(guestProfile.tutorialCompleted,false);`);
+  await g.run('completeTutorial()');
+  g.run(`assert.equal(guestProfile.tutorialCompleted,true); assert.equal(guestProfile.adventureUnlocked,true);
+    assert.equal(isCardUnlocked(deckCard('reposition'),0),true);
+    assert.equal(defaultPlayerDeck().includes('reposition'),true);
+    assert.equal(tutorialUI.tutorialRewardOverlay.hidden,false);
+    assert.match(tutorialUI.tutorialRewardTitle.textContent,/재배치/);
+    tutorialUI.tutorialRewardNext.listeners.click();
+    assert.match(tutorialUI.tutorialRewardTitle.textContent,/모험/);
+    tutorialUI.tutorialRewardNext.listeners.click(); assert.equal(state.tutorial,null);
+    renderCatalog('heroes'); assert.equal(learningUI.catalogList.children.length,HEROES.length);`);
 });
 
 test('hero portraits appear on the matching selection cards and catalog entries', () => {

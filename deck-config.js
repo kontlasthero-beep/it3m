@@ -7,24 +7,24 @@ const DEFAULT_DECK = Object.freeze([
   'brick', 'hardening', 'ammo', 'guard', 'pulse', 'blackhole', 'bluffing', 'reposition'
 ]);
 
-function validateDeck(cards, level) {
+function validateDeck(cards, level, tutorialCompleted = false) {
   if (!Array.isArray(cards) || cards.length !== 8) return false;
   const counts = new Map();
   for (const id of cards) {
-    if (typeof id !== 'string' || !CARD_LEVELS[id] || CARD_LEVELS[id] > level) return false;
+    if (typeof id !== 'string' || !CARD_LEVELS[id] || CARD_LEVELS[id] > level || (id === 'reposition' && !tutorialCompleted)) return false;
     counts.set(id, (counts.get(id) || 0) + 1);
     if (counts.get(id) > 2) return false;
   }
   return [...counts.values()].filter(count => count === 2).length <= 1;
 }
 
-function normalizeDecks(value, level) {
+function normalizeDecks(value, level, tutorialCompleted = false) {
   const decks = Array.isArray(value) ? value : [];
-  return Array.from({ length: 3 }, (_, index) => validateDeck(decks[index], level) ? [...decks[index]] : null);
+  return Array.from({ length: 3 }, (_, index) => validateDeck(decks[index], level, tutorialCompleted) ? [...decks[index]] : null);
 }
 
-function deckForPreset(decks, activePreset, level) {
-  return normalizeDecks(decks, level)[activePreset] || [...DEFAULT_DECK];
+function deckForPreset(decks, activePreset, level, tutorialCompleted = false) {
+  return normalizeDecks(decks, level, tutorialCompleted)[activePreset] || DEFAULT_DECK.map(id => id === 'reposition' && !tutorialCompleted ? 'hardening' : id);
 }
 
 module.exports = { CARD_LEVELS, DEFAULT_DECK, validateDeck, normalizeDecks, deckForPreset };

@@ -785,6 +785,40 @@
     @media (prefers-reduced-motion: reduce) {
       .trigger-tool img, .trigger-type-option img, body.game-active .hand-panel.current { animation: none; }
     }
+    .tutorial-dialogue { position: fixed; z-index: 45; inset: auto 16px 18px; width: min(820px, calc(100% - 32px)); margin: 0 auto; display: grid; grid-template-columns: 142px minmax(0, 1fr); background: #111a1c; border: 1px solid #7d8276; border-radius: 5px; box-shadow: 0 16px 60px #000c; overflow: hidden; }
+    #gameSettingsOverlay { z-index: 60; }
+    #tutorialRewardOverlay { z-index: 65; }
+    .tutorial-dialogue > img { width: 100%; height: 100%; min-height: 210px; object-fit: cover; object-position: center top; }
+    .tutorial-dialogue-copy { padding: 20px; min-width: 0; }
+    .tutorial-dialogue-copy strong { color: #edc477; font-size: 14px; }
+    .tutorial-dialogue-copy p { font-size: 18px; line-height: 1.65; word-break: keep-all; overflow-wrap: anywhere; margin: 12px 0; }
+    .tutorial-dialogue-actions { display: flex; justify-content: flex-end; }
+    #tutorialNicknameForm label { display: block; margin-bottom: 10px; }
+    #tutorialNicknameInput { width: 100%; margin-top: 8px; }
+    #tutorialDialogueError { color: #ffb8b0; font-size: 14px; }
+    .tutorial-reward { text-align: center; }
+    .tutorial-reward img { display: block; width: 180px; height: 240px; object-fit: cover; margin: 16px auto; border: 1px solid #dcc18a; border-radius: 5px; }
+    .tutorial-reward.reveal { animation: tutorial-reward-reveal 700ms ease-out both; }
+    @keyframes tutorial-reward-reveal { from { opacity: 0; transform: translateY(22px) scale(.85); } to { opacity: 1; transform: none; } }
+    body[data-tutorial="true"] .board-dock, body[data-tutorial="true"] #panel1,
+    body[data-tutorial="true"] #handPanel1, body[data-tutorial="true"] .game-deck-button,
+    body[data-tutorial="true"] .bottom-bar, body[data-tutorial="true"] #tutorialLessonSelect { display: none; }
+    body[data-tutorial="true"] .board-hud { grid-template-columns: minmax(0, 1fr) auto; }
+    body[data-tutorial="true"] .board-hud .player-label { display: block; }
+    body.game-active[data-tutorial="true"] .hands { grid-template-columns: 1fr; margin-top: 0; }
+    body.game-active[data-tutorial="true"] .hand-panel { transform: none; }
+    body.game-active[data-tutorial="true"] .tutorial-panel { align-self: center; width: min(100%, 71.8vw); }
+    body[data-tutorial="true"]:not([data-tutorial-stage="triggers"]) .trigger-tool { display: none; }
+    body[data-tutorial-stage="launch"] .hands, body[data-tutorial-stage="collision"] .hands { display: none; }
+    body[data-tutorial="true"][data-tutorial-settings="false"] #gameSettingsButton { visibility: hidden; }
+    body[data-tutorial-speaking="true"] .tutorial-actions { visibility: hidden; }
+    @media (max-width: 600px) {
+      body.game-active[data-tutorial="true"] .tutorial-panel { width: 100%; }
+      body.game-active[data-tutorial="true"] .game-shell { width: 100%; height: auto; }
+      .tutorial-dialogue { grid-template-columns: 85px minmax(0, 1fr); bottom: 10px; }
+      .tutorial-dialogue-copy { padding: 12px; }
+      .tutorial-dialogue-copy p { font-size: 15px; }
+    }
   </style>
 </head>
 <body>
@@ -1054,15 +1088,19 @@
   <div class="overlay" id="gameSettingsOverlay" hidden>
     <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="gameSettingsTitle">
       <h2 id="gameSettingsTitle">게임 설정</h2>
-      <label class="volume-row">배경음악<input id="musicVolume" type="range" min="0" max="100" value="100"><output id="musicVolumeValue">100%</output></label>
-      <label class="volume-row">효과음<input id="sfxVolume" type="range" min="0" max="100" value="100"><output id="sfxVolumeValue">100%</output></label>
-      <div class="settings-actions" id="tutorialSettingsActions" hidden><button id="tutorialRestartButton" type="button">현재 연습 다시 시작</button><button id="tutorialHomeButton" type="button">시작 화면으로 돌아가기</button></div>
+      <div id="settingsAudioControls">
+        <label class="volume-row">배경음악<input id="musicVolume" type="range" min="0" max="100" value="100"><output id="musicVolumeValue">100%</output></label>
+        <label class="volume-row">효과음<input id="sfxVolume" type="range" min="0" max="100" value="100"><output id="sfxVolumeValue">100%</output></label>
+        <label class="volume-row">효과음 방식<select id="sfxMode"><option value="elevenlabs">생성 효과음</option><option value="synth">기존 합성음</option></select></label>
+      </div>
+      <div class="settings-actions" id="tutorialSettingsActions" hidden><button id="tutorialRestartButton" type="button">현재 연습 다시 시작</button><button id="tutorialSkipButton" type="button">튜토리얼 스킵</button></div>
       <div class="settings-leave" id="gameLeaveActions" hidden>
         <button id="gameLeaveButton" type="button">게임 나가기</button>
-        <div id="gameLeaveConfirm" hidden>
-          <p id="gameLeavePrompt"></p>
-          <div class="settings-actions"><button id="gameLeaveConfirmButton" type="button">나가기</button><button id="gameLeaveCancelButton" type="button">계속 플레이</button></div>
-        </div>
+      </div>
+      <div class="settings-actions" id="gameSettingsMainActions"><button id="gameReturnButton" type="button">게임으로 돌아가기</button></div>
+      <div id="gameLeaveConfirm" hidden>
+        <p id="gameLeavePrompt"></p>
+        <div class="settings-actions"><button id="gameLeaveConfirmButton" type="button">나가기</button><button id="gameLeaveCancelButton" type="button">게임으로 돌아가기</button></div>
       </div>
     </div>
   </div>
@@ -1084,6 +1122,18 @@
     <circle id="aimTip" fill="#f4f0e6" />
   </svg>
   <script src="ai-planner.js"></script>
+  <section id="tutorialDialogue" class="tutorial-dialogue" role="dialog" aria-modal="true" aria-labelledby="tutorialSpeaker" hidden>
+    <img src="영웅 초상화/big boy.png" alt="빅보이" draggable="false">
+    <div class="tutorial-dialogue-copy">
+      <strong id="tutorialSpeaker">더글라스 피스트 · 빅보이</strong>
+      <p id="tutorialDialogueText" aria-live="polite"></p>
+      <form id="tutorialNicknameForm" hidden><label>닉네임<input id="tutorialNicknameInput" maxlength="20" required autocomplete="nickname"></label><button type="submit" class="primary">결정</button></form>
+      <p id="tutorialDialogueError" role="alert" hidden></p>
+      <div class="tutorial-dialogue-actions"><button id="tutorialDialogueNext" type="button">계속</button></div>
+    </div>
+  </section>
+  <div id="tutorialRewardOverlay" class="overlay" hidden><div class="dialog tutorial-reward" id="tutorialRewardContent" role="dialog" aria-modal="true" aria-labelledby="tutorialRewardTitle"><h2 id="tutorialRewardTitle"></h2><img id="tutorialRewardImage" src="Card_illustration/Relocation.png" alt="재배치 카드"><p id="tutorialRewardText"></p><button id="tutorialRewardNext" class="primary" type="button">계속</button></div></div>
+  <script src="tutorial-story.js"></script>
   <script>
     (() => {
       const canvas = document.querySelector('#game');
@@ -1224,6 +1274,9 @@
       const triggerToolButtons = [...document.querySelectorAll('.trigger-tool')];
       const gameSettingsOverlay = document.querySelector('#gameSettingsOverlay');
       const gameSettingsTitle = document.querySelector('#gameSettingsTitle');
+      const settingsAudioControls = document.querySelector('#settingsAudioControls');
+      const gameSettingsMainActions = document.querySelector('#gameSettingsMainActions');
+      const gameReturnButton = document.querySelector('#gameReturnButton');
       const tutorialSettingsActions = document.querySelector('#tutorialSettingsActions');
       const gameLeaveActions = document.querySelector('#gameLeaveActions');
       const gameLeaveButton = document.querySelector('#gameLeaveButton');
@@ -1247,7 +1300,30 @@
       updateDeviceLayout();
       mobileLayoutQuery.addEventListener('change', updateDeviceLayout);
 
-      // Synthesized interface cues remain configurable here; gameplay impacts use the WAV files below.
+      const ELEVENLABS_SFX = {
+        start: '효과음/화면과 진행/SecondChance_GameStart_ElevenLabs_Draft.mp3',
+        unitDeath: '효과음/ElevenLabs_Drafts/unit-death.mp3',
+        connected: '효과음/ElevenLabs_Drafts/connected.mp3', speedChange: '효과음/ElevenLabs_Drafts/speed-change.mp3',
+        deal: '효과음/ElevenLabs_Drafts/deal.mp3', heroSelect: '효과음/ElevenLabs_Drafts/hero-select.mp3',
+        powerStart: '효과음/ElevenLabs_Drafts/power-meter-start.mp3', powerLock: '효과음/ElevenLabs_Drafts/power-lock.mp3',
+        launch: '효과음/ElevenLabs_Drafts/stone-launch.mp3',
+        launchLight: '효과음/ElevenLabs_Drafts/launch-light.mp3', launchMedium: '효과음/ElevenLabs_Drafts/launch-medium.mp3',
+        launchHeavy: '효과음/ElevenLabs_Drafts/launch-heavy.mp3',
+        ammoFire: '효과음/ElevenLabs_Drafts/ammo-fire-rifle-1-5s.mp3',
+        turn: '효과음/ElevenLabs_Drafts/turn-change.mp3', win: '효과음/ElevenLabs_Drafts/victory.mp3',
+        victoryMusic: '효과음/ElevenLabs_Drafts/victory-sting.mp3', defeatMusic: '효과음/ElevenLabs_Drafts/defeat-sting.mp3',
+        hardening: '효과음/ElevenLabs_Drafts/hardening.mp3', guard: '효과음/ElevenLabs_Drafts/guard-deploy.mp3',
+        pulse: '효과음/ElevenLabs_Drafts/pulse-release.mp3', reposition: '효과음/ElevenLabs_Drafts/reposition.mp3',
+        drop: '효과음/ElevenLabs_Drafts/structure-drop.mp3', blackhole: '효과음/ElevenLabs_Drafts/blackhole-release.mp3',
+        ammoLoad: '효과음/ElevenLabs_Drafts/ammo-load.mp3', bluffing: '효과음/ElevenLabs_Drafts/bluffing.mp3',
+        escape: '효과음/ElevenLabs_Drafts/escape.mp3', card: '효과음/ElevenLabs_Drafts/card-effect.mp3',
+        wallHit: '효과음/ElevenLabs_Drafts/wall-impact.mp3', guardHit: '효과음/ElevenLabs_Drafts/guard-impact.mp3',
+        timerWarning: '효과음/ElevenLabs_Drafts/timer-warning.mp3', timerTick: '효과음/ElevenLabs_Drafts/timer-tick.mp3'
+      };
+      const generatedSoundLastPlayed = new Map();
+      const playedOnlineOutcomeKeys = new Set();
+      const generatedSoundCooldowns = { wallHit: 80, guardHit: 90 };
+      // Synthesized cues remain available as a fallback; gameplay impacts use the WAV files below.
       const AUDIO_CONFIG = {
         sfxVolume: 0.34,
         sounds: {
@@ -1282,17 +1358,25 @@
       };
 
       const AUDIO_FILES = {
-        weakHit: new Audio('효과음/Midhit_1.wav'),
-        strongHit: new Audio('효과음/Stronghit_1.wav'),
+        weakHit: new Audio('효과음/충돌과 타이머/Midhit_1.wav'),
+        strongHit: new Audio('효과음/충돌과 타이머/Stronghit_1.wav'),
         unitDeath: new Audio('효과음/Unit_death_sound_for_1.wav'),
         unitKill: new Audio('효과음/Unit_kill_sound_1.wav'),
-        pulseCast: new Audio('효과음/shockwave_sound_1.wav'),
-        blackholeCast: new Audio('효과음/Blackhole_shockwave_1.wav'),
-        music: new Audio('배경음악/비겁한 컬링 클럽.wav')
+        pulseCast: new Audio('효과음/카드와 트리거/shockwave_sound_1.wav'),
+        blackholeCast: new Audio('효과음/카드와 트리거/Blackhole_shockwave_1.wav'),
+        generalSelection: new Audio('효과음/화면과 진행/heavy_selction sound_General Selection1792409221097.mp3'),
+        importantSelection: new Audio('효과음/화면과 진행/heavy_selction sound_Important Selection1792409221097.mp3'),
+        lobbyMusic: new Audio('배경음악/Beyond_the_Threshold_2026-10-19T112131.mp3'),
+        gameMusic: new Audio('배경음악/비겁한 컬링 클럽.wav')
       };
-      AUDIO_FILES.music.loop = true;
-      AUDIO_FILES.music.volume = 0.28;
-      AUDIO_FILES.music.preload = 'auto';
+      let currentMusic = AUDIO_FILES.lobbyMusic;
+      for (const track of [AUDIO_FILES.lobbyMusic, AUDIO_FILES.gameMusic]) {
+        track.loop = true;
+        track.volume = 0.28;
+        track.preload = 'auto';
+      }
+      AUDIO_FILES.generalSelection.preload = 'auto';
+      AUDIO_FILES.importantSelection.preload = 'auto';
       const fileSoundLastPlayed = new Map();
       const STRONG_HIT_THRESHOLD = 500;
 
@@ -1335,7 +1419,7 @@
         { id: 'hardening', name: '경질화' }, { id: 'hardening', name: '경질화' },
         { id: 'guard', name: '방호벽' }, { id: 'guard', name: '방호벽' },
         { id: 'pulse', name: '방출' }, { id: 'pulse', name: '방출' },
-        { id: 'reposition', name: '재배치' }, { id: 'reposition', name: '재배치' },
+        { id: 'reposition', name: '재배치', unlockTutorial: true }, { id: 'reposition', name: '재배치', unlockTutorial: true },
         { id: 'brick', name: '구조물 투하' }, { id: 'brick', name: '구조물 투하' },
         { id: 'blackhole', name: '블랙홀 방출' }, { id: 'blackhole', name: '블랙홀 방출' },
         { id: 'ammo', name: '총알 장전' }, { id: 'ammo', name: '총알 장전' },
@@ -1346,7 +1430,7 @@
       const CARD_DESCRIPTIONS = {
         hardening: '스톤의 마찰력이 3배가 됩니다. 같은 카드 효과는 중첩되어 마찰력과 회색 코팅이 더 강해집니다.',
         guard: '스톤 주위를 도는 위성 방호벽 2개를 추가합니다. 최대 4개까지 중첩되며 충돌로 유닛을 밀어냅니다. 위성체가 지나가는 위치와 타이밍을 확인하세요. 1번 더 중첩해서 사용하면 위성체가 두 방향을 방어합니다.',
-        pulse: '사용한 스톤이 4초마다 충격파를 발산해 주변의 다른 스톤과 벽돌을 밀쳐냅니다. 발동 직전 스톤이 빛나며 시점을 알려줍니다. 상대 가까이에 멈춘 뒤 사용하면 4초마다 밀어낼 수 있습니다.',
+        pulse: '스톤을 충전 상태로 만듭니다. 충전된 스톤이 다른 유닛이나 구조물과 충돌하면 주변 스톤과 유닛을 밀쳐내는 강한 파동을 발산합니다. 아군 스톤은 밀려나는 힘이 절반으로 줄어듭니다.',
         reposition: '필드에 있는 자신의 스톤을 한 번 더 발사할 수 있게 됩니다. 파워를 정한 뒤 방향을 지정하세요.',
         brick: '시작선에서 충분히 떨어진 곳에 움직일 수 있는 벽돌 유닛을 배치합니다.',
         blackhole: '즉시 주변의 다른 스톤과 벽돌을 끌어당깁니다.',
@@ -1384,7 +1468,7 @@
       const LEARNING_DETAILS = {
         hardening: { color: '#aeb8bc', tip: '목표 지점에 도착한 스톤에 쓰면 위치를 지키기 좋습니다. 발사 전에 쓰면 이동 거리가 크게 줄어듭니다.' },
         guard: { color: '#f1b66e', tip: '위성체 위치와 회전 타이밍을 살펴 스톤을 효과적으로 보호하세요.' },
-        pulse: { color: '#00d9ff', tip: '상대 가까이에 멈춘 뒤 사용하면 4초마다 밀어낼 수 있습니다. 아군과 벽돌도 밀리므로 거리를 확인하세요.' },
+        pulse: { color: '#00d9ff', tip: '충전한 뒤 충돌을 일으켜 파동을 발산하세요. 아군 스톤은 절반의 힘으로 밀려납니다.' },
         reposition: { color: '#79dfc2', tip: '점수가 낮은 스톤을 구하거나 다른 방향에서 공격할 수 있습니다. 재발사가 끝날 때까지 총알 장전과 함께 사용할 수 없습니다.' },
         brick: { color: '#c3d0ce', tip: '왼쪽 배치 가능 구역에서 경로를 막거나 충돌 각도를 만드세요. 벽돌도 밀려나고 총탄에 파괴됩니다. 점수는 없습니다.' },
         blackhole: { color: '#bd75f5', tip: '주변 아군도 함께 끌려옵니다. 시전한 스톤은 잠시 유체 상태가 되어 다른 스톤이 통과합니다.' },
@@ -1397,6 +1481,9 @@
       // Card and trigger lessons/catalog entries follow the gameplay registries automatically.
       function cardDefinitions() { return [...new Map(CARDS.map(card => [card.id, card])).values()]; }
       const DEFAULT_DECK_IDS = ['brick', 'hardening', 'ammo', 'guard', 'pulse', 'blackhole', 'bluffing', 'reposition'];
+      function defaultPlayerDeck(completed = guestProfile?.tutorialCompleted === true) {
+        return DEFAULT_DECK_IDS.map(id => id === 'reposition' && !completed ? 'hardening' : id);
+      }
       let savedDecks = [null, null, null];
       let deckDrafts = [null, null, null];
       let activeDeckPreset = 0;
@@ -1407,7 +1494,7 @@
         const counts = new Map();
         for (const id of cards) {
           const card = cardDefinitions().find(item => item.id === id);
-          if (!card || (card.unlockLevel || 1) > level) return false;
+          if (!card || (card.unlockLevel || 1) > level || (card.unlockTutorial && !guestProfile?.tutorialCompleted)) return false;
           counts.set(id, (counts.get(id) || 0) + 1);
           if (counts.get(id) > 2) return false;
         }
@@ -1415,33 +1502,14 @@
       }
       function selectedDeck(preset, level = guestProfile?.level || 1) {
         const deck = savedDecks[preset];
-        return deckIsValid(deck, level) ? [...deck] : [...DEFAULT_DECK_IDS];
+        return deckIsValid(deck, level) ? [...deck] : defaultPlayerDeck();
       }
       function deckCard(id) { return cardDefinitions().find(item => item.id === id); }
       function playerLevel(owner) { return Math.max(1, Number(state.playerLevels?.[owner]) || 1); }
-      function isCardUnlocked(card, owner) { return playerLevel(owner) >= (card.unlockLevel || 1); }
-      function tutorialLessons() {
-        return [
-          { id: 'launch', title: '발사와 힘 조절', text: '스톤 아래 발사 버튼을 누른 뒤, 빨간 미터가 왕복할 때 결정 버튼으로 파워를 고르세요. 위쪽일수록 강해집니다. 그다음 스톤을 짧게 드래그해 방향을 정하고 놓으면 발사됩니다.', objective: '파워를 결정하고 파란 스톤을 발사하세요.', event: 'launch' },
-          { id: 'score', title: '거리 점수와 낙사', text: '왼쪽 끝선에 가까울수록 높은 점수입니다. 낮은 파워를 골라 안전하게 멈춰보세요. 네 방향 어디로든 테이블 밖으로 나가면 해당 스톤의 거리 점수는 사라집니다.', objective: '스톤을 테이블 위에 멈추세요.', event: 'rest' },
-          { id: 'collision', title: '상대 밀어내기', text: '빨간 스톤을 맞혀 위치를 바꿔보세요. 정면 충돌과 비스듬한 충돌의 결과가 다릅니다. 자신의 턴에 상대가 떨어지면 25점을 얻습니다.', objective: '빨간 스톤과 충돌하세요.', event: 'collision', targets: true },
-          { id: 'turn', title: '턴과 타이머', text: '턴마다 35초가 주어지고 스톤이 움직이는 동안에는 시간이 멈춥니다. 테이블 위의 타이머에서 남은 시간을 확인하세요. 시간이 끝나면 이 연습에서는 턴을 넘기지 않고 타이머만 다시 시작합니다. 스톤을 발사하고 완전히 멈춘 다음 아래의 강조된 턴 종료 버튼을 눌러야 턴이 끝납니다.', objective: '발사한 스톤이 멈추면 강조된 턴 종료 버튼을 누르세요.', event: 'end-turn', timed: true },
-          { id: 'hero-selection', title: '영웅 능력 선택', kind: 'hero', text: '맵을 고른 뒤 두 가지 영웅 능력 중 하나를 선택합니다. 15초 안에 선택하지 않으면 무작위로 정해집니다. 선택한 능력은 대전이 끝날 때까지 유지됩니다.', objective: '제시된 두 영웅 능력 중 하나를 선택하세요.', event: 'hero' },
-          ...cardDefinitions().filter(card => isCardUnlocked(card, 0)).map(card => ({ id: `card-${card.id}`, title: `${card.name} 카드`, kind: 'card', elementId: card.id,
-            text: `${CARD_DESCRIPTIONS[card.id] || card.name} ${LEARNING_DETAILS[card.id]?.tip || ''}`,
-             objective: ['brick', 'data-barrier'].includes(card.id) ? '카드를 왼쪽 테이블의 배치 가능 구역에 놓으세요.' : card.id === 'ammo' ? '카드를 파란 스톤에 놓고 당겨 총탄을 발사하세요.' : card.id === 'reposition' ? '카드를 파란 스톤에 놓고 파워와 방향을 정해 재발사하세요.' : ['hardening', 'guard'].includes(card.id) ? '같은 카드를 두 번 사용해 중첩을 확인하세요.' : '카드를 파란 스톤에 드래그해 사용하세요.',
-            event: card.id === 'ammo' ? 'ammo' : card.id === 'reposition' ? 'launch' : 'card', targets: true,
-            requiredUses: ['hardening', 'guard'].includes(card.id) ? 2 : 1 })),
-          { id: 'speed-card', title: '게임 속도 조절', kind: 'speed-card', elementId: 'blackhole', cardId: 'blackhole', targets: true,
-            text: '우측 상단의 속도 버튼으로 게임 속도를 바꿔보세요. 스톤을 발사한 뒤 움직이는 동안에도 카드를 스톤에 드래그해 사용할 수 있습니다. 발사 도중 블랙홀 방출 카드를 사용해 보세요.',
-            objective: '속도를 한 번 바꾸고, 발사 도중 블랙홀 방출 카드를 사용해 보세요.', event: 'speed-card' },
-          ...ITEM_TRIGGERS.map(trigger => ({ id: `trigger-${trigger.id}`, title: `${trigger.name} 트리거`, kind: 'trigger', elementId: trigger.id,
-            text: `${trigger.description} 트리거는 스톤에 닿으면 소모되어 효과를 부여하는 아이템입니다.`, objective: '발사해 앞에 놓인 트리거를 획득하세요.', event: 'trigger', targets: true })),
-          { id: 'placement', title: '나만의 트리거 배치', text: '각 플레이어는 게임당 한 번 트리거를 설치할 수 있습니다. 하단의 트리거 배치를 왼쪽 구역으로 끌어놓고 종류를 고르세요. 시작 위치에서 35% 이상 지난 곳에만 놓을 수 있으며 유닛이나 구조물 옆은 피해야 합니다.', objective: '트리거를 직접 배치하세요.', event: 'placement' },
-          { id: 'ice', title: '얼음판의 이동 거리', mapId: 'ice', text: '얼음판은 마찰력이 낮아 같은 파워로도 더 멀리 갑니다. 낮은 파워를 고르고 경질화로 이동 거리를 조절해보세요.', objective: '얼음판에서 스톤을 발사하세요.', event: 'launch', cardId: 'hardening' },
-          { id: 'walls', title: '움직이는 구조물', mapId: 'moving-walls', text: '구조물은 정해진 경로를 왕복합니다. 벽의 위치와 진행 방향을 보며 발사 시점을 고르세요. 벽 자체는 밀려나지 않고 총탄은 벽에 튕깁니다.', objective: '움직이는 벽 사이로 발사하세요.', event: 'launch' }
-        ];
+      function isCardUnlocked(card, owner) {
+        return playerLevel(owner) >= (card.unlockLevel || 1) && (!card.unlockTutorial || state.playerTutorialCompleted?.[owner] === true);
       }
+      function tutorialLessons() { return SecondChanceTutorial.lessons; }
       const MAPS = [
         { id: 'classic', name: '기본 맵', description: '적당한 마찰력의 표준 테이블', friction: 0.020625, color: '#1f7770', walls: false },
         { id: 'ice', name: '얼음판 맵', description: '기본 맵보다 마찰이 낮아 더 길게 미끄러집니다', friction: 0.0165, color: '#8edaf2', walls: false },
@@ -1474,6 +1542,7 @@
         fallPoints: [0, 0],
         escapePoints: [0, 0],
         playerLevels: [1, 1],
+        playerTutorialCompleted: [false, false],
         particles: [],
         effects: [],
         aiming: false,
@@ -1572,7 +1641,13 @@
         try { return Math.max(0, Math.min(100, Number(localStorage.getItem(key) ?? 100) || 0)); }
         catch { return 100; }
       }
-      const audio = { context: null, sfxBus: null, lastPlayed: new Map(), musicVolume: savedVolume('ucc.musicVolume'), sfxVolume: savedVolume('ucc.sfxVolume') };
+      const audio = { context: null, sfxBus: null, lastPlayed: new Map(), musicVolume: savedVolume('ucc.musicVolume'), sfxVolume: savedVolume('ucc.sfxVolume'), sfxMode: (() => { try { return localStorage.getItem('ucc.sfxMode') || 'elevenlabs'; } catch { return 'elevenlabs'; } })() };
+      const sfxMode = document.querySelector('#sfxMode');
+      sfxMode.value = audio.sfxMode;
+      sfxMode.addEventListener('change', () => {
+        audio.sfxMode = sfxMode.value;
+        try { localStorage.setItem('ucc.sfxMode', audio.sfxMode); } catch {}
+      });
       musicVolume.value = String(audio.musicVolume);
       sfxVolume.value = String(audio.sfxVolume);
       document.querySelector('#musicVolumeValue').textContent = `${audio.musicVolume}%`;
@@ -1773,6 +1848,7 @@
         pendingHeroTransition = null;
         hideCardInspector();
         handEls.forEach(hand => hand.replaceChildren());
+        document.querySelectorAll('.card-consumed').forEach(card => card.remove());
         state.cardDrawTimer = null;
         cancelCardDrag();
         if (localAimPointerId !== null && canvas.hasPointerCapture?.(localAimPointerId)) canvas.releasePointerCapture(localAimPointerId);
@@ -1781,6 +1857,7 @@
         onlineLastSnapshotAt = null;
         Object.assign(state, { units: [], bricks: [], bullets: [], triggers: [], particles: [], effects: [],
           hands: [[], []], decks: [[], []], playerDecks: [[], []], fallPoints: [0, 0], escapePoints: [0, 0], playerLevels: [guestProfile?.level || 1, guestProfile?.level || 1], triggerPlacementUsed: [false, false], triggerPlacementCount: [0, 0],
+          playerTutorialCompleted: [guestProfile?.tutorialCompleted === true, guestProfile?.tutorialCompleted === true],
           heroOffers: [[], []], heroChoices: [null, null], heroDeadline: null, heroSelectionMode: null,
           heroSelectionOwner: 0, heroTransitionTimer: null, heroPendingChoice: null, heroCardDraws: [0, 0],
           aiming: false, aimPoint: null, aimTension: 0, powerMeter: null, repositionUnit: null, repositionMode: null,
@@ -1796,8 +1873,20 @@
         document.body.classList.remove('timer-flash');
       }
 
+      function closeSettingsToGame() {
+        gameSettingsOverlay.hidden = true;
+        gameLeaveConfirm.hidden = true;
+        settingsAudioControls.hidden = false;
+        tutorialSettingsActions.hidden = !state.tutorial;
+        gameSettingsMainActions.hidden = false;
+        gameLeaveActions.hidden = state.tutorial || state.phase === 'intro' || state.phase === 'finished';
+        document.querySelector('#gameSettingsButton').focus();
+      }
+
       function returnToHome() {
         const previous = state.tutorial?.previous;
+        closeTutorialDialogue();
+        tutorialUI.tutorialRewardOverlay.hidden = true;
         clearPracticeBoard();
         state.aiMode = false;
         state.aiAction = null;
@@ -1811,7 +1900,8 @@
         tutorialSettingsActions.hidden = true;
         gameLeaveActions.hidden = true;
         gameLeaveConfirm.hidden = true;
-        gameLeaveButton.hidden = false;
+        settingsAudioControls.hidden = false;
+        gameSettingsMainActions.hidden = false;
         gameSettingsTitle.textContent = '게임 설정';
         if (previous) {
           PLAYER.forEach((player, index) => { player.name = previous.names[index]; });
@@ -1827,114 +1917,279 @@
         mapIndicator.textContent = '맵 선택 대기';
         startOverlay.hidden = false;
         showStartScreen('homeScreen');
+        startLobbyMusic();
         document.querySelector('#openPlayMenuButton').focus();
       }
 
-      function startTutorial() {
-        state.tutorial = { previous: { names: PLAYER.map(player => player.name), speedLevel: state.speedLevel, map: state.currentMap } };
-        PLAYER[0].name = '연습 플레이어';
-        PLAYER[1].name = '연습 상대';
-        updatePlayerNames();
-        learningUI.tutorialLessonSelect.replaceChildren(...tutorialLessons().map((lesson, index) => {
-          const option = document.createElement('option');
-          option.value = String(index);
-          option.textContent = `${index + 1}. ${lesson.title}`;
-          return option;
-        }));
-        initializeAudio();
-        startMusic();
-        setSpeedLevel(1);
-        loadTutorialLesson(0);
+      const tutorialUI = Object.fromEntries([
+        'tutorialDialogue', 'tutorialDialogueText', 'tutorialDialogueNext', 'tutorialNicknameForm',
+        'tutorialNicknameInput', 'tutorialDialogueError', 'tutorialRewardOverlay', 'tutorialRewardContent',
+        'tutorialRewardTitle', 'tutorialRewardImage', 'tutorialRewardText', 'tutorialRewardNext'
+      ].map(id => [id, document.getElementById(id)]));
+      let tutorialVoice = null;
+      let tutorialRetryTimer = null;
+
+      function stopTutorialVoice() {
+        tutorialVoice?.pause();
+        tutorialVoice = null;
       }
 
-      function loadTutorialLesson(index) {
-        const lessons = tutorialLessons();
-        const lesson = lessons[index];
+      function closeTutorialDialogue() {
+        clearTimeout(tutorialRetryTimer);
+        stopTutorialVoice();
+        tutorialUI.tutorialDialogue.hidden = true;
+        tutorialUI.tutorialNicknameForm.hidden = true;
+        if (state.tutorial) { state.tutorial.speaking = false; state.tutorial.dialogue = null; }
+        document.body.dataset.tutorialSpeaking = 'false';
+      }
+
+      function showTutorialDialogue(lines, onDone = null, actionLabel = '계속') {
+        if (!state.tutorial) return;
+        closeTutorialDialogue();
+        state.tutorial.speaking = true;
+        state.tutorial.dialogue = { lines, index: 0, onDone, actionLabel };
+        document.body.dataset.tutorialSpeaking = 'true';
+        tutorialUI.tutorialDialogue.hidden = false;
+        tutorialUI.tutorialDialogueError.hidden = true;
+        tutorialUI.tutorialDialogueNext.hidden = false;
+        renderTutorialLine();
+        updateHud();
+      }
+
+      function renderTutorialLine() {
+        const dialogue = state.tutorial?.dialogue;
+        if (!dialogue) return;
+        const line = dialogue.lines[dialogue.index];
+        tutorialUI.tutorialDialogueText.textContent = line.text.replaceAll('{name}', PLAYER[0].name);
+        tutorialUI.tutorialDialogue.dataset.lineId = line.id;
+        tutorialUI.tutorialDialogueNext.textContent = dialogue.index === dialogue.lines.length - 1 ? dialogue.actionLabel : '계속';
+        stopTutorialVoice();
+        if (line.voiceSrc) {
+          tutorialVoice = new Audio(line.voiceSrc);
+          tutorialVoice.volume = audio.sfxVolume / 100;
+          tutorialVoice.play()?.catch(() => {});
+        }
+        tutorialUI.tutorialDialogueNext.focus();
+      }
+
+      function advanceTutorialDialogue() {
+        const dialogue = state.tutorial?.dialogue;
+        if (!dialogue) return;
+        if (++dialogue.index < dialogue.lines.length) { renderTutorialLine(); return; }
+        const onDone = dialogue.onDone;
+        closeTutorialDialogue();
+        if (onDone) onDone();
+        updateHud();
+      }
+
+      function enterProfileLobby(returnScreen = 'homeScreen') {
+        if (!guestProfile?.tutorialCompleted) startTutorial();
+        else {
+          showStartScreen(returnScreen);
+          startLobbyMusic();
+        }
+      }
+
+      function startTutorial() {
+        closeTutorialDialogue();
+        if (!guestProfile) renderGuestProfile(createLocalGuestProfile(aiPlayerName()), false);
+        state.aiMode = false;
+        state.tutorial = { previous: { names: PLAYER.map(player => player.name), speedLevel: state.speedLevel, map: state.currentMap },
+          settingsReady: false, speaking: false };
+        PLAYER[0].name = guestProfile.name;
+        PLAYER[1].name = '연습 상대';
+        document.body.dataset.tutorialSettings = 'false';
+        initializeAudio();
+        startLobbyMusic();
+        setSpeedLevel(0);
+        loadTutorialLesson(0, false);
+        showTutorialDialogue(SecondChanceTutorial.introduction, () => {
+          state.tutorial.speaking = true;
+          document.body.dataset.tutorialSpeaking = 'true';
+          tutorialUI.tutorialDialogue.hidden = false;
+          tutorialUI.tutorialDialogueText.textContent = SecondChanceTutorial.introduction.at(-1).text;
+          tutorialUI.tutorialNicknameForm.hidden = false;
+          tutorialUI.tutorialDialogueNext.hidden = true;
+          tutorialUI.tutorialNicknameInput.value = guestProfile.name;
+          tutorialUI.tutorialNicknameInput.focus();
+        });
+      }
+
+      async function saveTutorialNickname(name) {
+        const tutorial = state.tutorial;
+        name = String(name || '').trim();
+        if (!tutorial || !name || name.length > 20) throw new Error('닉네임은 1~20자로 입력하세요.');
+        if (guestProfile?.username) {
+          const response = await fetch('/api/profile', { method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${guestToken}` },
+            body: JSON.stringify({ name }) });
+          const data = await response.json();
+          if (!response.ok) throw new Error(data.error || '닉네임을 저장하지 못했습니다.');
+          if (state.tutorial !== tutorial) return;
+          renderGuestProfile(data.profile, data.persistent);
+        } else renderGuestProfile({ ...guestProfile, name }, false);
+        PLAYER[0].name = name;
+        guestAiNickname = name;
+        tutorial.settingsReady = true;
+        document.body.dataset.tutorialSettings = 'true';
+        updatePlayerNames();
+        showTutorialDialogue(SecondChanceTutorial.briefing);
+      }
+
+      function loadTutorialLesson(index, withDialogue = true) {
+        const lesson = tutorialLessons()[index];
         if (!state.tutorial || !lesson) return;
+        closeTutorialDialogue();
         clearPracticeBoard();
-        Object.assign(state.tutorial, { index, lesson, complete: false, speedChanged: false, launched: false,
-          usedCardInFlight: false, promptedEndTurn: false, uses: 0, highlightKey: null });
+        Object.assign(state.tutorial, { index, lesson, complete: false, attempted: false,
+          ammoFired: false, collectedTrigger: false, outcomeResolved: false, highlightKey: null });
         document.body.dataset.tutorial = 'true';
+        document.body.dataset.tutorialStage = lesson.id;
         startOverlay.hidden = true;
         learningUI.tutorialPanel.hidden = false;
         tutorialSettingsActions.hidden = false;
         gameSettingsTitle.textContent = '튜토리얼 설정';
-        state.currentMap = MAPS.find(map => map.id === lesson.mapId) || MAPS[0];
+        state.currentMap = MAPS[0];
         state.phase = 'aiming';
         const unit = turns.createCurrentUnit();
-        if (lesson.kind === 'card' && !['brick', 'data-barrier'].includes(lesson.elementId)) {
-          unit.x = 860;
+        if (lesson.id !== 'launch') {
+          const target = new CurlingUnit({ id: 'practice-target', owner: 1, turnNumber: 1,
+            x: lesson.id === 'triggers' ? 190 : 470, y: 365 });
+          target.status = 'resting';
+          target.hasLaunched = true;
+          state.units.push(target);
+          if (lesson.id === 'triggers') {
+            applyUnitEffectStack(target, 'hardening');
+            state.triggers.push({ entityKind: ENTITY_KIND.TRIGGER, id: 'practice-pulse',
+              type: ITEM_TRIGGERS.find(item => item.id === 'pulse'), x: 280, y: 365, radius: CONFIG.unitRadius * .5 });
+          }
+        }
+        if (lesson.id === 'cards') {
+          unit.x = 620;
           unit.previousX = unit.x;
           unit.status = 'resting';
           unit.hasLaunched = true;
           state.phase = 'turn-ready';
+          state.hands[0] = [{ ...deckCard('ammo'), instanceId: 'practice-ammo' }];
         }
-        const cardId = lesson.kind === 'card' ? lesson.elementId : lesson.cardId;
-        if (cardId) {
-          const card = cardDefinitions().find(item => item.id === cardId);
-          const copies = lesson.requiredUses || 1;
-          if (card) state.hands[0] = Array.from({ length: copies }, (_, copy) => ({ ...card, instanceId: `practice-${card.id}-${copy}` }));
-        }
-        if (lesson.targets) {
-          const target = new CurlingUnit({ id: 'practice-target', owner: 1, turnNumber: 1,
-            x: lesson.kind === 'card' ? 740 : 550, y: 365 });
-          target.status = 'resting';
-          target.hasLaunched = true;
-          state.units.push(target);
-        }
-        if (lesson.kind === 'trigger') {
-          const type = ITEM_TRIGGERS.find(item => item.id === lesson.elementId);
-          state.triggers.push({ entityKind: ENTITY_KIND.TRIGGER, id: `practice-${type.id}`, type,
-            x: 680, y: 365, radius: CONFIG.unitRadius * .5 });
-        }
-        learningUI.tutorialLessonSelect.value = String(index);
         learningUI.tutorialCompletion.hidden = true;
         learningUI.tutorialCompletion.classList.remove('visible');
-        learningUI.tutorialTitle.textContent = `${index + 1} / ${lessons.length} · ${lesson.title}`;
+        learningUI.tutorialTitle.textContent = `${index + 1} / 4 · ${lesson.title}`;
         learningUI.tutorialInstruction.textContent = lesson.text;
         learningUI.tutorialObjective.textContent = lesson.objective;
-        learningUI.tutorialNextButton.textContent = index === lessons.length - 1 ? '연습 마치기' : '다음 연습 →';
-        mapIndicator.textContent = `튜토리얼 · ${state.currentMap.name}`;
+        learningUI.tutorialNextButton.textContent = index === 3 ? '튜토리얼 종료' : '다음 단계';
+        learningUI.tutorialNextButton.disabled = true;
+        mapIndicator.textContent = '튜토리얼';
         renderHands();
         startTurnTimer();
-        updateHud();
-        if (lesson.kind === 'hero') startHeroSelection('tutorial');
+        updatePlayerNames();
+        if (withDialogue && lesson.dialogue.length) showTutorialDialogue(lesson.dialogue);
       }
 
-      function recordTutorialEvent(event, elementId) {
+      function recordTutorialEvent(event) {
         const tutorial = state.tutorial;
-        if (!tutorial || tutorial.complete) return;
-        if (tutorial.lesson.id === 'speed-card') {
-          if (!['speed', 'launch', 'card'].includes(event)) return;
-          if (event === 'speed') tutorial.speedChanged = true;
-          if (event === 'launch') tutorial.launched = true;
-          if (event === 'card' && elementId === 'blackhole' && state.phase === 'sliding') tutorial.usedCardInFlight = true;
-          if (!(tutorial.speedChanged && tutorial.launched && tutorial.usedCardInFlight)) {
-            const remaining = [!tutorial.speedChanged && '속도를 바꾸고', !tutorial.launched && '스톤을 발사하고', !tutorial.usedCardInFlight && '움직이는 중에 블랙홀 방출 카드를 사용하세요'].filter(Boolean);
-            learningUI.tutorialObjective.textContent = remaining.join(' · ');
-            return;
-          }
-        } else {
-          if (tutorial.lesson.event !== event) return;
-          if (['card', 'trigger'].includes(event) && tutorial.lesson.elementId !== elementId) return;
-          if (event === 'card') {
-            tutorial.uses = (tutorial.uses || 0) + 1;
-            const needed = tutorial.lesson.requiredUses || 1;
-            if (tutorial.uses < needed) {
-              learningUI.tutorialObjective.textContent = `한 번 더 사용하세요. (${tutorial.uses}/${needed})`;
-              return;
-            }
-          }
+        if (!tutorial || tutorial.complete || tutorial.outcomeResolved || !tutorial.lesson) return;
+        if (event === 'launch' || event === 'ammo') tutorial.attempted = true;
+        if (event === 'ammo') tutorial.ammoFired = true;
+        if (event === 'trigger') tutorial.collectedTrigger = true;
+      }
+
+      function tutorialOutcome(success, response, automaticRetry = false) {
+        const tutorial = state.tutorial;
+        if (!tutorial || tutorial.outcomeResolved) return;
+        tutorial.outcomeResolved = true;
+        tutorial.complete = success;
+        state.turnDeadline = null;
+        learningUI.tutorialNextButton.disabled = !success;
+        learningUI.tutorialObjective.textContent = success ? '연습 완료' : tutorial.lesson.objective;
+        learningUI.tutorialCompletion.hidden = !success;
+        if (success) {
+          learningUI.tutorialCompletion.classList.add('visible');
+          playSound('connected');
         }
-        tutorial.complete = true;
-        if (tutorial.lesson.timed) state.turnDeadline = null;
-        learningUI.tutorialObjective.textContent = '완료! 다시 연습하거나 다음 항목으로 이동하세요.';
-        learningUI.tutorialCompletion.hidden = false;
-        learningUI.tutorialCompletion.classList.remove('visible');
-        void learningUI.tutorialCompletion.offsetWidth;
-        learningUI.tutorialCompletion.classList.add('visible');
-        document.body.classList.remove('timer-flash');
+        const retry = () => { if (state.tutorial === tutorial) loadTutorialLesson(tutorial.index, false); };
+        showTutorialDialogue([response], success ? null : retry, success ? '계속' : '다시 연습');
+        if (automaticRetry) {
+          const dialogue = tutorial.dialogue;
+          tutorialRetryTimer = setTimeout(() => {
+            if (state.tutorial === tutorial && tutorial.dialogue === dialogue) advanceTutorialDialogue();
+          }, 5000);
+        }
+      }
+
+      function evaluateTutorialOutcome() {
+        const tutorial = state.tutorial;
+        if (!tutorial?.lesson || !tutorial.attempted || tutorial.outcomeResolved || tutorial.speaking) return;
+        const unit = turns.currentUnit;
+        const target = state.units.find(item => item.id === 'practice-target');
+        const id = tutorial.lesson.id;
+        const reply = SecondChanceTutorial.responses;
+        if (id !== 'launch' && target?.status === 'fallen' &&
+            (id !== 'cards' || tutorial.ammoFired) && (id !== 'triggers' || tutorial.collectedTrigger)) {
+          tutorialOutcome(true, reply[id + 'Success']);
+          return;
+        }
+        const fallen = !unit || unit.status === 'fallen';
+        const stopped = !state.units.some(item => item.status === 'sliding') && !state.bullets.length;
+        if (!fallen && !stopped) return;
+        if (id === 'launch') {
+          calculateScores();
+          const success = !fallen && unit.status === 'resting' && unit.score >= 80;
+          tutorialOutcome(success, success ? reply.launchSuccess : fallen ? reply.launchFall : reply.launchShort);
+        } else tutorialOutcome(false, reply[id + 'Fail']);
+      }
+
+      async function completeTutorial() {
+        const tutorial = state.tutorial;
+        if (!tutorial || tutorial.saving) return;
+        const alreadyCompleted = guestProfile?.tutorialCompleted === true;
+        tutorial.saving = true;
+        closeTutorialDialogue();
+        gameSettingsOverlay.hidden = true;
+        state.turnDeadline = null;
+        tutorial.speaking = true;
+        try {
+          if (guestToken) {
+            const response = await fetch('/api/profile/tutorial', { method: 'POST',
+              headers: { Authorization: `Bearer ${guestToken}` } });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || '완료 기록을 저장하지 못했습니다.');
+            if (state.tutorial !== tutorial) return;
+            if (!data.profile.username) rememberGuestTutorialCompletion();
+            renderGuestProfile(data.profile, data.persistent);
+          } else {
+            if (!guestProfile?.username) rememberGuestTutorialCompletion();
+            renderGuestProfile({ ...guestProfile, tutorialCompleted: true, adventureUnlocked: true }, false);
+          }
+          if (alreadyCompleted) { returnToHome(); return; }
+          playOutcomeMusic('victoryMusic');
+          tutorial.rewardStep = 0;
+          tutorialUI.tutorialRewardOverlay.hidden = false;
+          showTutorialReward();
+        } catch (error) {
+          if (state.tutorial !== tutorial) return;
+          showTutorialDialogue([{ id: 'save-error', text: error.message, voiceSrc: null }], completeTutorial, '다시 시도');
+        } finally { tutorial.saving = false; }
+      }
+
+      function showTutorialReward() {
+        const step = state.tutorial?.rewardStep;
+        tutorialUI.tutorialRewardTitle.textContent = step === 0 ? '카드 획득 · 재배치' : '게임 모드 해금 · 모험';
+        tutorialUI.tutorialRewardImage.hidden = step !== 0;
+        tutorialUI.tutorialRewardText.textContent = step === 0 ? CARD_DESCRIPTIONS.reposition : '모험';
+        tutorialUI.tutorialRewardNext.textContent = step === 0 ? '계속' : '로비로';
+        tutorialUI.tutorialRewardContent.classList.remove('reveal');
+        void tutorialUI.tutorialRewardContent.offsetWidth;
+        tutorialUI.tutorialRewardContent.classList.add('reveal');
         playSound('connected');
+        tutorialUI.tutorialRewardNext.focus();
+      }
+
+      function nextTutorialStep() {
+        const tutorial = state.tutorial;
+        if (!tutorial?.complete || tutorial.speaking) return;
+        if (tutorial.index === 3) showTutorialDialogue([SecondChanceTutorial.farewell], completeTutorial);
+        else loadTutorialLesson(tutorial.index + 1);
       }
 
       function renderCatalog(category = 'cards') {
@@ -1965,7 +2220,8 @@
             const lock = document.createElement('span');
             lock.className = 'catalog-lock';
             lock.textContent = '🔒';
-            lock.setAttribute('aria-label', `${entry.unlockLevel}레벨에 해금`);
+            lock.setAttribute('aria-label', entry.unlockTutorial ? '튜토리얼 완료 또는 스킵 시 해금' : `${entry.unlockLevel}레벨에 해금`);
+            lock.title = lock.getAttribute('aria-label');
             header.append(lock);
             article.append(header);
             return article;
@@ -2103,7 +2359,12 @@
       }
 
       function playSound(name, intensity = 1) {
-        if (!audio.sfxVolume || !initializeAudio()) return;
+        if (!audio.sfxVolume) return;
+        if (audio.sfxMode === 'elevenlabs' && ELEVENLABS_SFX[name]) {
+          playElevenLabsSound(name, { volume: Math.min(1.5, intensity) });
+          return;
+        }
+        if (!initializeAudio()) return;
         const sound = AUDIO_CONFIG.sounds[name];
         if (!sound) return;
         const now = performance.now();
@@ -2115,15 +2376,33 @@
       }
 
       function playPowerLockSound(value) {
-        if (!audio.sfxVolume || !initializeAudio()) return;
+        if (!audio.sfxVolume) return;
+        if (audio.sfxMode === 'elevenlabs') {
+          playElevenLabsSound('powerLock', { volume: .45 + value * .55, playbackRate: .78 + value * .5 });
+          return;
+        }
+        if (!initializeAudio()) return;
         const sound = AUDIO_CONFIG.sounds.powerLock;
         const pitch = .65 + value * .7;
         scheduleTone(sound.frequency * pitch, sound.endFrequency * pitch, audio.context.currentTime,
           sound.duration, sound.waveform, AUDIO_CONFIG.sfxVolume * sound.volume * (.45 + value * .55), audio.sfxBus);
       }
 
+      function playLaunchSound(power) {
+        if (audio.sfxMode !== 'elevenlabs') {
+          playSound('launch');
+          return;
+        }
+        playElevenLabsSound(power < .3 ? 'launchLight' : power < .7 ? 'launchMedium' : 'launchHeavy');
+      }
+
       function playFileSound(name, { volume = 1, cooldown = 0 } = {}) {
         if (!audio.sfxVolume) return;
+        const generatedName = name === 'unitDeath' ? 'unitDeath' : null;
+        if (audio.sfxMode === 'elevenlabs' && generatedName) {
+          playElevenLabsSound(generatedName, { volume });
+          return;
+        }
         const source = AUDIO_FILES[name];
         if (!source) return;
         const now = performance.now();
@@ -2136,20 +2415,68 @@
         if (playback?.catch) playback.catch(() => {});
       }
 
+      function playElevenLabsSound(name, { volume = 1, playbackRate = 1 } = {}) {
+        const src = ELEVENLABS_SFX[name];
+        if (!src) return;
+        const now = performance.now();
+        const cooldown = generatedSoundCooldowns[name] || 0;
+        if (now - (generatedSoundLastPlayed.get(name) || 0) < cooldown) return;
+        generatedSoundLastPlayed.set(name, now);
+        const clip = new Audio(src);
+        clip.volume = Math.min(1, volume * audio.sfxVolume / 100);
+        clip.playbackRate = playbackRate;
+        const playback = clip.play();
+        if (playback?.catch) playback.catch(() => {});
+      }
+
+      function playOutcomeMusic(name) {
+        if (audio.sfxMode !== 'elevenlabs' || !audio.musicVolume || !ELEVENLABS_SFX[name]) return;
+        const backgroundTrack = currentMusic;
+        backgroundTrack.volume = .08 * audio.musicVolume / 100;
+        const clip = new Audio(ELEVENLABS_SFX[name]);
+        clip.volume = (name === 'victoryMusic' ? .8 * .65 : .8) * audio.musicVolume / 100;
+        clip.addEventListener?.('ended', () => {
+          if (currentMusic === backgroundTrack && !backgroundTrack.paused)
+            backgroundTrack.volume = .28 * audio.musicVolume / 100;
+        }, { once: true });
+        const playback = clip.play();
+        if (playback?.catch) playback.catch(() => {});
+      }
+
+      function playButtonSelection(button) {
+        if (!button || (button.matches('button,input') && button.disabled) || button.getAttribute('aria-disabled') === 'true') return;
+        if (audio.musicVolume && currentMusic.paused) startMusic();
+        const label = `${button.id} ${button.getAttribute('aria-label') || ''} ${button.textContent || button.value || ''}`.toLocaleLowerCase();
+        const important = button.dataset.soundType === 'important'
+          || /powerlaunchbutton|powerconfirmbutton|decksavebutton|confirmguestbutton|confirmmapbutton|gameleaveconfirmbutton/.test(label)
+          || /발사|저장|결정|확인|게임 시작|계정 등록|로그인/.test(label);
+        playFileSound(important ? 'importantSelection' : 'generalSelection', { volume: important ? .864 : .783 });
+      }
+
       function playUnitImpactSound(impulse) {
         playFileSound(Math.abs(impulse) >= STRONG_HIT_THRESHOLD ? 'strongHit' : 'weakHit', { volume: .8, cooldown: 65 });
       }
 
-      function startMusic() {
+      function startMusic(track = currentMusic) {
+        if (currentMusic !== track) {
+          currentMusic.pause();
+          currentMusic.currentTime = 0;
+          currentMusic = track;
+        }
         if (!audio.musicVolume) return;
-        AUDIO_FILES.music.volume = .28 * audio.musicVolume / 100;
-        const playback = AUDIO_FILES.music.play();
+        currentMusic.volume = .28 * audio.musicVolume / 100;
+        const playback = currentMusic.play();
         if (playback?.catch) playback.catch(() => {});
       }
 
+      function startLobbyMusic() { startMusic(AUDIO_FILES.lobbyMusic); }
+      function startGameMusic() { startMusic(AUDIO_FILES.gameMusic); }
+
       function stopMusic() {
-        AUDIO_FILES.music.pause();
-        AUDIO_FILES.music.currentTime = 0;
+        for (const track of [AUDIO_FILES.lobbyMusic, AUDIO_FILES.gameMusic]) {
+          track.pause();
+          track.currentTime = 0;
+        }
       }
 
       function setSpeedLevel(level, announce = false) {
@@ -2421,6 +2748,7 @@
       }
 
       function isTurnTimerPaused() {
+        if (state.tutorial && (state.tutorial.speaking || !gameSettingsOverlay.hidden)) return true;
         if (onlineSession?.started && onlineSession.role === 'challenger') return state.turnPausedByHost;
         if (state.aiMode && turns.playerIndex === state.aiOwner) return true;
         return state.units.some(unit => unit.status === 'sliding');
@@ -2480,8 +2808,7 @@
         const hostAuthority = !onlineSession?.started || onlineSession.role === 'host';
         if (remaining <= 0 && state.turnPausedAt == null && hostAuthority) {
           if (state.tutorial?.lesson?.timed) {
-            startTurnTimer();
-            playSound('timerWarning');
+            tutorialOutcome(false, SecondChanceTutorial.responses.cardsTimeout, true);
           } else expireCurrentTurn();
         }
       }
@@ -2705,28 +3032,15 @@
       function updateTutorialHighlights() {
         const lesson = state.tutorial?.lesson;
         if (!lesson) return;
-        const unit = turns.currentUnit;
-        const canEndTurn = lesson.timed && unit?.hasLaunched && unit.status === 'resting' && state.phase === 'turn-ready' && state.bullets.length === 0;
-        const key = `${lesson.id}:${state.tutorial.complete}:${canEndTurn}`;
-        if (state.tutorial.highlightKey === key) return;
-        state.tutorial.highlightKey = key;
         for (const element of [endTurnButton, speedToggle, turnTimer, ...triggerToolButtons]) element.classList.remove('tutorial-highlight');
         for (const card of handEls.flatMap(hand => [...hand.children])) card.classList.remove('tutorial-highlight');
-        if (state.tutorial.complete) return;
+        if (state.tutorial.complete || state.tutorial.speaking) return;
         const highlightedCard = lesson.elementId || lesson.cardId;
         if (highlightedCard) {
           for (const card of handEls[0].children) if (card.dataset.kind === highlightedCard) card.classList.add('tutorial-highlight');
         }
-        if (lesson.id === 'speed-card') speedToggle.classList.add('tutorial-highlight');
         if (lesson.timed) turnTimer.classList.add('tutorial-highlight');
-        if (lesson.id === 'placement') triggerToolButtons[0].classList.add('tutorial-highlight');
-        if (canEndTurn) {
-          endTurnButton.classList.add('tutorial-highlight');
-          if (!state.tutorial.promptedEndTurn) {
-            state.tutorial.promptedEndTurn = true;
-            playSound('turn');
-          }
-        }
+        if (lesson.id === 'triggers') triggerToolButtons[0]?.classList.add('tutorial-highlight');
       }
 
       function updateMatchHud() {
@@ -2905,6 +3219,7 @@
           });
           unit.activeSpecial = 'ammo';
           state.repositionMode = null;
+          playSound('ammoFire', 0.7);
           emitGameFeedback('ammoFire', unit, '격발', '#ffe58a');
         } else {
           if (speed > CONFIG.maxLaunchSpeed * powerScale) {
@@ -2912,7 +3227,7 @@
             vy = vy / speed * CONFIG.maxLaunchSpeed * powerScale;
           }
           unit.launch(vx, vy);
-          playSound('launch');
+          playLaunchSound(state.powerMeter?.value ?? 1);
           if (launchedFromReposition) {
             unit.relaunchUsed = true;
             unit.activeSpecial = 'reposition';
@@ -3311,7 +3626,8 @@
           const guardThreat = enemy.ability?.guard ? 10 : 0;
           const knockoutChance = enemy.x < TABLE.goalX + 140 ? 30 : enemy.x < TABLE.goalX + 250 ? 17 : 0;
           let obstructionValue = 0;
-          for (const brick of state.bricks) {
+          for (let brickIndex = state.bricks.length - 1; brickIndex >= 0; brickIndex -= 1) {
+            const brick = state.bricks[brickIndex];
             const t = ((brick.x - unit.x) * dx + (brick.y - unit.y) * dy) / lengthSq;
             if (t <= 0 || t >= 1) continue;
             const nearRay = Math.hypot(brick.x - (unit.x + dx * t), brick.y - (unit.y + dy * t));
@@ -3528,18 +3844,21 @@
             b.y += ny * overlap * CONFIG.separation;
 
             const relativeVelocity = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
-            if (relativeVelocity >= 0) continue;
-            const impulse = -(1 + CONFIG.restitution) * relativeVelocity / 2;
-            if (a.owner !== b.owner) recordTutorialEvent('collision');
-            playUnitImpactSound(impulse);
-            a.vx -= impulse * nx;
-            a.vy -= impulse * ny;
-            b.vx += impulse * nx;
-            b.vy += impulse * ny;
-            if (a.status === 'resting') a.status = 'sliding';
-            if (b.status === 'resting') b.status = 'sliding';
-            detonatePendingPulseTriggers(a);
-            detonatePendingPulseTriggers(b);
+            if (relativeVelocity < 0) {
+              const impulse = -(1 + CONFIG.restitution) * relativeVelocity / 2;
+              if (a.owner !== b.owner) recordTutorialEvent('collision');
+              playUnitImpactSound(impulse);
+              a.vx -= impulse * nx;
+              a.vy -= impulse * ny;
+              b.vx += impulse * nx;
+              b.vy += impulse * ny;
+              if (a.status === 'resting') a.status = 'sliding';
+              if (b.status === 'resting') b.status = 'sliding';
+              detonatePendingPulseTriggers(a);
+              detonatePendingPulseTriggers(b);
+            }
+            detonateChargedPulse(a);
+            detonateChargedPulse(b);
           }
         }
       }
@@ -3586,6 +3905,7 @@
               }
               detonatePendingPulseTriggers(unit);
             }
+            if (detonateChargedPulse(unit)) break;
             if (unit.status === 'resting' && Math.hypot(unit.vx, unit.vy) > CONFIG.stopSpeed) unit.status = 'sliding';
           }
         }
@@ -3669,6 +3989,7 @@
         }
         if (refreshHud) updateHud();
         if (turns.currentUnit?.hasLaunched && turns.currentUnit.status === 'resting') recordTutorialEvent('rest');
+        evaluateTutorialOutcome();
       }
 
       function useCard(cardId, owner, unit) {
@@ -3682,7 +4003,6 @@
         if (card.id === 'pulse') {
           const ability = ensureUnitAbility(unit);
           ability.pulse = true;
-          ability.pulseTimer = 4;
         }
         if (card.id === 'bluffing') {
           ensureUnitAbility(unit).bluffingUntilTurn = turns.globalTurn + 1;
@@ -3949,28 +4269,31 @@
           const ability = source.ability;
           if (!ability || source.status === 'fallen') continue;
           if (ability.guard) ability.guardAngle += dt * 1.6875;
-          if (ability.pulse) {
-            ability.pulseTimer = (ability.pulseTimer ?? 4) - dt;
-            if (ability.pulseTimer <= 0) {
-              triggerPulse(source);
-              ability.pulseTimer = 4;
-            }
-          }
         }
       }
 
-      function triggerPulse(source, range = PULSE_RANGE, impulse = PULSE_IMPULSE) {
+      function triggerPulse(source, range = PULSE_RANGE, impulse = PULSE_IMPULSE, chargedCard = false) {
         playFileSound('pulseCast', { volume: .75 });
-        for (const target of [...state.units, ...state.bricks]) {
-          if (target === source || target.barrier || target.status === 'fallen' || target.status === 'ready') continue;
+        const targets = chargedCard ? state.units : [...state.units, ...state.bricks];
+        for (const target of targets) {
+          if (target === source || target.status === 'fallen' || target.status === 'ready') continue;
+          if (target.barrier) continue;
           const dx = target.x - source.x;
           const dy = target.y - source.y;
           const distance = Math.hypot(dx, dy);
           if (distance > range) continue;
           const angle = distance > 0.001 ? Math.atan2(dy, dx) : Math.random() * Math.PI * 2;
-          target.vx += Math.cos(angle) * impulse;
-          target.vy += Math.sin(angle) * impulse;
+          const teamScale = chargedCard && target.owner === source.owner && target.unitKind !== 'brick' ? .5 : 1;
+          target.vx += Math.cos(angle) * impulse * teamScale;
+          target.vy += Math.sin(angle) * impulse * teamScale;
           if (target.unitKind !== 'brick') target.status = 'sliding';
+        }
+        if (chargedCard) for (let index = state.bricks.length - 1; index >= 0; index -= 1) {
+          const structure = state.bricks[index];
+          if (Math.hypot(structure.x - source.x, structure.y - source.y) > range) continue;
+          state.bricks.splice(index, 1);
+          state.effects.push({ type: 'item', x: structure.x, y: structure.y, age: 0, duration: .42,
+            color: structure.barrier ? '#a5f3ec' : '#c5d2d0' });
         }
         state.effects.push({ type: 'pulse', x: source.x, y: source.y, age: 0, duration: 0.48, radius: range });
         for (let i = 0; i < 28; i += 1) {
@@ -3983,6 +4306,13 @@
             color: i % 2 ? '#00aaff' : '#00f5ff'
           });
         }
+      }
+
+      function detonateChargedPulse(source) {
+        if (!source.ability?.pulse || source.status === 'fallen') return false;
+        source.ability.pulse = false;
+        triggerPulse(source, PULSE_RANGE, PULSE_IMPULSE, true);
+        return true;
       }
 
       function detonatePendingPulseTriggers(unit) {
@@ -4287,7 +4617,9 @@
               const nx = distance > .001 ? dx / distance : 1;
               const ny = distance > .001 ? dy / distance : 0;
               const relative = (target.vx - bullet.vx) * nx + (target.vy - bullet.vy) * ny;
-              if (relative < 0) {
+              const pulseOnly = target.ability?.pulse;
+              if (pulseOnly) detonateChargedPulse(target);
+              else if (relative < 0) {
                 const impulse = -1.72 * relative / (1 + 1 / bullet.mass);
                 target.vx += impulse * nx;
                 target.vy += impulse * ny;
@@ -4506,11 +4838,25 @@
         return localLevel100Profile({
           id: `LOCAL-${globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2, 12)}`,
           username: null, name: name || '게스트', fame: 0, played: 0, wins: 0, losses: 0, draws: 0,
+          level: 1, levelStart: 0, nextLevel: 100,
+          tutorialCompleted: hasGuestTutorialCompletion(), adventureUnlocked: hasGuestTutorialCompletion(),
           decks: [null, null, null], activePreset: 0
         });
       }
 
+      function hasGuestTutorialCompletion() {
+        try { return localStorage.getItem('ucc.guestTutorialCompleted.v1') === 'true'; }
+        catch { return false; }
+      }
+
+      function rememberGuestTutorialCompletion() {
+        try { localStorage.setItem('ucc.guestTutorialCompleted.v1', 'true'); } catch {}
+      }
+
       function renderGuestProfile(profile, persistent) {
+        if (!profile.username && hasGuestTutorialCompletion()) {
+          profile = { ...profile, tutorialCompleted: true, adventureUnlocked: true };
+        }
         profile = localLevel100Profile(profile);
         guestProfile = profile;
         savedDecks = Array.isArray(profile.decks) ? profile.decks.map(cards => cards ? [...cards] : null) : [null, null, null];
@@ -4523,7 +4869,10 @@
         guestProfileMeta.textContent = `Lv ${profile.level} · 명성치 ${profile.fame} / ${profile.nextLevel}${persistent ? '' : ' · 임시 기록'}`;
         guestProfileProgress.max = profile.nextLevel - profile.levelStart;
         guestProfileProgress.value = profile.fame - profile.levelStart;
-        if (!onlineSession?.started) state.playerLevels = [profile.level, profile.level];
+        if (!onlineSession?.started) {
+          state.playerLevels = [profile.level, profile.level];
+          state.playerTutorialCompleted = [profile.tutorialCompleted === true, profile.tutorialCompleted === true];
+        }
         openAccountButton.hidden = false;
         accountIdentity.textContent = profile.username
           ? `계정 ID ${profile.username} · 플레이어 ID ${profile.id}`
@@ -4674,6 +5023,7 @@
         PLAYER[0].name = room.host.name || '방장';
         PLAYER[1].name = room.challenger?.name || '도전자 대기 중';
         state.playerLevels = [room.host.level || 1, room.challenger?.level || 1];
+        state.playerTutorialCompleted = [room.host.tutorialCompleted === true, room.challenger?.tutorialCompleted === true];
         updatePlayerNames();
         if (onlineSession.role === 'host' && !previousChallenger && room.challenger) {
           showConnectionNotice(`${room.challenger.name} 님이 참가했습니다`);
@@ -5169,7 +5519,7 @@
       async function confirmOnlineMap() {
         if (!onlineSession || onlineSession.localMapConfirmed) return;
         initializeAudio();
-        startMusic();
+        startGameMusic();
         const session = onlineSession;
         confirmMapButton.disabled = true;
         onlineStatus.textContent = '맵 선택을 서버에 저장하는 중입니다.';
@@ -5220,6 +5570,7 @@
           fallPoints: [...state.fallPoints],
           escapePoints: [...state.escapePoints],
           playerLevels: [...state.playerLevels],
+          playerTutorialCompleted: [...state.playerTutorialCompleted],
           particles: state.particles.map(particle => ({ ...particle })),
           effects: state.effects.map(effect => ({ ...effect })),
           phase: state.phase === 'trigger-select' ? (state.phaseBeforeTriggerSelect || 'turn-ready') : state.phase,
@@ -5332,6 +5683,7 @@
         state.fallPoints = snapshot.fallPoints;
         state.escapePoints = snapshot.escapePoints || [0, 0];
         state.playerLevels = snapshot.playerLevels || [1, 1];
+        state.playerTutorialCompleted = snapshot.playerTutorialCompleted || [false, false];
         state.particles = snapshot.particles;
         state.effects = snapshot.effects;
         onlineSession.playedFeedbackIds ||= new Set();
@@ -5468,6 +5820,7 @@
       }
 
       function canControlPlayer(owner) {
+        if (state.tutorial && (state.tutorial.speaking || state.tutorial.outcomeResolved || !gameSettingsOverlay.hidden)) return false;
         if (!onlineSession?.started) return !(state.aiMode && owner === state.aiOwner);
         return onlineSession.playerIndex === owner;
       }
@@ -5493,7 +5846,7 @@
         state.currentMap = map;
         state.mapTime = 0;
         state.playerDecks = [onlineSession.room?.host?.deck, onlineSession.room?.challenger?.deck]
-          .map(ids => Array.isArray(ids) && ids.length === 8 ? [...ids] : [...DEFAULT_DECK_IDS]);
+          .map((ids, owner) => Array.isArray(ids) && ids.length === 8 ? [...ids] : defaultPlayerDeck(state.playerTutorialCompleted[owner]));
         mapIndicator.textContent = `${map.name} · ${roundIndex + 1}라운드`;
         mapSelectOverlay.hidden = true;
         startOverlay.hidden = true;
@@ -5594,7 +5947,7 @@
           return;
         }
         initializeAudio();
-        startMusic();
+        startGameMusic();
         playSound('start');
         state.currentMap = state.selectedMap;
         state.mapTime = 0;
@@ -5611,8 +5964,9 @@
         PLAYER[1].name = localPlayerNameInputs[1].value.trim().slice(0, 20) || '플레이어 2';
         const localLevel = guestProfile?.level || 1;
         state.playerLevels = [localLevel, localLevel];
+        state.playerTutorialCompleted = [guestProfile?.tutorialCompleted === true, guestProfile?.tutorialCompleted === true];
         state.playerDecks = localDeckSelects.map(select => select.value === '-1'
-          ? [...DEFAULT_DECK_IDS] : selectedDeck(Number(select.value), localLevel));
+          ? defaultPlayerDeck() : selectedDeck(Number(select.value), localLevel));
         updatePlayerNames();
         openMapSelection('start');
       }
@@ -5631,6 +5985,7 @@
         PLAYER[1].name = aiLevel().name;
         const localLevel = guestProfile?.level || 1;
         state.playerLevels = [localLevel, state.aiDifficulty === 'easy' ? 1 : 2];
+        state.playerTutorialCompleted = [guestProfile?.tutorialCompleted === true, true];
         const aiDeck = state.aiDifficulty === 'easy'
           ? [...AI_LEVELS.easy.cards, 'hardening']
           : state.aiDifficulty === 'hard' ? ['data-barrier', ...DEFAULT_DECK_IDS, 'escape'] :
@@ -5643,7 +5998,7 @@
           aiDeck.length = 8;
         }
         state.playerDecks = [
-          aiDeckSelect.value === '-1' ? [...DEFAULT_DECK_IDS] : selectedDeck(Number(aiDeckSelect.value), localLevel),
+          aiDeckSelect.value === '-1' ? defaultPlayerDeck() : selectedDeck(Number(aiDeckSelect.value), localLevel),
           aiDeck
         ];
         updatePlayerNames();
@@ -5745,7 +6100,7 @@
           return button;
         }));
         deckPool.replaceChildren(...cardDefinitions()
-          .filter(card => (card.unlockLevel || 1) <= (guestProfile?.level || 1))
+          .filter(card => (card.unlockLevel || 1) <= (guestProfile?.level || 1) && (!card.unlockTutorial || guestProfile?.tutorialCompleted))
           .map(card => {
             const count = counts.get(card.id) || 0;
             const unavailable = draft.length >= 8 || count >= 2 || (count === 1 && doubled);
@@ -5780,6 +6135,8 @@
       }
 
       function addDeckCard(id) {
+        const card = deckCard(id);
+        if (!card || (card.unlockLevel || 1) > (guestProfile?.level || 1) || (card.unlockTutorial && !guestProfile?.tutorialCompleted)) return;
         const draft = deckDrafts[activeDeckPreset] ||= [];
         const count = draft.filter(item => item === id).length;
         if (draft.length >= 8 || count >= 2 || (count && draft.some(item => draft.filter(other => other === item).length > 1))) return;
@@ -5999,10 +6356,11 @@
         state.turnPausedAt = null;
         state.bullets = [];
         entityTooltip.hidden = true;
-        playSound('win');
         const scores = calculateScores();
         const [one, two] = scores;
         const winner = one.score === two.score ? null : one.score > two.score ? 0 : 1;
+        if (winner !== null) playOutcomeMusic(winner === 0 ? 'victoryMusic' : 'defeatMusic');
+        else playSound('win');
         if (onlineSession?.role === 'host' && onlineSession.started) {
           finishOnlineRound(scores, winner);
           return;
@@ -6127,6 +6485,7 @@
         showOnlineResult(session.result);
         createConfetti(matchWinner === null ? PLAYER[winner ?? 0].color : PLAYER[matchWinner].color);
         if (matchOver) {
+          playOutcomeMusic(matchWinner === session.playerIndex ? 'victoryMusic' : 'defeatMusic');
           completeOnlineMatch(session);
         } else {
           const nextRound = session.roundIndex + 1;
@@ -6336,15 +6695,14 @@
           ctx.lineWidth = 2 + stack;
           ctx.stroke();
         }
-        if (unit.ability?.pulse && unit.ability.pulseTimer <= .7) {
-          const urgency = 1 - Math.max(0, unit.ability.pulseTimer) / .7;
+        if (unit.ability?.pulse) {
           const pulse = .5 + .5 * Math.sin(performance.now() / 55);
           ctx.beginPath();
-          ctx.arc(0, 0, unit.radius + 7 + urgency * 7, 0, Math.PI * 2);
-          ctx.strokeStyle = `rgba(0, 245, 255, ${.42 + pulse * .5})`;
-          ctx.lineWidth = 3 + pulse * 2;
+          ctx.arc(0, 0, unit.radius + 8 + pulse * 3, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(0, 245, 255, ${.38 + pulse * .4})`;
+          ctx.lineWidth = 3 + pulse;
           ctx.shadowColor = '#00e5ff';
-          ctx.shadowBlur = 12 + urgency * 12;
+          ctx.shadowBlur = 12 + pulse * 8;
           ctx.stroke();
           ctx.shadowBlur = 0;
         }
@@ -6682,6 +7040,7 @@
         if (unit.openingFrictionMultiplier > 1) effects.push('선공 첫 스톤 · 추가 마찰력 25%');
         if (hardeningStacks) effects.push(`경질화 ${hardeningStacks}중첩 · 마찰력 ${UNIT_EFFECTS.hardening.frictionPerStack ** hardeningStacks}배`);
         if (guardStacks) effects.push(`방호벽 ${guardStacks}중첩 · 위성체 ${guardStacks * UNIT_EFFECTS.guard.satellitesPerStack}개`);
+        if (unit.ability?.pulse) effects.push('방출 충전 · 충돌 시 파동 발산');
         if (isCollisionPhased(unit)) effects.push('속임수 · 다음 상대 턴 종료까지 충돌 무시');
         if (unit.fluidTimer > 0) effects.push('블랙홀 방출 · 유체 상태');
         if (unit.relaunchAvailable && !unit.relaunchUsed) effects.push('재배치 가능');
@@ -6841,13 +7200,14 @@
         updateHeroSelection();
         updateAiPlayer(timestamp);
         const onlineReplica = onlineSession?.started && onlineSession.role === 'challenger';
-        const tutorialPaused = state.tutorial && !gameSettingsOverlay.hidden;
+        const tutorialPaused = state.tutorial && (!gameSettingsOverlay.hidden || state.tutorial.speaking);
         if (!onlineReplica && !tutorialPaused && !['intro', 'map-select', 'hero-select', 'dealing', 'trigger-select', 'finished'].includes(state.phase)) {
           // Bound catch-up after an OS freeze; normal hidden-tab ticks retain all elapsed time.
           simulationRemainder += Math.min(elapsed, 1) * state.gameSpeed;
           while (simulationRemainder >= SIMULATION_STEP) {
             update(SIMULATION_STEP, timestamp, false);
             simulationRemainder -= SIMULATION_STEP;
+            if (state.tutorial?.speaking) { simulationRemainder = 0; break; }
           }
           updateHud();
         } else simulationRemainder = 0;
@@ -7020,8 +7380,8 @@
       });
       function setAccountMode(register) {
         registeringAccount = register;
-        accountNicknameField.hidden = !register;
-        accountNicknameInput.required = register;
+        accountNicknameField.hidden = true;
+        accountNicknameInput.required = false;
         accountPasswordInput.autocomplete = register ? 'new-password' : 'current-password';
         accountSubmitButton.textContent = register ? '계정 등록' : '로그인';
         accountModeButton.textContent = register ? '돌아가기' : '계정 등록';
@@ -7034,6 +7394,9 @@
         if (button.disabled) return;
         button.disabled = true;
         guestAiNickname = null;
+        guestProfile = null;
+        guestToken = null;
+        try { localStorage.removeItem('ucc.accountToken.v1'); } catch {}
         try {
           if (isLocalProfileMode()) {
             const name = aiPlayerName();
@@ -7042,14 +7405,18 @@
               const guest = await postOnlineRequest('/api/profiles/guest', { name });
               guestToken = guest.token;
               try { localStorage.setItem('ucc.accountToken.v1', guestToken); } catch {}
-              renderGuestProfile(guest.profile, guest.persistent);
+              let profile = guest.profile;
+              if (!profile.tutorialCompleted && hasGuestTutorialCompletion()) {
+                profile = (await postOnlineRequest('/api/profile/tutorial', {})).profile;
+              }
+              renderGuestProfile(profile, guest.persistent);
             } catch (error) {
               guestToken = null;
               try { localStorage.removeItem('ucc.accountToken.v1'); } catch {}
               renderGuestProfile(createLocalGuestProfile(name), false);
             }
-          }
-          showStartScreen('homeScreen');
+          } else renderGuestProfile(createLocalGuestProfile(aiPlayerName()), false);
+          enterProfileLobby();
         } catch (error) {
           startStatus.textContent = error.message;
         } finally {
@@ -7065,14 +7432,14 @@
           const account = await postOnlineRequest(registeringAccount ? '/api/accounts/register' : '/api/accounts/login', {
             username: accountUsernameInput.value,
             password: accountPasswordInput.value,
-            ...(registeringAccount ? { name: accountNicknameInput.value } : {})
+            ...(registeringAccount ? { name: '신입' } : {})
           });
           guestToken = account.token;
           try { localStorage.setItem('ucc.accountToken.v1', guestToken); } catch {}
           renderGuestProfile(account.profile, account.persistent);
           accountPasswordInput.value = '';
           playSound('connected');
-          showStartScreen(accountReturnScreen);
+          enterProfileLobby(accountReturnScreen);
         } catch (error) { startStatus.textContent = error.message; }
         finally { accountSubmitButton.disabled = false; }
       });
@@ -7104,7 +7471,7 @@
         showAccountScreen();
         if (token) fetch('/api/accounts/logout', { method: 'POST', headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
       });
-      for (const id of ['playMenuHomeButton', 'catalogHomeButton', 'tutorialHomeButton']) {
+      for (const id of ['playMenuHomeButton', 'catalogHomeButton']) {
         document.getElementById(id).addEventListener('click', returnToHome);
       }
       learningUI.cardCatalogTab.addEventListener('click', () => renderCatalog('cards'));
@@ -7122,16 +7489,38 @@
           catalogTabs[next].focus();
         });
       }
-      learningUI.tutorialLessonSelect.addEventListener('change', event => loadTutorialLesson(Number(event.target.value)));
+      tutorialUI.tutorialDialogueNext.addEventListener('click', advanceTutorialDialogue);
+      tutorialUI.tutorialNicknameForm.addEventListener('submit', async event => {
+        event.preventDefault();
+        const button = tutorialUI.tutorialNicknameForm.querySelector('button');
+        if (button.disabled) return;
+        button.disabled = true;
+        try { await saveTutorialNickname(tutorialUI.tutorialNicknameInput.value); }
+        catch (error) {
+          tutorialUI.tutorialDialogueError.textContent = error.message;
+          tutorialUI.tutorialDialogueError.hidden = false;
+        } finally { button.disabled = false; }
+      });
+      tutorialUI.tutorialRewardNext.addEventListener('click', () => {
+        if (!state.tutorial || tutorialUI.tutorialRewardOverlay.hidden) return;
+        if (state.tutorial.rewardStep === 0) { state.tutorial.rewardStep = 1; showTutorialReward(); }
+        else returnToHome();
+      });
       for (const id of ['tutorialRetryButton', 'tutorialRestartButton']) {
         document.getElementById(id).addEventListener('click', () => {
-          if (state.tutorial) loadTutorialLesson(state.tutorial.index);
+          if (state.tutorial?.settingsReady) loadTutorialLesson(state.tutorial.index, false);
         });
       }
-      learningUI.tutorialNextButton.addEventListener('click', () => {
-        if (!state.tutorial) return;
-        if (state.tutorial.index === tutorialLessons().length - 1) returnToHome();
-        else loadTutorialLesson(state.tutorial.index + 1);
+      learningUI.tutorialNextButton.addEventListener('click', nextTutorialStep);
+      document.querySelector('#tutorialSkipButton').addEventListener('click', () => {
+        if (!state.tutorial?.settingsReady) return;
+        settingsAudioControls.hidden = true;
+        tutorialSettingsActions.hidden = true;
+        gameSettingsMainActions.hidden = true;
+        gameLeaveConfirm.hidden = false;
+        gameLeavePrompt.textContent = '튜토리얼을 스킵하시겠습니까?';
+        document.querySelector('#gameLeaveConfirmButton').textContent = '스킵';
+        document.querySelector('#gameLeaveCancelButton').focus();
       });
       document.addEventListener('keydown', event => {
         if (event.key !== 'Escape') return;
@@ -7238,6 +7627,7 @@
         }
       });
       document.querySelector('#gameSettingsButton').addEventListener('click', () => {
+        if (state.tutorial && !state.tutorial.settingsReady) return;
         if (state.tutorial) {
           cancelCardDrag();
           localAimPointerId = null;
@@ -7247,8 +7637,9 @@
         gameSettingsTitle.textContent = state.tutorial ? '튜토리얼 설정' : '게임 설정';
         tutorialSettingsActions.hidden = !state.tutorial;
         gameLeaveActions.hidden = state.tutorial || state.phase === 'intro' || state.phase === 'finished';
+        settingsAudioControls.hidden = false;
+        gameSettingsMainActions.hidden = false;
         gameLeaveConfirm.hidden = true;
-        gameLeaveButton.hidden = false;
         gameLeaveButton.textContent = state.aiMode ? '게임 포기하기' : '게임 나가기';
         document.querySelector('#gameLeaveConfirmButton').textContent = state.aiMode ? '포기하고 나가기' : '나가기';
         gameSettingsOverlay.hidden = false;
@@ -7260,17 +7651,20 @@
           : onlineSession
             ? '온라인 대전에서 나가면 패배 처리될 수 있습니다. 그래도 나가시겠습니까?'
             : '현재 게임을 종료하고 로비로 돌아갈까요?';
-        gameLeaveButton.hidden = true;
+        settingsAudioControls.hidden = true;
+        tutorialSettingsActions.hidden = true;
+        gameLeaveActions.hidden = true;
+        gameSettingsMainActions.hidden = true;
         gameLeaveConfirm.hidden = false;
-        document.querySelector('#gameLeaveCancelButton').focus();
+        document.querySelector('#gameLeaveConfirmButton').focus();
       });
       document.querySelector('#gameLeaveCancelButton').addEventListener('click', () => {
-        gameLeaveConfirm.hidden = true;
-        gameLeaveButton.hidden = false;
-        gameLeaveButton.focus();
+        closeSettingsToGame();
       });
+      gameReturnButton.addEventListener('click', closeSettingsToGame);
       document.querySelector('#gameLeaveConfirmButton').addEventListener('click', () => {
-        if (state.aiMode) forfeitAiGame();
+        if (state.tutorial) completeTutorial();
+        else if (state.aiMode) forfeitAiGame();
         else leaveCurrentGame();
       });
       for (const [input, key, output] of [
@@ -7281,15 +7675,21 @@
         output.textContent = `${input.value}%`;
         try { localStorage.setItem(`ucc.${key}`, input.value); } catch {}
         if (key === 'musicVolume') {
-          AUDIO_FILES.music.volume = .28 * audio.musicVolume / 100;
+          currentMusic.volume = .28 * audio.musicVolume / 100;
           if (audio.musicVolume) startMusic();
-          else AUDIO_FILES.music.pause();
+          else currentMusic.pause();
         } else if (audio.sfxBus) audio.sfxBus.gain.value = audio.sfxVolume / 100;
+        if (key === 'sfxVolume' && tutorialVoice) tutorialVoice.volume = audio.sfxVolume / 100;
       });
       document.addEventListener('pointermove', moveCardGhost);
       document.addEventListener('pointerup', finishCardDrag);
       document.addEventListener('pointercancel', cancelCardDrag);
       window.addEventListener('blur', cancelCardDrag);
+      document.addEventListener('click', event => {
+        const button = event.target instanceof Element
+          ? event.target.closest('button, [role="button"], [role="tab"], input[type="button"], input[type="submit"]') : null;
+        playButtonSelection(button);
+      }, true);
       cardInspector.addEventListener('pointerdown', beginCardDrag);
       cardInspector.addEventListener('pointermove', inspectCardUnderPointer);
       cardInspector.addEventListener('blur', hideCardInspector);
@@ -7305,7 +7705,7 @@
       window.addEventListener('scroll', () => { if (!cardInspector.hidden) hideCardInspector(); }, true);
       document.addEventListener('visibilitychange', () => advanceGameClock(performance.now()));
       initializeGuestProfile().then(profile => {
-        if (profile && !startOverlay.hidden && !document.querySelector('#accountScreen').hidden) showStartScreen('homeScreen');
+        if (profile && !startOverlay.hidden && !document.querySelector('#accountScreen').hidden) enterProfileLobby();
       });
       if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
         let refreshingForWorkerUpdate = false;

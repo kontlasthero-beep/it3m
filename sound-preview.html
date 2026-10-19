@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Second Chance · 효과음 미리듣기</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0b1314; --panel:#152224; --line:#405456; --ink:#f0eee6; --muted:#a9b5b2; --mint:#65d6bd; --gold:#e4ae59; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 system-ui,"Malgun Gothic",sans-serif; }
+    main { width:min(1040px,100% - 32px); margin:28px auto 60px; }
+    header { display:flex; align-items:end; justify-content:space-between; gap:24px; padding:0 0 18px; border-bottom:1px solid var(--line); }
+    h1 { margin:0; font-size:26px; }
+    header p { margin:4px 0 0; color:var(--muted); }
+    a { color:var(--mint); }
+    .controls { display:flex; align-items:center; gap:12px; margin:18px 0 28px; padding:14px 16px; background:var(--panel); border:1px solid var(--line); border-radius:6px; }
+    .controls label { color:var(--muted); white-space:nowrap; }
+    .controls input { width:min(340px,40vw); accent-color:var(--mint); }
+    output { min-width:46px; text-align:right; font-variant-numeric:tabular-nums; }
+    section { margin-top:28px; }
+    h2 { margin:0 0 12px; font-size:18px; }
+    .group-note { margin:-7px 0 12px; color:var(--muted); font-size:13px; }
+    .grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+    .sound { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:12px; min-height:76px; padding:12px; background:var(--panel); border:1px solid var(--line); border-radius:6px; }
+    .sound strong { display:block; }
+    .sound small { display:block; margin-top:2px; color:var(--muted); }
+    .sound button { width:42px; height:42px; border:1px solid #568b82; border-radius:5px; background:#1d6258; color:white; font-size:18px; cursor:pointer; }
+    .sound button:hover { background:#287d70; }
+    .sound button:focus-visible,input:focus-visible { outline:2px solid var(--gold); outline-offset:2px; }
+    .sound.inactive { border-style:dashed; }
+    .sound.inactive em { color:var(--gold); font-style:normal; }
+    .sound details { grid-column:1 / -1; color:var(--muted); font-size:13px; }
+    .sound summary { cursor:pointer; color:var(--mint); }
+    .sound details p { margin:6px 0 0; }
+    .power-control { display:grid; grid-template-columns:auto minmax(120px,260px) 48px; align-items:center; gap:10px; margin-top:12px; color:var(--muted); }
+    .power-control input { width:100%; accent-color:var(--gold); }
+    footer { margin-top:28px; padding-top:16px; color:var(--muted); border-top:1px solid var(--line); font-size:13px; }
+    @media(max-width:700px) { main { width:calc(100% - 20px); margin-top:16px; } header { display:block; } .grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .controls { flex-wrap:wrap; } }
+    @media(max-width:440px) { .grid { grid-template-columns:1fr; } h1 { font-size:22px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div><h1>효과음 미리듣기</h1><p>게임 합성음과 ElevenLabs 초안을 비교합니다</p></div>
+      <a href="./?v=57">게임으로 돌아가기</a>
+    </header>
+    <div class="controls">
+      <label for="volume">미리듣기 음량</label>
+      <input id="volume" type="range" min="0" max="100" value="100">
+      <output id="volumeValue">100%</output>
+    </div>
+    <div id="soundGroups"></div>
+    <section id="generatedSfx" hidden>
+      <h2>ElevenLabs 생성 초안</h2>
+      <p class="group-note">생성 파일을 직접 들어보고 기존 합성음과 비교할 수 있습니다. 항목을 펼치면 생성 프롬프트를 확인할 수 있습니다.</p>
+      <div id="generatedSoundGroups"></div>
+    </section>
+    <footer>합성 효과음은 게임의 Web Audio 설정과 동일합니다. ElevenLabs 초안은 별도 파일로 재생되며, 아직 게임 내 사운드를 교체하지 않습니다.</footer>
+  </main>
+  <script src="./sound-preview-effects.js"></script>
+  <script>
+    const sounds = [
+      { id:'start', name:'게임 시작', group:'화면과 진행', description:'맵 선택 후 경기가 시작될 때', frequency:523, endFrequency:784, duration:.2, waveform:'sine', volume:.45 },
+      { id:'connected', name:'연결·완료', group:'화면과 진행', description:'연결 확인, 로그인 완료, 보상 연출', frequency:587, endFrequency:988, duration:.28, waveform:'sine', volume:.5 },
+      { id:'speedChange', name:'속도 변경', group:'화면과 진행', description:'게임 속도를 바꿀 때', frequency:720, endFrequency:1040, duration:.12, waveform:'sine', volume:.26 },
+      { id:'deal', name:'카드 받기', group:'화면과 진행', description:'카드를 뽑을 때', frequency:640, endFrequency:880, duration:.11, waveform:'triangle', volume:.28 },
+      { id:'heroSelect', name:'영웅 선택', group:'화면과 진행', description:'영웅 능력을 선택할 때', frequency:510, endFrequency:880, duration:.22, waveform:'triangle', volume:.38 },
+      { id:'powerStart', name:'파워미터 시작', group:'발사와 턴', description:'발사 버튼으로 파워미터를 열 때', frequency:280, endFrequency:490, duration:.15, waveform:'triangle', volume:.3 },
+      { id:'powerLock', name:'파워 결정', group:'발사와 턴', description:'미터를 멈출 때 · 세기에 따라 음높이 변화', frequency:950, endFrequency:590, duration:.14, waveform:'square', volume:.25, power:true },
+      { id:'launch', name:'스톤 발사', group:'발사와 턴', description:'당긴 방향으로 스톤을 발사할 때', frequency:300, endFrequency:115, duration:.25, waveform:'triangle', volume:.58 },
+      { id:'ammoFire', name:'총알 발사', group:'발사와 턴', description:'총알 장전 카드로 발사할 때', frequency:1500, endFrequency:65, duration:.14, waveform:'sawtooth', volume:.48 },
+      { id:'turn', name:'턴 전환', group:'발사와 턴', description:'턴을 끝내고 다음 턴을 시작할 때', frequency:440, endFrequency:660, duration:.15, waveform:'sine', volume:.3 },
+      { id:'win', name:'승리', group:'발사와 턴', description:'경기에서 이겼을 때', frequency:523, endFrequency:1046, duration:.7, waveform:'triangle', volume:.48 },
+      { id:'hardening', name:'경질화', group:'카드와 트리거', description:'경질화 효과를 적용할 때', frequency:330, endFrequency:140, duration:.23, waveform:'triangle', volume:.48 },
+      { id:'guard', name:'방호벽', group:'카드와 트리거', description:'방호벽 효과를 적용할 때', frequency:520, endFrequency:1250, duration:.24, waveform:'sine', volume:.4 },
+      { id:'pulse', name:'방출', group:'카드와 트리거', description:'방출 카드를 사용할 때', frequency:180, endFrequency:720, duration:.32, waveform:'sawtooth', volume:.52 },
+      { id:'reposition', name:'재배치', group:'카드와 트리거', description:'재배치 카드를 사용할 때', frequency:420, endFrequency:820, duration:.18, waveform:'sine', volume:.3 },
+      { id:'drop', name:'배치', group:'카드와 트리거', description:'벽돌·데이터 장벽·트리거를 배치할 때', frequency:190, endFrequency:95, duration:.2, waveform:'square', volume:.4 },
+      { id:'blackhole', name:'블랙홀 방출', group:'카드와 트리거', description:'블랙홀 방출 카드를 사용할 때', frequency:210, endFrequency:620, duration:.46, waveform:'sine', volume:.5 },
+      { id:'ammoLoad', name:'총알 장전', group:'카드와 트리거', description:'총알 장전 효과를 적용할 때', frequency:1100, endFrequency:380, duration:.1, waveform:'square', volume:.24 },
+      { id:'bluffing', name:'속임수', group:'카드와 트리거', description:'속임수 카드를 사용할 때', frequency:720, endFrequency:160, duration:.28, waveform:'sine', volume:.34 },
+      { id:'escape', name:'탈출', group:'카드와 트리거', description:'탈출 카드를 사용할 때', frequency:560, endFrequency:1160, duration:.32, waveform:'sine', volume:.38 },
+      { id:'card', name:'효과 적용', group:'카드와 트리거', description:'유닛 효과가 적용될 때', frequency:690, endFrequency:920, duration:.13, waveform:'triangle', volume:.38 },
+      { id:'wallHit', name:'벽 충돌', group:'충돌과 타이머', description:'맵 벽에 부딪힐 때', frequency:260, endFrequency:145, duration:.12, waveform:'square', volume:.38, cooldown:80 },
+      { id:'guardHit', name:'방호벽 충돌', group:'충돌과 타이머', description:'방호벽 위성체가 유닛을 밀어낼 때', frequency:520, endFrequency:250, duration:.1, waveform:'sine', volume:.35, cooldown:90 },
+      { id:'timerWarning', name:'시간 경고', group:'충돌과 타이머', description:'남은 시간이 10초 이하가 될 때', frequency:880, endFrequency:1040, duration:.1, waveform:'sine', volume:.28 },
+      { id:'timerTick', name:'마지막 초 카운트', group:'충돌과 타이머', description:'남은 5초를 셀 때 매초', frequency:1040, endFrequency:820, duration:.075, waveform:'square', volume:.2 },
+      { id:'elasticStretch', name:'당김 한계 진동음', group:'현재 미사용 설정', description:'설정만 남아 있고 현재 재생되지 않음', frequency:150, endFrequency:430, duration:.095, waveform:'sawtooth', volume:.16, cooldown:75, inactive:true },
+      { id:'strainRumble', name:'최대 당김 떨림음', group:'현재 미사용 설정', description:'설정만 남아 있고 현재 재생되지 않음', frequency:54, endFrequency:76, duration:.12, waveform:'square', volume:.12, cooldown:145, inactive:true }
+    ];
+    const groups = [...new Set(sounds.map(sound => sound.group))];
+    const root = document.querySelector('#soundGroups');
+    const generatedRoot = document.querySelector('#generatedSoundGroups');
+    let activeSample;
+    let context;
+    const lastPlayed = new Map();
+    const volume = document.querySelector('#volume');
+    const volumeValue = document.querySelector('#volumeValue');
+    volume.addEventListener('input', () => volumeValue.value = `${volume.value}%`);
+    function play(sound) {
+      if (Number(volume.value) <= 0) return;
+      if (sound.source) {
+        const sample = new Audio(sound.source);
+        sample.volume = Number(volume.value) / 100;
+        sample.play().catch(() => {});
+        return;
+      }
+      context ||= new (window.AudioContext || window.webkitAudioContext)();
+      if (context.state === 'suspended') context.resume();
+      const now = performance.now();
+      if (sound.cooldown && now - (lastPlayed.get(sound.id) || 0) < sound.cooldown) return;
+      lastPlayed.set(sound.id, now);
+      const time = context.currentTime;
+      const oscillator = context.createOscillator();
+      const envelope = context.createGain();
+      let pitch = 1;
+      let level = 1;
+      if (sound.power) {
+        const strength = Number(document.querySelector('#powerValue').value) / 100;
+        pitch = .65 + strength * .7;
+        level = .45 + strength * .55;
+      }
+      oscillator.type = sound.waveform;
+      oscillator.frequency.setValueAtTime(sound.frequency * pitch, time);
+      oscillator.frequency.exponentialRampToValueAtTime(Math.max(30, sound.endFrequency * pitch), time + sound.duration);
+      envelope.gain.setValueAtTime(.0001, time);
+      envelope.gain.linearRampToValueAtTime(Math.max(.0002, .34 * sound.volume * level), time + Math.min(.018, sound.duration * .25));
+      envelope.gain.exponentialRampToValueAtTime(.0001, time + sound.duration);
+      oscillator.connect(envelope);
+      envelope.connect(context.destination);
+      oscillator.start(time);
+      oscillator.stop(time + sound.duration + .02);
+    }
+    for (const group of groups) {
+      const section = document.createElement('section');
+      const heading = document.createElement('h2'); heading.textContent = group;
+      section.append(heading);
+      const grid = document.createElement('div'); grid.className = 'grid';
+      for (const sound of sounds.filter(item => item.group === group)) {
+        const item = document.createElement('article'); item.className = `sound${sound.inactive ? ' inactive' : ''}`;
+        const copy = document.createElement('div');
+        const title = document.createElement('strong'); title.textContent = sound.name;
+        const desc = document.createElement('small'); desc.textContent = sound.description;
+        copy.append(title, desc);
+        const button = document.createElement('button'); button.type = 'button'; button.textContent = '▶';
+        button.setAttribute('aria-label', `${sound.name} 효과음 미리듣기`);
+        button.addEventListener('click', () => play(sound));
+        item.append(copy, button);
+        if (sound.power) {
+          const controls = document.createElement('label'); controls.className = 'power-control';
+          controls.htmlFor = 'powerValue'; controls.append(document.createTextNode('파워 세기'));
+          const slider = document.createElement('input'); slider.id = 'powerValue'; slider.type = 'range'; slider.min = '0'; slider.max = '100'; slider.value = '50';
+          const output = document.createElement('output'); output.htmlFor = 'powerValue'; output.textContent = '50%';
+          slider.addEventListener('input', () => output.value = `${slider.value}%`);
+          controls.append(slider, output);
+          item.append(controls);
+        }
+        grid.append(item);
+      }
+      section.append(grid); root.append(section);
+    }
+
+    function loadGeneratedDrafts() {
+      const section = document.querySelector('#generatedSfx');
+      try {
+        const drafts = window.SECOND_CHANCE_ELEVENLABS_EFFECTS || [];
+        if (!drafts.length) throw new Error('No generated draft list found.');
+        for (const group of [...new Set(drafts.map(effect => effect.group))]) {
+          const groupSection = document.createElement('section');
+          const heading = document.createElement('h2'); heading.textContent = group;
+          groupSection.append(heading);
+          const grid = document.createElement('div'); grid.className = 'grid';
+          for (const effect of drafts.filter(item => item.group === group)) {
+            const item = document.createElement('article'); item.className = `sound${effect.inactive ? ' inactive' : ''}`;
+            const copy = document.createElement('div');
+            const title = document.createElement('strong'); title.textContent = effect.name;
+            const desc = document.createElement('small'); desc.textContent = `${effect.description} · ${effect.duration}초`;
+            copy.append(title, desc);
+            const button = document.createElement('button'); button.type = 'button'; button.textContent = '▶';
+            button.setAttribute('aria-label', `${effect.name} ElevenLabs 초안 미리듣기`);
+            button.addEventListener('click', async () => {
+              activeSample?.pause();
+              activeSample = new Audio(new URL(effect.src, document.baseURI).href);
+              activeSample.volume = Number(volume.value) / 100;
+              try { await activeSample.play(); } catch { button.title = '재생할 수 없습니다. 파일 경로를 확인해주세요.'; }
+            });
+            item.append(copy, button);
+            const details = document.createElement('details');
+            const summary = document.createElement('summary'); summary.textContent = '생성 프롬프트';
+            const prompt = document.createElement('p'); prompt.textContent = effect.prompt;
+            details.append(summary, prompt);
+            item.append(details);
+            grid.append(item);
+          }
+          groupSection.append(grid); generatedRoot.append(groupSection);
+        }
+        section.hidden = false;
+      } catch {
+        const note = document.createElement('p');
+        note.className = 'group-note';
+        note.textContent = '생성 초안 목록을 불러오지 못했습니다. 로컬 웹 서버에서 이 페이지를 열어주세요.';
+        generatedRoot.append(note);
+        section.hidden = false;
+      }
+    }
+    loadGeneratedDrafts();
+  </script>
+</body>
+</html>

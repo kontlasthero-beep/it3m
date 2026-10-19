@@ -10,22 +10,31 @@ const { DEFAULT_DECK, validateDeck, deckForPreset } = require('../deck-config');
 
 test('eight-card bags allow one duplicate and respect unlock levels', async () => {
   const doubleHardening = ['hardening', 'hardening', 'guard', 'pulse', 'reposition', 'brick', 'blackhole', 'ammo'];
-  assert.equal(validateDeck(DEFAULT_DECK, 1), true);
-  assert.equal(validateDeck(doubleHardening, 1), true);
+  assert.equal(validateDeck(DEFAULT_DECK, 1, true), true);
+  assert.equal(validateDeck(doubleHardening, 1, true), true);
+  assert.equal(validateDeck(DEFAULT_DECK, 100, false), false);
   assert.equal(validateDeck(['hardening', 'hardening', 'guard', 'guard', 'pulse', 'brick', 'ammo', 'bluffing'], 1), false);
   assert.equal(validateDeck([...DEFAULT_DECK.slice(0, 7), 'escape'], 1), false);
   assert.equal(validateDeck([...DEFAULT_DECK.slice(0, 7), 'escape'], 2), true);
   assert.equal(validateDeck([...DEFAULT_DECK.slice(0, 7), 'data-barrier'], 1), false);
   assert.equal(validateDeck([...DEFAULT_DECK.slice(0, 7), 'data-barrier'], 2), true);
   assert.equal(validateDeck(DEFAULT_DECK.slice(0, 7), 2), false);
-  assert.deepEqual(deckForPreset([null, null, null], 0, 1), DEFAULT_DECK);
+  assert.deepEqual(deckForPreset([null, null, null], 0, 1, true), DEFAULT_DECK);
+  assert.equal(deckForPreset([null, null, null], 0, 1, false).includes('reposition'), false);
   const store = createProfileStore('');
   const account = await store.register('deck_owner', 'long-password', 'DECK');
+  assert.equal(account.profile.tutorialCompleted, false);
+  await assert.rejects(store.saveDecks(account.token, [doubleHardening, null, null], 0), /가방은/);
+  const completed = await store.completeTutorial(account.token);
+  assert.equal(completed.tutorialCompleted, true);
+  assert.equal(completed.adventureUnlocked, true);
+  assert.equal((await store.completeTutorial(account.token)).tutorialCompleted, true);
   await assert.rejects(store.saveDecks(account.token, [[...DEFAULT_DECK.slice(0, 7), 'escape'], null, null], 0), /가방은/);
   const saved = await store.saveDecks(account.token, [null, doubleHardening, null], 1);
   assert.deepEqual(saved.decks[1], doubleHardening);
   assert.equal(saved.activePreset, 1);
   assert.deepEqual((await store.login('deck_owner', 'long-password')).profile.decks[1], doubleHardening);
+  assert.equal((await store.login('deck_owner', 'long-password')).profile.tutorialCompleted, true);
 });
 
 test('local level 100 is a view-only override for memory profiles and deck validation', async () => {
@@ -163,6 +172,15 @@ test('accounts and online match fame are bound to room participants', { timeout:
   assert.equal((await api('/api/profile', { name: 'NEW HOST' }, hostProfile.token, 'PATCH')).data.profile.name, 'NEW HOST');
   const hostBag = ['hardening', 'hardening', 'guard', 'pulse', 'reposition', 'brick', 'blackhole', 'ammo'];
   const challengerBag = ['guard', 'guard', 'hardening', 'pulse', 'reposition', 'brick', 'blackhole', 'bluffing'];
+  assert.equal((await api('/api/profile/tutorial')).status, 401);
+  assert.equal((await api('/api/profile/decks', { decks: [hostBag, null, null], activePreset: 0 }, hostProfile.token, 'PUT')).status, 400);
+  const tutorial = await api('/api/profile/tutorial', undefined, hostProfile.token);
+  assert.equal(tutorial.data.profile.tutorialCompleted, true);
+  assert.equal(tutorial.data.profile.adventureUnlocked, true);
+  assert.equal((await api('/api/profile', undefined, challengerProfile.token, 'GET')).data.profile.tutorialCompleted, false);
+  await api('/api/profile/tutorial', undefined, challengerProfile.token);
+  const relogin = await api('/api/accounts/login', { username: 'host_account', password: 'host-password' });
+  assert.equal(relogin.data.profile.tutorialCompleted, true);
   assert.equal((await api('/api/profile/decks', { decks: [hostBag, null, null], activePreset: 0 }, hostProfile.token, 'PUT')).status, 200);
   assert.equal((await api('/api/profile/decks', { decks: [challengerBag, null, null], activePreset: 0 }, challengerProfile.token, 'PUT')).status, 200);
   assert.equal((await api('/api/profile/decks', { decks: [[...hostBag.slice(0, 7), 'escape'], null, null], activePreset: 0 }, hostProfile.token, 'PUT')).status, 400);

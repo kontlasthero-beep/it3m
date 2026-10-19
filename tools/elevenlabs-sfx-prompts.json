@@ -1,0 +1,247 @@
+[
+  {
+    "id": "start",
+    "name": "게임 시작",
+    "group": "화면과 진행",
+    "description": "폐허의 장치가 깨어나며 탐험의 문턱을 넘는 신호",
+    "file": "../화면과 진행/SecondChance_GameStart_ElevenLabs_Draft.mp3",
+    "duration": 2.2,
+    "prompt": "A concise 2-second video game menu start sound for Second Chance, a grounded post-apocalyptic exploration game one year after an AI collapse. A heavy salvaged industrial relay engages with a muted metallic clunk, followed by a low analog power thrum and a subtle rising glassy data pulse that resolves into a small decisive click. Moody, restrained, tactile, slightly ominous but inviting, vintage machinery mixed with faint advanced technology. Clean transient, short natural decay, no music, no speech, no alarm, no exaggerated cinematic boom."
+  },
+  {
+    "id": "connected",
+    "name": "연결·완료",
+    "group": "화면과 진행",
+    "description": "연결 확인, 로그인 완료, 보상 연출",
+    "file": "connected.mp3",
+    "duration": 0.8,
+    "prompt": "A short confirmation sound for a post-apocalyptic exploration game: two small analog relay clicks followed by a clear but subdued paired glassy data ping, suggesting a connection has succeeded. Tactile salvaged electronics, warm and reassuring with a faint mysterious edge, clean short decay, no voice, no music, no generic office notification beep."
+  },
+  {
+    "id": "speedChange",
+    "name": "속도 변경",
+    "group": "화면과 진행",
+    "description": "게임 속도를 바꿀 때",
+    "file": "speed-change.mp3",
+    "duration": 0.5,
+    "prompt": "A very brief mechanical speed-shift sound for a weathered game control: a compact ratchet notch turns, a tiny motor changes pitch upward, then settles with a dry click. Industrial analog machinery, crisp and restrained, no music, no voice, no digital UI beep."
+  },
+  {
+    "id": "deal",
+    "name": "카드 받기",
+    "group": "화면과 진행",
+    "description": "카드를 뽑을 때",
+    "file": "deal.mp3",
+    "duration": 0.55,
+    "prompt": "A short tactile card-draw sound for a grimy post-apocalyptic tabletop game: one stiff laminated card slides free from a worn canvas pouch, a soft paper flick and small metal-edged tap. Intimate and dry, slightly rugged, no voices, no music, no magical sparkle."
+  },
+  {
+    "id": "heroSelect",
+    "name": "영웅 선택",
+    "group": "화면과 진행",
+    "description": "영웅 능력을 선택할 때",
+    "file": "hero-select.mp3",
+    "duration": 0.9,
+    "prompt": "A restrained character-selection confirmation for a post-apocalyptic adventure: a heavy iron latch seats into place, followed by a low resonant tonal swell with a faint data shimmer. Resolute, human and weathered rather than heroic fanfare, short decay, no music, no voice."
+  },
+  {
+    "id": "powerStart",
+    "name": "파워미터 시작",
+    "group": "발사와 턴",
+    "description": "발사 버튼으로 파워미터를 열 때",
+    "file": "power-meter-start.mp3",
+    "duration": 0.65,
+    "prompt": "A compact launch mechanism arming sound: a spring-loaded industrial lever pulls back, a motor hum rises slightly, and a small locking catch clicks. Tense anticipation, tactile salvaged machinery, concise and clean, no voice, no music, no alarm."
+  },
+  {
+    "id": "powerLock",
+    "name": "파워 결정",
+    "group": "발사와 턴",
+    "description": "미터를 멈출 때 · 세기에 따라 음높이 변화",
+    "file": "power-lock.mp3",
+    "duration": 0.55,
+    "prompt": "A short decisive power-lock effect for a post-apocalyptic game: a moving mechanism snaps into a notch with a solid metallic clack and a tight resonant pulse that quickly decays. Focused and satisfying, not explosive, no speech, no music, no alarm."
+  },
+  {
+    "id": "launch",
+    "name": "스톤 발사",
+    "group": "발사와 턴",
+    "description": "당긴 방향으로 스톤을 발사할 때",
+    "file": "stone-launch.mp3",
+    "duration": 0.85,
+    "prompt": "A heavy circular stone-like metal unit is released across a rough industrial surface: a firm mechanical release clunk, a dense low sliding whoosh with gritty friction, then a brief resonant tail. Grounded physical weight, no explosion, no voice, no music."
+  },
+  {
+    "id": "ammoFire",
+    "name": "총알 발사",
+    "group": "발사와 턴",
+    "description": "총알 장전 카드로 발사할 때",
+    "file": "ammo-fire.mp3",
+    "duration": 0.5,
+    "prompt": "A single compact improvised electromagnetic projectile shot from salvaged equipment: sharp compressed pop, brief metallic resonance and a tiny electrical snap. Punchy but not realistic gunfire, no casing rattle, no voices, no music, no long echo."
+  },
+  {
+    "id": "turn",
+    "name": "턴 전환",
+    "group": "발사와 턴",
+    "description": "턴을 끝내고 다음 턴을 시작할 때",
+    "file": "turn-change.mp3",
+    "duration": 0.7,
+    "prompt": "A subtle turn-change cue for an exploration tabletop game: a small counterweight mechanism shifts with two measured clicks and a low soft resonant note, like a machine advancing one position. Calm, clear, understated, no music, no voice, no clock alarm."
+  },
+  {
+    "id": "win",
+    "name": "승리",
+    "group": "발사와 턴",
+    "description": "경기에서 이겼을 때",
+    "file": "victory.mp3",
+    "duration": 1.5,
+    "prompt": "A restrained victory cue for a gritty post-apocalyptic adventure: three warm metallic-glass tones rise with quiet confidence, underlined by a soft machinery hum that resolves cleanly. Earned relief, not a sports jingle or grand fanfare, no voice, no percussion, no music bed."
+  },
+  {
+    "id": "hardening",
+    "name": "경질화",
+    "group": "카드와 트리거",
+    "description": "경질화 효과를 적용할 때",
+    "file": "hardening.mp3",
+    "duration": 0.8,
+    "prompt": "A small unit rapidly hardens: a dry metallic shell closes around it, followed by a crystalline mineral resonance and a short low pulse. Tough and tactile, strange technology fused with stone, concise, no voice, no music."
+  },
+  {
+    "id": "guard",
+    "name": "방호벽",
+    "group": "카드와 트리거",
+    "description": "방호벽 효과를 적용할 때",
+    "file": "guard-deploy.mp3",
+    "duration": 0.9,
+    "prompt": "A protective energy barrier deploys from compact salvaged satellites: three quick mechanical ticks form a curved field, with a faint glassy electrical hum settling around it. Protective but uneasy, restrained post-apocalyptic technology, no voice, no music, no laser blast."
+  },
+  {
+    "id": "pulse",
+    "name": "방출",
+    "group": "카드와 트리거",
+    "description": "방출 카드를 사용할 때",
+    "file": "pulse-release.mp3",
+    "duration": 1.1,
+    "prompt": "A charged energy unit collides and releases a forceful expanding shockwave: tight rising pressure, one deep physical thump, then a brief airy ripple with granular electrical texture. Powerful but controlled, no explosion debris, no voice, no music."
+  },
+  {
+    "id": "reposition",
+    "name": "재배치",
+    "group": "카드와 트리거",
+    "description": "재배치 카드를 사용할 때",
+    "file": "reposition.mp3",
+    "duration": 0.8,
+    "prompt": "A heavy circular unit is abruptly displaced through unstable technology: a short inward air pull, a crisp phase-shift pop, then a low metallic landing resonance. Strange but physical, concise, no voice, no music, no long sci-fi laser."
+  },
+  {
+    "id": "drop",
+    "name": "배치",
+    "group": "카드와 트리거",
+    "description": "벽돌·데이터 장벽·트리거를 배치할 때",
+    "file": "structure-drop.mp3",
+    "duration": 0.7,
+    "prompt": "A compact heavy structure is placed onto a worn industrial platform: short descending mechanical whirr, dense stone-and-metal thunk, tiny settling rattle. Solid and deliberate, no crash, no voice, no music."
+  },
+  {
+    "id": "blackhole",
+    "name": "블랙홀 방출",
+    "group": "카드와 트리거",
+    "description": "블랙홀 방출 카드를 사용할 때",
+    "file": "blackhole-release.mp3",
+    "duration": 1.5,
+    "prompt": "An unstable black-hole-like energy pulse opens: nearby sound is briefly sucked inward into a hollow low-frequency inhale, followed by a dense dark gravitational thump and a short distorted glassy ripple. Eerie and weighty, not a cinematic explosion, no voice, no music."
+  },
+  {
+    "id": "ammoLoad",
+    "name": "총알 장전",
+    "group": "카드와 트리거",
+    "description": "총알 장전 효과를 적용할 때",
+    "file": "ammo-load.mp3",
+    "duration": 0.6,
+    "prompt": "A single round is loaded into a compact improvised launcher: a small metal magazine seats with a firm click, followed by a short chambering snap and faint spring resonance. Clean and tactile, no gunshot, no speech, no music."
+  },
+  {
+    "id": "bluffing",
+    "name": "속임수",
+    "group": "카드와 트리거",
+    "description": "속임수 카드를 사용할 때",
+    "file": "bluffing.mp3",
+    "duration": 0.8,
+    "prompt": "A unit briefly slips out of physical phase: soft static bends downward, a thin glassy shimmer obscures it, then the sound fades as if its outline vanished. Subtle stealth technology, short and uncanny, no voice, no music, no magical sparkle."
+  },
+  {
+    "id": "escape",
+    "name": "탈출",
+    "group": "카드와 트리거",
+    "description": "탈출 카드를 사용할 때",
+    "file": "escape.mp3",
+    "duration": 1.2,
+    "prompt": "A small unit escapes a dangerous field by shedding a burst of stored data: quick metallic release, upward airy rush, then a few dim glassy particles fading into silence. Determined and bittersweet, concise, no voice, no music, no portal cliché."
+  },
+  {
+    "id": "card",
+    "name": "효과 적용",
+    "group": "카드와 트리거",
+    "description": "유닛 효과가 적용될 때",
+    "file": "card-effect.mp3",
+    "duration": 0.55,
+    "prompt": "A concise generic ability activation sound for a worn post-apocalyptic card game: one deliberate paper flick paired with a small resonant electronic tick. Neutral enough for many effects, tactile, clean, no voice, no music, no fantasy sparkle."
+  },
+  {
+    "id": "wallHit",
+    "name": "벽 충돌",
+    "group": "충돌과 타이머",
+    "description": "맵 벽에 부딪힐 때",
+    "file": "wall-impact.mp3",
+    "duration": 0.6,
+    "prompt": "A heavy metal-rimmed stone unit hits a rigid industrial boundary: dull dense impact, short vibration through metal and stone, quick decay. Physical and restrained, no glass breaking, no voice, no music."
+  },
+  {
+    "id": "guardHit",
+    "name": "방호벽 충돌",
+    "group": "충돌과 타이머",
+    "description": "방호벽 위성체가 유닛을 밀어낼 때",
+    "file": "guard-impact.mp3",
+    "duration": 0.6,
+    "prompt": "A unit touches a protective energy satellite and is pushed back: crisp electrical contact, a springy resonant force pulse and brief metallic recoil. Short, readable, non-lethal, no voice, no music, no explosion."
+  },
+  {
+    "id": "timerWarning",
+    "name": "시간 경고",
+    "group": "충돌과 타이머",
+    "description": "남은 시간이 10초 이하가 될 때",
+    "file": "timer-warning.mp3",
+    "duration": 0.7,
+    "prompt": "A single understated low warning pulse from a failing analog timer: muted resonant two-tone signal with a faint mechanical rattle, urgent but not harsh or piercing. One short cue only, no voice, no music, no siren."
+  },
+  {
+    "id": "timerTick",
+    "name": "마지막 초 카운트",
+    "group": "충돌과 타이머",
+    "description": "남은 5초를 셀 때 매초",
+    "file": "timer-tick.mp3",
+    "duration": 0.5,
+    "prompt": "A single short final-seconds timer tick: dry clockwork click with a tiny metallic resonance, clear and restrained, no repeated ticking sequence, no alarm, no voice, no music."
+  },
+  {
+    "id": "elasticStretch",
+    "name": "당김 한계 진동음",
+    "group": "현재 미사용 설정",
+    "description": "설정만 남아 있고 현재 재생되지 않음",
+    "file": "unused-elastic-stretch.mp3",
+    "duration": 0.6,
+    "inactive": true,
+    "prompt": "A brief tension effect for a stretched elastic industrial cable nearing its limit: rising tight wire resonance, a subtle fluttering vibration, then a quick release. Mechanical and controlled, no break, no voice, no music."
+  },
+  {
+    "id": "strainRumble",
+    "name": "최대 당김 떨림음",
+    "group": "현재 미사용 설정",
+    "description": "설정만 남아 있고 현재 재생되지 않음",
+    "file": "unused-strain-rumble.mp3",
+    "duration": 0.6,
+    "inactive": true,
+    "prompt": "A very short low mechanical strain rumble: a compact motor shudders under load with a rough bass vibration and fades quickly. Quiet, controlled, not an explosion, no voice, no music."
+  }
+]

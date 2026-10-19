@@ -75,18 +75,27 @@
     ];
   }
 
-  function pulse(world, source, range, impulse) {
-    for (const target of [...world.units, ...world.bricks]) {
+  function pulse(world, source, range, impulse, chargedCard = false) {
+    for (const target of chargedCard ? world.units : [...world.units, ...world.bricks]) {
       if (target === source || target.barrier || target.status === 'fallen' || target.status === 'ready') continue;
       const dx = target.x - source.x, dy = target.y - source.y;
       const distance = Math.hypot(dx, dy);
       if (distance > range) continue;
       const nx = distance > .001 ? dx / distance : 1;
       const ny = distance > .001 ? dy / distance : 0;
-      target.vx += nx * impulse;
-      target.vy += ny * impulse;
-      if (target.status === 'resting') target.status = 'sliding';
+      const teamScale = chargedCard && target.owner === source.owner && !target.width ? .5 : 1;
+      target.vx += nx * impulse * teamScale;
+      target.vy += ny * impulse * teamScale;
+      if (!target.width) target.status = 'sliding';
     }
+    if (chargedCard) world.bricks = world.bricks.filter(brick => Math.hypot(brick.x - source.x, brick.y - source.y) > range);
+  }
+
+  function detonateChargedPulse(world, source) {
+    if (!source.ability?.pulse || source.status === 'fallen') return false;
+    source.ability.pulse = false;
+    pulse(world, source, 150.9375, 274.21875, true);
+    return true;
   }
 
   function blackhole(world, source, range) {
@@ -118,7 +127,6 @@
     } else if (card === 'pulse') {
       if (ability.pulse) return false;
       ability.pulse = true;
-      ability.pulseTimer = 4;
     } else if (card === 'bluffing') {
       if (phased(source, world.turn)) return false;
       ability.bluffingUntilTurn = world.turn + 1;
@@ -151,16 +159,19 @@
       a.x -= nx * overlap * .52; a.y -= ny * overlap * .52;
       b.x += nx * overlap * .52; b.y += ny * overlap * .52;
       const relative = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
-      if (relative >= 0) continue;
-      const impulse = -(1 + RESTITUTION) * relative / 2;
-      a.vx -= impulse * nx; a.vy -= impulse * ny;
-      b.vx += impulse * nx; b.vy += impulse * ny;
-      if (a.status === 'resting') a.status = 'sliding';
-      if (b.status === 'resting') b.status = 'sliding';
-      for (const unit of [a, b]) {
-        for (const pending of unit.pendingPulseTriggers || []) pulse(world, unit, pending.range, pending.impulse);
-        unit.pendingPulseTriggers = [];
+      if (relative < 0) {
+        const impulse = -(1 + RESTITUTION) * relative / 2;
+        a.vx -= impulse * nx; a.vy -= impulse * ny;
+        b.vx += impulse * nx; b.vy += impulse * ny;
+        if (a.status === 'resting') a.status = 'sliding';
+        if (b.status === 'resting') b.status = 'sliding';
+        for (const unit of [a, b]) {
+          for (const pending of unit.pendingPulseTriggers || []) pulse(world, unit, pending.range, pending.impulse);
+          unit.pendingPulseTriggers = [];
+        }
       }
+      detonateChargedPulse(world, a);
+      detonateChargedPulse(world, b);
     }
   }
 
@@ -190,6 +201,7 @@
       for (const pending of unit.pendingPulseTriggers || []) pulse(world, unit, pending.range, pending.impulse);
       unit.pendingPulseTriggers = [];
     }
+    detonateChargedPulse(world, unit);
     if (unit.status === 'resting' && Math.hypot(unit.vx, unit.vy) > STOP_SPEED) unit.status = 'sliding';
   }
 
@@ -212,10 +224,6 @@
       unit.fluidTimer = Math.max(0, (unit.fluidTimer || 0) - STEP);
       const ability = unit.ability;
       if (ability?.guard) ability.guardAngle = (ability.guardAngle || 0) + STEP * 1.6875;
-      if (ability?.pulse) {
-        ability.pulseTimer = (ability.pulseTimer ?? 4) - STEP;
-        if (ability.pulseTimer <= 0) { pulse(world, unit, 150.9375, 274.21875); ability.pulseTimer += 4; }
-      }
       if (unit.pendingPulseTriggers?.length) {
         for (const pending of unit.pendingPulseTriggers) pending.remaining -= STEP;
         for (const pending of unit.pendingPulseTriggers.filter(item => item.remaining <= 0))
@@ -254,7 +262,9 @@
       }
     }
     collideStones(world);
-    for (const brick of world.bricks) for (const unit of world.units) collideRect(unit, brick, world, true, true);
+    for (const brick of [...world.bricks]) for (const unit of world.units) {
+      if (world.bricks.includes(brick)) collideRect(unit, brick, world, true, true);
+    }
     if (world.walls) for (const wall of wallSegments(world.mapTime)) {
       const rect = { ...wall, x: wall.x + wall.width / 2, y: wall.y + wall.height / 2 };
       for (const unit of world.units) collideRect(unit, rect, world, true, false);

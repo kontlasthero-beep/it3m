@@ -195,6 +195,28 @@ test('guard satellites repel stones and movable bricks in the rollout', () => {
   assert.notEqual(guarded.world.units[1].x, exposed.world.units[1].x);
 });
 
+test('charged release detonates on simulated impact, halves allied force, and removes nearby structures', () => {
+  const snapshot = board();
+  snapshot.units[0] = { ...snapshot.units[0], x: 1010, y: 355 };
+  snapshot.units[1] = { ...snapshot.units[1], ability: { pulse: true, stacks: {} } };
+  snapshot.units.push(
+    { id: 'ally', owner: 1, x: 950, y: 430, vx: 0, vy: 0, radius: 29, status: 'resting' },
+    { id: 'bystander', owner: 0, x: 1070, y: 280, vx: 0, vy: 0, radius: 29, status: 'resting' }
+  );
+  snapshot.bricks = [
+    { x: 1000, y: 355, vx: 0, vy: 0, width: 18, height: 18, mass: 2, restitution: .58 },
+    { x: 1060, y: 500, vx: 0, vy: 0, width: 18, height: 64, barrier: true, owner: 0 }
+  ];
+
+  const result = planner.simulate(snapshot, { dx: -1, dy: 0, power: .4 }, .001);
+  assert.equal(result.world.units[1].ability.pulse, false);
+  assert.equal(result.world.bricks.length, 0);
+  const allySpeed = Math.hypot(result.world.units[2].vx, result.world.units[2].vy);
+  const bystanderSpeed = Math.hypot(result.world.units[3].vx, result.world.units[3].vy);
+  assert.ok(allySpeed > 0);
+  assert.ok(Math.abs(allySpeed / bystanderSpeed - .5) < .03);
+});
+
 test('AAB chooses the black-hole timing that changes a close-range board state', () => {
   const fixture = SCENARIOS.find(item => item.name === 'close-range-removal');
   const report = summarizePlan(fixture, 'hard');
