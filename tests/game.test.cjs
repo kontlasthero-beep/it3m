@@ -442,12 +442,14 @@ test('challenger power selection survives snapshots and host validates its launc
 test('power choice is shown above the stone, meter dismisses, and lock sound scales with power', () => {
   const g = game();
   g.run(`turns.createCurrentUnit(); state.phase='aiming';
-    globalThis.tones=[]; audio.sfxMode='synth'; audio.sfxVolume=100; initializeAudio=()=>true;
-    audio.context={currentTime:0}; scheduleTone=(...args)=>tones.push(args);
-    assert.equal(startPowerMeter(),true); assert.equal(lockPowerMeter(.2),true); const low=tones.at(-1);
-    state.powerMeter=null; assert.equal(startPowerMeter(),true); assert.equal(lockPowerMeter(.9),true); const high=tones.at(-1);
-    assert.equal(tones.length,2);
-    assert.ok(high[0]>low[0]); assert.ok(high[5]>low[5]);
+    globalThis.lockSounds=[]; audio.sfxVolume=100;
+    playElevenLabsSound=(name,options)=>lockSounds.push({name,options});
+    assert.equal(startPowerMeter(),true); assert.equal(lockPowerMeter(.2),true); const low=lockSounds.at(-1);
+    state.powerMeter=null; assert.equal(startPowerMeter(),true); assert.equal(lockPowerMeter(.9),true); const high=lockSounds.at(-1);
+    assert.equal(lockSounds.length,2);
+    assert.equal(low.name,'powerLock'); assert.equal(high.name,'powerLock');
+    assert.ok(high.options.playbackRate>low.options.playbackRate);
+    assert.ok(high.options.volume>low.options.volume);
     globalThis.labels=[]; ctx.fillText=(...args)=>labels.push(args);
     drawLockedPower(); assert.equal(labels.at(-1)[0],'90%');
     renderPowerControl(); assert.equal(powerControl.hidden,false);`);
@@ -613,7 +615,39 @@ test('tutorial dialogue and settings pause practice and returning resumes the sa
     assert.ok(turns.currentUnit.x<oldX);
     returnToHome(); assert.equal(state.tutorial,null); assert.equal(tutorialUI.tutorialDialogue.hidden,true);
     assert.equal(state.units.length,0); assert.equal(document.body.dataset.tutorial,'false');
+    assert.equal(document.body.dataset.tutorialStage,undefined);
     beginRound(); assert.equal(state.tutorial,null);`);
+});
+
+test('first match after tutorial restores card panels instead of keeping tutorial-only hiding', () => {
+  const html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+  assert.match(html, /body\[data-tutorial="true"\]\[data-tutorial-stage="launch"\] \.hands/);
+  assert.doesNotMatch(html, /body\[data-tutorial-stage="launch"\] \.hands/);
+  const g = game();
+  g.run(`startTutorial(); closeTutorialDialogue();
+    assert.equal(document.body.dataset.tutorialStage,'launch');
+    returnToHome(); assert.equal(document.body.dataset.tutorialStage,undefined);
+    document.body.dataset.tutorialStage='collision'; beginRound();
+    assert.equal(document.body.dataset.tutorialStage,undefined);`);
+});
+
+test('new effect routes cover impact, placement, cards, and both speed directions', () => {
+  const g = game();
+  g.run(`globalThis.generated=[];
+    playElevenLabsSound=(name,options)=>generated.push({name,options});
+    assert.equal(CARD_PRESENTATION.pulse.sound,'pulseCharge');
+    assert.equal(CARD_PRESENTATION['data-barrier'].sound,'dataBarrier');
+    for (const name of ['strongHit','powerLock','hardening','guard','escape','reposition',
+      'drop','bluffing','triggerPlace','pulseCharge','dataBarrier','speedChange','speedRestore']) {
+      assert.ok(ELEVENLABS_SFX[name],name);
+    }
+    playUnitImpactSound(STRONG_HIT_THRESHOLD);
+    assert.equal(generated.at(-1).name,'strongHit');
+    state.speedLevel=0; setSpeedLevel(1,true);
+    assert.equal(sounds.at(-1),'speedChange');
+    setSpeedLevel(0,true); assert.equal(sounds.at(-1),'speedRestore');`);
+  const sources = g.run('Object.values(ELEVENLABS_SFX)');
+  for (const source of sources) assert.ok(fs.existsSync(path.join(__dirname, '..', source)), source);
 });
 
 test('AI mode chooses a hero, owns only player two, and completes a launch without pointer input', () => {

@@ -809,7 +809,8 @@
     body.game-active[data-tutorial="true"] .hand-panel { transform: none; }
     body.game-active[data-tutorial="true"] .tutorial-panel { align-self: center; width: min(100%, 71.8vw); }
     body[data-tutorial="true"]:not([data-tutorial-stage="triggers"]) .trigger-tool { display: none; }
-    body[data-tutorial-stage="launch"] .hands, body[data-tutorial-stage="collision"] .hands { display: none; }
+    body[data-tutorial="true"][data-tutorial-stage="launch"] .hands,
+    body[data-tutorial="true"][data-tutorial-stage="collision"] .hands { display: none; }
     body[data-tutorial="true"][data-tutorial-settings="false"] #gameSettingsButton { visibility: hidden; }
     body[data-tutorial-speaking="true"] .tutorial-actions { visibility: hidden; }
     @media (max-width: 600px) {
@@ -1091,7 +1092,6 @@
       <div id="settingsAudioControls">
         <label class="volume-row">배경음악<input id="musicVolume" type="range" min="0" max="100" value="100"><output id="musicVolumeValue">100%</output></label>
         <label class="volume-row">효과음<input id="sfxVolume" type="range" min="0" max="100" value="100"><output id="sfxVolumeValue">100%</output></label>
-        <label class="volume-row">효과음 방식<select id="sfxMode"><option value="elevenlabs">생성 효과음</option><option value="synth">기존 합성음</option></select></label>
       </div>
       <div class="settings-actions" id="tutorialSettingsActions" hidden><button id="tutorialRestartButton" type="button">현재 연습 다시 시작</button><button id="tutorialSkipButton" type="button">튜토리얼 스킵</button></div>
       <div class="settings-leave" id="gameLeaveActions" hidden>
@@ -1303,63 +1303,33 @@
       const ELEVENLABS_SFX = {
         start: '효과음/화면과 진행/SecondChance_GameStart_ElevenLabs_Draft.mp3',
         unitDeath: '효과음/ElevenLabs_Drafts/unit-death.mp3',
-        connected: '효과음/ElevenLabs_Drafts/connected.mp3', speedChange: '효과음/ElevenLabs_Drafts/speed-change.mp3',
+        connected: '효과음/ElevenLabs_Drafts/connected.mp3', speedChange: '효과음/ElevenLabs_Drafts/speed-slow-v2.mp3',
+        speedRestore: '효과음/ElevenLabs_Drafts/speed-restore-v1.mp3',
         deal: '효과음/ElevenLabs_Drafts/deal.mp3', heroSelect: '효과음/ElevenLabs_Drafts/hero-select.mp3',
-        powerStart: '효과음/ElevenLabs_Drafts/power-meter-start.mp3', powerLock: '효과음/ElevenLabs_Drafts/power-lock.mp3',
+        powerStart: '효과음/ElevenLabs_Drafts/power-meter-start.mp3', powerLock: '효과음/ElevenLabs_Drafts/power-lock-energy-v2.mp3',
         launch: '효과음/ElevenLabs_Drafts/stone-launch.mp3',
         launchLight: '효과음/ElevenLabs_Drafts/launch-light.mp3', launchMedium: '효과음/ElevenLabs_Drafts/launch-medium.mp3',
         launchHeavy: '효과음/ElevenLabs_Drafts/launch-heavy.mp3',
         ammoFire: '효과음/ElevenLabs_Drafts/ammo-fire-rifle-1-5s.mp3',
         turn: '효과음/ElevenLabs_Drafts/turn-change.mp3', win: '효과음/ElevenLabs_Drafts/victory.mp3',
         victoryMusic: '효과음/ElevenLabs_Drafts/victory-sting.mp3', defeatMusic: '효과음/ElevenLabs_Drafts/defeat-sting.mp3',
-        hardening: '효과음/ElevenLabs_Drafts/hardening.mp3', guard: '효과음/ElevenLabs_Drafts/guard-deploy.mp3',
-        pulse: '효과음/ElevenLabs_Drafts/pulse-release.mp3', reposition: '효과음/ElevenLabs_Drafts/reposition.mp3',
-        drop: '효과음/ElevenLabs_Drafts/structure-drop.mp3', blackhole: '효과음/ElevenLabs_Drafts/blackhole-release.mp3',
-        ammoLoad: '효과음/ElevenLabs_Drafts/ammo-load.mp3', bluffing: '효과음/ElevenLabs_Drafts/bluffing.mp3',
-        escape: '효과음/ElevenLabs_Drafts/escape.mp3', card: '효과음/ElevenLabs_Drafts/card-effect.mp3',
+        hardening: '효과음/ElevenLabs_Drafts/hardening-freeze-v2.mp3', guard: '효과음/ElevenLabs_Drafts/guard-orbit-v2.mp3',
+        pulse: '효과음/ElevenLabs_Drafts/pulse-release.mp3', pulseCharge: '효과음/ElevenLabs_Drafts/pulse-charge-v1.mp3',
+        reposition: '효과음/ElevenLabs_Drafts/reposition-gear-v2.mp3',
+        drop: '효과음/ElevenLabs_Drafts/structure-drop-iron-v2.mp3', blackhole: '효과음/ElevenLabs_Drafts/blackhole-release.mp3',
+        ammoLoad: '효과음/ElevenLabs_Drafts/ammo-load.mp3', bluffing: '효과음/ElevenLabs_Drafts/bluffing-sand-v2.mp3',
+        escape: '효과음/ElevenLabs_Drafts/escape-teleport-v2.mp3', card: '효과음/ElevenLabs_Drafts/card-effect.mp3',
+        triggerPlace: '효과음/ElevenLabs_Drafts/trigger-place-v1.mp3',
+        dataBarrier: '효과음/ElevenLabs_Drafts/data-barrier-form-v1.mp3',
+        strongHit: '효과음/ElevenLabs_Drafts/strong-impact-v2.mp3',
         wallHit: '효과음/ElevenLabs_Drafts/wall-impact.mp3', guardHit: '효과음/ElevenLabs_Drafts/guard-impact.mp3',
         timerWarning: '효과음/ElevenLabs_Drafts/timer-warning.mp3', timerTick: '효과음/ElevenLabs_Drafts/timer-tick.mp3'
       };
       const generatedSoundLastPlayed = new Map();
       const playedOnlineOutcomeKeys = new Set();
-      const generatedSoundCooldowns = { wallHit: 80, guardHit: 90 };
-      // Synthesized cues remain available as a fallback; gameplay impacts use the WAV files below.
-      const AUDIO_CONFIG = {
-        sfxVolume: 0.34,
-        sounds: {
-          start: { frequency: 523, endFrequency: 784, duration: .2, waveform: 'sine', volume: .45 },
-          connected: { frequency: 587, endFrequency: 988, duration: .28, waveform: 'sine', volume: .5 },
-          speedChange: { frequency: 720, endFrequency: 1040, duration: .12, waveform: 'sine', volume: .26 },
-          deal: { frequency: 640, endFrequency: 880, duration: .11, waveform: 'triangle', volume: .28 },
-          launch: { frequency: 300, endFrequency: 115, duration: .25, waveform: 'triangle', volume: .58 },
-          powerStart: { frequency: 280, endFrequency: 490, duration: .15, waveform: 'triangle', volume: .3 },
-          powerLock: { frequency: 950, endFrequency: 590, duration: .14, waveform: 'square', volume: .25 },
-          bluffing: { frequency: 720, endFrequency: 160, duration: .28, waveform: 'sine', volume: .34 },
-          escape: { frequency: 560, endFrequency: 1160, duration: .32, waveform: 'sine', volume: .38 },
-          ammoFire: { frequency: 1500, endFrequency: 65, duration: .14, waveform: 'sawtooth', volume: .48 },
-          hardening: { frequency: 330, endFrequency: 140, duration: .23, waveform: 'triangle', volume: .48 },
-          guard: { frequency: 520, endFrequency: 1250, duration: .24, waveform: 'sine', volume: .4 },
-          reposition: { frequency: 420, endFrequency: 820, duration: .18, waveform: 'sine', volume: .3 },
-          ammoLoad: { frequency: 1100, endFrequency: 380, duration: .1, waveform: 'square', volume: .24 },
-          wallHit: { frequency: 260, endFrequency: 145, duration: .12, waveform: 'square', volume: .38, cooldown: 80 },
-          guardHit: { frequency: 520, endFrequency: 250, duration: .1, waveform: 'sine', volume: .35, cooldown: 90 },
-          card: { frequency: 690, endFrequency: 920, duration: .13, waveform: 'triangle', volume: .38 },
-          pulse: { frequency: 180, endFrequency: 720, duration: .32, waveform: 'sawtooth', volume: .52 },
-          timerWarning: { frequency: 880, endFrequency: 1040, duration: .1, waveform: 'sine', volume: .28 },
-          timerTick: { frequency: 1040, endFrequency: 820, duration: .075, waveform: 'square', volume: .2 },
-          heroSelect: { frequency: 510, endFrequency: 880, duration: .22, waveform: 'triangle', volume: .38 },
-          blackhole: { frequency: 210, endFrequency: 620, duration: .46, waveform: 'sine', volume: .5 },
-          elasticStretch: { frequency: 150, endFrequency: 430, duration: .095, waveform: 'sawtooth', volume: .16, cooldown: 75 },
-          strainRumble: { frequency: 54, endFrequency: 76, duration: .12, waveform: 'square', volume: .12, cooldown: 145 },
-          drop: { frequency: 190, endFrequency: 95, duration: .2, waveform: 'square', volume: .4 },
-          turn: { frequency: 440, endFrequency: 660, duration: .15, waveform: 'sine', volume: .3 },
-          win: { frequency: 523, endFrequency: 1046, duration: .7, waveform: 'triangle', volume: .48 }
-        }
-      };
-
+      const generatedSoundCooldowns = { wallHit: 80, guardHit: 90, strongHit: 65 };
       const AUDIO_FILES = {
         weakHit: new Audio('효과음/충돌과 타이머/Midhit_1.wav'),
-        strongHit: new Audio('효과음/충돌과 타이머/Stronghit_1.wav'),
         unitDeath: new Audio('효과음/Unit_death_sound_for_1.wav'),
         unitKill: new Audio('효과음/Unit_kill_sound_1.wav'),
         pulseCast: new Audio('효과음/카드와 트리거/shockwave_sound_1.wav'),
@@ -1445,14 +1415,14 @@
       const CARD_PRESENTATION = {
         hardening: { art: 'Card_illustration/hardening.png', sound: 'hardening' },
         guard: { art: 'Card_illustration/Protective barrier.png', sound: 'guard' },
-        pulse: { art: 'Card_illustration/release .png', sound: 'pulse' },
+        pulse: { art: 'Card_illustration/release .png', sound: 'pulseCharge' },
         reposition: { art: 'Card_illustration/Relocation.png', sound: 'reposition' },
         brick: { art: 'Card_illustration/Structure Drop.png', sound: 'drop' },
         blackhole: { art: 'Card_illustration/blackhole release.png', sound: 'blackhole' },
         ammo: { art: 'Card_illustration/Load.png', sound: 'ammoLoad' },
         bluffing: { art: 'Card_illustration/Bluffing.png', sound: 'bluffing' },
         escape: { art: 'Card_illustration/Escape.png', sound: 'escape' },
-        'data-barrier': { art: 'Card_illustration/Data Barrier-v5.png', sound: 'drop' }
+        'data-barrier': { art: 'Card_illustration/Data Barrier-v5.png', sound: 'dataBarrier' }
       };
       const UNIT_EFFECTS = Object.freeze({
         hardening: { maxStacks: Infinity, frictionPerStack: 3 },
@@ -1641,32 +1611,11 @@
         try { return Math.max(0, Math.min(100, Number(localStorage.getItem(key) ?? 100) || 0)); }
         catch { return 100; }
       }
-      const audio = { context: null, sfxBus: null, lastPlayed: new Map(), musicVolume: savedVolume('ucc.musicVolume'), sfxVolume: savedVolume('ucc.sfxVolume'), sfxMode: (() => { try { return localStorage.getItem('ucc.sfxMode') || 'elevenlabs'; } catch { return 'elevenlabs'; } })() };
-      const sfxMode = document.querySelector('#sfxMode');
-      sfxMode.value = audio.sfxMode;
-      sfxMode.addEventListener('change', () => {
-        audio.sfxMode = sfxMode.value;
-        try { localStorage.setItem('ucc.sfxMode', audio.sfxMode); } catch {}
-      });
+      const audio = { musicVolume: savedVolume('ucc.musicVolume'), sfxVolume: savedVolume('ucc.sfxVolume') };
       musicVolume.value = String(audio.musicVolume);
       sfxVolume.value = String(audio.sfxVolume);
       document.querySelector('#musicVolumeValue').textContent = `${audio.musicVolume}%`;
       document.querySelector('#sfxVolumeValue').textContent = `${audio.sfxVolume}%`;
-
-      function initializeAudio() {
-        if (audio.context) {
-          if (audio.context.state === 'suspended') audio.context.resume();
-          return true;
-        }
-        const Context = window.AudioContext || window.webkitAudioContext;
-        if (!Context) return false;
-        audio.context = new Context();
-        audio.sfxBus = audio.context.createGain();
-        audio.sfxBus.gain.value = audio.sfxVolume / 100;
-        audio.sfxBus.connect(audio.context.destination);
-        audio.context.resume();
-        return true;
-      }
 
       function updateDeviceLayout() {
         document.body.dataset.device = mobileLayoutQuery.matches ? 'mobile' : 'desktop';
@@ -1896,6 +1845,7 @@
         state.tutorial = null;
         state.phase = 'intro';
         document.body.dataset.tutorial = 'false';
+        delete document.body.dataset.tutorialStage;
         learningUI.tutorialPanel.hidden = true;
         tutorialSettingsActions.hidden = true;
         gameLeaveActions.hidden = true;
@@ -1999,7 +1949,6 @@
         PLAYER[0].name = guestProfile.name;
         PLAYER[1].name = '연습 상대';
         document.body.dataset.tutorialSettings = 'false';
-        initializeAudio();
         startLobbyMusic();
         setSpeedLevel(0);
         loadTutorialLesson(0, false);
@@ -2343,63 +2292,24 @@
         updateConnectionStatusUI(session);
       }
 
-      function scheduleTone(frequency, endFrequency, time, duration, waveform, volume, bus) {
-        const oscillator = audio.context.createOscillator();
-        const envelope = audio.context.createGain();
-        oscillator.type = waveform;
-        oscillator.frequency.setValueAtTime(frequency, time);
-        oscillator.frequency.exponentialRampToValueAtTime(Math.max(30, endFrequency), time + duration);
-        envelope.gain.setValueAtTime(.0001, time);
-        envelope.gain.linearRampToValueAtTime(Math.max(.0002, volume), time + Math.min(.018, duration * .25));
-        envelope.gain.exponentialRampToValueAtTime(.0001, time + duration);
-        oscillator.connect(envelope);
-        envelope.connect(bus);
-        oscillator.start(time);
-        oscillator.stop(time + duration + .02);
-      }
-
       function playSound(name, intensity = 1) {
         if (!audio.sfxVolume) return;
-        if (audio.sfxMode === 'elevenlabs' && ELEVENLABS_SFX[name]) {
-          playElevenLabsSound(name, { volume: Math.min(1.5, intensity) });
-          return;
-        }
-        if (!initializeAudio()) return;
-        const sound = AUDIO_CONFIG.sounds[name];
-        if (!sound) return;
-        const now = performance.now();
-        const last = audio.lastPlayed.get(name) || 0;
-        if (sound.cooldown && now - last < sound.cooldown) return;
-        audio.lastPlayed.set(name, now);
-        scheduleTone(sound.frequency, sound.endFrequency || sound.frequency, audio.context.currentTime,
-          sound.duration, sound.waveform, AUDIO_CONFIG.sfxVolume * sound.volume * Math.min(1.5, intensity), audio.sfxBus);
+        playElevenLabsSound(name, { volume: Math.min(1.5, intensity) });
       }
 
       function playPowerLockSound(value) {
         if (!audio.sfxVolume) return;
-        if (audio.sfxMode === 'elevenlabs') {
-          playElevenLabsSound('powerLock', { volume: .45 + value * .55, playbackRate: .78 + value * .5 });
-          return;
-        }
-        if (!initializeAudio()) return;
-        const sound = AUDIO_CONFIG.sounds.powerLock;
-        const pitch = .65 + value * .7;
-        scheduleTone(sound.frequency * pitch, sound.endFrequency * pitch, audio.context.currentTime,
-          sound.duration, sound.waveform, AUDIO_CONFIG.sfxVolume * sound.volume * (.45 + value * .55), audio.sfxBus);
+        playElevenLabsSound('powerLock', { volume: .45 + value * .55, playbackRate: .78 + value * .6 });
       }
 
       function playLaunchSound(power) {
-        if (audio.sfxMode !== 'elevenlabs') {
-          playSound('launch');
-          return;
-        }
         playElevenLabsSound(power < .3 ? 'launchLight' : power < .7 ? 'launchMedium' : 'launchHeavy');
       }
 
       function playFileSound(name, { volume = 1, cooldown = 0 } = {}) {
         if (!audio.sfxVolume) return;
         const generatedName = name === 'unitDeath' ? 'unitDeath' : null;
-        if (audio.sfxMode === 'elevenlabs' && generatedName) {
+        if (generatedName) {
           playElevenLabsSound(generatedName, { volume });
           return;
         }
@@ -2430,7 +2340,7 @@
       }
 
       function playOutcomeMusic(name) {
-        if (audio.sfxMode !== 'elevenlabs' || !audio.musicVolume || !ELEVENLABS_SFX[name]) return;
+        if (!audio.musicVolume || !ELEVENLABS_SFX[name]) return;
         const backgroundTrack = currentMusic;
         backgroundTrack.volume = .08 * audio.musicVolume / 100;
         const clip = new Audio(ELEVENLABS_SFX[name]);
@@ -2454,7 +2364,8 @@
       }
 
       function playUnitImpactSound(impulse) {
-        playFileSound(Math.abs(impulse) >= STRONG_HIT_THRESHOLD ? 'strongHit' : 'weakHit', { volume: .8, cooldown: 65 });
+        if (Math.abs(impulse) >= STRONG_HIT_THRESHOLD) playElevenLabsSound('strongHit', { volume: .8 });
+        else playFileSound('weakHit', { volume: .8, cooldown: 65 });
       }
 
       function startMusic(track = currentMusic) {
@@ -2482,6 +2393,7 @@
       function setSpeedLevel(level, announce = false) {
         const nextLevel = Math.max(0, Math.min(2, Number(level) | 0));
         if (nextLevel === state.speedLevel) return false;
+        const previousLevel = state.speedLevel;
         state.speedLevel = nextLevel;
         state.gameSpeed = [1, .65, .4][nextLevel];
         speedToggle.dataset.speedLevel = String(nextLevel);
@@ -2493,7 +2405,7 @@
         speedToggle.classList.add('speed-changed');
         if (state.tutorial?.lesson?.id === 'speed-card') recordTutorialEvent('speed');
         if (announce) {
-          playSound('speedChange');
+          playSound(nextLevel > previousLevel ? 'speedChange' : 'speedRestore');
           showConnectionNotice(`게임 속도 ${speedLabel.textContent}`);
         }
         return true;
@@ -2679,6 +2591,7 @@
         tutorialSettingsActions.hidden = true;
         gameSettingsTitle.textContent = '게임 설정';
         document.body.dataset.tutorial = 'false';
+        delete document.body.dataset.tutorialStage;
         turns.reset(roundStartingPlayer());
         localAimPointerId = null;
         state.units = [];
@@ -3406,7 +3319,7 @@
               id: `ai-trigger-${turns.globalTurn}`, type, owner: unit.owner,
               x: trigger.x, y: trigger.y, radius: CONFIG.unitRadius * .5 });
             spendTriggerPlacement(unit.owner);
-            emitGameFeedback('drop', trigger, '트리거 배치', PLAYER[unit.owner].color);
+            emitGameFeedback('triggerPlace', trigger, '트리거 배치', PLAYER[unit.owner].color);
           }
         }
         action.scheduledTactics = [];
@@ -3546,7 +3459,7 @@
           state.triggers.push({ entityKind: ENTITY_KIND.TRIGGER, id: `ai-trigger-${turns.globalTurn}-${attempt}`,
             type, owner, ...point, radius: CONFIG.unitRadius * .5 });
           spendTriggerPlacement(owner);
-          emitGameFeedback('drop', point, '트리거 배치', PLAYER[owner].color);
+          emitGameFeedback('triggerPlace', point, '트리거 배치', PLAYER[owner].color);
           updateHud();
           return true;
         }
@@ -4482,7 +4395,7 @@
         });
         spendTriggerPlacement(pending.owner);
         closeTriggerTypeSelection(true);
-        emitGameFeedback('drop', pending, '트리거 배치', PLAYER[pending.owner].color);
+        emitGameFeedback('triggerPlace', pending, '트리거 배치', PLAYER[pending.owner].color);
         recordTutorialEvent('placement');
         updateHud();
       }
@@ -5410,7 +5323,6 @@
 
       async function createOnlineRoom() {
         try {
-          initializeAudio();
           if (!guestProfile?.username) throw new Error('온라인 플레이에는 로그인이 필요합니다.');
           const isPrivate = privateRoomToggle.checked;
           const password = isPrivate ? roomPasswordInput.value : '';
@@ -5434,7 +5346,6 @@
 
       async function joinOnlineRoom(options = {}) {
         try {
-          initializeAudio();
           if (!guestProfile?.username) throw new Error('온라인 플레이에는 로그인이 필요합니다.');
           const code = String(options.roomCode ?? roomCodeInput.value).trim().toUpperCase();
           if (!code) throw new Error('방 코드를 입력하세요.');
@@ -5518,7 +5429,6 @@
 
       async function confirmOnlineMap() {
         if (!onlineSession || onlineSession.localMapConfirmed) return;
-        initializeAudio();
         startGameMusic();
         const session = onlineSession;
         confirmMapButton.disabled = true;
@@ -5807,7 +5717,7 @@
           if (type) {
             state.triggers.push({ entityKind: ENTITY_KIND.TRIGGER, id: `online-trigger-${Date.now()}`, type, owner: 1, x: action.point.x, y: action.point.y, radius: CONFIG.unitRadius * .5 });
             spendTriggerPlacement(1);
-            emitGameFeedback('drop', action.point, '트리거 배치', PLAYER[1].color);
+            emitGameFeedback('triggerPlace', action.point, '트리거 배치', PLAYER[1].color);
             updateHud();
           }
         } else if (action.type === 'brick') {
@@ -5946,7 +5856,6 @@
           confirmOnlineMap();
           return;
         }
-        initializeAudio();
         startGameMusic();
         playSound('start');
         state.currentMap = state.selectedMap;
@@ -7270,7 +7179,6 @@
         if (Math.hypot(point.x - unit.x, point.y - unit.y) > unit.radius + 12) return;
         state.aiming = true;
         localAimPointerId = event.pointerId;
-        initializeAudio();
         updateAimFromInput(unit, point);
         canvas.setPointerCapture(event.pointerId);
       });
@@ -7678,7 +7586,7 @@
           currentMusic.volume = .28 * audio.musicVolume / 100;
           if (audio.musicVolume) startMusic();
           else currentMusic.pause();
-        } else if (audio.sfxBus) audio.sfxBus.gain.value = audio.sfxVolume / 100;
+        }
         if (key === 'sfxVolume' && tutorialVoice) tutorialVoice.volume = audio.sfxVolume / 100;
       });
       document.addEventListener('pointermove', moveCardGhost);

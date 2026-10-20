@@ -1,6 +1,6 @@
 {
   "provider": "ElevenLabs",
-  "generatedAt": "2026-10-19T17:54:07.070Z",
+  "generatedAt": "2026-10-20T06:56:52.320Z",
   "effects": [
     {
       "id": "start",
@@ -27,10 +27,10 @@
       "name": "속도 변경",
       "group": "화면과 진행",
       "description": "게임 속도를 바꿀 때",
-      "prompt": "A very brief mechanical speed-shift sound for a weathered game control: a compact ratchet notch turns, a tiny motor changes pitch upward, then settles with a dry click. Industrial analog machinery, crisp and restrained, no music, no voice, no digital UI beep.",
+      "prompt": "A brief time-slowing effect for a dark fantasy steampunk game: the entire sound seems to stretch as its pitch drops sharply downward into a soft low resonance. No gears, no mechanical button beep, no music or speech. Add a subtle short reverb tail.",
       "inactive": false,
-      "duration": 0.5,
-      "src": "효과음/ElevenLabs_Drafts/speed-change.mp3"
+      "duration": 0.7,
+      "src": "효과음/ElevenLabs_Drafts/speed-slow-v2.mp3"
     },
     {
       "id": "deal",
@@ -67,10 +67,10 @@
       "name": "파워 결정",
       "group": "발사와 턴",
       "description": "미터를 멈출 때 · 세기에 따라 음높이 변화",
-      "prompt": "A short decisive power-lock effect for a post-apocalyptic game: a moving mechanism snaps into a notch with a solid metallic clack and a tight resonant pulse that quickly decays. Focused and satisfying, not explosive, no speech, no music, no alarm.",
+      "prompt": "A single compact burst of mysterious energy condensing inside a heavy fantasy metal and steampunk vessel: airy particles spiral inward, a rich resonant metallic harmonic tightens into a bright focused core, then settles. Tonal and magical, not a machine beep or switch click, no voice or music. Add a subtle short reverb tail.",
       "inactive": false,
-      "duration": 0.55,
-      "src": "효과음/ElevenLabs_Drafts/power-lock.mp3"
+      "duration": 0.8,
+      "src": "효과음/ElevenLabs_Drafts/power-lock-energy-v2.mp3"
     },
     {
       "id": "launch",
@@ -83,44 +83,14 @@
       "src": "효과음/ElevenLabs_Drafts/stone-launch.mp3"
     },
     {
-      "id": "launchLight",
-      "name": "가벼운 발사",
-      "group": "발사와 턴",
-      "description": "파워 30% 미만의 짧고 가벼운 바람 가르는 소리",
-      "prompt": "Create a very short, light stone launch whoosh for a grounded post-apocalyptic tabletop game. A small polished stone skims quickly through air with a thin airy swish, a crisp onset and a fast clean fade. Keep it light and nimble, almost no bass, no clunk, no impact, no music, no voice, no electronic chirp.",
-      "inactive": false,
-      "duration": 0.5,
-      "src": "효과음/ElevenLabs_Drafts/launch-light.mp3"
-    },
-    {
-      "id": "launchMedium",
-      "name": "중간 파워 발사",
-      "group": "발사와 턴",
-      "description": "파워 30% 이상 70% 미만의 낮은 음이 살짝 더해진 바람 소리",
-      "prompt": "Create a medium-power stone launch sound for a grounded post-apocalyptic tabletop game. A dense circular stone cuts through air with a smooth wind-slicing whoosh, slightly longer than a light swish, with only a modest low-mid body beneath the airy top. Controlled and physical, no release clunk, no collision, no explosion, no music, no voice, no synthetic sci-fi sweep.",
-      "inactive": false,
-      "duration": 0.58,
-      "src": "효과음/ElevenLabs_Drafts/launch-medium.mp3"
-    },
-    {
-      "id": "launchHeavy",
-      "name": "강한 발사",
-      "group": "발사와 턴",
-      "description": "파워 70% 이상의 육중한 저음이 실린 바람 소리",
-      "prompt": "Create a powerful heavy stone launch whoosh for a gritty post-apocalyptic tabletop game. A massive dense metal-rimmed stone tears through air, with a broad forceful wind rush, weighty low subwoofer-like bass under the airy shear, and a slightly longer resonant tail. Make it feel heavy but not explosive; no collision, no gunshot, no music, no voice, no fantasy magic sound.",
-      "inactive": false,
-      "duration": 0.78,
-      "src": "효과음/ElevenLabs_Drafts/launch-heavy.mp3"
-    },
-    {
       "id": "ammoFire",
       "name": "총알 발사",
       "group": "발사와 턴",
       "description": "총알 장전 카드로 발사할 때",
-      "prompt": "One loud, unmistakable long-rifle gunshot for a gritty post-apocalyptic video game. Close, dry report with an immediate sharp crack and forceful low-mid body; the initial pahng must dominate, full and assertive, never distant or quiet. Let the report decay naturally over 1.5 seconds with a brief metallic resonance. Single shot only, not a burst. No voice, music, reload, charging, or long echo.",
+      "prompt": "A single compact improvised electromagnetic projectile shot from salvaged equipment: sharp compressed pop, brief metallic resonance and a tiny electrical snap. Punchy but not realistic gunfire, no casing rattle, no voices, no music, no long echo.",
       "inactive": false,
-      "duration": 1.5,
-      "src": "효과음/ElevenLabs_Drafts/ammo-fire-rifle-1-5s.mp3"
+      "duration": 0.5,
+      "src": "효과음/ElevenLabs_Drafts/ammo-fire.mp3"
     },
     {
       "id": "turn",
@@ -143,54 +113,24 @@
       "src": "효과음/ElevenLabs_Drafts/victory.mp3"
     },
     {
-      "id": "victoryMusic",
-      "name": "승리 음악",
-      "group": "승패 음악",
-      "description": "게임 또는 튜토리얼을 승리로 마칠 때",
-      "prompt": "A five-second instrumental victory sting for Second Chance, a restrained post-apocalyptic exploration game. Start with a quiet low mechanical drone, then rise through a few warm, imperfect metallic-glass notes to a clear, hard-won resolution. Suggest relief, courage, and a second chance, never a sports fanfare. Complete musical arc and natural ending. No voice, vocals, percussion, or sound effects.",
-      "inactive": false,
-      "duration": 5,
-      "src": "효과음/ElevenLabs_Drafts/victory-sting.mp3"
-    },
-    {
-      "id": "defeatMusic",
-      "name": "패배 음악",
-      "group": "승패 음악",
-      "description": "게임에서 패배로 마칠 때",
-      "prompt": "A five-second instrumental defeat sting for Second Chance, a restrained post-apocalyptic exploration game. Use a muted mechanical drone and a few sparse, worn metallic-glass notes, descending gently into a calm unresolved ending. Suggest a setback and another chance, not horror or melodrama. Complete musical arc and natural ending. No voice, vocals, percussion, or sound effects.",
-      "inactive": false,
-      "duration": 5,
-      "src": "효과음/ElevenLabs_Drafts/defeat-sting.mp3"
-    },
-    {
-      "id": "unitDeath",
-      "name": "스톤 탈락",
-      "group": "충돌과 타이머",
-      "description": "스톤이 경기장 밖으로 추락하거나 제거될 때",
-      "prompt": "A clear, compact game sound for a heavy metal-rimmed stone dropping out of a post-apocalyptic arena. Start with a quick descending airy rush, add one dark, weighty low-mid thud with a brief metallic ring, then let it fall away into a short hollow tail. Make the transient clearly audible in a busy game mix without harsh treble or excessive sub-bass. Somber and physical, not graphic, no voice, no music, no explosion, no glass breaking.",
-      "inactive": false,
-      "duration": 1,
-      "src": "효과음/ElevenLabs_Drafts/unit-death.mp3"
-    },
-    {
       "id": "hardening",
       "name": "경질화",
       "group": "카드와 트리거",
       "description": "경질화 효과를 적용할 때",
-      "prompt": "A small unit rapidly hardens: a dry metallic shell closes around it, followed by a crystalline mineral resonance and a short low pulse. Tough and tactile, strange technology fused with stone, concise, no voice, no music.",
+      "prompt": "Something massive instantly freezes solid: a weighty low bass impact, a fast crackling frost surge and deep stone-metal resonance. Heavy and physical, no light glass tinkle, no voice or music. Add a subtle short reverb tail.",
       "inactive": false,
-      "duration": 0.8,
-      "src": "효과음/ElevenLabs_Drafts/hardening.mp3"
+      "duration": 1,
+      "src": "효과음/ElevenLabs_Drafts/hardening-freeze-v2.mp3"
     },
     {
       "id": "guard",
       "name": "방호벽",
       "group": "카드와 트리거",
       "description": "방호벽 효과를 적용할 때",
-      "prompt": "A protective energy barrier deploys from compact salvaged satellites: three quick mechanical ticks form a curved field, with a faint glassy electrical hum settling around it. Protective but uneasy, restrained post-apocalyptic technology, no voice, no music, no laser blast.",
+      "prompt": "Several protective energy spheres begin orbiting a central object: a warm layered humming tone circles in stereo with a slight pulsing flutter, gathering into a steady resonant shield. Mysterious fantasy energy and salvaged metal, not an alarm or laser, no speech or music. Add a subtle short reverb tail.",
       "inactive": false,
-      "duration": 0.9,
-      "src": "효과음/ElevenLabs_Drafts/guard-deploy.mp3"
+      "duration": 1.2,
+      "src": "효과음/ElevenLabs_Drafts/guard-orbit-v2.mp3"
     },
     {
       "id": "pulse",
@@ -207,20 +147,20 @@
       "name": "재배치",
       "group": "카드와 트리거",
       "description": "재배치 카드를 사용할 때",
-      "prompt": "A heavy circular unit is abruptly displaced through unstable technology: a short inward air pull, a crisp phase-shift pop, then a low metallic landing resonance. Strange but physical, concise, no voice, no music, no long sci-fi laser.",
+      "prompt": "A person silently gathering scattered expedition gear from a hard floor: canvas, small metal tools and a weighty packed bag scrape together, then a firm final clasp. Only objects and fabric, absolutely no human sounds, footsteps or voice, no music. Add a subtle short reverb tail.",
       "inactive": false,
-      "duration": 0.8,
-      "src": "효과음/ElevenLabs_Drafts/reposition.mp3"
+      "duration": 1,
+      "src": "효과음/ElevenLabs_Drafts/reposition-gear-v2.mp3"
     },
     {
       "id": "drop",
       "name": "배치",
       "group": "카드와 트리거",
       "description": "벽돌·데이터 장벽·트리거를 배치할 때",
-      "prompt": "A compact heavy structure is placed onto a worn industrial platform: short descending mechanical whirr, dense stone-and-metal thunk, tiny settling rattle. Solid and deliberate, no crash, no voice, no music.",
+      "prompt": "A compact heavy iron structure drops onto a very hard stone floor: clear weighty metal-on-stone impact, a couple of short iron rattles and a low settling resonance. Tactile, dry attack, no machinery whirr, no voice or music. Add a subtle short reverb tail.",
       "inactive": false,
-      "duration": 0.7,
-      "src": "효과음/ElevenLabs_Drafts/structure-drop.mp3"
+      "duration": 0.9,
+      "src": "효과음/ElevenLabs_Drafts/structure-drop-iron-v2.mp3"
     },
     {
       "id": "blackhole",
@@ -247,20 +187,20 @@
       "name": "속임수",
       "group": "카드와 트리거",
       "description": "속임수 카드를 사용할 때",
-      "prompt": "A unit briefly slips out of physical phase: soft static bends downward, a thin glassy shimmer obscures it, then the sound fades as if its outline vanished. Subtle stealth technology, short and uncanny, no voice, no music, no magical sparkle.",
+      "prompt": "Fine sand grains scatter and swirl away in a sudden strange gust of invisible energy: a granular hiss, small dry particles skittering across stone, then an uncanny airy fade. Mysterious and stealthy, no electrical beep, no voice or music. Add a subtle short reverb tail.",
       "inactive": false,
-      "duration": 0.8,
-      "src": "효과음/ElevenLabs_Drafts/bluffing.mp3"
+      "duration": 1,
+      "src": "효과음/ElevenLabs_Drafts/bluffing-sand-v2.mp3"
     },
     {
       "id": "escape",
       "name": "탈출",
       "group": "카드와 트리거",
       "description": "탈출 카드를 사용할 때",
-      "prompt": "A small unit escapes a dangerous field by shedding a burst of stored data: quick metallic release, upward airy rush, then a few dim glassy particles fading into silence. Determined and bittersweet, concise, no voice, no music, no portal cliché.",
+      "prompt": "A sacred but restrained teleportation moment: thousands of delicate bright particles gather around an object, lift upward in a soft luminous rush and dissolve with a clear warm harmonic shimmer. Textured and otherworldly, not a sci-fi laser or grand choir, no voice or music. Add a subtle short reverb tail.",
       "inactive": false,
       "duration": 1.2,
-      "src": "효과음/ElevenLabs_Drafts/escape.mp3"
+      "src": "효과음/ElevenLabs_Drafts/escape-teleport-v2.mp3"
     },
     {
       "id": "card",
@@ -311,6 +251,56 @@
       "inactive": false,
       "duration": 0.5,
       "src": "효과음/ElevenLabs_Drafts/timer-tick.mp3"
+    },
+    {
+      "id": "strongHit",
+      "name": "강한 충돌",
+      "group": "충돌과 타이머",
+      "description": "스톤이나 유닛이 큰 힘으로 충돌할 때",
+      "prompt": "A forceful impact between two massive metal-rimmed stone units on a hard abandoned industrial platform: solid bass-heavy crack, rough stone scrape and a short metallic ring. Grounded but slightly fantastical, not an explosion, no voice or music. Add a subtle short reverb tail.",
+      "inactive": false,
+      "duration": 0.9,
+      "src": "효과음/ElevenLabs_Drafts/strong-impact-v2.mp3"
+    },
+    {
+      "id": "speedRestore",
+      "name": "속도 복원",
+      "group": "화면과 진행",
+      "description": "느려진 게임 속도를 높일 때",
+      "prompt": "A brief time-resuming effect for a dark fantasy steampunk game: a soft low stretched tone snaps upward in pitch and returns to normal speed with a clean airy finish. No gears, no mechanical button beep, no music or speech. Add a subtle short reverb tail.",
+      "inactive": false,
+      "duration": 0.7,
+      "src": "효과음/ElevenLabs_Drafts/speed-restore-v1.mp3"
+    },
+    {
+      "id": "triggerPlace",
+      "name": "트리거 배치",
+      "group": "카드와 트리거",
+      "description": "미지의 트리거가 생성될 때",
+      "prompt": "An unknown energetic trigger materializes in open air: low mysterious hum grows from silence, several unstable pulses gather into a small concentrated orb, then the field settles. Strange fantasy energy amid abandoned industry, no voice or music. Add a subtle short reverb tail.",
+      "inactive": false,
+      "duration": 1.1,
+      "src": "효과음/ElevenLabs_Drafts/trigger-place-v1.mp3"
+    },
+    {
+      "id": "pulseCharge",
+      "name": "방출 충전",
+      "group": "카드와 트리거",
+      "description": "방출 카드로 스톤이 충전될 때",
+      "prompt": "A heavy stone unit absorbs a contained surge of energy and becomes charged: a deep inward whoom, fine vibrating particles wrap around metal, then a tight held hum remains. This is a charge, not the later explosion or shockwave, no voice or music. Add a subtle short reverb tail.",
+      "inactive": false,
+      "duration": 0.9,
+      "src": "효과음/ElevenLabs_Drafts/pulse-charge-v1.mp3"
+    },
+    {
+      "id": "dataBarrier",
+      "name": "데이터 장벽 형성",
+      "group": "카드와 트리거",
+      "description": "데이터 장벽을 배치할 때",
+      "prompt": "Scattered fragments of luminous data converge from all directions and condense into a tall firm wall: hundreds of fine digital grains stream inward, stack into layers and lock with a broad resonant energy tone. Mysterious engineered world, no harsh computer beep, no voice or music. Add a subtle short reverb tail.",
+      "inactive": false,
+      "duration": 1.2,
+      "src": "효과음/ElevenLabs_Drafts/data-barrier-form-v1.mp3"
     },
     {
       "id": "elasticStretch",
