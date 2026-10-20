@@ -24,6 +24,11 @@ test('public room lifecycle, admission races and WebSocket delivery', { timeout:
     child.on('error',reject); child.on('exit',code=>reject(new Error(`Server exited ${code}`)));
   });
   const base=`http://127.0.0.1:${port}`;
+  await t.test('generated MP3 effects are served as playable audio',async()=>{
+    const response=await fetch(base+encodeURI('/효과음/ElevenLabs_Drafts/strong-impact-v2.mp3'));
+    assert.equal(response.status,200);
+    assert.equal(response.headers.get('content-type'),'audio/mpeg');
+  });
   async function api(route,body,auth) {
     const response=await fetch(base+route,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json',...(auth?{Authorization:`Bearer ${auth}`}:{})},body:JSON.stringify(body)});
     return {status:response.status,headers:response.headers,data:await response.json()};
