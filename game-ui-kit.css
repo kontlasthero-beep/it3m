@@ -1,0 +1,390 @@
+/* Second Chance: Salvage Terminal UI. Text stays live HTML; artwork is a skin. */
+:root {
+  --ui-face: #132023;
+  --ui-face-deep: #0d1719;
+  --ui-line: #6d837d;
+  --ui-bronze: #b58a50;
+  --ui-signal: #80c5b9;
+  --ui-serif: "SecondChance Gowun Batang", "Batang", Georgia, serif;
+  --ui-sans: "SecondChance Plex", "Malgun Gothic", sans-serif;
+}
+
+body { font-family: var(--ui-serif); }
+button, input, select { font-family: inherit; }
+h1, .dialog h2, .dialog h3, .deck-section h3, .catalog-entry h3 { font-family: var(--ui-serif); font-weight: 400; line-height: 1.3; text-wrap: balance; }
+button { line-height: 1.3; text-align: center; text-wrap: balance; overflow-wrap: anywhere; }
+
+/* Decorative lines are kept at the outside; no lettering is baked into SVGs. */
+.dialog {
+  border: 1px solid #8c7758;
+  border-radius: 8px;
+  background: linear-gradient(155deg, #19282a 0%, #101b1d 44%, #10191b 100%);
+  box-shadow: 0 22px 55px #0009, inset 0 0 0 3px #0b1315, inset 0 0 0 4px #455b55;
+}
+.dialog :is(p, strong, span, h2, h3, h4, label) { overflow-wrap: anywhere; }
+.dialog :is(input, select) { min-width: 0; max-width: 100%; }
+.dialog :is(button, input, select):focus-visible { outline: 2px solid #d5af74; outline-offset: 2px; }
+.dialog > h2 { max-width:100%; margin-inline:auto; }
+
+/* Wide lobby controls and mode tiles use the SVG skins from the proposal kit. */
+.home-menu button,
+.deck-entry-button,
+.home-account,
+.home-return,
+.start-menu-grid button,
+.account-actions button {
+  --ui-skin: url("shared-ui/expedition-ui-kit-v1/buttons/salvage/home-play--desktop--idle.svg");
+  --ui-skin-hover: url("shared-ui/expedition-ui-kit-v1/buttons/salvage/home-play--desktop--hover.svg");
+  --ui-skin-pressed: url("shared-ui/expedition-ui-kit-v1/buttons/salvage/home-play--desktop--pressed.svg");
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  background-image: var(--ui-skin);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  color: #f5eee0;
+  text-shadow: 0 1px 3px #000;
+  font-family: var(--ui-serif);
+  font-weight: 400;
+  letter-spacing: .015em;
+  transition: filter .14s ease, transform .12s ease;
+}
+#startOverlay .home-menu button:hover,
+#startOverlay .deck-entry-button:hover,
+#startOverlay .home-account:hover,
+#startOverlay .home-return:hover,
+#startOverlay .start-menu-grid button:hover,
+#startOverlay .account-actions button:hover { background-image: var(--ui-skin-hover); filter: brightness(1.07); }
+#startOverlay .home-menu button:active,
+#startOverlay .deck-entry-button:active,
+#startOverlay .home-account:active,
+#startOverlay .home-return:active,
+#startOverlay .start-menu-grid button:active,
+#startOverlay .account-actions button:active { background-image: var(--ui-skin-pressed); transform: translateY(1px); }
+#startOverlay .home-menu button:disabled,
+#startOverlay .deck-entry-button:disabled,
+#startOverlay .home-account:disabled,
+#startOverlay .start-menu-grid button:disabled { filter: grayscale(.75) brightness(.7); cursor: not-allowed; }
+
+#openPlayMenuButton { --ui-skin:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/home-play--desktop--idle.svg"); --ui-skin-hover:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/home-play--desktop--hover.svg"); --ui-skin-pressed:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/home-play--desktop--pressed.svg"); }
+#openTutorialButton { --ui-skin:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/home-tutorial--desktop--idle.svg"); --ui-skin-hover:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/home-tutorial--desktop--hover.svg"); --ui-skin-pressed:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/home-tutorial--desktop--pressed.svg"); }
+#openCatalogButton { --ui-skin:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/home-catalog--desktop--idle.svg"); --ui-skin-hover:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/home-catalog--desktop--hover.svg"); --ui-skin-pressed:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/home-catalog--desktop--pressed.svg"); }
+#openHomeDeckButton, #openMenuDeckButton { --ui-skin:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/home-deck--desktop--idle.svg"); --ui-skin-hover:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/home-deck--desktop--hover.svg"); --ui-skin-pressed:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/home-deck--desktop--pressed.svg"); }
+#openAccountButton { --ui-skin:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/home-account--desktop--idle.svg"); --ui-skin-hover:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/home-account--desktop--hover.svg"); --ui-skin-pressed:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/home-account--desktop--pressed.svg"); }
+#accountSubmitButton { --ui-skin:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/login--desktop--idle.svg"); --ui-skin-hover:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/login--desktop--hover.svg"); --ui-skin-pressed:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/login--desktop--pressed.svg"); }
+#accountModeButton { --ui-skin:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/register--desktop--idle.svg"); --ui-skin-hover:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/register--desktop--hover.svg"); --ui-skin-pressed:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/register--desktop--pressed.svg"); }
+#guestPlayButton { --ui-skin:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/guest--desktop--idle.svg"); --ui-skin-hover:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/guest--desktop--hover.svg"); --ui-skin-pressed:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/guest--desktop--pressed.svg"); }
+#browseRoomsButton { --ui-skin:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-browse--desktop--idle.svg"); --ui-skin-hover:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-browse--desktop--hover.svg"); --ui-skin-pressed:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-browse--desktop--pressed.svg"); }
+#openJoinScreenButton { --ui-skin:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-code--desktop--idle.svg"); --ui-skin-hover:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-code--desktop--hover.svg"); --ui-skin-pressed:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-code--desktop--pressed.svg"); }
+#openLocalScreenButton { --ui-skin:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-local--desktop--idle.svg"); --ui-skin-hover:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-local--desktop--hover.svg"); --ui-skin-pressed:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-local--desktop--pressed.svg"); }
+#createRoomButton { --ui-skin:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-online--desktop--idle.svg"); --ui-skin-hover:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-online--desktop--hover.svg"); --ui-skin-pressed:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-online--desktop--pressed.svg"); }
+#openAiScreenButton { --ui-skin:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-ai--desktop--idle.svg"); --ui-skin-hover:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-ai--desktop--hover.svg"); --ui-skin-pressed:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-ai--desktop--pressed.svg"); }
+#openAdventureScreenButton { --ui-skin:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-adventure--desktop--idle.svg"); --ui-skin-hover:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-adventure--desktop--hover.svg"); --ui-skin-pressed:url("shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-adventure--desktop--pressed.svg"); }
+#startOverlay #openAdventureScreenButton { position: relative; }
+#startOverlay #openAdventureScreenButton::after {
+  content: "BETA"; position: absolute; z-index: 1; top: 9px; right: 12px;
+  padding: 3px 5px 2px; border: 1px solid #d3ad72; border-radius: 2px;
+  background: #142629; box-shadow: 0 1px 3px #0009;
+  color: #ffe5b4; font-family: var(--ui-sans); font-size: 10px; font-weight: 700;
+  line-height: 1; letter-spacing: .04em; white-space: nowrap; pointer-events: none;
+}
+#startOverlay :is(.home-menu button, .deck-entry-button, .home-account) { min-height: 54px; padding: 11px 38px 11px 45px; font-size: clamp(15px, 2.8vw, 18px); }
+#startOverlay .start-menu-grid button { min-height: 92px; padding: 12px 13px 12px 34px; font-size: clamp(12px, 2vw, 15px); line-height: 1.25; }
+#startOverlay .account-actions button { min-width: 0; padding: 8px 12px 8px 32px; font-size: clamp(12px, 2.2vw, 16px); }
+#startOverlay .home-return { min-height: 47px; padding: 9px 25px; }
+#startOverlay .home-return {
+  --ui-skin: url("shared-ui/expedition-ui-kit-v1/buttons/salvage/back--desktop--idle.svg");
+  --ui-skin-hover: url("shared-ui/expedition-ui-kit-v1/buttons/salvage/back--desktop--hover.svg");
+  --ui-skin-pressed: url("shared-ui/expedition-ui-kit-v1/buttons/salvage/back--desktop--pressed.svg");
+  font-size: 0;
+}
+#startOverlay .home-return::after { content: "시작 화면으로 돌아가기"; font-size: 14px; }
+
+@media (min-width: 421px) {
+  #startOverlay .start-menu-grid button {
+    display: grid; place-items: end center; min-height: 100px;
+    padding: 52px 12px 13px; text-align: center;
+  }
+}
+
+/* Secondary controls use the same restrained metal and signal language. */
+.dialog button:not(.ai-opponent):not(.hero-option):not(.deck-card):not(.map-option):not(.catalog-entry),
+.board-dock #endTurnButton, .power-control .power-launch, .power-control .power-confirm {
+  border-color: #977b56;
+  border-radius: 4px;
+  background-color: #1a2c2d;
+  background-image: linear-gradient(155deg, #284043, #142326 57%, #102023);
+  color: #f2ead9;
+  box-shadow: inset 0 0 0 2px #102022, inset 0 1px 0 #819d90;
+}
+.dialog button:not(.ai-opponent):not(.hero-option):not(.deck-card):not(.map-option):not(.catalog-entry):hover,
+.board-dock #endTurnButton:hover, .power-control .power-launch:hover, .power-control .power-confirm:hover { background-image: linear-gradient(155deg, #365450, #1b3434 57%, #18292a); }
+.dialog button:disabled, .board-dock #endTurnButton:disabled, .power-control button:disabled { filter: grayscale(.68) brightness(.7); box-shadow: none; }
+.dialog :is(.primary, #adventurePlayButton, #deckSaveButton), .board-dock #endTurnButton:not(:disabled), .power-control .power-confirm:not(:disabled) { border-color: #dfb16b; color: #fff4dd; }
+#startOverlay .dialog :is(.deck-entry-button, .home-account, .home-return, .start-menu-grid button, .home-menu button, .account-actions button) { background-color: transparent; background-image: var(--ui-skin); background-position: center; background-repeat: no-repeat; background-size: 100% 100%; box-shadow: none; border: 0; }
+#startOverlay .dialog :is(.deck-entry-button, .home-account, .home-return, .start-menu-grid button, .home-menu button, .account-actions button):hover { background-image: var(--ui-skin-hover); }
+#startOverlay .dialog :is(.deck-entry-button, .home-account, .home-return, .start-menu-grid button, .home-menu button, .account-actions button):active { background-image: var(--ui-skin-pressed); }
+
+/* Profile: nickname and number labels must remain readable at narrow widths. */
+.guest-profile { border-top-color: #736e5b; padding: 12px 10px 4px; background: linear-gradient(90deg, #21323070, transparent 85%); }
+.guest-profile-line { min-width: 0; align-items: center; flex-wrap: wrap; }
+.guest-profile-line strong { min-width: 0; max-width: 100%; overflow-wrap: anywhere; font-family: var(--ui-serif); font-size: 17px; font-weight: 400; }
+.guest-profile-line span { min-width: 0; max-width: 100%; overflow-wrap: anywhere; font-family: var(--ui-sans); font-size: 10px; }
+.guest-profile-meta { min-width: 0; overflow-wrap: anywhere; font-family: var(--ui-sans); }
+.guest-profile progress { height: 9px; border: 1px solid #8b7957; border-radius: 6px; background: #0c1819; }
+.guest-profile progress::-webkit-progress-bar { border-radius: 5px; background: #0c1819; }
+.guest-profile progress::-webkit-progress-value { border-radius: 5px; background: linear-gradient(90deg, #72b7aa, #d6b16e); }
+.guest-profile-progress-wrap { position: relative; }
+.guest-profile-progress-wrap progress:focus-visible { outline: 2px solid #d5af74; outline-offset: 3px; }
+.guest-profile-progress-tooltip {
+  position: absolute; z-index: 30; bottom: calc(100% + 8px); left: 0;
+  width: max-content; max-width: min(320px, calc(100vw - 56px)); padding: 9px 11px;
+  border: 1px solid #aa8c5e; border-radius: 4px; background: #0d1a1cf7;
+  box-shadow: 0 9px 22px #0009; color: #f2e9d9; font-family: var(--ui-sans);
+  font-size: 12px; line-height: 1.5; font-variant-numeric: tabular-nums;
+  text-align: left; white-space: normal; overflow-wrap: anywhere;
+  visibility: hidden; pointer-events: none;
+}
+.guest-profile-progress-tooltip span { display: block; }
+.guest-profile-progress-wrap:hover .guest-profile-progress-tooltip,
+.guest-profile-progress-wrap:focus-within .guest-profile-progress-tooltip { visibility: visible; }
+
+/* Card illustration and text have separate areas; the name plate never bleeds outside the card. */
+.card-face { border-color: #9e825c; border-radius: 5px; background: #132124; box-shadow: inset 0 0 0 2px #0c181a, 0 4px 12px #0006; }
+.card-face .card-art { min-width: 0; max-width: 100%; }
+.card-face .card-name { min-width: 0; max-width: 100%; overflow-wrap: anywhere; word-break: keep-all; border-top-color: #907a58; background: linear-gradient(180deg, #203033, #121e21); font-family: var(--ui-serif); font-weight: 400; text-align: center; }
+.card-face .card-rules { min-width: 0; overflow-wrap: anywhere; word-break: keep-all; font-family: var(--ui-sans); text-align: left; }
+.ability-card .card-name, .deck-card .card-name, .game-deck-list .card-name, .drag-card .card-name {
+  display: grid; place-items: center; width: 100%; min-height: 0; line-height: 1.12;
+  padding: 3px 2px; font-family: var(--ui-serif); font-weight: 400; text-align: center;
+}
+.ability-card .card-name { min-height: 30px; font-size: 10px; }
+.deck-card .card-face { position: relative; display: grid; grid-template-rows: minmax(0, 1fr) 40px; }
+.deck-card .card-art { height: 100%; min-height: 0; }
+.deck-card .card-name { height: 100%; overflow: hidden; font-size: 15px; }
+.deck-bag .deck-card .card-name { min-height: 0; font-size: 12px; }
+.ability-card .card-face { display: grid; grid-template-rows: minmax(0, 1fr) 30px; }
+.ability-card .card-face { position: relative; }
+.ability-card .card-face::after {
+  content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: url("shared-ui/card-border-hud.svg") center / 100% 100% no-repeat;
+}
+.ability-card .card-name { position: relative; z-index: 3; }
+.ability-card .card-art, .deck-bag .deck-card .card-art { height: 100%; min-height: 0; }
+.ability-card .card-name, .deck-bag .deck-card .card-name { height: 100%; max-height: 100%; overflow: hidden; }
+.deck-bag .deck-card .card-face { grid-template-rows: minmax(0, 1fr) 34px; }
+.card-inspector .card-name { font-family: var(--ui-serif); font-size: 18px; text-align: left; }
+.card-inspector .card-rules { font-size: 13px; line-height: 1.48; }
+.card-inspector .card-face { height: 100%; }
+
+/* Tray, game HUD, and popups use the same material without reducing inactive readability. */
+body.game-active .hand-panel { min-width: 0; border-color: #637b74; border-radius: 5px; background: linear-gradient(160deg, #1c2a2c 0%, #101b1d 80%); box-shadow: 0 -12px 24px #0009, 0 10px 25px #0008, inset 0 0 0 2px #0a1416; }
+body.game-active .hand-panel.current { border-color: #d1a567; box-shadow: 0 -12px 25px #0009, 0 0 18px #cb995a2e, inset 0 0 0 2px #0a1416; }
+body.game-active .hand-panel:not(.current) { filter: grayscale(1); opacity: 1; }
+.hand-title { display: flex; align-items: baseline; flex-wrap: wrap; gap: 3px 6px; min-width: 0; }
+.hand-owner-name, .hand-hero-name { max-width: 100%; overflow-wrap: anywhere; line-height: 1.3; }
+.hand-hero-name { color: #d8b67d; }
+.hand-row { min-width: 0; }
+.hand-row .hand-cards { min-width: 0; }
+body.game-active .app { overflow-x: hidden; overflow-y: auto; }
+body.game-active .hand-row .hand-cards { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; scrollbar-color: #8b7658 transparent; }
+body.game-active .hand-row .ability-card { flex-shrink: 0; }
+.board-hud .player-panel { border-color: #6d817b; background: linear-gradient(135deg, #1c3031e8, #111c1ee8); }
+.board-hud .player-label, .board-hud .player-score { min-width: 0; font-family: var(--ui-sans); }
+body.game-active .board-dock { background: none; box-shadow: none; backdrop-filter: none; }
+.board-dock #endTurnButton { padding-inline: 9px; font-family: var(--ui-serif); }
+.power-control .power-launch, .power-control .power-confirm { font-family: var(--ui-serif); }
+.entity-tooltip, .player-score[data-score-detail]::after { border-color: #a68b60; background: #0e1b1df7; font-family: var(--ui-serif); }
+
+/* Tutorial and in-game controls share the Salvage metal, bronze, and signal accents. */
+.topbar h1, #startOverlay .dialog > h2 {
+  color: #f4e6cb; font-family: var(--ui-serif); font-weight: 400;
+  letter-spacing: .055em; text-shadow: 0 2px 12px #000a, 0 0 14px #b88b4f48;
+}
+.topbar h1 { border-left: 3px solid var(--ui-bronze); padding-left: 12px; }
+#startOverlay .dialog > h2 { border-bottom: 1px solid #987b53; padding-bottom: 9px; }
+#gameSettingsButton {
+  width: 34px; height: 34px; border: 1px solid #927b56; border-radius: 5px; padding: 0;
+  background: #142326 url("shared-ui/expedition-ui-kit-v1/icons/settings.svg") center / 21px 21px no-repeat;
+  box-shadow: inset 0 0 0 2px #0b1719; font-size: 0;
+}
+#gameSettingsButton:hover { border-color: #d4a35b; background-color: #203637; }
+#gameSettingsButton:active { background-color: #0b1719; }
+#gameSettingsButton:focus-visible, .power-launch:focus-visible { outline: 2px solid #f0cc8a; outline-offset: 2px; }
+
+.tutorial-panel, body.game-active .tutorial-panel {
+  border: 1px solid #987b53; border-radius: 5px;
+  background: linear-gradient(155deg, #1a2b2d, #0e191b 78%);
+  box-shadow: inset 0 0 0 2px #0b1517, inset 0 0 0 3px #405b54, 0 8px 22px #0007;
+  padding: 12px 16px; color: #f3ebdb;
+}
+.tutorial-heading strong { color: #e7c18b; font-family: var(--ui-serif); font-weight: 400; }
+.tutorial-heading select { border-color: #987b53; border-radius: 3px; background: #101d1f; color: #f3ebdb; }
+.tutorial-panel p { color: #d1ded5; }
+.tutorial-actions span { color: #8bd0c3; }
+.tutorial-actions button, .tutorial-dialogue-actions button, .tutorial-reward button {
+  border: 1px solid #a8895b; border-radius: 4px;
+  background: linear-gradient(150deg, #304b49, #142427 70%);
+  box-shadow: inset 0 0 0 2px #102022, inset 0 1px 0 #78978a;
+  color: #f6ecda; font-family: var(--ui-serif); font-weight: 400;
+}
+.tutorial-actions button:hover, .tutorial-dialogue-actions button:hover, .tutorial-reward button:hover { background: linear-gradient(150deg, #41615b, #1d3434 70%); }
+#tutorialNextButton, .tutorial-reward button { border-color: #dfb16b; }
+.tutorial-completion {
+  border-color: #cda668; background: linear-gradient(135deg, #294b40, #142d2b);
+  box-shadow: inset 0 0 0 1px #619484, 0 0 12px #75c2a544;
+  color: #f4e3ba; font-family: var(--ui-serif);
+}
+.tutorial-dialogue {
+  border-color: #9d8159; border-radius: 6px;
+  background: linear-gradient(145deg, #1a2b2c, #0d181b);
+  box-shadow: inset 0 0 0 3px #101b1d, inset 0 0 0 4px #465d55, 0 16px 60px #000c;
+}
+.tutorial-dialogue > img { border-right: 1px solid #987b53; }
+.tutorial-dialogue-copy strong { color: #e7c18b; font-family: var(--ui-serif); }
+.tutorial-dialogue-copy p { color: #f1e9d9; }
+.tutorial-reward { border-color: #c29a62; }
+.tutorial-reward img { box-shadow: 0 10px 25px #0009, 0 0 0 3px #17282a; }
+
+body.game-active .hand-panel:not(.current) { filter: grayscale(1); opacity: 1; }
+.hand-title { color: #c8d5cd; }
+.hand-owner-name { color: #f3e9d5; font-family: var(--ui-serif); font-weight: 400; }
+.card-face { border-color: #ac8a5c; }
+.card-face.card-back-face { border-color: #987b53; background: linear-gradient(155deg, #233c3b, #101e21); }
+.power-control .power-launch, .power-control .power-confirm {
+  border: 0; border-radius: 0; box-shadow: none; font-weight: 400;
+  background-color: transparent; background-position: center; background-size: 100% 100%; background-repeat: no-repeat;
+}
+.power-control .power-launch {
+  width: 110px; min-height: 50px; border: 2px solid #c69b60; border-radius: 6px;
+  background: linear-gradient(160deg, #3a5148, #172a2b 60%, #101b1d);
+  box-shadow: inset 0 0 0 2px #122223, inset 0 1px 0 #8ba99a, 0 5px 14px #0009;
+  color: #fff0d3; font-size: 18px; font-weight: 600; text-shadow: 0 1px 2px #000;
+}
+.power-control .power-launch:hover { background: linear-gradient(160deg, #49665a, #203638 60%, #142425); border-color: #e7bd7c; }
+.power-control .power-launch:active { background: linear-gradient(160deg, #182a2b, #29443e); box-shadow: inset 0 2px 5px #000a; }
+.power-control .power-confirm { background-image: url("shared-ui/expedition-ui-kit-v1/buttons/salvage/power-confirm--desktop--idle.svg"); }
+.power-control .power-confirm:hover { background-image: url("shared-ui/expedition-ui-kit-v1/buttons/salvage/power-confirm--desktop--hover.svg"); }
+.power-control .power-confirm:active { background-image: url("shared-ui/expedition-ui-kit-v1/buttons/salvage/power-confirm--desktop--pressed.svg"); }
+.power-panel { border-color: #a8895b; background: linear-gradient(160deg, #1a2c2d, #0d191b); box-shadow: inset 0 0 0 2px #0a1517, 0 9px 24px #0009; }
+.power-track {
+  border: 3px ridge #aa8958; border-radius: 3px;
+  background:
+    linear-gradient(90deg, #0b1819 0 18%, #35675f 19%, #468177 49%, #284c48 80%, #0b1819 81%),
+    #19312f;
+  box-shadow: inset 0 0 0 2px #101c1d, inset 0 0 12px #000b, 0 0 0 1px #293e3b;
+}
+.power-track::before {
+  inset: 4px 3px; border-left: 1px solid #c49e62a8; border-right: 1px solid #c49e62a8;
+  background:
+    repeating-linear-gradient(to top, transparent 0 21px, #d8bb7f9c 21px 22px, transparent 22px 23px),
+    linear-gradient(90deg, transparent 46%, #d9ca9c36 49% 51%, transparent 54%);
+}
+.power-needle { z-index: 2; height: 7px; border: 1px solid #f7e3b4; background: #c88d47; box-shadow: 0 0 0 1px #573d28, 0 0 9px #e8a65288; }
+.power-value { color: #f5e5c2; font-family: var(--ui-sans); font-weight: 600; }
+.power-control.viewport-meter {
+  position: fixed; z-index: 55; left: 50% !important; top: 50% !important;
+  transform: translate(-50%, -50%);
+  max-height: calc(100dvh - 24px);
+}
+.power-control.viewport-meter .power-panel { max-height: calc(100dvh - 24px); overflow-y: auto; }
+
+/* Keep the settings numbers together at every dialog width. */
+.volume-row { grid-template-columns: minmax(0, 85px) minmax(0, 1fr) minmax(4.5ch, max-content); }
+.volume-row output { min-width: 4.5ch; white-space: nowrap; font-family: var(--ui-sans); }
+
+/* Collection, decks, and narrative panels: flexible text columns and aligned headings. */
+.catalog-header { min-width: 0; flex-wrap: wrap; }
+.catalog-header h2 { min-width: 0; overflow-wrap: anywhere; }
+.catalog-tabs { min-width: 0; }
+.catalog-tabs button { min-width: 0; overflow-wrap: anywhere; }
+.catalog-entry header { min-width: 0; }
+.catalog-entry header > :not(img) { min-width: 0; }
+.catalog-entry h3, .catalog-entry p, .hero-option-copy, .ai-opponent-detail { min-width: 0; overflow-wrap: anywhere; }
+.deck-layout, .deck-section, .deck-pool, .deck-bag { min-width: 0; }
+.deck-section h3 { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; }
+.deck-pool, .deck-bag, .catalog-entry, .ai-opponent-detail { border-color: #75877d; background-color: #132023; }
+.deck-card.bonus-ready { box-shadow: 0 0 0 2px #a279d080, 0 0 12px #9d71be7a; }
+.adventure-outcome-speaker > div, .tutorial-dialogue-copy { min-width: 0; }
+.adventure-outcome-speaker img { flex: 0 0 82px; }
+.adventure-outcome-speaker p, .adventure-dialogue-dialog .adventure-outcome-speaker p { margin: 5px 0 0; }
+.adventure-outcome-speaker p, .tutorial-dialogue-copy p, .adventure-stage-detail p { overflow-wrap: anywhere; word-break: keep-all; }
+.tutorial-dialogue { max-height: calc(100dvh - 24px); overflow-y: auto; }
+.result-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.result-grid > * { min-width: 0; overflow-wrap: anywhere; }
+
+@media (max-width: 700px) {
+  #startOverlay .start-menu-grid button { min-height: 84px; padding: 44px 7px 9px; font-family: var(--ui-sans); font-size: clamp(11px, 3vw, 13px); }
+  #startOverlay .home-menu button, #startOverlay .deck-entry-button, #startOverlay .home-account { padding-left: 36px; padding-right: 16px; }
+  .guest-profile-line { display: block; }
+  .guest-profile-line strong, .guest-profile-line span { display: block; }
+  .catalog-header { align-items: flex-start; }
+  .catalog-tabs button { flex: 1 1 108px; font-family: var(--ui-sans); font-size: 12px; }
+  .ai-opponent-name { font-family: var(--ui-sans); font-size: 13px; }
+  body.game-active .hand-title { font-family: var(--ui-sans); }
+  .catalog-list { grid-template-columns: 1fr; }
+  .deck-bag { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .deck-bag .deck-card .card-face { height: 116px; }
+  .deck-bag .deck-card .card-art { height: 100%; }
+  .result-grid { grid-template-columns: 1fr; }
+  body.game-active .board-dock { grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: 23px 28px; gap: 1px 3px; min-height: 55px; padding: 2px 5px; }
+  body.game-active .board-dock .remaining-ui { grid-column: 1; grid-row: 1; align-self: center; }
+  body.game-active .board-dock .speed-toggle { grid-column: 2; grid-row: 1; align-self: center; }
+  body.game-active .board-dock .turn-status { grid-column: 1 / -1; grid-row: 2; justify-self: end; }
+  body.game-active .board-dock .turn-status strong { max-width: 110px; }
+}
+
+@media (max-width: 420px) {
+  .start-menu-grid { grid-template-columns: 1fr; gap: 6px; }
+  #startOverlay .dialog .start-menu-grid button,
+  #startOverlay .dialog .start-menu-grid button:hover,
+  #startOverlay .dialog .start-menu-grid button:active {
+    position: relative; min-height: 56px; padding: 8px 38px; border: 1px solid #927b56;
+    border-radius: 4px; background: linear-gradient(155deg, #1d3032, #0e1b1e 75%);
+    box-shadow: inset 0 0 0 2px #0a1416, inset 0 0 0 3px #465b55;
+    font-size: 13px;
+  }
+  #startOverlay .dialog .start-menu-grid button::before {
+    content: ''; position: absolute; top: 50%; left: 12px; width: 19px; height: 19px;
+    background-image: var(--ui-mobile-icon); background-position: center; background-size: contain;
+    background-repeat: no-repeat; transform: translateY(-50%); pointer-events: none;
+  }
+  #browseRoomsButton { --ui-mobile-icon: url("shared-ui/expedition-ui-kit-v1/icons/search.svg"); }
+  #openJoinScreenButton { --ui-mobile-icon: url("shared-ui/expedition-ui-kit-v1/icons/code.svg"); }
+  #openLocalScreenButton { --ui-mobile-icon: url("shared-ui/expedition-ui-kit-v1/icons/people.svg"); }
+  #createRoomButton { --ui-mobile-icon: url("shared-ui/expedition-ui-kit-v1/icons/network.svg"); }
+  #openAiScreenButton { --ui-mobile-icon: url("shared-ui/expedition-ui-kit-v1/icons/chip.svg"); }
+  #openAdventureScreenButton { --ui-mobile-icon: url("shared-ui/expedition-ui-kit-v1/icons/compass.svg"); }
+  #startOverlay .dialog #openAdventureScreenButton { padding-right: 58px; }
+  #startOverlay #openAdventureScreenButton::after { top: 50%; right: 11px; transform: translateY(-50%); }
+  .deck-bag { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dialog { padding-inline: 12px; }
+  .adventure-stage-detail { margin-inline: 12px; }
+  .adventure-outcome-speaker img { width: 64px; height: 64px; flex-basis: 64px; }
+  .tutorial-dialogue { grid-template-columns: 76px minmax(0, 1fr); }
+  .tutorial-dialogue > img { min-height: 120px; }
+  .tutorial-dialogue-copy { padding: 12px; }
+}
+
+@media (max-width: 700px) {
+  .power-control .power-launch { width: 88px; min-height: 43px; font-size: 15px; }
+}
+
+/* The artwork places its pictogram in the upper third. Keep the live label
+   within the lower inner frame, away from the bottom engraved border. */
+@media (min-width: 421px) {
+  #startOverlay .dialog .start-menu-grid button {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 272 / 92;
+    padding: 0 12px 13px;
+    font-family: var(--ui-serif);
+    font-size: clamp(12px, 1.5vw, 15px);
+    line-height: 1.2;
+    white-space: normal;
+  }
+}

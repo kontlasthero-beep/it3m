@@ -1,0 +1,111 @@
+/* Load after game-ui-kit.css. All rules are scoped to the tutorial presentation. */
+body.tm-open .topbar { position: relative; z-index: 44; }
+body.tm-open[data-tutorial-settings="false"] #gameSettingsButton { visibility: visible; }
+body.tm-open #gameSettingsOverlay { z-index: 60; }
+
+.tm-backdrop {
+  position: fixed;
+  z-index: 43;
+  inset: 0;
+  background: rgba(4, 9, 11, .46);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 320ms ease;
+}
+body.tm-open .tm-backdrop { opacity: 1; }
+
+body.tm-open #tutorialDialogue {
+  z-index: 45;
+  top: 50%;
+  right: auto;
+  bottom: auto;
+  left: 50%;
+  width: min(920px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: 0;
+  grid-template-columns: clamp(110px, 19vw, 200px) minmax(0, 1fr);
+  transform: translate(-50%, -50%);
+  box-shadow: 0 24px 90px rgba(0, 0, 0, .86);
+}
+body.tm-open #tutorialDialogue:not([hidden]) { display: grid; }
+body.tm-open #tutorialDialogue > img { min-height: 240px; }
+body.tm-open #tutorialDialogue .tutorial-dialogue-copy { align-self: center; padding: clamp(22px, 3vw, 38px); }
+body.tm-open #tutorialDialogue #tutorialSpeaker { font-size: clamp(16px, 1.5vw, 21px); }
+body.tm-open #tutorialDialogue #tutorialDialogueText {
+  min-height: 3.4em;
+  margin-block: 15px 22px;
+  color: #f0efe8;
+  font-size: clamp(20px, 2.25vw, 29px);
+  line-height: 1.7;
+}
+body.tm-open #tutorialDialogue #tutorialNicknameForm { max-width: 520px; }
+body.tm-open #tutorialDialogue #tutorialNicknameInput { min-height: 44px; }
+body.tm-open #tutorialDialogue #tutorialDialogueNext { min-width: 100px; min-height: 44px; }
+
+body.tm-open #tutorialDialogue.tm-enter { animation: tm-dialog-enter 420ms cubic-bezier(.2, .75, .25, 1) both; }
+body.tutorial-intro-sequence .game-shell { animation: tm-board-settle 600ms ease-out both; }
+body.tutorial-intro-sequence .board-hud { animation: tm-hud-settle 520ms ease-out both; }
+
+.tm-exit-ghost {
+  z-index: 45;
+  top: 50%;
+  right: auto;
+  bottom: auto;
+  left: 50%;
+  width: min(920px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: 0;
+  grid-template-columns: clamp(110px, 19vw, 200px) minmax(0, 1fr);
+  pointer-events: none !important;
+  animation: tm-dialog-exit 300ms ease-in both;
+}
+.tm-exit-ghost > img { min-height: 240px; }
+.tm-exit-ghost .tutorial-dialogue-copy { align-self: center; padding: clamp(22px, 3vw, 38px); }
+.tm-exit-ghost .tutorial-dialogue-copy p { color: #f0efe8; font-size: clamp(20px, 2.25vw, 29px); line-height: 1.7; }
+.tm-exit-ghost :is(form, .tutorial-dialogue-actions) { display: none !important; }
+
+@keyframes tm-dialog-enter {
+  from { opacity: 0; transform: translate(-50%, calc(-50% + 32px)); }
+  to { opacity: 1; transform: translate(-50%, -50%); }
+}
+@keyframes tm-dialog-exit {
+  from { opacity: 1; transform: translate(-50%, -50%); }
+  to { opacity: 0; transform: translate(-50%, calc(-50% + 38px)); }
+}
+@keyframes tm-board-settle {
+  from { opacity: .6; transform: translateY(22px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes tm-hud-settle {
+  from { opacity: 0; transform: translateY(-14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 600px) {
+  body.tm-open #tutorialDialogue {
+    width: calc(100vw - 20px);
+    max-height: calc(100dvh - 20px);
+    grid-template-columns: 76px minmax(0, 1fr);
+  }
+  .tm-exit-ghost { width: calc(100vw - 20px); grid-template-columns: 76px minmax(0, 1fr); }
+  .tm-exit-ghost > img { min-height: 160px; }
+  .tm-exit-ghost .tutorial-dialogue-copy { padding: 14px; }
+  .tm-exit-ghost .tutorial-dialogue-copy p { font-size: clamp(17px, 4.2vw, 22px); }
+  body.tm-open #tutorialDialogue > img { min-height: 160px; }
+  body.tm-open #tutorialDialogue .tutorial-dialogue-copy { padding: 14px; }
+  body.tm-open #tutorialDialogue #tutorialDialogueText { min-height: 0; font-size: clamp(17px, 4.2vw, 22px); }
+}
+
+@media (max-height: 520px) {
+  body.tm-open #tutorialDialogue > img { min-height: 0; }
+  body.tm-open #tutorialDialogue .tutorial-dialogue-copy { padding-block: 12px; }
+  body.tm-open #tutorialDialogue #tutorialDialogueText { min-height: 0; margin-block: 8px 12px; font-size: clamp(16px, 3.5vh, 23px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-backdrop { transition: none; }
+  body.tm-open #tutorialDialogue.tm-enter,
+  body.tutorial-intro-sequence .game-shell,
+  body.tutorial-intro-sequence .board-hud,
+  .tm-exit-ghost { animation: none; }
+}

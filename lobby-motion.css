@@ -1,0 +1,25 @@
+/* Lobby navigation: the outgoing screen falls to black before the next one emerges. */
+::view-transition { background: #050a0c; }
+::view-transition-old(root) {
+  animation: lobby-out 190ms ease-in both;
+}
+::view-transition-new(root) {
+  animation: lobby-in 310ms 190ms cubic-bezier(.2,.72,.25,1) both;
+}
+@keyframes lobby-out {
+  from { opacity: 1; filter: brightness(1) blur(0); }
+  to { opacity: 0; filter: brightness(.34) blur(2px); }
+}
+@keyframes lobby-in {
+  from { opacity: 0; filter: brightness(.4) blur(4px); transform: translateY(8px); }
+  to { opacity: 1; filter: brightness(1) blur(0); transform: translateY(0); }
+}
+.overlay:not([hidden]) > .dialog { animation: surface-rise 290ms cubic-bezier(.2,.72,.25,1) both; }
+@keyframes surface-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 1ms; animation-delay: 0ms; }
+  .overlay:not([hidden]) > .dialog { animation: none; }
+}

@@ -103,9 +103,9 @@
     "name": "경질화",
     "group": "카드와 트리거",
     "description": "경질화 효과를 적용할 때",
-    "file": "hardening-freeze-v2.mp3",
-    "duration": 1.0,
-    "prompt": "Something massive instantly freezes solid: a weighty low bass impact, a fast crackling frost surge and deep stone-metal resonance. Heavy and physical, no light glass tinkle, no voice or music. Add a subtle short reverb tail."
+    "file": "hardening-freeze-v3.mp3",
+    "duration": 1.8,
+    "prompt": "A clearly audible, upfront 1.8-second game ability sound. A massive stone-and-metal object hardens in an instant: start with a sharp full-bodied cracking impact, then a dense icy crystalline fracture spreads across the surface, ending in a deep resonant frozen-metal ring. Strong midrange presence as well as bass so it remains audible on laptop speakers. No quiet fade-in, no glass tinkle, no voice or music. Subtle short reverb tail."
   },
   {
     "id": "guard",
@@ -148,9 +148,9 @@
     "name": "블랙홀 방출",
     "group": "카드와 트리거",
     "description": "블랙홀 방출 카드를 사용할 때",
-    "file": "blackhole-release.mp3",
-    "duration": 1.5,
-    "prompt": "An unstable black-hole-like energy pulse opens: nearby sound is briefly sucked inward into a hollow low-frequency inhale, followed by a dense dark gravitational thump and a short distorted glassy ripple. Eerie and weighty, not a cinematic explosion, no voice, no music."
+    "file": "blackhole-release-v3.mp3",
+    "duration": 2.0,
+    "prompt": "Loud, full-bodied continuous 2-second dark-fantasy black-hole ability sound, no silence or quiet lead-in. Start with a strong crunchy midrange energy crack. A dense vortex rush and resonant gravity hum fill the entire duration, ending in a deep thump and short warped-metal reverb. Consistent sound level, audible on laptop speakers, rich bass and strong midrange. No empty gaps, whisper, music or voice."
   },
   {
     "id": "ammoLoad",
@@ -229,9 +229,9 @@
     "name": "강한 충돌",
     "group": "충돌과 타이머",
     "description": "스톤이나 유닛이 큰 힘으로 충돌할 때",
-    "file": "strong-impact-v2.mp3",
-    "duration": 0.9,
-    "prompt": "A forceful impact between two massive metal-rimmed stone units on a hard abandoned industrial platform: solid bass-heavy crack, rough stone scrape and a short metallic ring. Grounded but slightly fantastical, not an explosion, no voice or music. Add a subtle short reverb tail."
+    "file": "strong-impact-v3.mp3",
+    "duration": 1.8,
+    "prompt": "A clearly audible, upfront 1.8-second heavy game collision sound. Two massive metal-rimmed stone units slam together on a hard abandoned industrial platform: immediate sharp stone-and-metal crack with a powerful body, followed by grinding friction and a lower resonant metal ring that decays naturally. Strong midrange attack and weighty bass, audible on laptop speakers. No quiet lead-in, no explosion, no voice or music. Subtle short reverb tail."
   },
   {
     "id": "speedRestore",

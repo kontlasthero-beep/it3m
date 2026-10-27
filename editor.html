@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>모험 스테이지 에디터 · Second Chance</title>
+  <link rel="stylesheet" href="fonts/font-families.css?v=1">
+  <link rel="stylesheet" href="editor.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand"><strong>Second Chance</strong><span>모험 스테이지 에디터</span></div>
+    <div class="document-actions">
+      <label class="sr-only" for="draftSelect">저장된 스테이지</label>
+      <select id="draftSelect" title="저장된 스테이지"></select>
+      <button id="newButton" type="button">새 스테이지</button>
+      <button id="deleteStageButton" class="danger" type="button">초안 삭제</button>
+      <button id="saveButton" type="button">저장</button>
+      <button id="importButton" type="button">가져오기</button>
+      <button id="exportButton" class="primary" type="button">내보내기</button>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <aside class="palette" aria-label="에셋 목록">
+      <div class="panel-heading"><h1>에셋</h1><button id="uploadButton" type="button">업로드</button></div>
+      <div class="palette-filters">
+        <label class="sr-only" for="assetCategory">에셋 종류</label>
+        <select id="assetCategory"><option value="all">전체</option><option value="stone">스톤</option><option value="structure">구조물</option><option value="trigger">트리거</option><option value="beacon">비콘</option><option value="wire">전선</option><option value="card">카드 삽화</option><option value="portrait">초상화</option><option value="map">맵 이미지</option><option value="decoration">기타 이미지</option><option value="audio">오디오</option><option value="upload">업로드 전체</option></select>
+        <label class="sr-only" for="assetSearch">에셋 검색</label>
+        <input id="assetSearch" type="search" placeholder="에셋 검색" autocomplete="off">
+        <label>새 파일 분류<select id="uploadCategory"><option value="decoration">기타 이미지</option><option value="stone">스톤</option><option value="structure">구조물</option><option value="trigger">트리거</option><option value="beacon">비콘</option><option value="wire">전선</option><option value="card">카드 삽화</option><option value="portrait">초상화</option><option value="map">맵 이미지</option></select></label>
+      </div>
+      <div class="asset-list" id="assetList"></div>
+      <div class="palette-footer"><button id="addZoneButton" type="button">영역 배치</button><button id="addNoteButton" type="button">주석 표식</button></div>
+    </aside>
+
+    <section class="board-area" aria-label="스테이지 게임판">
+      <div class="board-toolbar">
+        <div class="tool-group" role="group" aria-label="편집 도구">
+          <button id="selectTool" class="selected" type="button" aria-pressed="true">선택</button>
+          <button id="placeTool" type="button" aria-pressed="false">배치</button>
+          <button id="boundaryTool" type="button" aria-pressed="false">경계 조정</button>
+          <button id="undoButton" type="button" title="되돌리기" aria-label="되돌리기">↶</button>
+          <button id="redoButton" type="button" title="다시 실행" aria-label="다시 실행">↷</button>
+          <button id="groupButton" type="button" disabled>그룹화</button>
+          <button id="ungroupButton" type="button" disabled>그룹 해제</button>
+        </div>
+        <label class="check"><input id="snapToggle" type="checkbox">격자 맞춤</label>
+        <label class="check"><input id="boundsToggle" type="checkbox" checked>추락 경계</label>
+        <button id="focusBoardButton" type="button" aria-pressed="false">판 확대</button>
+        <span class="board-count" id="objectCount">0개 배치</span>
+      </div>
+      <div class="board-frame"><canvas id="editorCanvas" width="1200" height="772" aria-label="스테이지 배치 화면"></canvas></div>
+      <div class="board-footer"><span id="cursorPosition">x 0 · y 0</span><span id="boardStatus" role="status"></span><span>실제 게임 좌표 · 1200 × 772</span></div>
+    </section>
+
+    <aside class="inspector" aria-label="스테이지 속성">
+      <div class="inspector-tabs" role="tablist" aria-label="편집 정보">
+        <button id="stageTab" class="selected" type="button" role="tab" aria-selected="true">스테이지</button>
+        <button id="objectTab" type="button" role="tab" aria-selected="false">개체</button>
+        <button id="storyTab" type="button" role="tab" aria-selected="false">연출</button>
+      </div>
+      <div class="inspector-content" id="stagePanel" role="tabpanel">
+        <label>스테이지 제목<input id="stageTitle" maxlength="120"></label>
+        <label>부제<input id="stageSubtitle" maxlength="240"></label>
+        <label>맵<select id="mapSelect"></select></label>
+        <label>맵 이미지<select id="backgroundSelect"></select></label>
+        <button id="uploadMapButton" type="button">맵 이미지 업로드</button>
+        <div class="boundary-heading"><h2>추락 경계</h2><button id="resetBoundaryButton" type="button">기본값</button></div>
+        <div class="field-grid"><label>왼쪽 X<input id="fallLeft" type="number" min="0" max="1200" step="1"></label><label>오른쪽 X<input id="fallRight" type="number" min="0" max="1200" step="1"></label></div>
+        <div class="field-grid"><label>위쪽 Y<input id="fallTop" type="number" min="0" max="772" step="1"></label><label>아래쪽 Y<input id="fallBottom" type="number" min="0" max="772" step="1"></label></div>
+        <label>진입 상황<textarea id="stageBriefing" rows="3" maxlength="4000"></textarea></label>
+        <h2>클리어 조건</h2>
+        <label>종류<select id="objectiveType"><option value="custom">직접 지정</option><option value="reach-score">점수 도달</option><option value="knockout">상대 스톤 추락</option><option value="reach-zone">영역 진입</option><option value="survive">생존</option><option value="collect-trigger">트리거 획득</option></select></label>
+        <label>목표값<input id="objectiveTarget" maxlength="300" placeholder="예: 80 / zone-1"></label>
+        <label>제한 턴<input id="turnLimit" type="number" min="1" max="99" step="1"></label>
+        <label>조건 세부사항<textarea id="objectiveNotes" rows="3" maxlength="4000"></textarea></label>
+        <section class="exploration-marks" aria-labelledby="explorationMarksHeading">
+          <h2 id="explorationMarksHeading">탐사 표식</h2>
+          <label>표식 아이콘 세트<select id="explorationIconSet"><option value="beacon">B · 탐사 비콘</option><option value="wayfinder">A · 항로 화살촉</option></select></label>
+          <div class="exploration-mark-preview" aria-label="선택한 표식의 완전한 아이콘과 깨진 아이콘">
+            <figure><img id="explorationIconIntact" src="adventure/reward-icons/exploration-mark-b-beacon.png" alt=""><figcaption>완전한 표식</figcaption></figure>
+            <figure><img id="explorationIconBroken" src="adventure/reward-icons/exploration-mark-b-beacon-broken.png" alt=""><figcaption>깨진 표식</figcaption></figure>
+          </div>
+          <p>추가 보상 조건은 최대 2개까지 설정할 수 있습니다. 직접 입력한 문장은 안내용이며, 실제 획득 판정은 아래 변수 비교식으로 연결됩니다.</p>
+          <button id="markVariableEditorButton" type="button">연출 탭에서 변수·이벤트 설정</button>
+          <div class="exploration-bonus-row" data-bonus-index="0"><label>추가 조건 1<select class="exploration-bonus-type"><option value="">없음</option><option value="hand-card">클리어 시 손패에 카드 보유</option><option value="trigger-count">트리거 획득 개수</option><option value="variable">직접 입력 · 스테이지 변수 판정</option></select></label><label class="exploration-bonus-card-field" hidden>손패 카드<select class="exploration-bonus-card"></select></label><label class="exploration-bonus-count-field" hidden>획득할 트리거 수<input class="exploration-bonus-count" type="number" min="1" max="50" step="1"></label><div class="exploration-bonus-custom" hidden><label>조건 설명<input class="exploration-bonus-description" type="text" maxlength="240" placeholder="예: 카드 사용 없이 목표 도달"></label><label>판정 변수<select class="exploration-bonus-variable"></select></label><label>비교<select class="exploration-bonus-operator"><option value="eq">=</option><option value="ne">≠</option><option value="gt">&gt;</option><option value="gte">≥</option><option value="lt">&lt;</option><option value="lte">≤</option></select></label><label>기준값<input class="exploration-bonus-value" type="text" maxlength="200" placeholder="true / 3 / 값"></label></div></div>
+          <div class="exploration-bonus-row" data-bonus-index="1"><label>추가 조건 2<select class="exploration-bonus-type"><option value="">없음</option><option value="hand-card">클리어 시 손패에 카드 보유</option><option value="trigger-count">트리거 획득 개수</option><option value="variable">직접 입력 · 스테이지 변수 판정</option></select></label><label class="exploration-bonus-card-field" hidden>손패 카드<select class="exploration-bonus-card"></select></label><label class="exploration-bonus-count-field" hidden>획득할 트리거 수<input class="exploration-bonus-count" type="number" min="1" max="50" step="1"></label><div class="exploration-bonus-custom" hidden><label>조건 설명<input class="exploration-bonus-description" type="text" maxlength="240" placeholder="예: 스톤 하나로 모든 트리거 획득"></label><label>판정 변수<select class="exploration-bonus-variable"></select></label><label>비교<select class="exploration-bonus-operator"><option value="eq">=</option><option value="ne">≠</option><option value="gt">&gt;</option><option value="gte">≥</option><option value="lt">&lt;</option><option value="lte">≤</option></select></label><label>기준값<input class="exploration-bonus-value" type="text" maxlength="200" placeholder="true / 3 / 값"></label></div></div>
+        </section>
+        <h2>시작 손패</h2>
+        <div class="field-grid"><label>선정 방식<select id="startingHandMode"><option value="ordered">지정 순서</option><option value="random">무작위</option></select></label><label>시작 장수<input id="startingHandCount" type="number" min="0" max="40" step="1"></label></div>
+        <div id="startingHandCards" class="stage-card-list" aria-label="시작 손패 카드 순서"></div>
+        <div class="stage-card-add"><label>추가할 카드<select id="startingHandCardSelect"></select></label><button id="addStartingHandCard" type="button">손패에 넣기</button></div>
+        <h2>플레이어 가방 <span id="deckCardCount"></span></h2>
+        <label>뽑기 방식<select id="deckMode"><option value="ordered">지정 순서</option><option value="random">무작위</option></select></label>
+        <div id="deckCards" class="stage-card-list" aria-label="가방 카드 순서"></div>
+        <div class="stage-card-add"><label>추가할 카드<select id="deckCardSelect"></select></label><button id="addDeckCard" type="button">가방에 넣기</button></div>
+        <h2>제작 메모</h2>
+        <label class="sr-only" for="stageNotes">제작 메모</label><textarea id="stageNotes" rows="5" maxlength="10000"></textarea>
+      </div>
+      <div class="inspector-content" id="objectPanel" role="tabpanel" hidden>
+        <div id="objectEmpty" class="empty-state">게임판에서 개체를 선택하세요. Shift+클릭으로 여러 개를 선택할 수 있습니다.</div>
+        <div id="multiSelection" class="multi-selection" hidden><strong id="selectionCount"></strong><span>함께 이동하거나 그룹으로 묶을 수 있습니다.</span><div><button id="multiFlipX" type="button">좌우 반전</button><button id="multiFlipY" type="button">상하 반전</button></div></div>
+        <div id="objectFields" hidden>
+          <div class="object-title"><strong id="objectAssetName"></strong><span id="objectId"></span></div>
+          <label>표시 이름<input id="objectLabel" maxlength="120"></label>
+          <label>판정 종류<select id="objectKind"><option value="stone">스톤</option><option value="structure">구조물</option><option value="trigger">트리거</option><option value="decoration">장식</option><option value="zone">목표 영역</option><option value="note">주석 표식</option></select></label>
+          <label>소유자<select id="objectOwner"><option value="neutral">중립</option><option value="player">플레이어</option><option value="opponent">상대</option></select></label>
+          <div class="field-grid"><label>X<input id="objectX" type="number" min="0" max="1200" step="any"></label><label>Y<input id="objectY" type="number" min="0" max="772" step="any"></label></div>
+          <div class="field-grid"><label>너비<input id="objectWidth" type="number" min="4" max="1200" step="any"></label><label>높이<input id="objectHeight" type="number" min="4" max="772" step="any"></label></div>
+          <label>회전<input id="objectRotation" type="number" step="1"></label>
+          <div class="field-grid"><button id="flipXButton" type="button">좌우 반전</button><button id="flipYButton" type="button">상하 반전</button></div>
+          <label>연출·배치 주석<textarea id="objectNotes" rows="4" maxlength="5000"></textarea></label>
+          <label>특수 판정·효과 주석<textarea id="objectMechanicNotes" rows="4" maxlength="5000"></textarea></label>
+          <section id="objectMechanics" hidden><h2>게임 규칙</h2><div id="objectMechanicFields"></div></section>
+          <div class="object-actions"><button id="duplicateButton" type="button">복제</button><button id="bringFrontButton" type="button">앞으로</button><button id="deleteButton" class="danger" type="button">삭제</button></div>
+          <button id="objectEventsButton" type="button">이 개체의 연출 보기</button>
+          <button id="removeAssetButton" class="danger" type="button" hidden>업로드 에셋 삭제</button>
+        </div>
+      </div>
+      <div class="inspector-content story-workbench" id="storyPanel" role="dialog" aria-modal="true" aria-label="연출 편집" hidden>
+        <div class="workbench-header"><h1>연출</h1><div class="workbench-nav"><button id="storySaveButton" type="button">저장</button><button id="storyStageButton" type="button">스테이지</button><button id="storyObjectButton" type="button">개체</button><button id="closeStoryButton" type="button" aria-label="연출 닫기">닫기</button></div></div>
+        <div class="workbench-body">
+          <section class="workbench-column event-column" aria-label="이벤트 목록"><div class="workbench-section-heading"><h2>이벤트</h2><button id="addEventButton" type="button">추가</button></div><div id="eventList" class="event-list"></div></section>
+          <section class="workbench-column rule-column" aria-label="이벤트 규칙"><div class="workbench-section-heading"><h2>규칙</h2><button id="deleteEventButton" class="danger" type="button">삭제</button></div><div id="eventEditor"></div></section>
+          <section class="workbench-column side-column" aria-label="변수와 미리보기"><div class="workbench-section-heading"><h2>변수</h2><button id="addVariableButton" type="button">추가</button></div><div id="variableList" class="variable-list"></div><div class="workbench-section-heading"><h2>미리보기</h2></div><div class="dialogue-preview"><label>출력 상황<select id="previewCue"><option value="intro">시작</option><option value="success">성공</option><option value="failure">실패</option><option value="event">이벤트</option></select></label><label>이벤트<select id="previewEvent"></select></label><button id="testEventButton" type="button">이벤트 시험</button><div id="eventTestResult" class="event-test-result" aria-live="polite"></div><div class="preview-content" id="previewLine" aria-live="off"></div><div class="preview-controls"><span id="previewPosition"></span><button id="previewRestart" type="button">처음</button><button id="previewNext" type="button">다음</button><button id="previewFullscreenButton" type="button">확대 편집·미리보기</button></div></div></section>
+        </div>
+        <section class="workbench-dialogue" aria-label="대사 편집"><div class="workbench-section-heading"><h2>대사</h2><button id="addLineButton" type="button">추가</button></div><div id="dialogueList" class="dialogue-list"></div></section>
+        <div class="dialogue-preview-overlay" id="dialoguePreviewOverlay" role="dialog" aria-modal="true" aria-label="대사 확대 편집 및 미리보기" hidden><div class="dialogue-preview-window"><div class="dialogue-preview-dialog-head"><strong id="dialoguePreviewTitle">대사 확대 편집 및 미리보기</strong><button id="dialoguePreviewClose" type="button">닫기</button></div><div class="dialogue-preview-layout"><div class="dialogue-preview-editor"><label>대사<textarea id="dialoguePreviewInput" rows="12" aria-describedby="dialoguePreviewHint"></textarea></label><small id="dialoguePreviewHint">Enter로 넣은 줄바꿈이 미리보기에도 적용됩니다.</small><div class="dialogue-preview-fields"><label>글꼴<select id="dialoguePreviewFont"></select></label><label>글자 크기<input id="dialoguePreviewFontSize" type="number" min="14" max="28" step="1"></label><label>등장 효과<select id="dialoguePreviewReveal"><option value="instant">즉시</option><option value="typewriter">타자</option><option value="fade">페이드</option></select></label><label>타자 속도 (글자/초)<input id="dialoguePreviewSpeed" type="number" min="5" max="90" step="1"></label></div></div><div class="dialogue-preview-stage"><span>대화창 미리보기 · 실제 글자 크기</span><div class="dialogue-preview-dialog" id="dialoguePreviewDialog"><h2 class="dialogue-preview-outcome-title" id="dialoguePreviewOutcomeTitle" hidden></h2><div class="dialogue-preview-body"><img id="dialoguePreviewPortrait" src="영웅 초상화/big boy.png" alt=""><div><strong id="dialoguePreviewSpeaker"></strong><p id="dialoguePreviewText"></p></div></div></div><div class="dialogue-preview-dialog-actions"><button id="dialoguePreviewReplay" type="button">다시 재생</button></div></div></div></div></div>
+      </div>
+    </aside>
+  </main>
+  <input id="assetFileInput" type="file" accept="image/png,image/jpeg,image/webp,audio/mpeg,audio/wav,audio/ogg" multiple hidden>
+  <input id="mapFileInput" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden>
+  <input id="stageFileInput" type="file" accept=".json,application/json" hidden>
+  <script src="adventure-loadout.js"></script>
+  <script src="adventure-event-catalog.js"></script>
+  <script src="adventure-marks.js"></script>
+  <script src="adventure-dialogue-presentation.js"></script>
+  <script src="adventure-editor-model.js"></script>
+  <script src="adventure-event-engine.js"></script>
+  <script src="adventure-power.js"></script>
+  <script src="editor.js"></script>
+</body>
+</html>

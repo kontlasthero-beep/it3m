@@ -588,9 +588,19 @@ test('first entry opens Big Boy dialogue, collects a nickname, then reveals sett
   g.run(`guestProfile={name:'신입',level:1,tutorialCompleted:false}; enterProfileLobby();
     assert.equal(state.tutorial.index,0); assert.equal(tutorialLessons().length,4);
     assert.equal(document.body.dataset.tutorialSettings,'false');
+    assert.equal(state.tutorialIntroDrop.phase,'hidden');`);
+  g.flush();
+  g.run(`
     assert.equal(tutorialUI.tutorialDialogue.dataset.lineId,'welcome');
     assert.equal(canControlPlayer(0),false);
-    advanceTutorialDialogue(); advanceTutorialDialogue(); advanceTutorialDialogue();
+    advanceTutorialDialogue();
+    assert.equal(state.tutorial.dialogue.index,0);
+    assert.equal(tutorialUI.tutorialDialogueNext.disabled,true);
+    assert.equal(state.tutorialIntroDrop.phase,'falling');`);
+  g.flush();
+  g.run(`assert.equal(tutorialUI.tutorialDialogue.dataset.lineId,'introduce');
+    assert.ok(sounds.includes('drop'));
+    advanceTutorialDialogue(); advanceTutorialDialogue();
     assert.equal(tutorialUI.tutorialNicknameForm.hidden,false);`);
   await g.run("saveTutorialNickname('탐험가')");
   g.run(`assert.equal(PLAYER[0].name,'탐험가'); assert.equal(guestProfile.name,'탐험가');

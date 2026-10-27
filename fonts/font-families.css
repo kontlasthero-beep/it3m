@@ -1,0 +1,36 @@
+/* Local, commercially usable SIL OFL 1.1 fonts. See fonts/README.md and each OFL.txt. */
+@font-face {
+  font-family: "SecondChance Plex";
+  src: url("./ibmplexsanskr/IBMPlexSansKR-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "SecondChance Noto Sans";
+  src: url("./notosanskr/NotoSansKR%5Bwght%5D.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "SecondChance Gowun Batang";
+  src: url("./gowunbatang/GowunBatang-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "SecondChance Black Han";
+  src: url("./blackhansans/BlackHanSans-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "SecondChance Do Hyeon";
+  src: url("./dohyeon/DoHyeon-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}

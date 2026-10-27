@@ -25,9 +25,36 @@ test('public room lifecycle, admission races and WebSocket delivery', { timeout:
   });
   const base=`http://127.0.0.1:${port}`;
   await t.test('generated MP3 effects are served as playable audio',async()=>{
-    const response=await fetch(base+encodeURI('/효과음/ElevenLabs_Drafts/strong-impact-v2.mp3'));
+    const response=await fetch(base+encodeURI('/효과음/ElevenLabs_Drafts/strong-impact-v3.mp3'));
     assert.equal(response.status,200);
     assert.equal(response.headers.get('content-type'),'audio/mpeg');
+  });
+  await t.test('local adventure editor assets are served',async()=>{
+    for(const file of ['editor.html','editor.css','editor.js','adventure-editor-model.js','adventure-marks.js','adventure-dialogue-presentation.js']) {
+      const response=await fetch(`${base}/${file}`);
+      assert.equal(response.status,200,file);
+    }
+  });
+  await t.test('local editor discovers shared art without exposing arbitrary paths',async()=>{
+    const response=await fetch(`${base}/api/editor-assets`);
+    assert.equal(response.status,200);
+    assert.equal(response.headers.get('cache-control'),'no-store');
+    const {assets}=await response.json();
+    assert.ok(assets.some(asset=>asset.src.startsWith('/Card_illustration/Data Barrier-v2.png?') && asset.category==='card'));
+    const rewardFiles = [
+      'exploration-mark-a-wayfinder.png', 'exploration-mark-a-wayfinder-broken.png',
+      'exploration-mark-b-beacon.png', 'exploration-mark-b-beacon-broken.png',
+      'exploration-mark-c-route-seal.png'
+    ];
+    for(const file of rewardFiles) {
+      const asset=assets.find(item=>item.src.startsWith(`/adventure/reward-icons/${file}?`));
+      assert.ok(asset,`${file} is discoverable`);
+      assert.equal(asset.category,'decoration');
+      const image=await fetch(base+asset.src);
+      assert.equal(image.status,200,file);
+      assert.equal(image.headers.get('content-type'),'image/png');
+    }
+    assert.ok(assets.every(asset=>asset.id.startsWith('upload:shared:') && !asset.src.includes('..')));
   });
   async function api(route,body,auth) {
     const response=await fetch(base+route,body===undefined?{}:{method:'POST',headers:{'Content-Type':'application/json',...(auth?{Authorization:`Bearer ${auth}`}:{})},body:JSON.stringify(body)});

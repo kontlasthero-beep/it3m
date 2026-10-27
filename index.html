@@ -10,6 +10,7 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="stylesheet" href="fonts/font-families.css?v=1">
   <title>Second Chance</title>
   <style>
     :root {
@@ -35,7 +36,7 @@
       padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
       background: #0c1315;
       color: var(--ink);
-      font-family: "Malgun Gothic", "Segoe UI", sans-serif;
+      font-family: "SecondChance Plex", "Malgun Gothic", "Segoe UI", sans-serif;
     }
 
     button {
@@ -243,7 +244,49 @@
     .start-menu-grid .menu-local { border-color: #d59e4d; background: #b47522; color: #18110a; }
     .start-menu-grid .menu-online { border-color: #4cae9b; background: #247667; color: #f1fffb; }
     .start-menu-grid .menu-browse { border-color: #76908c; background: #243936; }
-    .start-menu-grid .menu-ai { grid-column: 1 / -1; border-color: #9b87d4; background: #493d6b; color: #f8f3ff; }
+    .start-menu-grid .menu-ai { border-color: #9b87d4; background: #493d6b; color: #f8f3ff; }
+    .start-menu-grid .menu-adventure { border-color: #b4aa76; background: #39433c; color: #f4efdb; }
+    .adventure-selection-dialog { width: min(680px, 100%); }
+    .adventure-stage-browser { display: grid; grid-template-columns: 42px minmax(0, 1fr) 42px; gap: 8px; align-items: center; }
+    .adventure-stage-browser > button { height: 52px; padding: 0; font-size: 28px; }
+    .adventure-stage-browser > button:disabled { opacity: .35; }
+    .adventure-stage-preview { position: relative; overflow: hidden; aspect-ratio: 1200 / 772; border: 1px solid #62716b; border-radius: 4px; background: #10191a; }
+    .adventure-stage-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .adventure-stage-preview.locked img { filter: grayscale(1) blur(7px) brightness(.45); }
+    .adventure-stage-lock { position: absolute; left: 50%; top: 50%; width: 54px; height: 45px; transform: translate(-50%, -35%); }
+    .adventure-stage-lock::before { content: ''; position: absolute; left: 13px; top: -14px; width: 28px; height: 29px; border: 5px solid #f0e6d2; border-bottom: 0; border-radius: 16px 16px 0 0; }
+    .adventure-stage-lock::after { content: ''; position: absolute; left: 6px; top: 11px; width: 42px; height: 32px; border: 2px solid #f0e6d2; border-radius: 4px; background: #33413f; }
+    .adventure-stage-detail { min-height: 78px; margin: 12px 50px; text-align: left; }
+    .adventure-stage-detail strong { font-size: 19px; }
+    .adventure-stage-detail p { margin: 5px 0 0; color: var(--muted); white-space: pre-line; }
+    .exploration-marks { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 10px 0 14px; color: #e6d6b2; font-weight: 700; }
+    .exploration-marks img { width: 42px; height: 42px; object-fit: contain; flex: none; }
+    .exploration-marks.compact { gap: 7px; margin: 4px 0 10px; font-size: 13px; }
+    .exploration-marks.compact img { width: 31px; height: 31px; }
+    .exploration-marks[hidden] { display: none; }
+    .adventure-stage-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .adventure-stage-actions button { min-height: 46px; }
+    .adventure-status { min-height: 1.4em; color: #e8c985; }
+    .adventure-outcome-dialog { width: min(500px, 100%); }
+    .adventure-outcome-speaker { display: flex; align-items: center; gap: 14px; text-align: left; }
+    .adventure-outcome-speaker img { width: 82px; height: 82px; object-fit: cover; object-position: center 24%; border: 1px solid #7c8278; border-radius: 4px; }
+    .adventure-outcome-speaker p { margin: 5px 0 0; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .adventure-dialogue-dialog { width: min(620px, 100%); }
+    .adventure-dialogue-dialog .adventure-outcome-speaker { margin: 16px 0; }
+    .adventure-dialogue-dialog .adventure-outcome-speaker p { white-space: pre-line; }
+    .adventure-illustration-dialog { width: min(760px, 100%); }
+    .adventure-illustration-dialog img { display: block; width: 100%; max-height: 70dvh; object-fit: contain; }
+    .adventure-illustration-dialog button { display: block; margin: 12px 0 0 auto; }
+    .game-shell.adventure-shake { animation: adventure-shake var(--adventure-shake-duration, .4s) ease-out; }
+    @keyframes adventure-shake { 20% { transform: translate(var(--adventure-shake-negative, -4px), 2px); } 40% { transform: translate(var(--adventure-shake-distance, 4px), -2px); } 65% { transform: translate(var(--adventure-shake-half-negative, -2px), -1px); } }
+    @media (prefers-reduced-motion: reduce) { .game-shell.adventure-shake { animation: none; } }
+    body[data-adventure="true"] #endTurnButton, body[data-adventure="true"] .trigger-tool,
+    body[data-adventure="true"] .game-deck-button[data-owner="1"], body[data-adventure="true"][data-adventure-deck="false"] .game-deck-button[data-owner="0"], body[data-adventure="true"] #handPanel1,
+    body[data-adventure="true"] #remainingPanel1, body[data-adventure="true"] #panel1 { display: none; }
+    body[data-adventure="true"] .hands { grid-template-columns: 1fr; }
+    body[data-adventure="true"] #turnTimer { display: none; }
+    body.game-active[data-adventure="true"] .board-hud { grid-template-columns: minmax(0, 1fr); }
+    body.game-active[data-adventure="true"][data-adventure-hand="false"] .hands { display: none; }
     .start-screen[hidden] { display: none; }
     .start-screen h3 { margin: 16px 0 10px; font-size: 17px; }
     .start-form { display: grid; gap: 10px; margin: 14px 0 4px; text-align: left; }
@@ -821,6 +864,9 @@
       .tutorial-dialogue-copy p { font-size: 15px; }
     }
   </style>
+  <link rel="stylesheet" href="game-ui-kit.css?v=1">
+  <link rel="stylesheet" href="lobby-motion.css?v=1">
+  <link rel="stylesheet" href="tutorial-motion.css?v=1">
 </head>
 <body>
   <main class="app">
@@ -898,7 +944,13 @@
             <div class="guest-profile" id="guestProfile" hidden>
               <div class="guest-profile-line"><strong id="guestProfileName"></strong><span id="guestProfileId"></span></div>
               <p class="guest-profile-meta" id="guestProfileMeta"></p>
-              <progress id="guestProfileProgress" max="100" value="0" aria-label="다음 레벨 진행도"></progress>
+              <div class="guest-profile-progress-wrap">
+                <progress id="guestProfileProgress" max="100" value="0" tabindex="0" aria-label="명성치 진행도" aria-describedby="guestProfileProgressTooltip"></progress>
+                <div class="guest-profile-progress-tooltip" id="guestProfileProgressTooltip" role="tooltip">
+                  <span id="guestProfileLevelProgress"></span>
+                  <span id="guestProfileRemainingFame"></span>
+                </div>
+              </div>
             </div>
             <div class="home-menu"><button class="primary" id="openPlayMenuButton" type="button">게임 시작</button><button id="openTutorialButton" type="button">튜토리얼</button><button id="openCatalogButton" type="button">도감</button></div>
             <button class="deck-entry-button" id="openHomeDeckButton" type="button">카드 덱 만들기</button>
@@ -933,6 +985,7 @@
               <button class="menu-local" id="openLocalScreenButton" type="button">로컬 2인 플레이</button>
               <button class="menu-online" id="createRoomButton" type="button">온라인 방 만들기</button>
               <button class="menu-ai" id="openAiScreenButton" type="button">AI 대전</button>
+              <button class="menu-adventure" id="openAdventureScreenButton" type="button">모험 모드</button>
             </div>
             <button class="deck-entry-button" id="openMenuDeckButton" type="button">카드 덱 만들기</button>
             <button class="home-return" id="playMenuHomeButton" type="button">← 시작 화면으로 돌아가기</button>
@@ -985,6 +1038,21 @@
               <button class="primary" id="startAiButton" type="button" disabled>게임 시작</button>
               <div class="start-form-actions"><button class="backToStartMenuButton" type="button">뒤로</button></div>
             </div>
+          </div>
+          <div class="start-screen" id="adventurePlayScreen" hidden>
+            <h3>모험 모드</h3>
+            <div class="adventure-stage-browser">
+              <button id="adventurePreviousButton" type="button" aria-label="이전 스테이지" title="이전 스테이지">‹</button>
+              <div class="adventure-stage-preview" id="adventureStagePreview">
+                <img id="adventureStageImage" src="in-game-screen/curling-table-maps/classic/background-concept.png" alt="">
+                <span class="adventure-stage-lock" id="adventureStageLock" aria-label="잠긴 스테이지" hidden></span>
+              </div>
+              <button id="adventureNextButton" type="button" aria-label="다음 스테이지" title="다음 스테이지">›</button>
+            </div>
+            <div class="adventure-stage-detail"><strong id="adventureStageTitle"></strong><p id="adventureStageBriefing"></p></div>
+            <div class="exploration-marks compact" id="adventureStageMarks" aria-label="획득한 탐사 표식" hidden></div>
+            <p class="adventure-status" id="adventureStatus" role="status"></p>
+            <div class="adventure-stage-actions"><button id="adventureBackButton" type="button">돌아가기</button><button class="primary" id="adventurePlayButton" type="button">플레이</button></div>
           </div>
           <div class="start-screen" id="createRoomScreen" hidden>
             <h3>온라인 방 만들기</h3>
@@ -1044,6 +1112,26 @@
           <div class="result-grid" id="resultGrid"></div>
           <p class="match-fame-reward" id="matchFameReward" role="status" hidden></p>
           <div class="result-actions"><button class="primary" id="replayButton">다시 플레이</button><button id="resultLobbyButton" type="button" hidden>로비로 돌아가기</button></div>
+        </div>
+      </div>
+      <div class="overlay" id="adventureOutcomeOverlay" hidden>
+        <div class="dialog adventure-outcome-dialog" role="dialog" aria-modal="true" aria-labelledby="adventureOutcomeTitle">
+          <h2 id="adventureOutcomeTitle"></h2>
+          <div class="exploration-marks" id="adventureOutcomeMarks" aria-live="polite" hidden></div>
+          <div class="adventure-outcome-speaker"><img id="adventureOutcomePortrait" src="영웅 초상화/big boy.png" alt=""><div><strong id="adventureOutcomeSpeaker"></strong><p id="adventureOutcomeText"></p></div></div>
+          <div class="adventure-stage-actions"><button id="adventureSelectButton" type="button">스테이지 선택</button><button class="primary" id="adventureRetryButton" type="button">다시 시도</button></div>
+        </div>
+      </div>
+      <div class="overlay" id="adventureDialogueOverlay" hidden>
+        <div class="dialog adventure-dialogue-dialog" role="dialog" aria-modal="true" aria-labelledby="adventureDialogueSpeaker">
+          <div class="adventure-outcome-speaker"><img id="adventureDialoguePortrait" src="영웅 초상화/big boy.png" alt=""><div><strong id="adventureDialogueSpeaker"></strong><p id="adventureDialogueText"></p></div></div>
+          <button class="primary" id="adventureDialogueNext" type="button">계속</button>
+        </div>
+      </div>
+      <div class="overlay" id="adventureIllustrationOverlay" hidden>
+        <div class="dialog adventure-illustration-dialog" role="dialog" aria-modal="true" aria-label="모험 삽화">
+          <img id="adventureIllustrationImage" alt="">
+          <button class="primary" id="adventureIllustrationNext" type="button">계속</button>
         </div>
       </div>
     </section>
@@ -1134,6 +1222,13 @@
   </section>
   <div id="tutorialRewardOverlay" class="overlay" hidden><div class="dialog tutorial-reward" id="tutorialRewardContent" role="dialog" aria-modal="true" aria-labelledby="tutorialRewardTitle"><h2 id="tutorialRewardTitle"></h2><img id="tutorialRewardImage" src="Card_illustration/Relocation.png" alt="재배치 카드"><p id="tutorialRewardText"></p><button id="tutorialRewardNext" class="primary" type="button">계속</button></div></div>
   <script src="tutorial-story.js"></script>
+  <script src="adventure-loadout.js"></script>
+  <script src="adventure/stage-01-bundle.js"></script>
+  <script src="adventure-marks.js?v=74"></script>
+  <script src="adventure-dialogue-presentation.js?v=77"></script>
+  <script src="adventure-power.js?v=1"></script>
+  <script src="adventure-runtime.js?v=76"></script>
+  <script src="adventure-event-engine.js?v=72"></script>
   <script>
     (() => {
       const canvas = document.querySelector('#game');
@@ -1163,6 +1258,8 @@
       const guestProfileId = document.querySelector('#guestProfileId');
       const guestProfileMeta = document.querySelector('#guestProfileMeta');
       const guestProfileProgress = document.querySelector('#guestProfileProgress');
+      const guestProfileLevelProgress = document.querySelector('#guestProfileLevelProgress');
+      const guestProfileRemainingFame = document.querySelector('#guestProfileRemainingFame');
       const matchFameReward = document.querySelector('#matchFameReward');
       const mapSelectOverlay = document.querySelector('#mapSelectOverlay');
       const heroSelectOverlay = document.querySelector('#heroSelectOverlay');
@@ -1194,6 +1291,15 @@
       const aiOpponentDetailName = document.querySelector('#aiOpponentDetailName');
       const aiOpponentDetailDescription = document.querySelector('#aiOpponentDetailDescription');
       const startAiButton = document.querySelector('#startAiButton');
+      const adventureUI = Object.fromEntries([
+        'adventurePlayScreen', 'adventureStagePreview', 'adventureStageImage', 'adventureStageLock',
+        'adventureStageTitle', 'adventureStageBriefing', 'adventureStatus', 'adventurePreviousButton',
+        'adventureNextButton', 'adventurePlayButton', 'adventureBackButton', 'adventureStageMarks', 'adventureOutcomeMarks', 'adventureOutcomeOverlay',
+        'adventureOutcomeTitle', 'adventureOutcomePortrait', 'adventureOutcomeSpeaker',
+        'adventureOutcomeText', 'adventureSelectButton', 'adventureRetryButton',
+        'adventureDialogueOverlay', 'adventureDialoguePortrait', 'adventureDialogueSpeaker', 'adventureDialogueText', 'adventureDialogueNext',
+        'adventureIllustrationOverlay', 'adventureIllustrationImage', 'adventureIllustrationNext'
+      ].map(id => [id, document.getElementById(id)]));
       const deckOverlay = document.querySelector('#deckOverlay');
       const deckPool = document.querySelector('#deckPool');
       const deckBag = document.querySelector('#deckBag');
@@ -1313,15 +1419,15 @@
         ammoFire: '효과음/ElevenLabs_Drafts/ammo-fire-rifle-1-5s.mp3',
         turn: '효과음/ElevenLabs_Drafts/turn-change.mp3', win: '효과음/ElevenLabs_Drafts/victory.mp3',
         victoryMusic: '효과음/ElevenLabs_Drafts/victory-sting.mp3', defeatMusic: '효과음/ElevenLabs_Drafts/defeat-sting.mp3',
-        hardening: '효과음/ElevenLabs_Drafts/hardening-freeze-v2.mp3', guard: '효과음/ElevenLabs_Drafts/guard-orbit-v2.mp3',
+        hardening: '효과음/ElevenLabs_Drafts/hardening-freeze-v3.mp3', guard: '효과음/ElevenLabs_Drafts/guard-orbit-v2.mp3',
         pulse: '효과음/ElevenLabs_Drafts/pulse-release.mp3', pulseCharge: '효과음/ElevenLabs_Drafts/pulse-charge-v1.mp3',
         reposition: '효과음/ElevenLabs_Drafts/reposition-gear-v2.mp3',
-        drop: '효과음/ElevenLabs_Drafts/structure-drop-iron-v2.mp3', blackhole: '효과음/ElevenLabs_Drafts/blackhole-release.mp3',
+        drop: '효과음/ElevenLabs_Drafts/structure-drop-iron-v2.mp3', blackhole: '효과음/ElevenLabs_Drafts/blackhole-release-v3.mp3',
         ammoLoad: '효과음/ElevenLabs_Drafts/ammo-load.mp3', bluffing: '효과음/ElevenLabs_Drafts/bluffing-sand-v2.mp3',
         escape: '효과음/ElevenLabs_Drafts/escape-teleport-v2.mp3', card: '효과음/ElevenLabs_Drafts/card-effect.mp3',
         triggerPlace: '효과음/ElevenLabs_Drafts/trigger-place-v1.mp3',
         dataBarrier: '효과음/ElevenLabs_Drafts/data-barrier-form-v1.mp3',
-        strongHit: '효과음/ElevenLabs_Drafts/strong-impact-v2.mp3',
+        strongHit: '효과음/ElevenLabs_Drafts/strong-impact-v3.mp3',
         wallHit: '효과음/ElevenLabs_Drafts/wall-impact.mp3', guardHit: '효과음/ElevenLabs_Drafts/guard-impact.mp3',
         timerWarning: '효과음/ElevenLabs_Drafts/timer-warning.mp3', timerTick: '효과음/ElevenLabs_Drafts/timer-tick.mp3'
       };
@@ -1333,9 +1439,8 @@
         unitDeath: new Audio('효과음/Unit_death_sound_for_1.wav'),
         unitKill: new Audio('효과음/Unit_kill_sound_1.wav'),
         pulseCast: new Audio('효과음/카드와 트리거/shockwave_sound_1.wav'),
-        blackholeCast: new Audio('효과음/카드와 트리거/Blackhole_shockwave_1.wav'),
-        generalSelection: new Audio('효과음/화면과 진행/heavy_selction sound_General Selection1792409221097.mp3'),
-        importantSelection: new Audio('효과음/화면과 진행/heavy_selction sound_Important Selection1792409221097.mp3'),
+        generalSelection: new Audio('효과음/화면과 진행/selection-general-clear.mp3'),
+        importantSelection: new Audio('효과음/화면과 진행/selection-important-clear.mp3'),
         lobbyMusic: new Audio('배경음악/Beyond_the_Threshold_2026-10-19T112131.mp3'),
         gameMusic: new Audio('배경음악/비겁한 컬링 클럽.wav')
       };
@@ -1477,6 +1582,7 @@
       function deckCard(id) { return cardDefinitions().find(item => item.id === id); }
       function playerLevel(owner) { return Math.max(1, Number(state.playerLevels?.[owner]) || 1); }
       function isCardUnlocked(card, owner) {
+        if (state.adventure && owner === 0) return true;
         return playerLevel(owner) >= (card.unlockLevel || 1) && (!card.unlockTutorial || state.playerTutorialCompleted?.[owner] === true);
       }
       function tutorialLessons() { return SecondChanceTutorial.lessons; }
@@ -1492,6 +1598,7 @@
         'moving-walls': { src: 'in-game-screen/curling-table-maps/moving-walls/background-concept.png', crop: { x: .03, y: .10, width: .94, height: .79 } }
       };
       const mapBackgroundImages = Object.create(null);
+      const adventureImages = Object.create(null);
       const PLAYER = [
         { name: '플레이어 1', color: '#4287ff', imagePath: 'stone-blue.png' },
         { name: '플레이어 2', color: '#f05252', imagePath: 'stone-red.png' }
@@ -1505,6 +1612,7 @@
 
       const state = {
         tutorial: null,
+        adventure: null,
         units: [],
         bricks: [],
         bullets: [],
@@ -1572,6 +1680,12 @@
       let guestProfile = null;
       let guestAiNickname = null;
       let selectedAiDifficulty = null;
+      let adventureStage = null;
+      let adventureStageIndex = 0;
+      const adventureBestMarks = new Map();
+      let adventureDialogueReveal = null;
+      let adventureOutcomeReveal = null;
+      const adventureTypingClips = new Map();
       let guestProfilePersistent = false;
       let guestProfileInit = null;
       let accountReturnScreen = 'homeScreen';
@@ -1813,7 +1927,7 @@
           pendingTriggerPlacement: null, selectedTriggerType: null, phaseBeforeTriggerSelect: null,
           turnDeadline: null, turnPausedAt: null, turnPausedByHost: false, timerTurn: -1, mapTime: 0 });
         turns.reset();
-        for (const overlay of [resultOverlay, mapSelectOverlay, heroSelectOverlay, dealOverlay, triggerSelectOverlay,
+        for (const overlay of [resultOverlay, adventureUI.adventureOutcomeOverlay, adventureUI.adventureDialogueOverlay, adventureUI.adventureIllustrationOverlay, mapSelectOverlay, heroSelectOverlay, dealOverlay, triggerSelectOverlay,
           publicRoomPasswordOverlay, learningUI.catalogOverlay, gameSettingsOverlay]) overlay.hidden = true;
         entityTooltip.hidden = true;
         turnTimer.hidden = true;
@@ -1837,12 +1951,18 @@
         closeTutorialDialogue();
         tutorialUI.tutorialRewardOverlay.hidden = true;
         clearPracticeBoard();
+        state.adventure = null;
+        document.body.dataset.adventure = 'false';
+        document.body.dataset.adventureHand = 'false';
+        document.body.dataset.adventureDeck = 'false';
         state.aiMode = false;
         state.aiAction = null;
         state.aiMatchId = null;
         state.aiMatchPromise = null;
         state.aiMatchToken = null;
         state.tutorial = null;
+        state.tutorialIntroDrop = null;
+        document.body.classList.remove('tutorial-intro-sequence');
         state.phase = 'intro';
         document.body.dataset.tutorial = 'false';
         delete document.body.dataset.tutorialStage;
@@ -1925,6 +2045,28 @@
       function advanceTutorialDialogue() {
         const dialogue = state.tutorial?.dialogue;
         if (!dialogue) return;
+        const arrival = state.tutorialIntroDrop;
+        if (dialogue.lines === SecondChanceTutorial.introduction && dialogue.index === 0 && arrival?.phase === 'hidden') {
+          const currentTutorial = state.tutorial;
+          arrival.phase = 'falling';
+          arrival.start = performance.now();
+          arrival.duration = 730;
+          tutorialUI.tutorialDialogueNext.disabled = true;
+          setTimeout(() => {
+            if (state.tutorial !== currentTutorial || state.tutorialIntroDrop !== arrival) return;
+            playSound('drop', .65);
+            arrival.phase = 'landed';
+          }, arrival.duration * .72);
+          setTimeout(() => {
+            if (state.tutorial !== currentTutorial || state.tutorialIntroDrop !== arrival) return;
+            state.tutorialIntroDrop = null;
+            tutorialUI.tutorialDialogueNext.disabled = false;
+            dialogue.index = 1;
+            renderTutorialLine();
+          }, arrival.duration + 120);
+          return;
+        }
+        if (arrival?.phase === 'falling') return;
         if (++dialogue.index < dialogue.lines.length) { renderTutorialLine(); return; }
         const onDone = dialogue.onDone;
         closeTutorialDialogue();
@@ -1952,7 +2094,15 @@
         startLobbyMusic();
         setSpeedLevel(0);
         loadTutorialLesson(0, false);
-        showTutorialDialogue(SecondChanceTutorial.introduction, () => {
+        const introTutorial = state.tutorial;
+        state.tutorial.speaking = true;
+        document.body.dataset.tutorialSpeaking = 'true';
+        document.body.classList.add('tutorial-intro-sequence');
+        state.tutorialIntroDrop = { unitId: turns.currentUnit?.id, phase: 'hidden' };
+        setTimeout(() => {
+          if (state.tutorial !== introTutorial || state.tutorial.index !== 0) return;
+          document.body.classList.remove('tutorial-intro-sequence');
+          showTutorialDialogue(SecondChanceTutorial.introduction, () => {
           state.tutorial.speaking = true;
           document.body.dataset.tutorialSpeaking = 'true';
           tutorialUI.tutorialDialogue.hidden = false;
@@ -1961,7 +2111,8 @@
           tutorialUI.tutorialDialogueNext.hidden = true;
           tutorialUI.tutorialNicknameInput.value = guestProfile.name;
           tutorialUI.tutorialNicknameInput.focus();
-        });
+          });
+        }, 680);
       }
 
       async function saveTutorialNickname(name) {
@@ -1988,6 +2139,8 @@
       function loadTutorialLesson(index, withDialogue = true) {
         const lesson = tutorialLessons()[index];
         if (!state.tutorial || !lesson) return;
+        state.tutorialIntroDrop = null;
+        document.body.classList.remove('tutorial-intro-sequence');
         closeTutorialDialogue();
         clearPracticeBoard();
         Object.assign(state.tutorial, { index, lesson, complete: false, attempted: false,
@@ -2188,11 +2341,12 @@
       }
 
       function openCatalog() {
-        showStartScreen('homeScreen');
-        startOverlay.hidden = true;
-        learningUI.catalogOverlay.hidden = false;
-        renderCatalog();
-        learningUI.cardCatalogTab.focus();
+        runLobbyTransition(() => {
+          showStartScreen('homeScreen', true);
+          startOverlay.hidden = true;
+          learningUI.catalogOverlay.hidden = false;
+          renderCatalog();
+        }, () => learningUI.cardCatalogTab.focus());
       }
 
       function showConnectionNotice(message) {
@@ -2360,11 +2514,11 @@
         const important = button.dataset.soundType === 'important'
           || /powerlaunchbutton|powerconfirmbutton|decksavebutton|confirmguestbutton|confirmmapbutton|gameleaveconfirmbutton/.test(label)
           || /발사|저장|결정|확인|게임 시작|계정 등록|로그인/.test(label);
-        playFileSound(important ? 'importantSelection' : 'generalSelection', { volume: important ? .864 : .783 });
+        playFileSound(important ? 'importantSelection' : 'generalSelection', { volume: important ? 1 : .95 });
       }
 
       function playUnitImpactSound(impulse) {
-        if (Math.abs(impulse) >= STRONG_HIT_THRESHOLD) playElevenLabsSound('strongHit', { volume: .8 });
+        if (Math.abs(impulse) >= STRONG_HIT_THRESHOLD) playElevenLabsSound('strongHit');
         else playFileSound('weakHit', { volume: .8, cooldown: 65 });
       }
 
@@ -2447,6 +2601,10 @@
           this.relaunchUsed = false;
           this.activeSpecial = null;
           this.fluidTimer = 0;
+          this.adventureFrictionTimer = 0;
+          this.adventureFrictionMultiplier = 1;
+          this.adventurePulseFrictionTimer = 0;
+          this.adventurePulseFrictionMultiplier = 1;
           this.fallRewarded = false;
           this.fallResolved = false;
           this.pendingPulseTriggers = [];
@@ -2463,6 +2621,8 @@
 
         update(dt) {
           this.fluidTimer = Math.max(0, this.fluidTimer - dt);
+          this.adventureFrictionTimer = Math.max(0, this.adventureFrictionTimer - dt);
+          this.adventurePulseFrictionTimer = Math.max(0, this.adventurePulseFrictionTimer - dt);
           this.previousX = this.x;
           this.previousY = this.y;
           if (this.status !== 'sliding') return;
@@ -2476,8 +2636,9 @@
             this.vy = 0;
             this.status = 'resting';
           }
-          if (this.x < TABLE.left || this.x > TABLE.right ||
-              this.y < TABLE.top || this.y > TABLE.bottom) {
+          const bounds = state.adventure?.stage.fallBounds || TABLE;
+          if (this.x < bounds.left || this.x > bounds.right ||
+              this.y < bounds.top || this.y > bounds.bottom) {
             this.status = 'fallen';
             this.vx = 0;
             this.vy = 0;
@@ -2493,7 +2654,10 @@
             if (!(brick.barrier && brick.owner === this.owner) && Math.abs(this.x - brick.x) <= brick.width / 2 + this.radius &&
                 Math.abs(this.y - brick.y) <= brick.height / 2 + this.radius) multiplier += brick.frictionMultiplier - 1;
           }
-          return state.currentMap.friction * multiplier * heroRule(this.owner, 'frictionScale', 1) * (this.openingFrictionMultiplier || 1);
+          return state.currentMap.friction * multiplier * heroRule(this.owner, 'frictionScale', 1) *
+            (this.openingFrictionMultiplier || 1) *
+            (this.adventureFrictionTimer > 0 ? this.adventureFrictionMultiplier : 1) *
+            (this.adventurePulseFrictionTimer > 0 ? this.adventurePulseFrictionMultiplier : 1);
         }
 
         get isOnTable() { return this.status !== 'fallen'; }
@@ -2855,7 +3019,7 @@
           button.dataset.description = '원하는 위치에 스톤과 상호작용하는 특수 함정을 설치합니다.';
           button.title = button.dataset.description;
           button.setAttribute('aria-label', `트리거 배치, 남은 횟수 ${remaining}`);
-          button.disabled = spent || owner !== turns.playerIndex || !canControlPlayer(owner) || !turns.currentUnit ||
+          button.disabled = Boolean(state.adventure) || spent || owner !== turns.playerIndex || !canControlPlayer(owner) || !turns.currentUnit ||
             !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase);
           button.querySelector('.trigger-count').textContent = String(remaining);
         });
@@ -2884,6 +3048,8 @@
       }
 
       function updateHud() {
+        document.body.dataset.adventureHand = state.adventure && state.hands[0].length ? 'true' : 'false';
+        document.body.dataset.adventureDeck = state.adventure?.hasBag ? 'true' : 'false';
         document.body.classList.toggle('game-active', !['intro', 'map-select', 'hero-select', 'finished'].includes(state.phase));
         const scores = calculateScores();
         scores.forEach((result, index) => {
@@ -2914,7 +3080,7 @@
           remainingEls[index].querySelectorAll('img').forEach((image, stoneIndex) => { image.hidden = stoneIndex >= remaining; });
           practiceRemainingEls[index].hidden = true;
         });
-        endTurnButton.disabled = state.phase !== 'turn-ready' || state.bullets.length > 0 || !canControlPlayer(turns.playerIndex);
+        endTurnButton.disabled = Boolean(state.adventure) || state.phase !== 'turn-ready' || state.bullets.length > 0 || !canControlPlayer(turns.playerIndex);
         speedToggle.disabled = !canChangeSpeed();
         actionHint.textContent = state.phase === 'sliding' ? '스톤이 움직이는 중' : state.phase === 'turn-ready' ? '턴을 마치거나 카드를 사용하세요' : state.phase === 'reposition' && state.repositionMode === 'ammo' ? '총알 장전: 당겨서 발사' : state.phase === 'trigger-select' ? '트리거 종류를 선택하세요' : needsPowerMeter() && state.powerMeter?.stage === 'locked' ? '스톤을 드래그해 방향을 지정하세요' : needsPowerMeter() && state.powerMeter?.stage === 'spinning' ? '미터를 보고 파워를 결정하세요' : '스톤 아래 발사 버튼을 누르세요';
         if (state.aiMode && turns.playerIndex === state.aiOwner && !turns.isComplete)
@@ -2934,6 +3100,13 @@
           practiceRemainingEls.forEach(element => { element.hidden = false; });
           if (state.tutorial.complete) actionHint.textContent = '반복해서 연습할 수 있습니다';
           updateTutorialHighlights();
+        }
+        if (state.adventure) {
+          turnText.textContent = '모험 · 01';
+          remainingEls[0].setAttribute('aria-label', `남은 스톤 ${turns.currentUnit?.hasLaunched ? 0 : 1}개`);
+          remainingEls[0].querySelectorAll('img').forEach((image, index) => { image.hidden = index > 0 || Boolean(turns.currentUnit?.hasLaunched); });
+          actionHint.textContent = state.phase === 'reposition' ? '재배치: 파워와 방향을 정하세요' :
+            state.phase === 'turn-ready' ? '목표 영역에 도달하세요' : actionHint.textContent;
         }
       }
 
@@ -3058,7 +3231,7 @@
           !['intro', 'dealing', 'finished'].includes(state.phase) &&
           (meter || canControlPlayer(unit.owner)) && (!dismissing || performance.now() - meter.lockedAt < 300);
         powerControl.hidden = !visible;
-        if (!visible) return;
+        if (!visible) { powerControl.classList.remove('viewport-meter'); return; }
         const canChoose = canControlPlayer(unit.owner);
         powerControl.classList.toggle('big-boy', heroRule(unit.owner, 'powerScale', 1) > 1);
         powerLaunchButton.hidden = Boolean(meter);
@@ -3082,6 +3255,13 @@
         const y = board.top - shell.top + unit.y * board.height / canvas.height;
         const width = powerControl.offsetWidth || 136;
         const height = powerControl.offsetHeight || 40;
+        const needsViewportMeter = Boolean(meter && height > Math.min(shell.height - 12, window.innerHeight - 24));
+        powerControl.classList.toggle('viewport-meter', needsViewportMeter);
+        if (needsViewportMeter) {
+          powerControl.style.left = '';
+          powerControl.style.top = '';
+          return;
+        }
         const below = y + unit.radius * scale + 8;
         const above = y - unit.radius * scale - height - 8;
         const visibleTop = Math.max(6, -shell.top + 8);
@@ -3809,6 +3989,7 @@
             const toward = (unit.vx - brick.vx) * nx + (unit.vy - brick.vy) * ny;
             if (toward < 0) {
               const impulse = -(1 + brick.restitution) * toward / (1 + (brick.barrier ? 0 : 1 / brick.mass));
+              if (state.adventure && brick.id) emitAdventureEvent({ type: 'object-collision', objectId: brick.id });
               playUnitImpactSound(impulse);
               unit.vx += impulse * nx;
               unit.vy += impulse * ny;
@@ -3853,11 +4034,100 @@
         }
       }
 
+      function resolveAdventureCollisions(dt) {
+        const adventure = state.adventure;
+        if (!adventure) return;
+        for (const dummy of adventure.dummies) dummy.recharge = Math.max(0, dummy.recharge - dt);
+        for (const unit of state.units) {
+          if (unit.status !== 'sliding') continue;
+          for (const prop of adventure.props) {
+            if (!prop.collidable) continue;
+            if (adventure.eventState.visibleObjects.get(prop.id) === false) continue;
+            const angle = -prop.rotation * Math.PI / 180;
+            const cos = Math.cos(angle), sin = Math.sin(angle);
+            const dx = unit.x - prop.x, dy = unit.y - prop.y;
+            const localX = dx * cos - dy * sin, localY = dx * sin + dy * cos;
+            const halfW = prop.width * .36, halfH = prop.height * .36;
+            const closeX = Math.max(-halfW, Math.min(halfW, localX));
+            const closeY = Math.max(-halfH, Math.min(halfH, localY));
+            let nx = localX - closeX, ny = localY - closeY;
+            const distance = Math.hypot(nx, ny);
+            if (distance >= unit.radius) continue;
+            let correction = unit.radius - distance;
+            if (distance < .001) {
+              const gapX = halfW + unit.radius - Math.abs(localX);
+              const gapY = halfH + unit.radius - Math.abs(localY);
+              if (gapX < gapY) { nx = localX < 0 ? -1 : 1; ny = 0; correction = gapX; }
+              else { nx = 0; ny = localY < 0 ? -1 : 1; correction = gapY; }
+            } else { nx /= distance; ny /= distance; }
+            const worldX = nx * cos + ny * sin, worldY = -nx * sin + ny * cos;
+            unit.x += worldX * correction;
+            unit.y += worldY * correction;
+            const toward = unit.vx * worldX + unit.vy * worldY;
+            if (toward < 0) {
+              emitAdventureEvent({ type: 'object-collision', objectId: prop.id });
+              playUnitImpactSound(-toward);
+              unit.vx -= toward * 1.58 * worldX;
+              unit.vy -= toward * 1.58 * worldY;
+            }
+          }
+          for (const dummy of adventure.dummies) {
+            const dx = unit.x - dummy.x, dy = unit.y - dummy.y;
+            const distance = Math.hypot(dx, dy);
+            if (distance >= unit.radius + dummy.radius) continue;
+            const nx = distance > .001 ? dx / distance : 1;
+            const ny = distance > .001 ? dy / distance : 0;
+            unit.x += nx * (unit.radius + dummy.radius - distance);
+            unit.y += ny * (unit.radius + dummy.radius - distance);
+            if (dummy.recharge === 0) {
+              emitAdventureEvent({ type: 'object-collision', objectId: dummy.id });
+              dummy.recharge = dummy.rechargeSeconds;
+              latchAdventurePulseHits(dummy.x, dummy.y, dummy.pulseRadius);
+              for (const target of state.units) {
+                if (target.status === 'fallen' || target.status === 'ready') continue;
+                const targetDx = target.x - dummy.x, targetDy = target.y - dummy.y;
+                const targetDistance = Math.hypot(targetDx, targetDy);
+                if (targetDistance > dummy.pulseRadius + target.radius) continue;
+                const force = PULSE_IMPULSE * dummy.pulseImpulseMultiplier *
+                  Math.max(.45, 1 - targetDistance / (dummy.pulseRadius + target.radius) * .35);
+                if (target.owner === 0) {
+                  target.vx *= dummy.velocityMultiplierOnHit;
+                  target.vy *= dummy.velocityMultiplierOnHit;
+                  target.adventurePulseFrictionMultiplier = dummy.frictionMultiplierOnHit;
+                  target.adventurePulseFrictionTimer = dummy.pulseEffectSeconds;
+                }
+                if (target === unit) {
+                  const toward = target.vx * nx + target.vy * ny;
+                  if (toward < 0) {
+                    target.vx -= (1 + dummy.ricochetRestitution) * toward * nx;
+                    target.vy -= (1 + dummy.ricochetRestitution) * toward * ny;
+                  }
+                  const outgoingSpeed = Math.hypot(target.vx, target.vy);
+                  target.vx += (outgoingSpeed > .001 ? target.vx / outgoingSpeed : nx) * force;
+                  target.vy += (outgoingSpeed > .001 ? target.vy / outgoingSpeed : ny) * force;
+                } else {
+                  target.vx += (targetDistance > .001 ? targetDx / targetDistance : nx) * force;
+                  target.vy += (targetDistance > .001 ? targetDy / targetDistance : ny) * force;
+                }
+                target.status = 'sliding';
+              }
+              state.effects.push({ type: 'pulse', x: dummy.x, y: dummy.y, age: 0,
+                duration: dummy.pulseEffectSeconds, radius: dummy.pulseRadius });
+              playFileSound('pulseCast', { volume: .75 });
+            } else {
+              const toward = unit.vx * nx + unit.vy * ny;
+              if (toward < 0) { unit.vx -= toward * 1.58 * nx; unit.vy -= toward * 1.58 * ny; }
+            }
+          }
+        }
+      }
+
       function update(dt, timestamp, refreshHud = true) {
         state.bricks.forEach(brick => brick.update(dt));
         state.units.forEach(unit => unit.update(dt));
         emitBarrierParticles(dt);
         if (state.triggers.length) collectItemTriggers();
+        resolveAdventureCollisions(dt);
         resolveCollisions();
         resolveBrickCollisions();
         updatePendingPulseTriggers(dt);
@@ -3868,6 +4138,7 @@
         updateBullets(dt);
         updateAbilityEffects(dt);
         resolveGuardCollisions();
+        updateAdventurePower();
         const objectsMoving = state.units.some(unit => unit.status === 'sliding') || state.bullets.length > 0 ||
           state.bricks.some(brick => Math.hypot(brick.vx, brick.vy) > 5);
         if (state.phase === 'reposition' &&
@@ -3900,6 +4171,7 @@
             unit.specialFired = false;
           }
         }
+        evaluateAdventureOutcome(dt);
         if (refreshHud) updateHud();
         if (turns.currentUnit?.hasLaunched && turns.currentUnit.status === 'resting') recordTutorialEvent('rest');
         evaluateTutorialOutcome();
@@ -3912,7 +4184,7 @@
         const card = hand[cardIndex];
         if (!canUseCardOnUnit(card, owner, unit)) return false;
         if (UNIT_EFFECTS[card.id] && !applyUnitEffectStack(unit, card.id)) return false;
-        if (card.id === 'blackhole') triggerBlackHole(unit);
+        if (card.id === 'blackhole') triggerBlackHole(unit, BLACK_HOLE.range, false);
         if (card.id === 'pulse') {
           const ability = ensureUnitAbility(unit);
           ability.pulse = true;
@@ -3958,6 +4230,7 @@
         }
         emitGameFeedback(CARD_PRESENTATION[card.id]?.sound || 'card', unit, card.name, PLAYER[owner].color);
         recordTutorialEvent('card', card.id);
+        if (state.adventure && owner === 0) emitAdventureEvent({ type: 'card-used', cardId: card.id });
         hand.splice(cardIndex, 1);
         renderHands();
         updateHud();
@@ -4187,6 +4460,7 @@
 
       function triggerPulse(source, range = PULSE_RANGE, impulse = PULSE_IMPULSE, chargedCard = false) {
         playFileSound('pulseCast', { volume: .75 });
+        latchAdventurePulseHits(source.x, source.y, range);
         const targets = chargedCard ? state.units : [...state.units, ...state.bricks];
         for (const target of targets) {
           if (target === source || target.status === 'fallen' || target.status === 'ready') continue;
@@ -4243,8 +4517,8 @@
         }
       }
 
-      function triggerBlackHole(source, range = BLACK_HOLE.range) {
-        playFileSound('blackholeCast', { volume: .75 });
+      function triggerBlackHole(source, range = BLACK_HOLE.range, playAudio = true) {
+        if (playAudio) playSound('blackhole');
         source.fluidTimer = BLACK_HOLE.duration;
         state.effects.push({ type: 'blackhole', x: source.x, y: source.y, age: 0, duration: BLACK_HOLE.duration, radius: range });
         for (const target of [...state.units, ...state.bricks]) {
@@ -4423,6 +4697,20 @@
           if (index < 0) continue;
           const [trigger] = state.triggers.splice(index, 1);
           if (unit.owner === 0) recordTutorialEvent('trigger', trigger.type.id);
+          if (state.adventure && trigger.type.id === 'adventure-reposition' && unit.owner === 0) {
+            state.hands[0].push({ ...deckCard('reposition'), instanceId: `adventure-card-${++state.nextCardId}` });
+            renderHands();
+            updateHud();
+            playSound('deal');
+            unit.adventureFrictionMultiplier = trigger.frictionMultiplier;
+            unit.adventureFrictionTimer = trigger.frictionSeconds;
+            if (trigger.revealFog) state.adventure.fogVisible = false;
+            state.adventure.pendingEvents.push({ unit, trigger });
+          }
+          if (state.adventure && unit.owner === 0) {
+            state.adventure.collectedTriggerIds.add(trigger.id);
+            emitAdventureEvent({ type: 'trigger-collected', objectId: trigger.id });
+          }
           if (trigger.type.id === 'blackhole') triggerBlackHole(unit, trigger.type.range);
           if (trigger.type.id === 'pulse') unit.pendingPulseTriggers.push({ remaining: .5, range: trigger.type.range, impulse: trigger.type.impulse });
           if (UNIT_EFFECTS[trigger.type.id] && applyUnitEffectStack(unit, trigger.type.id)) playSound('card');
@@ -4666,7 +4954,7 @@
       }
 
       function endTurn() {
-        if (state.phase !== 'turn-ready' || state.bullets.length > 0) return;
+        if (state.adventure || state.phase !== 'turn-ready' || state.bullets.length > 0) return;
         if (state.tutorial) {
           if (!turns.currentUnit?.hasLaunched || turns.currentUnit.status !== 'resting') return;
           recordTutorialEvent('end-turn');
@@ -4779,9 +5067,15 @@
         guestProfileElement.hidden = false;
         guestProfileName.textContent = profile.name;
         guestProfileId.textContent = profile.id;
-        guestProfileMeta.textContent = `Lv ${profile.level} · 명성치 ${profile.fame} / ${profile.nextLevel}${persistent ? '' : ' · 임시 기록'}`;
-        guestProfileProgress.max = profile.nextLevel - profile.levelStart;
-        guestProfileProgress.value = profile.fame - profile.levelStart;
+        guestProfileMeta.textContent = `Lv ${profile.level} · 명성치${persistent ? '' : ' · 임시 기록'}`;
+        const levelFame = profile.fame - profile.levelStart;
+        const levelRequirement = profile.nextLevel - profile.levelStart;
+        const remainingFame = Math.max(0, profile.nextLevel - profile.fame);
+        guestProfileProgress.max = levelRequirement;
+        guestProfileProgress.value = levelFame;
+        guestProfileLevelProgress.textContent = `현재 레벨 진행도 ${levelFame.toLocaleString('ko-KR')} / ${levelRequirement.toLocaleString('ko-KR')} 명성치`;
+        guestProfileRemainingFame.textContent = `다음 레벨까지 ${remainingFame.toLocaleString('ko-KR')} 명성치`;
+        guestProfileProgress.setAttribute('aria-valuetext', `${guestProfileLevelProgress.textContent}, ${guestProfileRemainingFame.textContent}`);
         if (!onlineSession?.started) {
           state.playerLevels = [profile.level, profile.level];
           state.playerTutorialCompleted = [profile.tutorialCompleted === true, profile.tutorialCompleted === true];
@@ -4869,7 +5163,30 @@
         updateHud();
       }
 
-      function showStartScreen(screenId) {
+      function runLobbyTransition(update, afterUpdate = null) {
+        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!document.startViewTransition || reduced || document.visibilityState === 'hidden') {
+          update();
+          afterUpdate?.();
+          return;
+        }
+        const transition = document.startViewTransition(update);
+        transition.updateCallbackDone.then(() => afterUpdate?.()).catch(() => afterUpdate?.());
+      }
+
+      function showStartScreen(screenId, instant = false) {
+        const previousScreen = startScreens.find(screen => !screen.hidden)?.id;
+        const update = () => applyStartScreen(screenId);
+        if (!instant && !startOverlay.hidden && previousScreen && previousScreen !== screenId) {
+          runLobbyTransition(update, () => {
+            if (screenId === 'accountScreen') accountUsernameInput.focus();
+            if (screenId === 'localPlayScreen') localPlayerNameInputs[0].focus();
+            if (screenId === 'aiPlayScreen') aiOpponentButtons[0]?.focus();
+          });
+        } else update();
+      }
+
+      function applyStartScreen(screenId) {
         clearInterval(publicRoomRefreshTimer);
         publicRoomRefreshTimer = screenId === 'browseRoomsScreen' ? setInterval(() => {
           if (!startOverlay.hidden && !document.hidden && publicRoomPasswordOverlay.hidden) refreshPublicRooms(true);
@@ -4887,11 +5204,422 @@
           joinRoomScreen: '초대 코드를 입력하세요.',
           localPlayScreen: '두 플레이어의 이름을 정하세요.',
           aiPlayScreen: '',
+          adventurePlayScreen: '',
           createRoomScreen: '방 공개 여부와 비밀번호를 설정하세요.'
         };
         startScreenDescription.textContent = descriptions[screenId] || '';
         startScreenDescription.hidden = !startScreenDescription.textContent;
         startOverlay.querySelector('.dialog').classList.toggle('ai-selection-dialog', screenId === 'aiPlayScreen');
+        startOverlay.querySelector('.dialog').classList.toggle('adventure-selection-dialog', screenId === 'adventurePlayScreen');
+      }
+
+      async function openAdventureScreen() {
+        adventureStageIndex = 0;
+        showStartScreen('adventurePlayScreen');
+        adventureStage = null;
+        renderAdventureSelection();
+        adventureUI.adventureStatus.textContent = '스테이지를 불러오는 중';
+        try {
+          let source;
+          if (location.protocol === 'file:') {
+            source = window.SecondChanceAdventureStage01;
+            if (!source) throw new Error('스테이지 포함본을 읽지 못했습니다.');
+          } else {
+            const response = await fetch(`./adventure/stage-01.json?refresh=${Date.now()}`, { cache: 'no-store' });
+            if (!response.ok) throw new Error(`스테이지 파일을 읽지 못했습니다 (${response.status}).`);
+            source = await response.json();
+          }
+          adventureStage = SecondChanceAdventure.prepareStage(source);
+          adventureUI.adventureStatus.textContent = '';
+          renderAdventureSelection();
+        } catch (error) {
+          adventureUI.adventureStatus.textContent = error.message;
+          adventureUI.adventurePlayButton.disabled = true;
+        }
+      }
+
+      function adventureMarkStorageKey(stageId) {
+        return guestProfile?.username ? `second-chance.adventure-marks.v1.${encodeURIComponent(guestProfile.username)}.${stageId}` : null;
+      }
+
+      function bestAdventureMarks(stageId) {
+        const key = `${guestProfile?.id || 'guest'}:${stageId}`;
+        if (adventureBestMarks.has(key)) return adventureBestMarks.get(key);
+        const storageKey = adventureMarkStorageKey(stageId);
+        let count = 0;
+        if (storageKey) {
+          try { count = Math.max(0, Math.min(3, Number(localStorage.getItem(storageKey)) || 0)); } catch {}
+        }
+        adventureBestMarks.set(key, count);
+        return count;
+      }
+
+      function rememberAdventureMarks(stageId, count) {
+        const best = Math.max(bestAdventureMarks(stageId), count);
+        adventureBestMarks.set(`${guestProfile?.id || 'guest'}:${stageId}`, best);
+        const storageKey = adventureMarkStorageKey(stageId);
+        if (storageKey) try { localStorage.setItem(storageKey, String(best)); } catch {}
+        return best;
+      }
+
+      function renderExplorationMarks(container, count, config, prefix) {
+        const icon = SecondChanceAdventureMarks.ICON_SETS[config?.iconSet] ||
+          SecondChanceAdventureMarks.ICON_SETS[SecondChanceAdventureMarks.DEFAULT_ICON_SET];
+        const label = document.createElement('strong');
+        label.textContent = `${prefix} ${count}/3`;
+        container.replaceChildren(label);
+        for (let index = 0; index < 3; index += 1) {
+          const earned = index < count;
+          const image = document.createElement('img');
+          image.src = earned ? icon.earnedSrc : icon.unearnedSrc;
+          image.alt = earned ? `탐사 표식 ${index + 1} 획득` : `탐사 표식 ${index + 1} 미획득`;
+          if (index > 0 && config?.bonus?.[index - 1]?.description)
+            image.title = config.bonus[index - 1].description;
+          image.width = 42;
+          image.height = 42;
+          container.append(image);
+        }
+        container.setAttribute('aria-label', `${prefix} ${count}/3`);
+      }
+
+      function renderAdventureSelection() {
+        const firstStage = adventureStageIndex === 0;
+        const unlocked = firstStage && Boolean(guestProfile?.adventureUnlocked || guestProfile?.tutorialCompleted);
+        adventureUI.adventurePreviousButton.disabled = firstStage;
+        adventureUI.adventureNextButton.disabled = !firstStage;
+        adventureUI.adventureStagePreview.classList.toggle('locked', !unlocked);
+        adventureUI.adventureStageLock.hidden = unlocked;
+        adventureUI.adventureStageTitle.textContent = unlocked && adventureStage ? adventureStage.title : `스테이지 ${String(adventureStageIndex + 1).padStart(2, '0')}`;
+        adventureUI.adventureStageBriefing.textContent = unlocked && adventureStage ? adventureStage.briefing.trim() : '';
+        adventureUI.adventureStageImage.src = adventureStage?.backgroundSrc || 'in-game-screen/curling-table-maps/classic/background-concept.png';
+        adventureUI.adventureStageMarks.hidden = !unlocked || !adventureStage;
+        if (unlocked && adventureStage) renderExplorationMarks(adventureUI.adventureStageMarks,
+          bestAdventureMarks(adventureStage.id), adventureStage.explorationMarks, '최고 탐사 표식');
+        adventureUI.adventurePlayButton.disabled = !unlocked || !adventureStage;
+        if (!unlocked) adventureUI.adventureStatus.textContent = firstStage ? '튜토리얼 완료 후 해금됩니다.' : '잠긴 스테이지';
+        else if (adventureStage) adventureUI.adventureStatus.textContent = '';
+      }
+
+      function startAdventureStage() {
+        if (!adventureStage || adventureStageIndex !== 0 || !(guestProfile?.adventureUnlocked || guestProfile?.tutorialCompleted)) return;
+        adventureDialogueReveal?.stop(); adventureDialogueReveal = null;
+        adventureOutcomeReveal?.stop(); adventureOutcomeReveal = null;
+        clearPracticeBoard();
+        state.aiMode = false;
+        state.aiAction = null;
+        state.tutorial = null;
+        const eventState = SecondChanceAdventureEventEngine.createState(adventureStage);
+        state.adventure = { stage: adventureStage, outcome: null, restSeconds: 0,
+          props: adventureStage.props, dummies: adventureStage.dummies.filter(dummy => eventState.visibleObjects.get(dummy.id) !== false)
+            .map(dummy => ({ ...dummy, recharge: 0 })),
+          pulseHits: new Set(), powerState: { poweredById: new Map(), activeById: new Map() },
+          fogVisible: Boolean(adventureStage.fog) && eventState.visibleObjects.get(adventureStage.fog.id) !== false,
+          dialogue: [], pendingEvents: [], sceneQueue: [], eventState, lastUnitStatus: null, zoneEntered: false,
+          collectedTriggerIds: new Set(), markResult: null,
+          pendingOutcome: false };
+        document.body.dataset.adventure = 'true';
+        PLAYER[0].name = aiPlayerName();
+        PLAYER[1].name = '환경';
+        state.currentMap = MAPS.find(map => map.id === adventureStage.mapId) || MAPS[0];
+        state.phase = 'aiming';
+        const loadout = SecondChanceAdventureLoadout.resolveLoadout(adventureStage.loadout);
+        state.adventure.hasBag = loadout.deck.length > 0;
+        state.playerDecks = [[...loadout.deck], []];
+        state.decks = [loadout.deck.map(id => ({ ...deckCard(id) })).reverse(), []];
+        state.nextCardId = 0;
+        state.hands = [loadout.startingHand.map(id => ({ ...deckCard(id), instanceId: `adventure-card-${++state.nextCardId}` })), []];
+        state.heroChoices = [null, null];
+        turns.reset(0);
+        turns.createCurrentUnit();
+        Object.assign(turns.currentUnit, adventureStage.start, {
+          previousX: adventureStage.start.x, previousY: adventureStage.start.y,
+          radius: CONFIG.unitRadius * adventureStage.stoneScale
+        });
+        state.bricks = adventureStage.barriers.filter(data => eventState.visibleObjects.get(data.id) !== false).map(data => {
+          const brick = new BrickUnit({ x: data.x, y: data.y, owner: data.owner, barrier: true, expiresAtTurn: Infinity });
+          Object.assign(brick, { id: data.id, width: data.width, height: data.height });
+          return brick;
+        });
+        state.triggers = adventureStage.triggers.filter(data => eventState.visibleObjects.get(data.id) !== false).map(data => ({
+          entityKind: ENTITY_KIND.TRIGGER, id: data.id, x: data.x, y: data.y, radius: data.radius,
+          frictionMultiplier: data.frictionMultiplier, frictionSeconds: data.frictionSeconds,
+          eventDialogueIds: data.eventDialogueIds, revealFog: data.revealFog,
+          type: { id: 'adventure-reposition', name: '재배치', color: '#b489ef' }
+        }));
+        for (const src of [adventureStage.backgroundSrc, ...adventureStage.props.map(prop => prop.src),
+          ...adventureStage.beacons.flatMap(beacon => [beacon.offSrc, beacon.onSrc])]) {
+          if (src && !adventureImages[src]) { const image = new Image(); image.src = src; adventureImages[src] = image; }
+        }
+        mapIndicator.textContent = adventureStage.title;
+        renderHands();
+        updatePlayerNames();
+        startGameMusic();
+        playSound('start');
+        startOverlay.hidden = true;
+        adventureUI.adventureOutcomeOverlay.hidden = true;
+        adventureUI.adventureDialogueOverlay.hidden = true;
+        adventureUI.adventureIllustrationOverlay.hidden = true;
+        showAdventureDialogue(SecondChanceAdventure.dialogueFor(adventureStage, 'intro'));
+        updateAdventurePower(true);
+        emitAdventureEvent({ type: 'stage-start' });
+        updateHud();
+      }
+
+      function adventureAssetSource(id) {
+        const asset = state.adventure?.stage.assets.find(item => item.id === id);
+        if (asset) return asset.src || asset.dataUrl || '';
+        if (id?.startsWith('builtin:portrait-')) return `영웅 초상화/${id.slice('builtin:portrait-'.length)}`;
+        if (id?.startsWith('builtin:card-')) return `Card_illustration/${id.slice('builtin:card-'.length)}`;
+        return '';
+      }
+
+      function setAdventureObjectVisibility(id, visible) {
+        const adventure = state.adventure;
+        if (!adventure || !adventure.eventState.visibleObjects.has(id)) return;
+        adventure.eventState.visibleObjects.set(id, visible);
+        if (adventure.stage.fog?.id === id) adventure.fogVisible = visible;
+        const dummy = adventure.stage.dummies.find(item => item.id === id);
+        if (dummy) {
+          adventure.dummies = adventure.dummies.filter(item => item.id !== id);
+          if (visible) adventure.dummies.push({ ...dummy, recharge: 0 });
+        }
+        const barrier = adventure.stage.barriers.find(item => item.id === id);
+        if (barrier) {
+          state.bricks = state.bricks.filter(item => item.id !== id);
+          if (visible) {
+            const brick = new BrickUnit({ x: barrier.x, y: barrier.y, owner: barrier.owner, barrier: true, expiresAtTurn: Infinity });
+            Object.assign(brick, { id, width: barrier.width, height: barrier.height });
+            state.bricks.push(brick);
+          }
+        }
+        const trigger = adventure.stage.triggers.find(item => item.id === id);
+        if (trigger) {
+          state.triggers = state.triggers.filter(item => item.id !== id);
+          if (visible) state.triggers.push({
+            entityKind: ENTITY_KIND.TRIGGER, id, x: trigger.x, y: trigger.y, radius: trigger.radius,
+            frictionMultiplier: trigger.frictionMultiplier, frictionSeconds: trigger.frictionSeconds,
+            eventDialogueIds: trigger.eventDialogueIds, revealFog: trigger.revealFog,
+            type: { id: 'adventure-reposition', name: '재배치', color: '#b489ef' }
+          });
+        }
+        updateAdventurePower();
+      }
+
+      function latchAdventurePulseHits(x, y, radius) {
+        const adventure = state.adventure;
+        if (!adventure) return;
+        for (const beacon of adventure.stage.beacons) {
+          if (adventure.eventState.visibleObjects.get(beacon.id) === false) continue;
+          if (Math.hypot(beacon.x - x, beacon.y - y) <= radius + beacon.radius)
+            adventure.pulseHits.add(beacon.id);
+        }
+      }
+
+      function updateAdventurePower(initial = false) {
+        const adventure = state.adventure;
+        if (!adventure) return;
+        const visible = item => adventure.eventState.visibleObjects.get(item.id) !== false;
+        const beacons = adventure.stage.beacons.filter(visible);
+        const wires = adventure.stage.wires.filter(visible);
+        const devices = adventure.stage.powerDevices.filter(visible);
+        const stones = state.units.filter(unit => unit.status === 'resting' && unit.isOnTable)
+          .map(unit => ({ x: unit.x, y: unit.y, radius: unit.radius }));
+        const structures = [
+          ...state.bricks.filter(brick => brick.status !== 'fallen').map(brick => ({
+            x: brick.x, y: brick.y, width: brick.width, height: brick.height, radius: brick.radius
+          })),
+          ...adventure.props.filter(prop => prop.collidable && visible(prop))
+            .map(prop => ({ x: prop.x, y: prop.y, width: prop.width, height: prop.height }))
+        ];
+        const previous = adventure.powerState;
+        const next = SecondChanceAdventurePower.evaluatePowerNetwork({
+          beacons, wires, devices, stones, structures, pulseHits: adventure.pulseHits
+        });
+        adventure.powerState = next;
+        if (initial || !previous) return;
+        for (const item of [...beacons, ...wires, ...devices]) {
+          const oldValue = previous.activeById.has(item.id)
+            ? previous.activeById.get(item.id) : previous.poweredById.get(item.id);
+          const newValue = next.activeById.has(item.id)
+            ? next.activeById.get(item.id) : next.poweredById.get(item.id);
+          if (oldValue === undefined || oldValue === newValue) continue;
+          if (beacons.includes(item) || devices.includes(item))
+            playElevenLabsSound('powerLock', { volume: beacons.includes(item) ? .35 : .2,
+              playbackRate: newValue ? 1.12 : .78 });
+          emitAdventureEvent({ type: newValue ? 'power-on' : 'power-off', objectId: item.id });
+        }
+      }
+
+      function advanceAdventureScene() {
+        const adventure = state.adventure;
+        if (!adventure || !adventureUI.adventureDialogueOverlay.hidden || !adventureUI.adventureIllustrationOverlay.hidden) return false;
+        const scene = adventure.sceneQueue.shift();
+        if (scene?.type === 'dialogue') { showAdventureDialogue(scene.lines); return true; }
+        if (scene?.type === 'illustration') {
+          adventureUI.adventureIllustrationImage.src = scene.src;
+          adventureUI.adventureIllustrationOverlay.hidden = false;
+          adventureUI.adventureIllustrationNext.focus();
+          return true;
+        }
+        if (adventure.pendingOutcome) {
+          adventure.pendingOutcome = false;
+          adventureUI.adventureOutcomeOverlay.hidden = false;
+          return true;
+        }
+        return false;
+      }
+
+      function emitAdventureEvent(signal) {
+        const adventure = state.adventure;
+        if (!adventure || adventure.outcome && !['stage-success', 'stage-failure'].includes(signal.type)) return;
+        const effects = SecondChanceAdventureEventEngine.dispatch(adventure.stage, adventure.eventState, signal);
+        for (const effect of effects) {
+          if (effect.type === 'dialogue') {
+            const ids = new Set(effect.dialogueIds);
+            const lines = adventure.stage.dialogue.filter(line => ids.has(line.id));
+            if (lines.length) adventure.sceneQueue.push({ type: 'dialogue', lines });
+          } else if (effect.type === 'illustration') {
+            const src = adventureAssetSource(effect.assetId);
+            if (src) adventure.sceneQueue.push({ type: 'illustration', src });
+          } else if (effect.type === 'screen-shake') {
+            const shell = document.querySelector('.game-shell');
+            shell.style.setProperty('--adventure-shake-duration', `${Math.max(.1, effect.duration || .4)}s`);
+            const distance = Math.max(1, Math.round((effect.intensity ?? .4) * 10));
+            shell.style.setProperty('--adventure-shake-distance', `${distance}px`);
+            shell.style.setProperty('--adventure-shake-negative', `${-distance}px`);
+            shell.style.setProperty('--adventure-shake-half-negative', `${-distance / 2}px`);
+            shell.classList.remove('adventure-shake');
+            void shell.offsetWidth;
+            shell.classList.add('adventure-shake');
+            setTimeout(() => shell.classList.remove('adventure-shake'), Math.max(100, (effect.duration || .4) * 1000));
+          } else if (effect.type === 'play-sound') {
+            const src = adventureAssetSource(effect.assetId);
+            if (src && audio.sfxVolume) {
+              const clip = new Audio(src);
+              clip.volume = audio.sfxVolume / 100;
+              clip.play().catch(() => {});
+            }
+          } else if (effect.type === 'show-object' || effect.type === 'hide-object') {
+            setAdventureObjectVisibility(effect.objectId, effect.type === 'show-object');
+          }
+        }
+        if (!adventure.outcome) advanceAdventureScene();
+      }
+
+      function showAdventureDialogue(lines) {
+        if (!state.adventure || !lines.length) return;
+        adventureDialogueReveal?.stop(); adventureDialogueReveal = null;
+        state.adventure.dialogue = [...lines];
+        advanceAdventureDialogue();
+      }
+
+      function playAdventureTypingSound(assetId) {
+        const src = adventureAssetSource(assetId);
+        if (!src || !audio.sfxVolume) return;
+        let clip = adventureTypingClips.get(src);
+        if (!clip) { clip = new Audio(src); adventureTypingClips.set(src, clip); }
+        clip.volume = Math.min(1, audio.sfxVolume / 100 * .24);
+        if (clip.paused) clip.play().catch(() => {});
+      }
+
+      function advanceAdventureDialogue() {
+        if (adventureDialogueReveal && !adventureDialogueReveal.isFinished) {
+          adventureDialogueReveal.finish();
+          return;
+        }
+        adventureDialogueReveal?.stop(); adventureDialogueReveal = null;
+        const line = state.adventure?.dialogue.shift();
+        adventureUI.adventureDialogueOverlay.hidden = !line;
+        if (!line) {
+          if (advanceAdventureScene()) return;
+          showSettledAdventureEvents();
+          return;
+        }
+        adventureUI.adventureDialoguePortrait.src = adventureAssetSource(line.portraitAssetId) || '영웅 초상화/big boy.png';
+        adventureUI.adventureDialogueSpeaker.textContent = line.speaker || '';
+        adventureDialogueReveal = SecondChanceDialoguePresentation.presentText(adventureUI.adventureDialogueText,
+          line, { onTick: playAdventureTypingSound });
+        adventureUI.adventureDialogueNext.focus();
+      }
+
+      function evaluateAdventureOutcome(dt = 0) {
+        const adventure = state.adventure;
+        if (!adventure || adventure.outcome) return;
+        const unit = turns.currentUnit;
+        if (unit?.status !== adventure.lastUnitStatus) {
+          if (unit?.status === 'resting' && unit.hasLaunched) emitAdventureEvent({ type: 'unit-resting' });
+          adventure.lastUnitStatus = unit?.status;
+        }
+        if (unit?.hasLaunched && !adventure.zoneEntered &&
+            adventure.eventState.visibleObjects.get(adventure.stage.goal.id) !== false &&
+            SecondChanceAdventure.inGoal(unit, adventure.stage.goal)) {
+          adventure.zoneEntered = true;
+          emitAdventureEvent({ type: 'zone-enter', objectId: adventure.stage.goal.id });
+        }
+        adventure.restSeconds = unit?.status === 'resting' && state.phase !== 'reposition'
+          ? adventure.restSeconds + dt : 0;
+        const outcome = SecondChanceAdventure.stageOutcome({ unit, goal: adventure.stage.goal,
+          goalEnabled: adventure.eventState.visibleObjects.get(adventure.stage.goal.id) !== false,
+          hasReposition: state.hands[0].some(card => card.id === 'reposition'),
+          reaiming: state.phase === 'reposition', restSeconds: adventure.restSeconds });
+        if (outcome) finishAdventureStage(outcome);
+        else showSettledAdventureEvents();
+      }
+
+      function showSettledAdventureEvents() {
+        const adventure = state.adventure;
+        if (!adventure || adventure.outcome || !adventureUI.adventureDialogueOverlay.hidden || !adventureUI.adventureIllustrationOverlay.hidden) return;
+        const ready = adventure.pendingEvents.filter(event => event.unit.status === 'resting');
+        if (!ready.length) return;
+        adventure.pendingEvents = adventure.pendingEvents.filter(event => event.unit.status !== 'resting');
+        const ids = new Set(ready.flatMap(event => event.trigger.eventDialogueIds));
+        const lines = adventure.stage.dialogue.filter(line => ids.has(line.id));
+        showAdventureDialogue(lines);
+      }
+
+      function finishAdventureStage(outcome) {
+        const adventure = state.adventure;
+        if (!adventure || adventure.outcome) return;
+        adventure.outcome = outcome;
+        emitAdventureEvent({ type: outcome === 'success' ? 'stage-success' : 'stage-failure' });
+        adventure.markResult = SecondChanceAdventureMarks.evaluate(adventure.stage.explorationMarks, {
+          cleared: outcome === 'success',
+          handCardIds: state.hands[0].map(card => card.id),
+          collectedTriggerIds: [...adventure.collectedTriggerIds],
+          variableDefinitions: adventure.stage.variables,
+          variableValues: adventure.eventState.variables
+        });
+        if (outcome === 'success') rememberAdventureMarks(adventure.stage.id, adventure.markResult.count);
+        adventureUI.adventureOutcomeMarks.hidden = outcome !== 'success';
+        if (outcome === 'success') renderExplorationMarks(adventureUI.adventureOutcomeMarks,
+          adventure.markResult.count, adventure.stage.explorationMarks,
+          adventure.markResult.count === 3 ? '완전 탐사' : '이번 탐사 표식');
+        state.phase = 'finished';
+        state.powerMeter = null;
+        state.repositionUnit = null;
+        state.aiming = false;
+        cancelCardDrag();
+        powerControl.hidden = true;
+        const line = SecondChanceAdventure.dialogueFor(adventure.stage, outcome)[0];
+        adventureUI.adventureOutcomeTitle.textContent = outcome === 'success' ? '스테이지 클리어' : '다시 도전';
+        adventureUI.adventureOutcomeSpeaker.textContent = line?.speaker || '';
+        adventureOutcomeReveal?.stop();
+        adventureOutcomeReveal = SecondChanceDialoguePresentation.presentText(adventureUI.adventureOutcomeText,
+          line, { onTick: playAdventureTypingSound });
+        adventureUI.adventureOutcomePortrait.src = '영웅 초상화/big boy.png';
+        adventure.pendingOutcome = adventure.sceneQueue.length > 0;
+        adventureUI.adventureOutcomeOverlay.hidden = adventure.pendingOutcome;
+        adventureUI.adventureDialogueOverlay.hidden = true;
+        if (adventure.pendingOutcome) advanceAdventureScene();
+        playOutcomeMusic(outcome === 'success' ? 'victoryMusic' : 'defeatMusic');
+        updateHud();
+      }
+
+      function returnToAdventureSelection() {
+        returnToHome();
+        adventureStageIndex = 0;
+        renderAdventureSelection();
+        showStartScreen('adventurePlayScreen');
       }
 
       function openOnlineLobby() {
@@ -5731,6 +6459,8 @@
 
       function canControlPlayer(owner) {
         if (state.tutorial && (state.tutorial.speaking || state.tutorial.outcomeResolved || !gameSettingsOverlay.hidden)) return false;
+        if (state.adventure && (!gameSettingsOverlay.hidden || !adventureUI.adventureOutcomeOverlay.hidden ||
+          !adventureUI.adventureDialogueOverlay.hidden || !adventureUI.adventureIllustrationOverlay.hidden)) return false;
         if (!onlineSession?.started) return !(state.aiMode && owner === state.aiOwner);
         return onlineSession.playerIndex === owner;
       }
@@ -6093,14 +6823,18 @@
         deckDrafts = savedDecks.map(cards => cards ? [...cards] : []);
         deckStatus.textContent = savedDecks[activeDeckPreset] ? '' : '저장한 가방이 없으면 기본 덱으로 플레이합니다.';
         renderDeckEditor();
-        startOverlay.hidden = true;
-        deckOverlay.hidden = false;
+        runLobbyTransition(() => {
+          startOverlay.hidden = true;
+          deckOverlay.hidden = false;
+        });
       }
 
       function closeDeckEditor() {
-        deckOverlay.hidden = true;
-        startOverlay.hidden = false;
-        showStartScreen(deckReturnScreen);
+        runLobbyTransition(() => {
+          deckOverlay.hidden = true;
+          startOverlay.hidden = false;
+          showStartScreen(deckReturnScreen, true);
+        });
       }
 
       function beginDeckDrag(event) {
@@ -6521,6 +7255,12 @@
       }
 
       function drawMapSurface() {
+        const adventureBackground = state.adventure?.stage.backgroundSrc;
+        if (adventureBackground) {
+          const image = adventureImages[adventureBackground];
+          if (image?.complete && image.naturalWidth) ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+          return;
+        }
         const width = TABLE.right - TABLE.left;
         const height = TABLE.bottom - TABLE.top;
         ctx.save();
@@ -6556,7 +7296,20 @@
         if (unit.status === 'fallen') return;
         const image = images[unit.owner];
         ctx.save();
-        ctx.translate(unit.x, unit.y);
+        let visualY = unit.y;
+        const introDrop = state.tutorialIntroDrop;
+        if (introDrop?.unitId === unit.id && introDrop.phase === 'hidden') { ctx.restore(); return; }
+        let introAlpha = 1;
+        if (introDrop?.unitId === unit.id && introDrop.phase === 'falling') {
+          const t = Math.min(1, Math.max(0, (performance.now() - introDrop.start) / introDrop.duration));
+          const offset = t < .72
+            ? 220 * (1 - (t / .72) ** 2)
+            : -16 * Math.sin((t - .72) / .28 * Math.PI) * (1 - (t - .72) / .28);
+          visualY -= offset;
+          introAlpha = Math.min(1, Math.max(0, (t - .04) / .4));
+        }
+        ctx.translate(unit.x, visualY);
+        ctx.globalAlpha = introAlpha;
         if (unit.fluidTimer > 0) {
           ctx.beginPath();
           ctx.arc(0, 0, unit.radius + 8, 0, Math.PI * 2);
@@ -6566,7 +7319,7 @@
           ctx.lineWidth = 2;
           ctx.stroke();
         }
-        ctx.globalAlpha = unit.fluidTimer > 0 ? .58 : isCollisionPhased(unit) ? .46 : 1;
+        ctx.globalAlpha = introAlpha * (unit.fluidTimer > 0 ? .58 : isCollisionPhased(unit) ? .46 : 1);
         ctx.beginPath();
         ctx.arc(0, 0, unit.radius + 3, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(0,0,0,.25)';
@@ -6620,7 +7373,7 @@
         const emphasize = lesson && !state.tutorial.complete && (
           unit === turns.currentUnit || lesson.id === 'collision' && unit.owner === 1
         );
-        if (emphasize) {
+        if (emphasize && (introDrop?.unitId !== unit.id || introDrop.phase === 'landed')) {
           const phase = .5 + .5 * Math.sin(performance.now() / 360);
           ctx.save();
           ctx.beginPath();
@@ -6885,6 +7638,10 @@
 
       function draw() {
         drawTable();
+        drawAdventureWires();
+        drawAdventureProps();
+        drawAdventureBeacons();
+        drawAdventureDummies();
         drawItemTriggers();
         state.units.forEach(drawUnit);
         drawLockedPower();
@@ -6894,7 +7651,140 @@
         drawAim();
         drawCardPreview();
         drawParticles();
+        drawAdventureFog();
+        drawAdventureGoal();
         drawSkullEffects();
+      }
+
+      function drawAdventureWires() {
+        const adventure = state.adventure;
+        if (!adventure) return;
+        for (const wire of adventure.stage.wires) {
+          if (adventure.eventState.visibleObjects.get(wire.id) === false) continue;
+          const points = wire.points;
+          if (points.length < 2) continue;
+          const powered = adventure.powerState.poweredById.get(wire.id);
+          ctx.save();
+          ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.moveTo(points[0].x, points[0].y);
+          for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
+          ctx.strokeStyle = '#26302e'; ctx.lineWidth = 12; ctx.stroke();
+          ctx.strokeStyle = '#776744'; ctx.lineWidth = 8; ctx.stroke();
+          ctx.strokeStyle = powered ? '#73d9d4' : '#384849';
+          ctx.lineWidth = powered ? 3.5 : 2;
+          if (powered) { ctx.shadowColor = '#72f4e7'; ctx.shadowBlur = 12; }
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+
+      function drawAdventureBeacons() {
+        const adventure = state.adventure;
+        if (!adventure) return;
+        for (const beacon of adventure.stage.beacons) {
+          if (adventure.eventState.visibleObjects.get(beacon.id) === false) continue;
+          const active = adventure.powerState.activeById.get(beacon.id);
+          const image = adventureImages[active ? beacon.onSrc : beacon.offSrc];
+          ctx.save();
+          if (active) { ctx.shadowColor = '#73e4d9'; ctx.shadowBlur = 15; }
+          if (image?.complete && image.naturalWidth) {
+            ctx.drawImage(image, beacon.x - beacon.width / 2, beacon.y - beacon.height / 2,
+              beacon.width, beacon.height);
+          } else {
+            ctx.beginPath(); ctx.arc(beacon.x, beacon.y, beacon.radius, 0, Math.PI * 2);
+            ctx.fillStyle = active ? '#446c68' : '#333d3d'; ctx.fill();
+            ctx.strokeStyle = active ? '#7adbd4' : '#7d7967'; ctx.lineWidth = 3; ctx.stroke();
+          }
+          ctx.restore();
+        }
+      }
+
+      function drawAdventureProps() {
+        for (const prop of state.adventure?.props || []) {
+          if (state.adventure.eventState.visibleObjects.get(prop.id) === false) continue;
+          const image = adventureImages[prop.src];
+          if (!image?.complete || !image.naturalWidth) continue;
+          ctx.save();
+          ctx.translate(prop.x, prop.y);
+          ctx.rotate(prop.rotation * Math.PI / 180);
+          ctx.scale(prop.flipX ? -1 : 1, prop.flipY ? -1 : 1);
+          if (state.adventure.powerState.poweredById.get(prop.id)) {
+            ctx.shadowColor = '#73e4d9'; ctx.shadowBlur = 15;
+          }
+          ctx.drawImage(image, -prop.width / 2, -prop.height / 2, prop.width, prop.height);
+          ctx.restore();
+        }
+      }
+
+      function drawAdventureDummies() {
+        for (const dummy of state.adventure?.dummies || []) {
+          ctx.save();
+          ctx.translate(dummy.x, dummy.y);
+          const image = images[0];
+          if (image.complete && image.naturalWidth) {
+            ctx.filter = 'grayscale(1)';
+            ctx.drawImage(image, -dummy.radius, -dummy.radius, dummy.radius * 2, dummy.radius * 2);
+            ctx.filter = 'none';
+          } else {
+            ctx.fillStyle = '#89918e';
+            ctx.beginPath(); ctx.arc(0, 0, dummy.radius, 0, Math.PI * 2); ctx.fill();
+          }
+          if (!dummy.recharge) {
+            ctx.strokeStyle = '#86e7ef';
+            ctx.shadowColor = '#83dce9';
+            ctx.shadowBlur = 14;
+            ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.arc(0, 0, dummy.radius + 5, 0, Math.PI * 2); ctx.stroke();
+          }
+          ctx.restore();
+        }
+      }
+
+      function drawAdventureFog() {
+        const adventure = state.adventure;
+        if (!adventure?.fogVisible || !adventure.stage.fog) return;
+        const fog = adventure.stage.fog;
+        const left = fog.x - fog.width / 2;
+        const right = left + fog.width;
+        const fadeStart = left + fog.width * .52;
+        const top = fog.y - fog.height / 2;
+        ctx.save();
+        ctx.fillStyle = '#06090c';
+        ctx.fillRect(left, top, fadeStart - left, fog.height);
+        const fogFade = ctx.createLinearGradient(fadeStart, 0, right, 0);
+        fogFade.addColorStop(0, '#06090c');
+        fogFade.addColorStop(.6, 'rgba(6, 9, 12, .72)');
+        fogFade.addColorStop(1, 'rgba(6, 9, 12, .36)');
+        ctx.fillStyle = fogFade;
+        ctx.fillRect(fadeStart, top, right - fadeStart, fog.height);
+        const edge = ctx.createLinearGradient(right, 0, right + 24, 0);
+        edge.addColorStop(0, 'rgba(6, 9, 12, .36)');
+        edge.addColorStop(1, 'rgba(6, 9, 12, 0)');
+        ctx.fillStyle = edge;
+        ctx.fillRect(right, top, 24, fog.height);
+        ctx.restore();
+      }
+
+      function drawAdventureGoal() {
+        const goal = state.adventure?.stage.goal;
+        if (!goal || state.adventure.eventState.visibleObjects.get(goal.id) === false) return;
+        const pulse = (1 + Math.sin(performance.now() / 650)) / 2;
+        ctx.save();
+        ctx.translate(goal.x, goal.y);
+        ctx.rotate(goal.rotation * Math.PI / 180);
+        ctx.fillStyle = `rgba(230, 186, 98, ${(.01 + pulse * .11).toFixed(3)})`;
+        ctx.strokeStyle = `rgba(240, 212, 145, ${(.18 + pulse * .34).toFixed(3)})`;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([9, 6]);
+        ctx.fillRect(-goal.width / 2, -goal.height / 2, goal.width, goal.height);
+        ctx.strokeRect(-goal.width / 2, -goal.height / 2, goal.width, goal.height);
+        ctx.setLineDash([]);
+        ctx.fillStyle = `rgba(255, 240, 201, ${(.32 + pulse * .36).toFixed(3)})`;
+        ctx.font = '700 15px "Malgun Gothic", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('목표', 0, 0);
+        ctx.restore();
       }
 
       function drawLockedPower() {
@@ -6961,6 +7851,7 @@
 
       function getTriggerTooltip(trigger) {
         const descriptions = {
+          'adventure-reposition': '닿은 플레이어가 재배치 카드 한 장을 얻습니다.',
           blackhole: `블랙홀 방출 · 범위 ${Math.round(trigger.type.range)} 안의 스톤과 벽돌을 끌어당깁니다.`,
           pulse: `방출 · 획득 후 유닛과 충돌하거나 0.5초가 지나면 범위 ${Math.round(trigger.type.range)} 안의 스톤과 벽돌을 강하게 밀쳐냅니다.`,
           hardening: '경질화 · 중첩할 때마다 마찰력이 3배씩 곱해집니다.',
@@ -7068,6 +7959,13 @@
           ctx.translate(x, y);
           ctx.rotate(performance.now() * Math.PI * 2 / 14000);
           ctx.drawImage(image, -size / 2, -size / 2, size, size);
+          if (type.id === 'adventure-reposition') {
+            ctx.fillStyle = '#f4e6ff';
+            ctx.font = `800 ${Math.max(13, radius)}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('R', 0, 1);
+          }
           if (type.id === 'pulse') {
             ctx.globalAlpha = alpha * .35;
             ctx.strokeStyle = '#c5fcff';
@@ -7110,13 +8008,14 @@
         updateAiPlayer(timestamp);
         const onlineReplica = onlineSession?.started && onlineSession.role === 'challenger';
         const tutorialPaused = state.tutorial && (!gameSettingsOverlay.hidden || state.tutorial.speaking);
-        if (!onlineReplica && !tutorialPaused && !['intro', 'map-select', 'hero-select', 'dealing', 'trigger-select', 'finished'].includes(state.phase)) {
+        const adventurePaused = state.adventure && (!gameSettingsOverlay.hidden || !adventureUI.adventureDialogueOverlay.hidden || !adventureUI.adventureIllustrationOverlay.hidden);
+        if (!onlineReplica && !tutorialPaused && !adventurePaused && !['intro', 'map-select', 'hero-select', 'dealing', 'trigger-select', 'finished'].includes(state.phase)) {
           // Bound catch-up after an OS freeze; normal hidden-tab ticks retain all elapsed time.
           simulationRemainder += Math.min(elapsed, 1) * state.gameSpeed;
           while (simulationRemainder >= SIMULATION_STEP) {
             update(SIMULATION_STEP, timestamp, false);
             simulationRemainder -= SIMULATION_STEP;
-            if (state.tutorial?.speaking) { simulationRemainder = 0; break; }
+            if (state.tutorial?.speaking || (state.adventure && (!adventureUI.adventureDialogueOverlay.hidden || !adventureUI.adventureIllustrationOverlay.hidden))) { simulationRemainder = 0; break; }
           }
           updateHud();
         } else simulationRemainder = 0;
@@ -7233,7 +8132,7 @@
       });
 
       document.querySelector('#openPlayMenuButton').addEventListener('click', () => showStartScreen('startMenu'));
-      document.querySelector('#openTutorialButton').addEventListener('click', startTutorial);
+      document.querySelector('#openTutorialButton').addEventListener('click', () => runLobbyTransition(startTutorial));
       document.querySelector('#openCatalogButton').addEventListener('click', openCatalog);
       document.querySelector('#openHomeDeckButton').addEventListener('click', () => openDeckEditor('homeScreen'));
       document.querySelector('#openMenuDeckButton').addEventListener('click', () => openDeckEditor('startMenu'));
@@ -7438,8 +8337,20 @@
           document.querySelector('#gameSettingsButton').focus();
         }
       });
-      startButton.addEventListener('click', startLocalGame);
-      startAiButton.addEventListener('click', startAiGame);
+      startButton.addEventListener('click', () => runLobbyTransition(startLocalGame));
+      startAiButton.addEventListener('click', () => runLobbyTransition(startAiGame));
+      document.querySelector('#openAdventureScreenButton').addEventListener('click', openAdventureScreen);
+      adventureUI.adventurePreviousButton.addEventListener('click', () => { adventureStageIndex = 0; renderAdventureSelection(); });
+      adventureUI.adventureNextButton.addEventListener('click', () => { adventureStageIndex = 1; renderAdventureSelection(); });
+      adventureUI.adventureBackButton.addEventListener('click', () => showStartScreen('startMenu'));
+      adventureUI.adventurePlayButton.addEventListener('click', () => runLobbyTransition(startAdventureStage));
+      adventureUI.adventureSelectButton.addEventListener('click', returnToAdventureSelection);
+      adventureUI.adventureRetryButton.addEventListener('click', startAdventureStage);
+      adventureUI.adventureDialogueNext.addEventListener('click', advanceAdventureDialogue);
+      adventureUI.adventureIllustrationNext.addEventListener('click', () => {
+        adventureUI.adventureIllustrationOverlay.hidden = true;
+        if (!advanceAdventureScene()) showSettledAdventureEvents();
+      });
       aiOpponentButtons.forEach(button => button.addEventListener('click', () => selectAiOpponent(button.dataset.aiOpponent)));
       browseRoomsButton.addEventListener('click', async () => {
         if (await requireAccount('browseRoomsScreen')) refreshPublicRooms();
@@ -7509,8 +8420,11 @@
         } else openMapSelection('result');
       });
       resultLobbyButton.addEventListener('click', returnToHome);
-      confirmMapButton.addEventListener('click', startSelectedMap);
-      cancelMapButton.addEventListener('click', cancelMapSelection);
+      confirmMapButton.addEventListener('click', () => {
+        if (onlineSession && !onlineSession.started) startSelectedMap();
+        else runLobbyTransition(startSelectedMap);
+      });
+      cancelMapButton.addEventListener('click', () => runLobbyTransition(cancelMapSelection));
       triggerToolButtons.forEach(button => button.addEventListener('pointerdown', beginTriggerPlacementDrag));
       confirmTriggerButton.addEventListener('click', confirmItemTriggerPlacement);
       cancelTriggerButton.addEventListener('click', cancelItemTriggerPlacement);
@@ -7548,7 +8462,7 @@
         settingsAudioControls.hidden = false;
         gameSettingsMainActions.hidden = false;
         gameLeaveConfirm.hidden = true;
-        gameLeaveButton.textContent = state.aiMode ? '게임 포기하기' : '게임 나가기';
+        gameLeaveButton.textContent = state.aiMode ? '게임 포기하기' : state.adventure ? '모험 중단하기' : '게임 나가기';
         document.querySelector('#gameLeaveConfirmButton').textContent = state.aiMode ? '포기하고 나가기' : '나가기';
         gameSettingsOverlay.hidden = false;
         musicVolume.focus();
@@ -7556,6 +8470,8 @@
       gameLeaveButton.addEventListener('click', () => {
         gameLeavePrompt.textContent = state.aiMode
           ? 'AI 대전을 포기하고 시작 화면으로 돌아갈까요? 이 경기의 명성치는 획득할 수 없습니다.'
+          : state.adventure
+            ? '모험을 중단하고 로비로 돌아갈까요? 현재 스테이지 진행은 저장되지 않습니다.'
           : onlineSession
             ? '온라인 대전에서 나가면 패배 처리될 수 있습니다. 그래도 나가시겠습니까?'
             : '현재 게임을 종료하고 로비로 돌아갈까요?';
@@ -7630,5 +8546,6 @@
       requestAnimationFrame(gameLoop);
     })();
   </script>
+  <script src="tutorial-motion.js?v=1"></script>
 </body>
 </html>

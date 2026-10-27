@@ -21,6 +21,11 @@ const mimeTypes = {
   '.css': 'text/css; charset=utf-8',
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.ttf': 'font/ttf',
+  '.json': 'application/json; charset=utf-8',
   '.webmanifest': 'application/manifest+json',
   '.mp3': 'audio/mpeg',
   '.wav': 'audio/wav'
@@ -29,6 +34,43 @@ const mimeTypes = {
 function sendJson(response, status, value) {
   response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
   response.end(JSON.stringify(value));
+}
+
+async function listEditorAssets() {
+  const folders = [
+    ['World_illustration', 'decoration'],
+    ['Card_illustration', 'card'],
+    ['adventure/reward-icons', 'decoration'],
+    ['영웅 초상화', 'portrait'],
+    ['in-game-screen/curling-table-maps', 'map'],
+    ['in-game-screen/game-objects', 'decoration']
+  ];
+  const assets = [];
+  async function visit(relative, defaultCategory) {
+    const entries = await fs.promises.readdir(path.join(ROOT, ...relative.split('/')), { withFileTypes: true }).catch(() => []);
+    for (const entry of entries) {
+      const assetPath = `${relative}/${entry.name}`;
+      if (entry.isDirectory()) { await visit(assetPath, defaultCategory); continue; }
+      if (!entry.isFile() || !/\.(png|jpe?g|webp)$/i.test(entry.name)) continue;
+      if ((assetPath.includes('/game-objects/beacons/') || assetPath.includes('/game-objects/wires/')) &&
+          /-on(?:-concept)?\.png$/i.test(entry.name)) continue;
+      const stat = await fs.promises.stat(path.join(ROOT, ...assetPath.split('/')));
+      let category = defaultCategory;
+      if (relative === 'World_illustration' && /^AAB-humanoid/i.test(entry.name)) category = 'portrait';
+      if (assetPath.includes('/game-objects/triggers/')) category = 'trigger';
+      else if (assetPath.includes('/game-objects/beacons/')) category = 'beacon';
+      else if (assetPath.includes('/game-objects/wires/')) category = 'wire';
+      else if (/\/game-objects\/(data-barrier|structure-drop-brick)\//.test(assetPath)) category = 'structure';
+      assets.push({
+        id: `upload:shared:${crypto.createHash('sha256').update(assetPath).digest('hex').slice(0, 16)}`,
+        name: path.parse(entry.name).name,
+        category,
+        src: `/${assetPath}?v=${Math.trunc(stat.mtimeMs)}`
+      });
+    }
+  }
+  for (const [folder, category] of folders) await visit(folder, category);
+  return assets;
 }
 
 function readJson(request) {
@@ -260,6 +302,11 @@ function rejectUpgrade(socket, status, message) {
 
 async function handleApi(request, response, url) {
   const parts = url.pathname.split('/').filter(Boolean);
+  if (url.pathname === '/api/editor-assets') {
+    if (!LOCAL_TEST_LEVEL) return fail(response, 404, 'Not found');
+    if (request.method !== 'GET') return fail(response, 405, 'Method not allowed');
+    return sendJson(response, 200, { assets: await listEditorAssets() });
+  }
   if (request.method === 'POST' && url.pathname === '/api/accounts/register') {
     const data = await readJson(request);
     try {
@@ -601,11 +648,13 @@ const server = http.createServer(async (request, response) => {
     if (pathname === '/') pathname = '/index.html';
     const file = path.resolve(ROOT, `.${pathname}`);
     if (file !== ROOT && !file.startsWith(`${ROOT}${path.sep}`)) return fail(response, 403, 'Forbidden');
+    if (!LOCAL_TEST_LEVEL && ['editor.html', 'editor.css', 'editor.js', 'adventure-editor-model.js'].includes(path.basename(file).toLowerCase()))
+      return fail(response, 404, 'Not found');
     const stat = await fs.promises.stat(file).catch(() => null);
     if (!stat?.isFile()) return fail(response, 404, 'Not found');
     response.writeHead(200, {
       'Content-Type': mimeTypes[path.extname(file).toLowerCase()] || 'application/octet-stream',
-      'Cache-Control': ['index.html', 'sw.js'].includes(path.basename(file)) ? 'no-cache' : 'public, max-age=3600'
+      'Cache-Control': ['index.html', 'sw.js', 'editor.html', 'editor.css', 'editor.js', 'adventure-editor-model.js'].includes(path.basename(file)) ? 'no-cache' : 'public, max-age=3600'
     });
     if (request.method === 'HEAD') return response.end();
     fs.createReadStream(file).pipe(response);
