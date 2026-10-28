@@ -1,0 +1,895 @@
+/* Second Chance: full-screen profile lobby. Keep all copy as live HTML. */
+#startOverlay .lobby-brand { display: none; }
+
+#startOverlay.is-profile-lobby {
+  --lobby-ink: #f1e9d8;
+  --lobby-muted: #b9c8c4;
+  --lobby-brass: #c19a62;
+  --lobby-signal: #78b8ae;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  padding: clamp(12px, 2.2vw, 32px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: #081011;
+  color: var(--lobby-ink);
+}
+
+#startOverlay.is-profile-lobby[hidden] { display: none; }
+
+/* The preservation-zone WebCG belongs to the lobby, including mode selection. */
+#startOverlay.is-profile-lobby > .preservation-webcg {
+  display: block;
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+#startOverlay.is-profile-lobby > .preservation-webcg::after {
+  content: "";
+  position: absolute;
+  z-index: 7;
+  inset: 0;
+  background:
+    linear-gradient(90deg, #081113ba 0%, #08111384 27%, #08111320 58%, #08111382 100%),
+    linear-gradient(0deg, #050c0ed2 0%, transparent 35%, #050c0e85 100%);
+}
+
+#startOverlay.is-profile-lobby > .dialog {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: clamp(258px, 24vw, 330px) minmax(0, 1fr);
+  grid-template-rows: minmax(100px, 20vh) minmax(0, 1fr);
+  column-gap: clamp(20px, 3.2vw, 60px);
+  width: min(1540px, 100%);
+  min-height: 100%;
+  max-height: none;
+  margin: 0 auto;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  text-align: left;
+  animation: none;
+  view-transition-name: none;
+}
+
+#startOverlay.is-profile-lobby > .dialog > h2 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+#startOverlay.is-profile-lobby #startScreenDescription { display: none; }
+#startOverlay.is-profile-lobby #startStatus:empty { display: none; }
+#startOverlay.is-profile-lobby #startStatus:not(:empty) {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  max-width: min(460px, 100%);
+  margin: 0;
+  padding: 8px 12px;
+  background: #0b1719ee;
+  border: 1px solid #b3986a9c;
+}
+
+/* Artwork contains the final lettering; the image is decorative to the live title. */
+#startOverlay.is-profile-lobby .lobby-brand {
+  display: block;
+  grid-column: 1 / -1;
+  grid-row: 1;
+  justify-self: center;
+  align-self: start;
+  width: min(54vw, 640px);
+  min-width: 280px;
+  min-height: 0;
+  margin: 0;
+  text-align: center;
+  pointer-events: none;
+}
+
+#startOverlay.is-profile-lobby .lobby-brand img {
+  display: block;
+  width: 100%;
+  max-height: 17vh;
+  max-height: 17dvh;
+  margin-inline: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 7px 20px #000b);
+}
+
+#startOverlay.is-profile-lobby #homeScreen {
+  grid-column: 1;
+  grid-row: 2;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  width: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 0 0 clamp(12px, 2vh, 24px);
+}
+
+#startOverlay.is-profile-lobby #homeScreen[hidden],
+#startOverlay.is-profile-lobby #startMenu[hidden] { display: none !important; }
+
+#startOverlay.is-profile-lobby #homeScreen button[hidden],
+#startOverlay.is-profile-lobby #startMenu button[hidden] { display: none !important; }
+
+#startOverlay.is-profile-lobby #homeScreen .home-stones { display: none; }
+
+#startOverlay.is-profile-lobby .lobby-profile-row {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #a58c6369;
+  border-radius: 5px;
+  background: linear-gradient(105deg, #0b191cd9, #102023a8 80%, #132b2b5c);
+  box-shadow: 0 10px 28px #0008, inset 0 1px #d3b88328;
+  backdrop-filter: blur(8px);
+}
+
+#startOverlay.is-profile-lobby #lobbyAvatarButton {
+  display: grid;
+  place-items: center;
+  width: 68px;
+  height: 68px;
+  min-height: 0;
+  padding: 0;
+  border: 1px solid #b89962a8;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #1e3132, #0d1b1f 60%);
+  box-shadow: inset 0 0 0 3px #101d1f, inset 0 0 0 4px #6b8a7d75;
+  color: #a9b9ae;
+  cursor: pointer;
+}
+
+#startOverlay.is-profile-lobby #lobbyAvatarButton:hover { border-color: #e0bf84; filter: brightness(1.16); }
+#startOverlay.is-profile-lobby #lobbyAvatarButton:focus-visible { outline: 2px solid #f2ca86; outline-offset: 3px; }
+#startOverlay.is-profile-lobby #lobbyAvatarButton > span { display: none; }
+
+#startOverlay.is-profile-lobby .guest-profile {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+#startOverlay.is-profile-lobby .guest-profile[hidden] { display: none; }
+#startOverlay.is-profile-lobby .guest-profile-line { display: block; }
+#startOverlay.is-profile-lobby .guest-profile-line strong {
+  display: block;
+  max-width: 100%;
+  color: #f5ecdd;
+  font-size: clamp(14px, 1.3vw, 19px);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+#startOverlay.is-profile-lobby #guestProfileId { display: none; }
+#startOverlay.is-profile-lobby .guest-profile-line span {
+  display: block;
+  max-width: 100%;
+  margin-top: 3px;
+  font-size: 10px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+#startOverlay.is-profile-lobby .guest-profile-meta {
+  margin: 5px 0 7px;
+  color: var(--lobby-muted);
+  font-size: 11px;
+  line-height: 1.3;
+}
+#startOverlay.is-profile-lobby .guest-profile-progress-wrap { min-width: 0; }
+#startOverlay.is-profile-lobby .guest-profile progress { width: 100%; }
+
+#startOverlay.is-profile-lobby #homeScreen .home-menu {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  gap: clamp(7px, 1.3vh, 12px);
+  width: 100%;
+  min-height: 0;
+  margin: clamp(18px, 3vh, 34px) 0 auto;
+}
+
+/* Navigation buttons retain live HTML labels, with predictable padding. */
+#startOverlay.is-profile-lobby #homeScreen :is(.home-menu button, .deck-entry-button, .home-account),
+#startOverlay.is-profile-lobby #startMenu .deck-entry-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  min-width: 0;
+  min-height: clamp(45px, 6vh, 58px);
+  margin: 0;
+  padding: 8px 38px 8px 20px;
+  border: 1px solid #b3905b70;
+  border-radius: 3px;
+  background-color: #0a181bd4;
+  background-image: linear-gradient(90deg, #1d3435ca, #102022d1 75%, #0b1719e8);
+  box-shadow: inset 0 1px #c8aa7854, 0 4px 12px #0006;
+  color: var(--lobby-ink);
+  font-family: var(--ui-serif, Georgia, serif);
+  font-size: clamp(14px, 1.25vw, 18px);
+  line-height: 1.25;
+  text-align: left;
+  text-wrap: wrap;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+  cursor: pointer;
+  transition: border-color .18s ease, filter .18s ease, background-color .18s ease, transform .18s ease;
+}
+
+#startOverlay.is-profile-lobby #homeScreen :is(.home-menu button, .deck-entry-button, .home-account)::after,
+#startOverlay.is-profile-lobby #startMenu .deck-entry-button::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  width: 7px;
+  height: 7px;
+  border-top: 1px solid #d1ba88;
+  border-right: 1px solid #d1ba88;
+  transform: translateY(-50%) rotate(45deg);
+  pointer-events: none;
+}
+
+#startOverlay.is-profile-lobby #homeScreen :is(.home-menu button, .deck-entry-button, .home-account):hover,
+#startOverlay.is-profile-lobby #startMenu .deck-entry-button:hover {
+  border-color: #d7b47c;
+  background-image: linear-gradient(90deg, #365454df, #183031ed 75%, #102023ee);
+  filter: brightness(1.07);
+  transform: translateX(3px);
+}
+
+#startOverlay.is-profile-lobby #homeScreen :is(.home-menu button, .deck-entry-button, .home-account):active,
+#startOverlay.is-profile-lobby #startMenu .deck-entry-button:active {
+  transform: translateX(1px);
+  background-image: linear-gradient(90deg, #234240, #152c2c);
+}
+
+#startOverlay.is-profile-lobby[data-lobby-mode="multi"] #openPlayMenuButton,
+#startOverlay.is-profile-lobby[data-lobby-mode="single"] #openSingleLobbyButton,
+#startOverlay.is-profile-lobby #homeScreen .home-menu button[aria-current="true"] {
+  border-color: #e0b66e;
+  background-image: linear-gradient(90deg, #4b4935d9, #22302bdb 70%, #142222d9);
+  box-shadow: inset 3px 0 #e0b66e, 0 5px 18px #0008;
+}
+
+#startOverlay.is-profile-lobby #homeScreen > .deck-entry-button,
+#startOverlay.is-profile-lobby #homeScreen > .home-account {
+  margin-top: 8px;
+}
+
+#startOverlay.is-profile-lobby #startMenu {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: end;
+  align-self: center;
+  width: min(460px, 100%);
+  min-width: 0;
+  max-height: min(74vh, 720px);
+  max-height: min(74dvh, 720px);
+  margin: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #a68d65 #0d1b1d;
+  pointer-events: auto;
+}
+
+#startOverlay.is-profile-lobby #startMenu .lobby-mode-panel {
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transform: translateX(52px);
+  gap: clamp(14px, 2vh, 22px);
+  width: 100%;
+  min-width: 0;
+  padding: clamp(20px, 2.2vw, 32px);
+  border: 1px solid #b3986a9c;
+  border-radius: 6px;
+  background: linear-gradient(145deg, #132426f1, #0b1719ed 72%, #0c1b1dee);
+  box-shadow: 0 22px 62px #000a, inset 0 0 0 2px #0a1516, inset 0 0 0 3px #86a59b46;
+  backdrop-filter: blur(13px);
+}
+
+#startOverlay.is-profile-lobby #startMenu .lobby-mode-panel h3 {
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  padding: 0 0 13px;
+  border-bottom: 1px solid #b399677a;
+  color: #f4e9d2;
+  font-family: var(--ui-serif, Georgia, serif);
+  font-size: clamp(21px, 2vw, 28px);
+  font-weight: 400;
+  line-height: 1.3;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+#startOverlay.is-profile-lobby #startMenu .lobby-panel-heading { min-width: 0; }
+#startOverlay.is-profile-lobby #startMenu .lobby-panel-kicker {
+  display: block;
+  margin: 0 0 9px;
+  color: var(--lobby-signal);
+  font-family: var(--ui-sans, sans-serif);
+  font-size: 10px;
+  line-height: 1.3;
+  letter-spacing: .18em;
+}
+#startOverlay.is-profile-lobby #startMenu .lobby-panel-heading p {
+  margin: 11px 0 0;
+  color: var(--lobby-muted);
+  font-family: var(--ui-sans, sans-serif);
+  font-size: clamp(11px, 1.05vw, 14px);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+#startOverlay.is-profile-lobby #startMenu .start-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+
+#startOverlay.is-profile-lobby[data-lobby-mode="multi"] #startMenu .lobby-single-options,
+#startOverlay.is-profile-lobby[data-lobby-mode="single"] #startMenu .lobby-multi-options,
+#startOverlay.is-profile-lobby #startMenu .start-menu-grid[hidden] { display: none !important; }
+
+#startOverlay.is-profile-lobby #startMenu .start-menu-grid button {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+  min-height: clamp(100px, 14vh, 142px);
+  height: auto;
+  margin: 0;
+  padding: 52px 14px 18px;
+  border: 1px solid #b3915d95;
+  border-radius: 4px;
+  background-color: #122326;
+  background-image: var(--ui-skin);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  box-shadow: 0 5px 14px #0007;
+  color: #f3e8d4;
+  font-family: var(--ui-serif, Georgia, serif);
+  font-size: clamp(12px, 1.15vw, 16px);
+  line-height: 1.3;
+  text-align: center;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+#startOverlay.is-profile-lobby #startMenu .start-menu-grid button:hover { border-color: #d8b476; filter: brightness(1.12); }
+#startOverlay.is-profile-lobby #startMenu .start-menu-grid button:active { transform: translateY(1px); }
+#startOverlay.is-profile-lobby #startMenu .lobby-multi-options button:last-child {
+  grid-column: 1 / -1;
+  min-height: 76px;
+  padding-top: 37px;
+  padding-bottom: 12px;
+}
+#startOverlay.is-profile-lobby #startMenu #openAdventureScreenButton::after { top: 10px; right: 10px; transform: none; }
+
+#startOverlay.is-profile-lobby #startMenu .lobby-panel-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+}
+#startOverlay.is-profile-lobby #startMenu .deck-entry-button { margin-top: 0; }
+#startOverlay.is-profile-lobby #startMenu .home-return {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
+  min-height: 45px;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid #b3905b70;
+  border-radius: 3px;
+  background-color: #0a181bd4;
+  background-image: linear-gradient(135deg, #203535, #0d1d1f);
+  color: #f1e9d8;
+  font-family: var(--ui-serif, Georgia, serif);
+  font-size: clamp(12px, 1.1vw, 15px);
+  line-height: 1.2;
+  text-align: center;
+  text-wrap: nowrap;
+}
+#startOverlay.is-profile-lobby #startMenu .home-return::after { content: none; }
+#startOverlay.is-profile-lobby #startMenu .home-return:hover { border-color: #d9b979; background-image: linear-gradient(135deg, #345051, #152a2d); }
+
+/* Distinct names force a fresh right-to-left entry when switching mode. */
+#startOverlay.is-profile-lobby.is-panel-open[data-lobby-mode="multi"] #startMenu .lobby-mode-panel {
+  animation: second-chance-multi-panel-in .42s cubic-bezier(.2,.72,.22,1) both;
+}
+#startOverlay.is-profile-lobby.is-panel-open[data-lobby-mode="single"] #startMenu .lobby-mode-panel {
+  animation: second-chance-single-panel-in .42s cubic-bezier(.2,.72,.22,1) both;
+}
+
+@keyframes second-chance-multi-panel-in {
+  from { opacity: 0; transform: translate3d(52px, 0, 0); filter: blur(5px); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); filter: blur(0); }
+}
+@keyframes second-chance-single-panel-in {
+  from { opacity: 0; transform: translate3d(52px, 0, 0); filter: blur(5px); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); filter: blur(0); }
+}
+
+@media (max-width: 760px) {
+  #startOverlay.is-profile-lobby { padding: 12px; }
+  #startOverlay.is-profile-lobby > .dialog {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    align-content: start;
+    row-gap: 14px;
+    min-height: 100%;
+  }
+  #startOverlay.is-profile-lobby .lobby-brand {
+    grid-column: 1;
+    grid-row: 1;
+    width: min(92vw, 480px);
+    min-width: 0;
+    justify-self: center;
+  }
+  #startOverlay.is-profile-lobby .lobby-brand img { max-height: 110px; }
+  #startOverlay.is-profile-lobby #homeScreen {
+    grid-column: 1;
+    grid-row: 2;
+    width: min(100%, 620px);
+    justify-self: center;
+    padding: 0;
+  }
+  #startOverlay.is-profile-lobby #homeScreen .home-menu {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 14px 0 0;
+  }
+  #startOverlay.is-profile-lobby #startMenu {
+    grid-column: 1;
+    grid-row: 3;
+    justify-self: center;
+    align-self: start;
+    width: min(100%, 620px);
+    max-height: none;
+    overflow: visible;
+    padding-bottom: 16px;
+  }
+  #startOverlay.is-profile-lobby #startMenu .lobby-mode-panel { padding: 18px; }
+}
+
+@media (max-width: 420px) {
+  #startOverlay.is-profile-lobby { padding: 10px; }
+  #startOverlay.is-profile-lobby .lobby-brand img { max-height: 86px; }
+  #startOverlay.is-profile-lobby .lobby-profile-row {
+    grid-template-columns: 54px minmax(0, 1fr);
+    gap: 9px;
+    padding: 8px;
+  }
+  #startOverlay.is-profile-lobby #lobbyAvatarButton { width: 52px; height: 52px; }
+  #startOverlay.is-profile-lobby #homeScreen .home-menu { gap: 6px; }
+  #startOverlay.is-profile-lobby #homeScreen :is(.home-menu button, .deck-entry-button, .home-account) {
+    min-height: 48px;
+    padding: 7px 22px 7px 9px;
+    font-size: clamp(12px, 3.6vw, 15px);
+    line-height: 1.2;
+  }
+  #startOverlay.is-profile-lobby #homeScreen :is(.home-menu button, .deck-entry-button, .home-account)::after { right: 8px; width: 5px; height: 5px; }
+  #startOverlay.is-profile-lobby #startMenu .lobby-mode-panel { gap: 12px; padding: 14px; }
+  #startOverlay.is-profile-lobby #startMenu .start-menu-grid { gap: 7px; }
+  #startOverlay.is-profile-lobby #startMenu .start-menu-grid button {
+    min-height: 70px;
+    padding: 34px 7px 10px;
+    font-size: clamp(11px, 3.3vw, 14px);
+    line-height: 1.2;
+  }
+  #startOverlay.is-profile-lobby #startMenu #openAdventureScreenButton { padding-right: 37px; }
+  #startOverlay.is-profile-lobby #startMenu #openAdventureScreenButton::after { right: 6px; top: 6px; font-size: 8px; }
+  #startOverlay.is-profile-lobby #startMenu .lobby-panel-actions { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 340px) {
+  #startOverlay.is-profile-lobby #homeScreen .home-menu { grid-template-columns: 1fr; }
+  #startOverlay.is-profile-lobby #startMenu .start-menu-grid { grid-template-columns: 1fr; }
+  #startOverlay.is-profile-lobby #startMenu .start-menu-grid button { min-height: 52px; padding: 10px 42px 10px 12px; align-items: center; justify-content: flex-start; text-align: left; }
+  #startOverlay.is-profile-lobby #startMenu .start-menu-grid button::before { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #startOverlay.is-profile-lobby.is-panel-open[data-lobby-mode] #startMenu .lobby-mode-panel {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  #startOverlay.is-profile-lobby #homeScreen :is(.home-menu button, .deck-entry-button, .home-account),
+  #startOverlay.is-profile-lobby #startMenu .deck-entry-button { transition: none; }
+}
+
+/* Shared scenery and scalable frame for every pre-match screen. */
+#startOverlay.is-home-lobby:not(.is-profile-lobby) > .dialog {
+  background: #101d20 url("lobby-window-frame.svg") center / 100% 100% no-repeat;
+  border: 0;
+  border-radius: 0;
+  padding: clamp(24px, 3vw, 38px);
+  box-shadow: 0 24px 80px #000c;
+}
+
+#startOverlay.is-home-lobby:not(.is-profile-lobby) > .preservation-webcg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  background: linear-gradient(90deg, #0710128a, #0710123b 48%, #0710129c);
+  pointer-events: none;
+}
+
+/* These pre-match overlays live outside #startOverlay, so give them the same lobby scene. */
+#catalogOverlay,
+#deckOverlay,
+#mapSelectOverlay,
+#heroSelectOverlay {
+  background:
+    linear-gradient(90deg, #071012bd, #07101273 50%, #071012c2),
+    url("preservation-zone/preservation-zone-aerial.webp") center / cover no-repeat fixed;
+}
+
+#catalogOverlay > .dialog,
+#deckOverlay > .dialog,
+#mapSelectOverlay > .dialog,
+#heroSelectOverlay > .dialog {
+  border: 0;
+  border-radius: 0;
+  background: #101d20 url("lobby-window-frame.svg") center / 100% 100% no-repeat;
+  box-shadow: 0 24px 80px #000c;
+}
+
+#startOverlay.is-profile-lobby .lobby-profile-row,
+#startOverlay.is-profile-lobby #startMenu .lobby-mode-panel {
+  border: 0;
+  border-radius: 0;
+  background: #0f1d20 url("lobby-window-frame.svg") center / 100% 100% no-repeat;
+  box-shadow: 0 16px 42px #000b;
+}
+
+#startOverlay.is-profile-lobby #homeScreen :is(.home-menu button, .deck-entry-button, .home-account),
+#startOverlay.is-profile-lobby #startMenu .deck-entry-button,
+#startOverlay.is-profile-lobby #startMenu .home-return,
+#startOverlay.is-profile-lobby #startMenu .start-menu-grid button {
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  background-image: var(--ui-skin);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  box-shadow: none;
+}
+
+#startOverlay.is-profile-lobby #homeScreen :is(.home-menu button, .deck-entry-button, .home-account):hover,
+#startOverlay.is-profile-lobby #startMenu :is(.deck-entry-button, .home-return, .start-menu-grid button):hover {
+  background-image: var(--ui-skin-hover);
+}
+
+#startOverlay.is-profile-lobby #homeScreen :is(.home-menu button, .deck-entry-button, .home-account):active,
+#startOverlay.is-profile-lobby #startMenu :is(.deck-entry-button, .home-return, .start-menu-grid button):active {
+  background-image: var(--ui-skin-pressed);
+}
+
+#startOverlay.is-profile-lobby[data-lobby-mode="multi"] #openPlayMenuButton,
+#startOverlay.is-profile-lobby[data-lobby-mode="single"] #openSingleLobbyButton,
+#startOverlay.is-profile-lobby #homeScreen .home-menu button[aria-current="true"] {
+  background-image: var(--ui-skin-hover);
+  filter: drop-shadow(0 0 8px #c79b5960);
+}
+
+#startOverlay.is-profile-lobby #homeScreen :is(.home-menu button, .deck-entry-button, .home-account)::after,
+#startOverlay.is-profile-lobby #startMenu .deck-entry-button::after { content: none; }
+
+#startOverlay.is-profile-lobby #openSingleLobbyButton {
+  --ui-skin: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/home-tutorial--desktop--idle.svg");
+  --ui-skin-hover: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/home-tutorial--desktop--hover.svg");
+  --ui-skin-pressed: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/home-tutorial--desktop--pressed.svg");
+}
+
+/* Keep asset URLs relative to this stylesheet, including when used in a CSS variable. */
+#startOverlay.is-profile-lobby #openPlayMenuButton {
+  --ui-skin: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/home-play--desktop--idle.svg");
+  --ui-skin-hover: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/home-play--desktop--hover.svg");
+  --ui-skin-pressed: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/home-play--desktop--pressed.svg");
+}
+#startOverlay.is-profile-lobby #openCatalogButton {
+  --ui-skin: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/home-catalog--desktop--idle.svg");
+  --ui-skin-hover: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/home-catalog--desktop--hover.svg");
+  --ui-skin-pressed: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/home-catalog--desktop--pressed.svg");
+}
+#startOverlay.is-profile-lobby :is(#openHomeDeckButton, #openMenuDeckButton) {
+  --ui-skin: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/home-deck--desktop--idle.svg");
+  --ui-skin-hover: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/home-deck--desktop--hover.svg");
+  --ui-skin-pressed: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/home-deck--desktop--pressed.svg");
+}
+#startOverlay.is-profile-lobby #openAccountButton {
+  --ui-skin: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/home-account--desktop--idle.svg");
+  --ui-skin-hover: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/home-account--desktop--hover.svg");
+  --ui-skin-pressed: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/home-account--desktop--pressed.svg");
+}
+#startOverlay.is-profile-lobby #playMenuHomeButton {
+  --ui-skin: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/back--desktop--idle.svg");
+  --ui-skin-hover: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/back--desktop--hover.svg");
+  --ui-skin-pressed: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/back--desktop--pressed.svg");
+}
+#startOverlay.is-profile-lobby #createRoomButton { --ui-skin: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-online--desktop--idle.svg"); --ui-skin-hover: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-online--desktop--hover.svg"); --ui-skin-pressed: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-online--desktop--pressed.svg"); }
+#startOverlay.is-profile-lobby #browseRoomsButton { --ui-skin: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-browse--desktop--idle.svg"); --ui-skin-hover: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-browse--desktop--hover.svg"); --ui-skin-pressed: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-browse--desktop--pressed.svg"); }
+#startOverlay.is-profile-lobby #openJoinScreenButton { --ui-skin: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-code--desktop--idle.svg"); --ui-skin-hover: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-code--desktop--hover.svg"); --ui-skin-pressed: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-code--desktop--pressed.svg"); }
+#startOverlay.is-profile-lobby #openAiScreenButton { --ui-skin: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-ai--desktop--idle.svg"); --ui-skin-hover: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-ai--desktop--hover.svg"); --ui-skin-pressed: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-ai--desktop--pressed.svg"); }
+#startOverlay.is-profile-lobby #openLocalScreenButton { --ui-skin: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-local--desktop--idle.svg"); --ui-skin-hover: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-local--desktop--hover.svg"); --ui-skin-pressed: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-local--desktop--pressed.svg"); }
+#startOverlay.is-profile-lobby #openTutorialButton { --ui-skin: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/home-tutorial--desktop--idle.svg"); --ui-skin-hover: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/home-tutorial--desktop--hover.svg"); --ui-skin-pressed: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/home-tutorial--desktop--pressed.svg"); }
+#startOverlay.is-profile-lobby #openAdventureScreenButton { --ui-skin: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-adventure--desktop--idle.svg"); --ui-skin-hover: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-adventure--desktop--hover.svg"); --ui-skin-pressed: url("../shared-ui/expedition-ui-kit-v1/buttons/salvage/mode-adventure--desktop--pressed.svg"); }
+
+@media (min-width: 761px) {
+  #startOverlay.is-profile-lobby { padding: clamp(22px, 3vw, 76px); }
+  #startOverlay.is-profile-lobby > .dialog {
+    width: 100%;
+    grid-template-columns: clamp(300px, 25vw, 540px) minmax(0, 1fr);
+    grid-template-rows: minmax(135px, 19vh) minmax(0, 1fr);
+    column-gap: clamp(24px, 4vw, 88px);
+  }
+  #startOverlay.is-profile-lobby .lobby-brand { width: min(69vw, 910px); }
+  #startOverlay.is-profile-lobby .lobby-brand img { max-height: 20vh; max-height: 20dvh; }
+  #startOverlay.is-profile-lobby .lobby-profile-row {
+    grid-template-columns: 92px minmax(0, 1fr);
+    min-height: 112px;
+    gap: 17px;
+    padding: 16px 22px;
+  }
+  #startOverlay.is-profile-lobby #lobbyAvatarButton { width: 82px; height: 82px; }
+  #startOverlay.is-profile-lobby .guest-profile-line strong { font-size: clamp(18px, 1.25vw, 25px); }
+  #startOverlay.is-profile-lobby .guest-profile-meta { font-size: clamp(12px, .8vw, 15px); }
+  #startOverlay.is-profile-lobby #homeScreen .home-menu { gap: clamp(8px, 1.3vh, 15px); margin-top: clamp(22px, 3vh, 42px); }
+  #startOverlay.is-profile-lobby #homeScreen :is(.home-menu button, .deck-entry-button, .home-account) {
+    min-height: clamp(60px, 7.2vh, 88px);
+    padding: 10px 58px 10px 62px;
+    font-size: clamp(19px, 1.2vw, 25px);
+  }
+  #startOverlay.is-profile-lobby #startMenu { width: min(700px, 100%); max-height: min(77dvh, 900px); }
+  #startOverlay.is-profile-lobby #startMenu .lobby-mode-panel { gap: clamp(18px, 2.5vh, 28px); padding: clamp(26px, 2.8vw, 44px); }
+  #startOverlay.is-profile-lobby #startMenu .lobby-mode-panel h3 { font-size: clamp(28px, 1.8vw, 38px); }
+  #startOverlay.is-profile-lobby #startMenu .lobby-panel-heading p { font-size: clamp(14px, .9vw, 18px); }
+  #startOverlay.is-profile-lobby #startMenu .start-menu-grid { gap: 14px; }
+  #startOverlay.is-profile-lobby #startMenu .start-menu-grid button {
+    min-height: clamp(115px, 13vh, 155px);
+    padding: 57px 18px 20px;
+    font-size: clamp(16px, 1.05vw, 21px);
+  }
+  #startOverlay.is-profile-lobby #startMenu .deck-entry-button { min-height: 60px; padding-left: 57px; font-size: 18px; }
+  #startOverlay.is-profile-lobby #startMenu .home-return { min-height: 60px; min-width: 100px; font-size: 18px; }
+}
+
+@media (max-width: 420px) {
+  #startOverlay.is-profile-lobby #startMenu .start-menu-grid button::before { content: none; }
+  #startOverlay.is-profile-lobby #homeScreen :is(.home-menu button, .deck-entry-button, .home-account) {
+    padding-left: 28px;
+  }
+}
+
+/* The original mode artwork includes an icon and frame in one SVG. Stretching
+   that SVG to a responsive tile pushed live labels across its lower border.
+   Build the same bronze/signal frame in CSS and keep the existing icons separate. */
+#startOverlay.is-profile-lobby #startMenu .start-menu-grid button {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(9px, 1.2vh, 15px);
+  aspect-ratio: auto;
+  min-height: clamp(108px, 11vh, 136px);
+  padding: 14px 18px;
+  border: 2px solid #a7895e;
+  border-radius: 5px;
+  background: linear-gradient(160deg, #16282bcf, #091618ee 76%);
+  box-shadow: inset 0 0 0 2px #0a1517, inset 0 0 0 3px #66837a78, 0 8px 19px #0009;
+  font-size: clamp(16px, 1.1vw, 21px);
+  line-height: 1.25;
+  text-align: center;
+  overflow: hidden;
+}
+#startOverlay.is-profile-lobby #startMenu .start-menu-grid button::before {
+  content: "";
+  display: block;
+  flex: 0 0 auto;
+  width: clamp(25px, 2vw, 32px);
+  height: clamp(25px, 2vw, 32px);
+  background: var(--mode-icon) center / contain no-repeat;
+  pointer-events: none;
+}
+#startOverlay.is-profile-lobby #startMenu .start-menu-grid button .mode-button-label {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  color: #f3e8d4;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+#startOverlay.is-profile-lobby #startMenu .start-menu-grid button:hover {
+  border-color: #dfbc80;
+  background: linear-gradient(160deg, #284344ec, #102224f2 76%);
+  box-shadow: inset 0 0 0 2px #0a1517, inset 0 0 0 3px #82b5a984, 0 8px 22px #000b;
+}
+#startOverlay.is-profile-lobby #startMenu .start-menu-grid button:focus-visible {
+  outline: 3px solid #e9c182;
+  outline-offset: 3px;
+}
+#startOverlay.is-profile-lobby #startMenu .lobby-multi-options button:last-child {
+  min-height: 90px;
+  padding: 12px 18px;
+}
+#startOverlay.is-profile-lobby #createRoomButton { --mode-icon: url("../shared-ui/expedition-ui-kit-v1/icons/network.svg"); }
+#startOverlay.is-profile-lobby #browseRoomsButton { --mode-icon: url("../shared-ui/expedition-ui-kit-v1/icons/search.svg"); }
+#startOverlay.is-profile-lobby #openJoinScreenButton { --mode-icon: url("../shared-ui/expedition-ui-kit-v1/icons/code.svg"); }
+#startOverlay.is-profile-lobby #openAiScreenButton { --mode-icon: url("../shared-ui/expedition-ui-kit-v1/icons/chip.svg"); }
+#startOverlay.is-profile-lobby #openLocalScreenButton { --mode-icon: url("../shared-ui/expedition-ui-kit-v1/icons/people.svg"); }
+#startOverlay.is-profile-lobby #openTutorialButton { --mode-icon: url("../shared-ui/expedition-ui-kit-v1/icons/book.svg"); }
+#startOverlay.is-profile-lobby #openAdventureScreenButton { --mode-icon: url("../shared-ui/expedition-ui-kit-v1/icons/compass.svg"); }
+
+@media (max-width: 420px) {
+  #startOverlay.is-profile-lobby #startMenu .start-menu-grid button,
+  #startOverlay.is-profile-lobby #startMenu .lobby-multi-options button:last-child {
+    min-height: 84px;
+    padding: 10px 8px;
+    gap: 5px;
+    font-size: clamp(13px, 3.8vw, 16px);
+  }
+  #startOverlay.is-profile-lobby #startMenu .start-menu-grid button::before {
+    display: block;
+    width: 21px;
+    height: 21px;
+    background-image: var(--mode-icon);
+    transform: none;
+    position: static;
+  }
+  #startOverlay.is-profile-lobby #startMenu #openAdventureScreenButton { padding-right: 36px; }
+}
+
+@media (max-width: 340px) {
+  #startOverlay.is-profile-lobby #startMenu .start-menu-grid button,
+  #startOverlay.is-profile-lobby #startMenu .lobby-multi-options button:last-child {
+    min-height: 58px;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 10px 16px;
+    text-align: left;
+  }
+}
+
+/* Full-height responsive lobby controls. The wide SVG skins letterbox inside
+   narrow buttons; a live frame keeps the visible and clickable areas aligned. */
+#startOverlay.is-profile-lobby #homeScreen .home-menu button,
+#startOverlay.is-profile-lobby #startMenu .deck-entry-button,
+#startOverlay.is-profile-lobby #startMenu #playMenuHomeButton {
+  display: flex;
+  align-items: center;
+  min-height: 54px;
+  border: 1px solid #a88a60;
+  border-radius: 4px;
+  background: linear-gradient(155deg, #162a2bbf, #0a1719ed 74%);
+  box-shadow: inset 0 0 0 2px #091517, inset 0 0 0 3px #66857b63, 0 5px 14px #0009;
+  color: #f1e9d8;
+  font-size: clamp(16px, 1.1vw, 22px);
+  line-height: 1.25;
+}
+#startOverlay.is-profile-lobby #homeScreen .home-menu button,
+#startOverlay.is-profile-lobby #startMenu .deck-entry-button {
+  justify-content: flex-start;
+  gap: 15px;
+  padding: 10px 22px;
+}
+#startOverlay.is-profile-lobby #homeScreen .home-menu button::before,
+#startOverlay.is-profile-lobby #startMenu .deck-entry-button::before {
+  content: "";
+  display: block;
+  position: static;
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  background: var(--nav-icon) center / contain no-repeat;
+  transform: none;
+  pointer-events: none;
+}
+#startOverlay.is-profile-lobby #homeScreen .home-menu button::after {
+  content: "";
+  display: block;
+  position: static;
+  flex: 0 0 7px;
+  width: 7px;
+  height: 7px;
+  margin-left: auto;
+  border: 0;
+  border-top: 1.5px solid #c9ac79;
+  border-right: 1.5px solid #c9ac79;
+  background: none;
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+#startOverlay.is-profile-lobby #homeScreen .home-menu button:hover,
+#startOverlay.is-profile-lobby #startMenu .deck-entry-button:hover,
+#startOverlay.is-profile-lobby #startMenu #playMenuHomeButton:hover {
+  border-color: #dbb878;
+  background: linear-gradient(155deg, #2b4947e8, #102527ed 74%);
+  box-shadow: inset 0 0 0 2px #091517, inset 0 0 0 3px #7eb6a77d, 0 6px 18px #000b;
+}
+#startOverlay.is-profile-lobby #homeScreen .home-menu button:focus-visible,
+#startOverlay.is-profile-lobby #startMenu :is(.deck-entry-button, #playMenuHomeButton):focus-visible {
+  outline: 3px solid #e9c182;
+  outline-offset: 3px;
+}
+#startOverlay.is-profile-lobby #startMenu #playMenuHomeButton {
+  justify-content: center;
+  min-width: 104px;
+  min-height: 54px;
+  padding: 8px 14px;
+  font-size: 17px;
+  text-align: center;
+}
+#startOverlay.is-profile-lobby #startMenu #playMenuHomeButton::after { content: none; }
+#startOverlay.is-profile-lobby #openPlayMenuButton { --nav-icon: url("../shared-ui/expedition-ui-kit-v1/icons/play.svg"); }
+#startOverlay.is-profile-lobby #openSingleLobbyButton { --nav-icon: url("../shared-ui/expedition-ui-kit-v1/icons/compass.svg"); }
+#startOverlay.is-profile-lobby #openCatalogButton { --nav-icon: url("../shared-ui/expedition-ui-kit-v1/icons/book.svg"); }
+#startOverlay.is-profile-lobby #openHomeDeckButton,
+#startOverlay.is-profile-lobby #openMenuDeckButton { --nav-icon: url("../shared-ui/expedition-ui-kit-v1/icons/cards.svg"); }
+#startOverlay.is-profile-lobby #openAccountButton { --nav-icon: url("../shared-ui/expedition-ui-kit-v1/icons/person.svg"); }
+#startOverlay.is-profile-lobby[data-lobby-mode="multi"] #openPlayMenuButton,
+#startOverlay.is-profile-lobby[data-lobby-mode="single"] #openSingleLobbyButton {
+  border-color: #d9b676;
+  background: linear-gradient(90deg, #51472ed9, #1e3230e5 70%);
+}
+
+@media (max-width: 420px) {
+  #startOverlay.is-profile-lobby #homeScreen .home-menu button,
+  #startOverlay.is-profile-lobby #startMenu .deck-entry-button {
+    min-height: 50px;
+    gap: 8px;
+    padding: 8px 10px;
+    font-size: clamp(13px, 3.5vw, 16px);
+  }
+  #startOverlay.is-profile-lobby #homeScreen .home-menu button::before,
+  #startOverlay.is-profile-lobby #startMenu .deck-entry-button::before {
+    flex-basis: 17px;
+    width: 17px;
+    height: 17px;
+  }
+  #startOverlay.is-profile-lobby #startMenu .lobby-mode-panel { padding-top: 32px; }
+}

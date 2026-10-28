@@ -1,4 +1,4 @@
-const CACHE_NAME = 'second-chance-v81';
+const CACHE_NAME = 'second-chance-v87';
 const APP_FILES = [
   './',
   './index.html',
@@ -6,6 +6,14 @@ const APP_FILES = [
   './fonts/gowunbatang/GowunBatang-Regular.ttf',
   './game-ui-kit.css?v=1',
   './lobby-motion.css?v=1',
+  './game-lobby-screen/preservation-zone/preservation-zone-aerial.webp',
+  './game-lobby-screen/game-title/concepts/second-chance-wordmark-concept-c-ruined-signal.png',
+  './game-lobby-screen/preservation-zone/preservation-webcg.css?v=2',
+  './game-lobby-screen/lobby-layout.css?v=4',
+  './entry-layout.css?v=2',
+  './collection-layout.css?v=2',
+  './game-lobby-screen/lobby-window-frame.svg',
+  './game-lobby-screen/preservation-zone/preservation-webcg.js?v=2',
   './tutorial-motion.css?v=1',
   './tutorial-motion.js?v=1',
   './shared-ui/expedition-ui-kit-v1/buttons/salvage/back--desktop--idle.svg',

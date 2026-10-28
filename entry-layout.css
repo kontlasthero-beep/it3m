@@ -1,0 +1,199 @@
+/* Entry-only sizing. Load after game-ui-kit.css and lobby-layout.css. */
+#startOverlay.is-home-lobby:not(.is-profile-lobby):is(
+  [data-active-screen="accountScreen"],
+  [data-active-screen="guestWarningScreen"]
+) {
+  padding: clamp(16px, 2vw, 36px);
+}
+
+#startOverlay.is-home-lobby:not(.is-profile-lobby):is(
+  [data-active-screen="accountScreen"],
+  [data-active-screen="guestWarningScreen"]
+) > .dialog {
+  width: min(580px, 100%);
+  min-height: 0;
+  max-height: calc(100dvh - 32px);
+  margin: auto 0;
+  padding: clamp(26px, 2.4vw, 42px) clamp(22px, 2.6vw, 44px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  text-align: center;
+}
+
+#startOverlay.is-home-lobby:not(.is-profile-lobby):is(
+  [data-active-screen="accountScreen"],
+  [data-active-screen="guestWarningScreen"]
+) > .dialog > h2 {
+  margin: 0 0 clamp(18px, 2.1vh, 28px);
+  font-size: clamp(27px, 2vw, 35px);
+  line-height: 1.25;
+  letter-spacing: .012em;
+}
+
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #accountScreen,
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #guestWarningScreen {
+  min-width: 0;
+}
+
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #accountScreen .start-form {
+  gap: clamp(15px, 1.6vh, 21px);
+  margin: 0;
+}
+
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #accountScreen .start-form label {
+  min-width: 0;
+  gap: 8px;
+  color: #d0d8d2;
+  font-family: var(--ui-sans, sans-serif);
+  font-size: clamp(15px, .85vw, 17px);
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: left;
+}
+
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #accountScreen .start-form input {
+  width: 100%;
+  min-height: 54px;
+  padding: 12px 16px;
+  border-color: #637974;
+  background: #0b1719;
+  color: #f5eee0;
+  font-family: var(--ui-sans, sans-serif);
+  font-size: 17px;
+  line-height: 1.3;
+}
+
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #accountScreen .start-form input:focus {
+  border-color: #c6a774;
+}
+
+#startOverlay.is-home-lobby:not(.is-profile-lobby) :is(#accountScreen, #guestWarningScreen) .account-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(8px, 1vw, 14px);
+  margin-top: 4px;
+}
+
+#startOverlay.is-home-lobby:not(.is-profile-lobby) :is(#accountScreen, #guestWarningScreen) .account-actions button,
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #guestPlayButton {
+  min-width: 0;
+  min-height: 56px;
+  padding: 10px 14px 10px 39px;
+  font-size: clamp(16px, .95vw, 19px);
+  line-height: 1.25;
+  white-space: normal;
+  word-break: keep-all;
+}
+
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #guestPlayButton {
+  display: block;
+  width: min(285px, 100%);
+  margin: clamp(18px, 2vh, 26px) auto 0;
+}
+
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #guestWarningScreen h3 {
+  margin: 0 0 12px;
+  font-size: clamp(22px, 1.4vw, 27px);
+  line-height: 1.3;
+}
+
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #guestWarningScreen p {
+  max-width: 36ch;
+  margin: 0 auto clamp(22px, 2.4vh, 32px);
+  color: #d0d8d2;
+  font-family: var(--ui-sans, sans-serif);
+  font-size: clamp(16px, .95vw, 19px);
+  line-height: 1.6;
+  word-break: keep-all;
+}
+
+#startOverlay.is-home-lobby:not(.is-profile-lobby)[data-active-screen="guestWarningScreen"] > .dialog {
+  width: min(540px, 100%);
+}
+
+#startOverlay.is-home-lobby:not(.is-profile-lobby):is(
+  [data-active-screen="accountScreen"],
+  [data-active-screen="guestWarningScreen"]
+) #startStatus:empty {
+  display: none;
+}
+
+#startOverlay.is-home-lobby:not(.is-profile-lobby):is(
+  [data-active-screen="accountScreen"],
+  [data-active-screen="guestWarningScreen"]
+) #startStatus:not(:empty) {
+  margin: 18px 0 0;
+  color: #f2d9ac;
+  font-family: var(--ui-sans, sans-serif);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+@media (max-width: 520px) {
+  #startOverlay.is-home-lobby:not(.is-profile-lobby):is(
+    [data-active-screen="accountScreen"],
+    [data-active-screen="guestWarningScreen"]
+  ) > .dialog {
+    padding: 26px clamp(18px, 5vw, 28px);
+  }
+
+  #startOverlay.is-home-lobby:not(.is-profile-lobby) :is(#accountScreen, #guestWarningScreen) .account-actions button,
+  #startOverlay.is-home-lobby:not(.is-profile-lobby) #guestPlayButton {
+    min-height: 52px;
+    padding-left: 30px;
+    padding-right: 8px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 350px) {
+  #startOverlay.is-home-lobby:not(.is-profile-lobby) :is(#accountScreen, #guestWarningScreen) .account-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-height: 620px) {
+  #startOverlay.is-home-lobby:not(.is-profile-lobby):is(
+    [data-active-screen="accountScreen"],
+    [data-active-screen="guestWarningScreen"]
+  ) > .dialog {
+    padding-top: 20px;
+    padding-bottom: 20px;
+  }
+}
+
+/* Match the painted control to its real hit area at every aspect ratio. */
+#startOverlay.is-home-lobby:not(.is-profile-lobby) :is(#accountScreen, #guestWarningScreen) .account-actions button,
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #guestPlayButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 54px;
+  padding: 10px 14px;
+  border: 1px solid #a88a60;
+  border-radius: 4px;
+  background: linear-gradient(155deg, #1b3132, #0c1b1d 75%);
+  box-shadow: inset 0 0 0 2px #091517, inset 0 0 0 3px #66857b63, 0 5px 13px #0008;
+}
+#startOverlay.is-home-lobby:not(.is-profile-lobby) :is(#accountScreen, #guestWarningScreen) .account-actions button:hover,
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #guestPlayButton:hover {
+  border-color: #d9b878;
+  background: linear-gradient(155deg, #2b4947, #102527 75%);
+}
+#startOverlay.is-home-lobby:not(.is-profile-lobby) :is(#accountScreen, #guestWarningScreen) .account-actions button:focus-visible,
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #guestPlayButton:focus-visible {
+  outline: 3px solid #e9c182;
+  outline-offset: 3px;
+}
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #accountScreen .account-actions button::before,
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #guestPlayButton::before {
+  content: "";
+  display: block;
+  flex: 0 0 19px;
+  width: 19px;
+  height: 19px;
+  background: var(--entry-icon) center / contain no-repeat;
+}
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #accountSubmitButton { --entry-icon: url("shared-ui/expedition-ui-kit-v1/icons/enter.svg"); }
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #accountModeButton { --entry-icon: url("shared-ui/expedition-ui-kit-v1/icons/person-add.svg"); }
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #guestPlayButton { --entry-icon: url("shared-ui/expedition-ui-kit-v1/icons/person.svg"); }

@@ -1,0 +1,333 @@
+/* Collection and deck editor layout. Loaded after the shared UI and lobby styles. */
+html:has(#catalogOverlay:not([hidden])),
+html:has(#deckOverlay:not([hidden])),
+body:has(#catalogOverlay:not([hidden])),
+body:has(#deckOverlay:not([hidden])) {
+  overflow: hidden;
+}
+
+#catalogOverlay,
+#deckOverlay {
+  overflow: hidden;
+  padding: clamp(10px, 2.2dvh, 24px);
+}
+
+#catalogOverlay > .catalog-dialog,
+#deckOverlay > .deck-dialog {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: min(1120px, 100%);
+  max-height: calc(100dvh - 2 * clamp(10px, 2.2dvh, 24px));
+  min-height: 0;
+  margin: 0;
+  padding: clamp(56px, 4vw, 68px) clamp(22px, 3vw, 40px) clamp(24px, 2.5vw, 34px);
+  overflow: hidden;
+  text-align: left;
+}
+
+#catalogOverlay .catalog-header,
+#deckOverlay .catalog-header {
+  flex: 0 0 auto;
+  align-items: center;
+  min-width: 0;
+  gap: 12px 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(180, 146, 91, .45);
+}
+
+#catalogOverlay .catalog-header h2,
+#deckOverlay .catalog-header h2 {
+  min-width: 0;
+  margin: 0;
+  font-size: clamp(23px, 2.2vw, 34px);
+  line-height: 1.3;
+  word-break: keep-all;
+}
+
+#catalogOverlay .catalog-header button,
+#deckOverlay .catalog-header button {
+  flex: 0 0 auto;
+  min-height: 42px;
+  max-width: 100%;
+}
+
+/* The catalog frame and tabs stay in place while only the entries scroll. */
+#catalogOverlay .catalog-tabs {
+  flex: 0 0 auto;
+  margin: 14px 0 8px;
+  padding-bottom: 10px;
+}
+
+#catalogOverlay .catalog-tabs button {
+  min-height: 42px;
+  padding: 8px 13px;
+  font-size: 14px;
+}
+
+#catalogOverlay .catalog-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  align-content: start;
+  grid-auto-rows: max-content;
+  gap: 12px;
+  padding: 8px 6px 4px 2px;
+  scrollbar-gutter: stable;
+}
+
+#catalogOverlay .catalog-entry {
+  padding: clamp(14px, 1.4vw, 20px);
+}
+
+#catalogOverlay .catalog-entry header {
+  gap: 14px;
+}
+
+#catalogOverlay .catalog-entry :is(.catalog-card-art, .catalog-trigger-art) {
+  width: 112px;
+  height: 84px;
+  flex-basis: 112px;
+}
+
+#catalogOverlay .catalog-lock {
+  left: 56px;
+  top: 42px;
+}
+
+#catalogOverlay .catalog-entry h3 {
+  font-size: clamp(18px, 1.5vw, 22px);
+  line-height: 1.35;
+}
+
+#catalogOverlay .catalog-entry p {
+  margin: 9px 0 0;
+  color: #d4ded9;
+  font-family: var(--ui-sans, "SecondChance Plex", sans-serif);
+  font-size: clamp(14px, 1vw, 16px);
+  line-height: 1.65;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+#catalogOverlay .catalog-entry .strategy-tip {
+  color: #acd7ca;
+}
+
+/* Both deck zones fit the same panel; their contents have independent scroll. */
+#deckOverlay .deck-layout {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(14px, 2vw, 24px);
+  min-height: 0;
+  margin-top: 18px;
+}
+
+#deckOverlay .deck-section {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+#deckOverlay .deck-section h3 {
+  flex: 0 0 auto;
+  align-items: baseline;
+  min-height: 30px;
+  margin: 0 0 10px;
+  font-size: clamp(20px, 1.55vw, 25px);
+}
+
+#deckOverlay .deck-count {
+  font-family: var(--ui-sans, "SecondChance Plex", sans-serif);
+  font-size: 14px;
+}
+
+#deckOverlay .deck-pool,
+#deckOverlay .deck-bag {
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  max-height: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  align-content: start;
+  grid-auto-rows: max-content;
+  scrollbar-gutter: stable;
+}
+
+#deckOverlay .deck-pool {
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 12px;
+  padding: 14px;
+}
+
+#deckOverlay .deck-bag {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 9px;
+  padding: 12px;
+}
+
+#deckOverlay .deck-card .card-face {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) 40px;
+  height: 170px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+#deckOverlay .deck-bag .deck-card .card-face {
+  grid-template-rows: minmax(0, 1fr) 34px;
+  height: clamp(110px, 13vw, 140px);
+}
+
+#deckOverlay .deck-empty-slot {
+  height: clamp(110px, 13vw, 140px);
+}
+
+#deckOverlay .deck-card .card-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: cover;
+}
+
+#deckOverlay .deck-card .card-name {
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 3px 5px;
+  overflow: hidden;
+  font-family: var(--ui-serif, Georgia, serif);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.2;
+  text-align: center;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+#deckOverlay .deck-bag .deck-card .card-name {
+  font-size: clamp(11px, 1vw, 14px);
+}
+
+#deckOverlay .deck-presets,
+#deckOverlay .deck-actions,
+#deckOverlay .deck-status {
+  flex: 0 0 auto;
+}
+
+#deckOverlay .deck-presets button {
+  min-width: 42px;
+  min-height: 42px;
+}
+
+#deckOverlay .deck-actions button {
+  min-height: 42px;
+}
+
+#deckOverlay .deck-status {
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* Narrow screens stack the deck zones and scroll the panel as a single unit. */
+@media (max-width: 700px) {
+  #catalogOverlay > .catalog-dialog,
+  #deckOverlay > .deck-dialog {
+    padding: 46px 18px 20px;
+  }
+
+  #catalogOverlay .catalog-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #deckOverlay > .deck-dialog {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  #deckOverlay .deck-layout {
+    flex: 0 0 auto;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+
+  #deckOverlay .deck-section {
+    min-height: auto;
+  }
+
+  #deckOverlay .deck-pool,
+  #deckOverlay .deck-bag {
+    flex: 0 0 auto;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    scrollbar-gutter: auto;
+  }
+
+  #deckOverlay .deck-pool {
+    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  }
+
+  #deckOverlay .deck-bag {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 440px) {
+  #catalogOverlay .catalog-header,
+  #deckOverlay .catalog-header {
+    align-items: flex-start;
+  }
+
+  #catalogOverlay .catalog-header button,
+  #deckOverlay .catalog-header button {
+    font-size: 12px;
+  }
+
+  #catalogOverlay .catalog-tabs {
+    gap: 5px;
+  }
+
+  #catalogOverlay .catalog-tabs button {
+    flex: 1 1 90px;
+    padding: 7px 5px;
+    font-size: 12px;
+  }
+
+  #catalogOverlay .catalog-entry :is(.catalog-card-art, .catalog-trigger-art) {
+    width: 90px;
+    height: 72px;
+    flex-basis: 90px;
+  }
+
+  #catalogOverlay .catalog-lock {
+    left: 45px;
+    top: 36px;
+  }
+
+  #deckOverlay .deck-bag {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #deckOverlay .deck-bag .deck-card .card-face {
+    height: 160px;
+  }
+
+  #deckOverlay .deck-empty-slot {
+    height: 160px;
+  }
+}
