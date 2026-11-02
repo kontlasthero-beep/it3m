@@ -197,3 +197,96 @@
 #startOverlay.is-home-lobby:not(.is-profile-lobby) #accountSubmitButton { --entry-icon: url("shared-ui/expedition-ui-kit-v1/icons/enter.svg"); }
 #startOverlay.is-home-lobby:not(.is-profile-lobby) #accountModeButton { --entry-icon: url("shared-ui/expedition-ui-kit-v1/icons/person-add.svg"); }
 #startOverlay.is-home-lobby:not(.is-profile-lobby) #guestPlayButton { --entry-icon: url("shared-ui/expedition-ui-kit-v1/icons/person.svg"); }
+
+/* Registration consent is a compact terminal control, not a full-width text field. */
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #accountScreen .start-form label.privacy-consent-check {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 44px;
+  margin: 9px 0 0;
+  padding: 10px 12px;
+  border: 1px solid #526a64;
+  border-radius: 4px;
+  background: linear-gradient(100deg, #1a2b2c, #101d1f 72%);
+  color: #e9e3d5;
+  font-family: var(--ui-sans, sans-serif);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.45;
+  cursor: pointer;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #accountScreen .start-form label.privacy-consent-check:hover {
+  border-color: #a98a58;
+  background-color: #19292b;
+}
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #accountScreen .start-form label.privacy-consent-check span {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow-wrap: normal;
+  word-break: keep-all;
+}
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #accountScreen .start-form label.privacy-consent-check input[type="checkbox"] {
+  appearance: none;
+  display: grid;
+  place-content: center;
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  min-height: 20px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #9e875f;
+  border-radius: 3px;
+  background: #0b1719;
+  box-shadow: inset 0 0 0 2px #0b1719;
+  cursor: pointer;
+}
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #accountScreen .start-form label.privacy-consent-check input[type="checkbox"]::after {
+  content: "";
+  width: 9px;
+  height: 5px;
+  border-bottom: 2px solid #0c191a;
+  border-left: 2px solid #0c191a;
+  opacity: 0;
+  transform: translateY(-1px) rotate(-45deg);
+}
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #accountScreen .start-form label.privacy-consent-check input[type="checkbox"]:checked {
+  border-color: #d3ae70;
+  background: #75c5b5;
+}
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #accountScreen .start-form label.privacy-consent-check input[type="checkbox"]:checked::after { opacity: 1; }
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #accountScreen .start-form label.privacy-consent-check input[type="checkbox"]:focus-visible {
+  outline: 2px solid #e5c182;
+  outline-offset: 3px;
+}
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #accountScreen .privacy-consent details {
+  padding: 10px 11px;
+  border: 1px solid #465d58;
+  border-radius: 3px;
+  background: #0d191b;
+}
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #accountScreen .privacy-consent details + details { margin-top: 8px; }
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #accountScreen .privacy-consent summary {
+  color: #e9d7b7;
+  font-size: 14px;
+  line-height: 1.4;
+}
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #accountScreen .privacy-consent-body {
+  max-height: 30vh;
+  overflow: auto;
+  padding-right: 4px;
+  color: #c1cbc5;
+  font-size: 12px;
+  line-height: 1.65;
+}
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #accountScreen .privacy-consent-body p { margin: 7px 0; }
+
+@media (max-width: 520px) {
+  #startOverlay.is-home-lobby:not(.is-profile-lobby) #accountScreen .start-form label.privacy-consent-check {
+    min-height: 42px;
+    padding: 9px 10px;
+    font-size: 13px;
+  }
+}

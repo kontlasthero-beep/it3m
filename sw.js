@@ -1,4 +1,4 @@
-const CACHE_NAME = 'second-chance-v104';
+const CACHE_NAME = 'second-chance-v105';
 const APP_FILES = [
   './',
   './index.html',
