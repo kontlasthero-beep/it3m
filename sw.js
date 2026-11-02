@@ -1,4 +1,4 @@
-const CACHE_NAME = 'second-chance-v105';
+const CACHE_NAME = 'second-chance-v106';
 const APP_FILES = [
   './',
   './index.html',
@@ -10,7 +10,7 @@ const APP_FILES = [
   './game-lobby-screen/game-title/concepts/second-chance-wordmark-concept-c-ruined-signal.png',
   './game-lobby-screen/preservation-zone/preservation-webcg.css?v=2',
   './game-lobby-screen/lobby-layout.css?v=4',
-  './entry-layout.css?v=2',
+  './entry-layout.css?v=3',
   './collection-layout.css?v=2',
   './game-lobby-screen/lobby-window-frame.svg',
   './game-lobby-screen/preservation-zone/preservation-webcg.js?v=2',

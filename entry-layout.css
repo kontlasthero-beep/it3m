@@ -200,8 +200,9 @@
 
 /* Registration consent is a compact terminal control, not a full-width text field. */
 #startOverlay.is-home-lobby:not(.is-profile-lobby) #accountScreen .start-form label.privacy-consent-check {
-  display: flex;
-  align-items: center;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
   gap: 11px;
   min-height: 44px;
   margin: 9px 0 0;
@@ -228,15 +229,18 @@
   word-break: keep-all;
 }
 #startOverlay.is-home-lobby:not(.is-profile-lobby) #accountScreen .start-form label.privacy-consent-check input[type="checkbox"] {
-  appearance: none;
-  display: grid;
-  place-content: center;
-  flex: 0 0 20px;
-  width: 20px;
-  height: 20px;
-  min-height: 20px;
-  margin: 0;
-  padding: 0;
+  appearance: none !important;
+  display: grid !important;
+  place-content: center !important;
+  flex: 0 0 20px !important;
+  width: 20px !important;
+  min-width: 20px !important;
+  max-width: 20px !important;
+  height: 20px !important;
+  min-height: 20px !important;
+  max-height: 20px !important;
+  margin: 0 !important;
+  padding: 0 !important;
   border: 1px solid #9e875f;
   border-radius: 3px;
   background: #0b1719;
