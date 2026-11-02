@@ -9,6 +9,8 @@ const { deckForPreset } = require('./deck-config');
 const ROOT = __dirname;
 const PORT = Number(process.env.PORT) || 4173;
 const ROOM_CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const PRIVACY_CONSENT_VERSION = '2026-11-02-v2';
+const CROSS_BORDER_CONSENT_VERSION = '2026-11-02-v1';
 const MAP_IDS = ['classic', 'ice', 'moving-walls', 'items'];
 const rooms = new Map();
 const LOCAL_TEST_LEVEL = !process.env.DATABASE_URL && process.env.NODE_ENV !== 'production' ? 100 : null;
@@ -60,7 +62,7 @@ async function listEditorAssets() {
       if (assetPath.includes('/game-objects/triggers/')) category = 'trigger';
       else if (assetPath.includes('/game-objects/beacons/')) category = 'beacon';
       else if (assetPath.includes('/game-objects/wires/')) category = 'wire';
-      else if (/\/game-objects\/(data-barrier|structure-drop-brick)\//.test(assetPath)) category = 'structure';
+      else if (/\/game-objects\/(data-barrier|structure-drop-brick|fake-wall|moving-walls)\//.test(assetPath)) category = 'structure';
       assets.push({
         id: `upload:shared:${crypto.createHash('sha256').update(assetPath).digest('hex').slice(0, 16)}`,
         name: path.parse(entry.name).name,
@@ -309,8 +311,11 @@ async function handleApi(request, response, url) {
   }
   if (request.method === 'POST' && url.pathname === '/api/accounts/register') {
     const data = await readJson(request);
+    if (data.privacyConsent !== true) return fail(response, 400, '개인정보 수집·이용 동의가 필요합니다.');
+    if (data.crossBorderConsent !== true) return fail(response, 400, '개인정보 국외 이전 동의가 필요합니다.');
+    if (data.ageConfirmed !== true) return fail(response, 400, '만 14세 이상만 계정을 등록할 수 있습니다.');
     try {
-      const account = await profiles.register(data.username, data.password, data.name);
+      const account = await profiles.register(data.username, data.password, data.name, PRIVACY_CONSENT_VERSION, CROSS_BORDER_CONSENT_VERSION);
       return sendJson(response, 201, { ...account, persistent: profiles.persistent });
     } catch (error) {
       if (error.message.includes('입력하세요') || error.message.includes('사용 중')) return fail(response, 400, error.message);
@@ -349,6 +354,21 @@ async function handleApi(request, response, url) {
     const token = parseBearer(request.headers.authorization);
     if (token) await profiles.logout(token);
     return sendJson(response, 200, { ok: true });
+  }
+  if (request.method === 'POST' && url.pathname === '/api/accounts/delete') {
+    const token = parseBearer(request.headers.authorization);
+    if (!token) return fail(response, 401, '계정 인증이 필요합니다.');
+    const data = await readJson(request);
+    if (data.confirmed !== true) return fail(response, 400, '계정 삭제 확인이 필요합니다.');
+    try {
+      const deleted = await profiles.deleteAccount(token, data.password);
+      if (deleted === null) return fail(response, 401, '계정을 찾을 수 없습니다. 다시 로그인하세요.');
+      if (!deleted) return fail(response, 403, '비밀번호가 일치하지 않습니다.');
+      return sendJson(response, 200, { deleted: true });
+    } catch (error) {
+      console.error('Account deletion failed:', error);
+      return fail(response, 503, '계정을 삭제할 수 없습니다. 잠시 후 다시 시도하세요.');
+    }
   }
   if (request.method === 'POST' && url.pathname === '/api/profiles/guest') {
     const data = await readJson(request);
@@ -539,6 +559,10 @@ async function handleApi(request, response, url) {
   if (request.method === 'POST' && parts.length === 4 && parts[3] === 'map') {
     if (['playing', 'complete'].includes(room.status)) return fail(response, 409, '맵을 선택할 수 없는 상태입니다.');
     if (!MAP_IDS.includes(data.mapId)) return fail(response, 400, '올바르지 않은 맵입니다.');
+    const opponent = member.role === 'host' ? room.challenger : room.host;
+    if (opponent?.mapId && member.player.mapId && member.player.mapId !== data.mapId) {
+      return fail(response, 409, '상대가 맵을 선택해 변경할 수 없습니다.');
+    }
     member.player.mapId = data.mapId;
     if (room.challenger && room.host.mapId && room.challenger.mapId) {
       const randomMap = MAP_IDS[crypto.randomInt(MAP_IDS.length)];

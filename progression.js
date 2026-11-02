@@ -149,7 +149,11 @@ function createMemoryStore(now = Date.now, localTestLevel = null) {
       tokens.set(tokenHash(token), row.id);
       return { token, profile: profileView(row) };
     },
-    async register(usernameInput, passwordInput, nameInput) {
+    async register(usernameInput, passwordInput, nameInput, consentVersion = 'internal-v1', crossBorderConsentVersion = 'internal-v1') {
+      if (typeof consentVersion !== 'string' || !/^(?:\d{4}-\d{2}-\d{2}-v\d+|internal-v1)$/.test(consentVersion))
+        throw new Error('개인정보 수집·이용 동의가 필요합니다.');
+      if (typeof crossBorderConsentVersion !== 'string' || !/^(?:\d{4}-\d{2}-\d{2}-v\d+|internal-v1)$/.test(crossBorderConsentVersion))
+        throw new Error('개인정보 국외 이전 동의가 필요합니다.');
       const username = normalizeUsername(usernameInput);
       const password = validatePassword(passwordInput);
       const name = normalizeName(nameInput);
@@ -159,6 +163,8 @@ function createMemoryStore(now = Date.now, localTestLevel = null) {
         const passwordHash = await hashPassword(password);
         const token = newSession();
         const row = { id: crypto.randomUUID(), publicId: newPublicId(), username, passwordHash, name, fame: 0,
+          privacyConsentVersion: consentVersion, privacyConsentAt: new Date(now()).toISOString(),
+          crossBorderConsentVersion, crossBorderConsentAt: new Date(now()).toISOString(), ageConfirmationAt: new Date(now()).toISOString(),
           played: 0, wins: 0, losses: 0, draws: 0 };
         profiles.set(row.id, row);
         usernames.set(username, row.id);
@@ -202,6 +208,17 @@ function createMemoryStore(now = Date.now, localTestLevel = null) {
       return profileView(row);
     },
     async logout(token) { tokens.delete(tokenHash(token)); },
+    async deleteAccount(token, passwordInput) {
+      const row = lookup(token);
+      if (!row?.username) return null;
+      if (!(await verifyPassword(String(passwordInput || ''), row.passwordHash))) return false;
+      profiles.delete(row.id);
+      usernames.delete(row.username);
+      for (const [hash, profileId] of tokens) if (profileId === row.id) tokens.delete(hash);
+      for (const [matchId, match] of aiMatches) if (match.profileId === row.id) aiMatches.delete(matchId);
+      for (const key of awards.keys()) if (key.endsWith(`:${row.id}`)) awards.delete(key);
+      return true;
+    },
     async startAiMatch(token, difficulty) {
       const row = lookup(token);
       if (!row?.username) return null;
@@ -272,7 +289,12 @@ function createPostgresStore(connectionString) {
         ADD COLUMN IF NOT EXISTS draws INTEGER NOT NULL DEFAULT 0,
         ADD COLUMN IF NOT EXISTS decks JSONB NOT NULL DEFAULT '[null,null,null]'::jsonb,
         ADD COLUMN IF NOT EXISTS active_preset INTEGER NOT NULL DEFAULT 0,
-        ADD COLUMN IF NOT EXISTS tutorial_completed BOOLEAN NOT NULL DEFAULT FALSE`);
+        ADD COLUMN IF NOT EXISTS tutorial_completed BOOLEAN NOT NULL DEFAULT FALSE,
+        ADD COLUMN IF NOT EXISTS privacy_consent_version TEXT,
+        ADD COLUMN IF NOT EXISTS privacy_consent_at TIMESTAMPTZ,
+        ADD COLUMN IF NOT EXISTS cross_border_consent_version TEXT,
+        ADD COLUMN IF NOT EXISTS cross_border_consent_at TIMESTAMPTZ,
+        ADD COLUMN IF NOT EXISTS age_confirmation_at TIMESTAMPTZ`);
       await pool.query('CREATE UNIQUE INDEX IF NOT EXISTS ucc_profiles_username_unique ON ucc_profiles (username)');
       await pool.query(`CREATE TABLE IF NOT EXISTS ucc_sessions (
         token_hash TEXT PRIMARY KEY, profile_id UUID NOT NULL REFERENCES ucc_profiles(id) ON DELETE CASCADE,
@@ -319,7 +341,11 @@ function createPostgresStore(connectionString) {
         }
       }
     },
-    async register(usernameInput, passwordInput, nameInput) {
+    async register(usernameInput, passwordInput, nameInput, consentVersion = 'internal-v1', crossBorderConsentVersion = 'internal-v1') {
+      if (typeof consentVersion !== 'string' || !/^(?:\d{4}-\d{2}-\d{2}-v\d+|internal-v1)$/.test(consentVersion))
+        throw new Error('개인정보 수집·이용 동의가 필요합니다.');
+      if (typeof crossBorderConsentVersion !== 'string' || !/^(?:\d{4}-\d{2}-\d{2}-v\d+|internal-v1)$/.test(crossBorderConsentVersion))
+        throw new Error('개인정보 국외 이전 동의가 필요합니다.');
       const username = normalizeUsername(usernameInput);
       const passwordHash = await hashPassword(validatePassword(passwordInput));
       const name = normalizeName(nameInput);
@@ -329,9 +355,10 @@ function createPostgresStore(connectionString) {
         try {
           await client.query('BEGIN');
           const { rows } = await client.query(
-            `INSERT INTO ucc_profiles (id, public_id, token_hash, username, password_hash, name)
-             VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-            [crypto.randomUUID(), newPublicId(), tokenHash(newSession()), username, passwordHash, name]
+            `INSERT INTO ucc_profiles (id, public_id, token_hash, username, password_hash, name,
+              privacy_consent_version, privacy_consent_at, cross_border_consent_version, cross_border_consent_at, age_confirmation_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), $8, NOW(), NOW()) RETURNING *`,
+            [crypto.randomUUID(), newPublicId(), tokenHash(newSession()), username, passwordHash, name, consentVersion, crossBorderConsentVersion]
           );
           const token = await insertSession(client, rows[0].id);
           await client.query('COMMIT');
@@ -389,6 +416,29 @@ function createPostgresStore(connectionString) {
     async logout(token) {
       await ensureReady();
       await pool.query('DELETE FROM ucc_sessions WHERE token_hash = $1', [tokenHash(token)]);
+    },
+    async deleteAccount(token, passwordInput) {
+      await ensureReady();
+      const member = await this.findByToken(token);
+      if (!member?.profile.username) return null;
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        const { rows } = await client.query('SELECT * FROM ucc_profiles WHERE id = $1 FOR UPDATE', [member.internalId]);
+        if (!rows[0]) { await client.query('ROLLBACK'); return null; }
+        if (!(await verifyPassword(String(passwordInput || ''), rows[0].password_hash))) {
+          await client.query('ROLLBACK');
+          return false;
+        }
+        await client.query('DELETE FROM ucc_match_awards WHERE profile_id = $1', [member.internalId]);
+        await client.query('DELETE FROM ucc_ai_matches WHERE profile_id = $1', [member.internalId]);
+        await client.query('DELETE FROM ucc_profiles WHERE id = $1', [member.internalId]);
+        await client.query('COMMIT');
+        return true;
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      } finally { client.release(); }
     },
     async startAiMatch(token, difficulty) {
       validateAiDifficulty(difficulty);

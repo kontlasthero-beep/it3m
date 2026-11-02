@@ -41,12 +41,23 @@
     { id: 'builtin:dummy-stone', name: '더미 스톤', category: 'stone', kind: 'stone', owner: 'neutral', dummy: true, width: 58, height: 58 },
     { id: 'builtin:brick', name: '벽돌 유닛', category: 'structure', kind: 'structure', owner: 'neutral', width: 18, height: 64 },
     { id: 'builtin:data-barrier', name: '데이터 장벽', category: 'structure', kind: 'structure', owner: 'player', width: 18, height: 64 },
+    ...[
+      ['v1', 'false-wall.png'], ['v2', 'false-wall-v2.png'], ['v3', 'false-wall-v3.png'],
+      ['v4', 'false-wall-v4.png'], ['v5', 'false-wall-v5.png']
+    ].map(([id, file]) => ({ id: `builtin:fake-wall-${id}`, name: `가벽 ${id.toUpperCase()}`, category: 'structure', kind: 'structure', owner: 'neutral', src: `in-game-screen/game-objects/fake-wall/${file}`, width: 18, height: 64 })),
+    ...[
+      ['a', 'A'], ['b', 'B'], ['c', 'C']
+    ].map(([id, label]) => ({ id: `builtin:moving-wall-${id}`, name: `부유 구조물 ${label}`, category: 'structure', kind: 'structure', owner: 'neutral', src: `in-game-screen/game-objects/moving-walls/levitating-rail-${id}.png`, width: 108, height: 14 })),
+    { id: 'builtin:embedded-guide-rail', name: '매설 레일', category: 'structure', kind: 'decoration', owner: 'neutral', src: 'in-game-screen/game-objects/moving-walls/embedded-guide-rail.png', width: 350, height: 30 },
+    { id: 'builtin:framed-moving-barrier', name: '프레임 이동 구조물', category: 'structure', kind: 'structure', owner: 'neutral', src: 'in-game-screen/game-objects/moving-walls/framed-moving-barrier.png', width: 108, height: 14 },
+    { id: 'builtin:framed-moving-barrier-v2', name: '프레임 이동 구조물 · 적색 도색', category: 'structure', kind: 'structure', owner: 'neutral', src: 'in-game-screen/game-objects/moving-walls/framed-moving-barrier-v2.png', width: 108, height: 18.4 },
     { id: 'builtin:dummy-structure', name: '더미 구조물', category: 'structure', kind: 'structure', owner: 'neutral', dummy: true, width: 64, height: 64 },
     { id: 'builtin:pressure-beacon-off', name: '압력 비콘', category: 'beacon', kind: 'decoration', owner: 'neutral', src: 'in-game-screen/game-objects/beacons/pressure-beacon-off.png', width: 86, height: 86 },
     { id: 'builtin:floor-wire-off-concept', name: '바닥 전선', category: 'wire', kind: 'decoration', owner: 'neutral', src: 'in-game-screen/game-objects/wires/floor-circuit-straight-off-concept.png', width: 140, height: 46 },
     ...[
-      ['blackhole', '블랙홀 방출'], ['pulse', '방출'], ['hardening', '경질화'], ['guard', '방호벽']
-    ].map(([id, name]) => ({ id: `builtin:trigger-${id}`, name: `${name} 트리거`, category: 'trigger', kind: 'trigger', owner: 'neutral', src: `Trigger_illustration/v3-simple/${id}.png`, width: 29, height: 29 })),
+      ['empty', '트리거 배치 버튼'], ['blackhole', '블랙홀 방출'], ['pulse', '방출'], ['hardening', '경질화'], ['guard', '방호벽'],
+      ['reposition', '재배치 트리거 · 모험 전용'], ['repulsion', '반발화 트리거 · 모험 전용']
+    ].map(([id, name]) => ({ id: `builtin:trigger-${id}`, name, category: 'trigger', kind: 'trigger', owner: 'neutral', src: `Trigger_illustration/v6-organic/${id}.webp`, width: 29, height: 29 })),
     { id: 'builtin:dummy-trigger', name: '더미 트리거', category: 'trigger', kind: 'trigger', owner: 'neutral', dummy: true, width: 34, height: 34 },
     ...[
       ['hardening.png', '경질화'], ['Protective barrier.png', '방호벽'], ['release .png', '방출'],
@@ -1303,7 +1314,9 @@
     sharedAssets = [...bundledMarkAssets, ...catalog.filter(item =>
       ![...builtins, ...bundledMarkAssets].some(asset => asset.src?.replace(/^\//, '') === item.src.split('?')[0].replace(/^\//, '')))
       .map(item => {
-        const [width, height] = sizes[item.category] || [90, 90];
+        const artSize = item.src.includes('/game-objects/fake-wall/') ? [18, 64]
+          : item.src.includes('/game-objects/moving-walls/') ? [108, 14] : null;
+        const [width, height] = artSize || sizes[item.category] || [90, 90];
         const kinds = { stone: 'stone', structure: 'structure', trigger: 'trigger', map: 'map' };
         return { ...item, shared: true, kind: kinds[item.category] || 'decoration', owner: 'neutral', width, height };
       })];

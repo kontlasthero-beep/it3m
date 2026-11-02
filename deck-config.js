@@ -1,6 +1,9 @@
+const { isTemporarilyGranted } = require('./card-unlocks');
+
 const CARD_LEVELS = Object.freeze({
   hardening: 1, guard: 1, pulse: 1, reposition: 1, brick: 1,
-  blackhole: 1, ammo: 1, bluffing: 1, escape: 2, 'data-barrier': 2
+  blackhole: 1, ammo: 1, bluffing: 1, escape: 2, 'data-barrier': 2,
+  'repulsion-field': 999
 });
 
 const DEFAULT_DECK = Object.freeze([
@@ -11,7 +14,10 @@ function validateDeck(cards, level, tutorialCompleted = false) {
   if (!Array.isArray(cards) || cards.length !== 8) return false;
   const counts = new Map();
   for (const id of cards) {
-    if (typeof id !== 'string' || !CARD_LEVELS[id] || CARD_LEVELS[id] > level || (id === 'reposition' && !tutorialCompleted)) return false;
+    if (typeof id !== 'string' || !CARD_LEVELS[id] ||
+        (id === 'repulsion-field' && !isTemporarilyGranted(id)) ||
+        (!isTemporarilyGranted(id) && CARD_LEVELS[id] > level) ||
+        (id === 'reposition' && !tutorialCompleted)) return false;
     counts.set(id, (counts.get(id) || 0) + 1);
     if (counts.get(id) > 2) return false;
   }

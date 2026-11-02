@@ -425,14 +425,41 @@
     @keyframes timer-flash { from { opacity: .72; } to { opacity: 0; } }
     .roulette-name { color: var(--accent); font-size: 30px !important; }
     .map-indicator { color: var(--accent); font-weight: 700; }
-    .map-dialog { width: min(700px, 100%); }
-    .map-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin: 18px 0; text-align: left; }
-    .map-option { display: grid; grid-template-columns: 48px minmax(0, 1fr); align-items: center; gap: 11px; min-width: 0; padding: 10px; border-color: #425657; background: #101a1c; text-align: left; }
-    .map-option[aria-checked="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: #263331; }
-    .map-swatch { width: 48px; aspect-ratio: 1.3; border: 2px solid rgba(255, 255, 255, .55); border-radius: 3px; }
-    .map-option strong, .map-option span { display: block; }
-    .map-option strong { margin-bottom: 3px; font-size: 14px; }
-    .map-option span { color: var(--muted); font-size: 11px; line-height: 1.4; }
+    .map-dialog { width: min(880px, 100%); }
+    .map-options { display: grid; grid-template-columns: 52px minmax(0, 1fr) 52px; gap: 12px; align-items: center; margin: 18px 0 12px; }
+    .map-carousel-arrow { min-height: 58px; padding: 0; font-size: 30px; }
+    .map-carousel-arrow:disabled { opacity: .35; cursor: not-allowed; }
+    .map-preview { position: relative; overflow: hidden; aspect-ratio: 1642 / 958; border: 1px solid #88734d; border-radius: 5px; background: #0b1315; box-shadow: 0 12px 30px rgba(0,0,0,.32), inset 0 0 0 3px rgba(16,29,30,.78); }
+    .map-preview-base { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .map-preview-layer { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+    .map-preview-item { position: absolute; width: clamp(24px, 5.4%, 56px); aspect-ratio: 1; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(0,0,0,.9)); animation: preview-trigger-phase 3.2s ease-in-out infinite; }
+    .map-preview-item:nth-child(2) { animation-delay: .55s; }
+    .map-preview-item:nth-child(3) { animation-delay: 1.1s; }
+    .map-preview-item:nth-child(4) { animation-delay: 1.65s; }
+    .map-preview-item:nth-child(5) { animation-delay: 2.2s; }
+    @keyframes preview-trigger-phase { 0%, 14% { opacity: 0; transform: translateY(8px) scale(.66); } 28%, 68% { opacity: .96; transform: translateY(0) scale(1); } 86%, 100% { opacity: 0; transform: translateY(-7px) scale(.72); } }
+    .map-preview-rail { position: absolute; height: 2.8%; min-height: 6px; max-height: 15px; object-fit: fill; opacity: .9; filter: drop-shadow(0 1px 3px #000); }
+    .map-preview-rail.horizontal { width: 30%; }
+    .map-preview-rail.vertical { width: 29%; height: 2.8%; max-height: none; transform: rotate(90deg); transform-origin: center; }
+    .map-preview-wall { position: absolute; width: 18%; height: auto; filter: drop-shadow(0 3px 3px rgba(0,0,0,.8)); }
+    .map-preview-wall.top { top: 17%; animation: preview-wall-x 5.6s ease-in-out infinite alternate; }
+    .map-preview-wall.bottom { top: 79%; animation: preview-wall-x 6.4s ease-in-out infinite alternate-reverse; }
+    .map-preview-wall.side { width: 15%; transform: rotate(90deg); left: 42.5%; top: 38%; animation: preview-wall-y 4.8s ease-in-out infinite alternate; }
+    @keyframes preview-wall-x { from { margin-left: 0; } to { margin-left: 14%; } }
+    @keyframes preview-wall-y { from { margin-top: 0; } to { margin-top: 14%; } }
+    .map-preview.is-sliding-left { animation: map-preview-out-left .2s ease-in both; }
+    .map-preview.is-sliding-right { animation: map-preview-out-right .2s ease-in both; }
+    .map-preview.enter-from-left { animation: map-preview-in-left .34s cubic-bezier(.2,.75,.25,1) both; }
+    .map-preview.enter-from-right { animation: map-preview-in-right .34s cubic-bezier(.2,.75,.25,1) both; }
+    @keyframes map-preview-out-left { to { opacity: 0; transform: translateX(-9%); } }
+    @keyframes map-preview-out-right { to { opacity: 0; transform: translateX(9%); } }
+    @keyframes map-preview-in-left { from { opacity: 0; transform: translateX(9%); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes map-preview-in-right { from { opacity: 0; transform: translateX(-9%); } to { opacity: 1; transform: translateX(0); } }
+    @media (prefers-reduced-motion: reduce) { .map-preview-item, .map-preview-wall, .map-preview.is-sliding-left, .map-preview.is-sliding-right, .map-preview.enter-from-left, .map-preview.enter-from-right { animation: none !important; } }
+    .map-preview::after { content: ''; position: absolute; inset: 0; pointer-events: none; border: 1px solid rgba(235,202,139,.16); box-shadow: inset 0 0 36px rgba(4,10,12,.25); }
+    .map-detail { min-height: 75px; margin: 0 64px 12px; text-align: left; }
+    .map-detail strong { display: block; color: var(--ink); font-size: 20px; }
+    .map-detail span { display: block; margin-top: 5px; color: var(--muted); line-height: 1.5; }
     .map-actions { display: flex; justify-content: center; gap: 9px; }
     .hero-dialog { width: min(760px, 100%); text-align: left; }
     .hero-selection-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 12px 0; color: var(--muted); font-size: 14px; }
@@ -463,7 +490,7 @@
     .hand-row .hand-cards { flex: 1; }
     .trigger-tool { position: relative; display: grid; place-items: start center; flex: 0 0 48px; width: 48px; height: 54px; padding: 2px 0 0; border: 0; background: transparent; touch-action: none; user-select: none; }
     .trigger-tool:hover { background: transparent; filter: drop-shadow(0 0 8px rgba(141, 235, 215, .5)); }
-    .trigger-tool img { display: block; width: 40px; height: 40px; object-fit: contain; opacity: .78; animation: trigger-icon-rotation 14s linear infinite; transform-origin: center; pointer-events: none; }
+    .trigger-tool img { display: block; width: 40px; height: 40px; object-fit: contain; opacity: .9; animation: trigger-icon-rotation 14s linear infinite; transform-origin: center; pointer-events: none; }
     .trigger-count { position: absolute; bottom: 0; left: 50%; display: grid; place-items: center; min-width: 20px; height: 18px; padding: 0 4px; border: 1.5px solid #91e6d0; border-radius: 50%; background: #0b1c1e; color: #e9fff7; font-size: 10px; font-variant-numeric: tabular-nums; transform: translateX(-50%); pointer-events: none; }
     @keyframes trigger-icon-rotation { to { transform: rotate(360deg); } }
     .trigger-tool[disabled] { opacity: .42; cursor: not-allowed; }
@@ -487,6 +514,7 @@
     .card-art[data-card-id="reposition"] { object-position: center 18%; }
     .card-art[data-card-id="bluffing"] { object-position: center 12%; transform: scale(1.1); transform-origin: center top; }
     .card-art[data-card-id="data-barrier"] { object-position: center 35%; }
+    .card-art[data-card-id="repulsion-field"] { object-position: center 20%; transform: scale(1.22); transform-origin: center 22%; }
     .card-name { display: block; flex: 0 0 auto; padding: 8px 10px; font-size: 16px; line-height: 1.25; border-top: 1px solid #65736d; }
     .card-rules { display: block; padding: 0 10px 10px; font-size: 12px; font-weight: 400; line-height: 1.45; overflow-y: auto; overflow-wrap: anywhere; }
     .card-face .card-name { position: relative; z-index: 1; background: #152226; }
@@ -591,7 +619,7 @@
     .card-ghost.drag-card.valid-target { width: 68px; height: 86px; transform: translate(-50%, -50%); filter: drop-shadow(0 0 12px #9ff4c0); }
     .drag-card.valid-target .card-art { height: calc(100% - 22px); }
     .drag-card.valid-target .card-name { min-height: 22px; font-size: 9px; }
-    .trigger-placement-preview { position: fixed; z-index: 21; display: none; pointer-events: none; transform: translate(-50%, -50%); background: url('Trigger_illustration/v3-simple/empty.png') center / 145% no-repeat; opacity: .9; }
+    .trigger-placement-preview { position: fixed; z-index: 21; display: none; pointer-events: none; transform: translate(-50%, -50%); background: url('Trigger_illustration/v6-organic/empty.webp') center / 145% no-repeat; opacity: .9; }
     .card-deal-overlay { z-index: 65; background: rgba(8,15,16,.48); }
     .deal-player { position: fixed; top: max(12px, calc(50% - 202px)); left: 0; right: 0; margin: 0; color: #f4f0e6; font-size: 15px; text-align: center; }
     .deal-card { position: fixed; left: 50%; top: 50%; width: 232px; height: min(340px, calc(100dvh - 72px)); transform: translate(-50%, -50%); transform-origin: center; }
@@ -600,7 +628,7 @@
     .trigger-type-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 16px 0; text-align: left; }
     .trigger-type-option { min-width: 0; padding: 10px; background: #101a1c; text-align: left; }
     .trigger-type-option { display: grid; grid-template-columns: 48px minmax(0, 1fr); align-items: center; gap: 9px; }
-    .trigger-type-option img { width: 48px; height: 48px; object-fit: contain; opacity: .82; animation: trigger-icon-rotation 14s linear infinite; transform-origin: center; }
+    .trigger-type-option img { width: 48px; height: 48px; object-fit: contain; opacity: .82; }
     .trigger-type-option[aria-checked="true"] { border-color: var(--accent); background: #263331; }
     .trigger-type-option strong, .trigger-type-option span { display: block; }
     .trigger-type-option span { margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 1.4; white-space: normal; }
@@ -616,6 +644,14 @@
     .guest-profile progress { display: block; width: 100%; height: 7px; accent-color: #e5b35a; }
     .match-fame-reward { margin: 14px 0; color: #f4d487; font-weight: 700; }
     .home-menu { display: grid; gap: 10px; }
+    .privacy-consent { margin: 12px 0 2px; padding: 11px 12px; border: 1px solid #405451; border-radius: 4px; background: rgba(12, 22, 23, .7); color: var(--muted); font-size: 12px; line-height: 1.55; }
+    .privacy-consent summary { color: var(--ink); cursor: pointer; font-weight: 700; }
+    .privacy-consent-body { margin-top: 9px; }
+    .privacy-consent-body p { margin: 6px 0; }
+    .privacy-consent-body strong { color: #e3c68e; }
+    .privacy-consent-check { display: flex; align-items: flex-start; gap: 8px; margin-top: 10px; color: var(--ink); cursor: pointer; }
+    .privacy-consent-check input { flex: 0 0 auto; margin: 3px 0 0; accent-color: #65d6bd; }
+    .privacy-consent[hidden] { display: none; }
     .home-menu button { min-height: 52px; font-size: 17px; }
     .deck-entry-button { width: 100%; margin-top: 10px; }
     .deck-dialog { width: min(1120px, 100%); text-align: left; }
@@ -682,6 +718,7 @@
     .catalog-entry .catalog-card-art[data-card-id="reposition"] { object-position: center 18%; }
     .catalog-entry .catalog-card-art[data-card-id="bluffing"] { object-position: center 12%; transform: scale(1.08); }
     .catalog-entry .catalog-card-art[data-card-id="data-barrier"] { object-position: center 35%; }
+    .catalog-entry .catalog-card-art[data-card-id="repulsion-field"] { object-position: center 20%; transform: scale(1.22); transform-origin: center 22%; }
     .catalog-entry.locked-card header { position: relative; }
     .catalog-entry.locked-card .catalog-card-art { filter: grayscale(1) blur(4px) brightness(.48); }
     .catalog-lock {
@@ -758,8 +795,10 @@
       .online-player-status { grid-template-columns: 1fr; gap: 6px; }
       .online-player-status span { min-height: 40px; display: flex; align-items: center; }
       .start-menu-grid button { min-height: 82px; font-size: 12px; }
-      .map-options { grid-template-columns: 1fr; gap: 7px; margin: 12px 0; }
-      .map-option { min-height: 54px; padding: 9px; }
+      .map-options { grid-template-columns: 40px minmax(0, 1fr) 40px; gap: 6px; margin: 12px 0 8px; }
+      .map-carousel-arrow { min-height: 46px; font-size: 25px; }
+      .map-detail { min-height: 68px; margin: 0 46px 8px; }
+      .map-detail strong { font-size: 17px; }
       .map-actions { position: sticky; bottom: -1px; padding: 8px 0 max(4px, env(safe-area-inset-bottom)); background: #162326; }
       .map-actions button, .start-fields button, .join-entry button { min-height: 44px; }
       .room-code-view strong { font-size: 22px; }
@@ -981,6 +1020,31 @@
               <label>계정 ID<input id="accountUsernameInput" minlength="4" maxlength="20" autocomplete="username" required></label>
               <label id="accountNicknameField" hidden>닉네임<input id="accountNicknameInput" maxlength="20" autocomplete="nickname"></label>
               <label>비밀번호<input id="accountPasswordInput" type="password" minlength="8" autocomplete="current-password" required></label>
+              <section class="privacy-consent" id="privacyConsentSection" hidden aria-label="개인정보 수집 및 이용 동의">
+                <details>
+                  <summary>개인정보 수집·이용 내용 보기</summary>
+                  <div class="privacy-consent-body">
+                    <p><strong>수집·이용 목적</strong> 계정 생성 및 본인 인증, 닉네임·게임 진척도·전적·덱 프리셋 저장, 온라인 대전 운영</p>
+                    <p><strong>수집 항목</strong> 계정 ID, 비밀번호(단방향 해시 처리 후 저장), 닉네임, 자동 발급 플레이어 ID, 레벨·명성치·승패 전적·덱 프리셋·튜토리얼 완료 상태, AI 경기 난이도와 경기 처리 시각, 로그인 세션 식별값(해시 저장)</p>
+                    <p><strong>보유 및 이용 기간</strong> 회원 탈퇴 시까지. 관계 법령에 따라 보존할 필요가 있는 정보는 해당 기간 동안 분리 보관 후 파기합니다.</p>
+                    <p><strong>동의 거부 권리 및 불이익</strong> 동의를 거부할 수 있으나, 계정 등록과 계정 기반 온라인 기능을 이용할 수 없습니다. 게스트 플레이는 계정 등록 없이 이용할 수 있으며 진척도가 계정에 저장되지 않습니다.</p>
+                    <p>동의 기록은 동의 시각과 문안 버전으로 보관하며, 비밀번호 원문은 저장하지 않습니다. 선택 동의나 광고·마케팅 수집은 없습니다.</p>
+                  </div>
+                </details>
+                <label class="privacy-consent-check"><input id="privacyConsentCheckbox" type="checkbox"><span>필수 개인정보 수집·이용에 동의합니다.</span></label>
+                  <details>
+                    <summary>개인정보 국외 이전 내용 보기</summary>
+                    <div class="privacy-consent-body">
+                      <p><strong>이전되는 항목</strong> 계정 ID, 비밀번호 해시, 닉네임, 플레이어 ID, 레벨·명성치·전적·덱 프리셋·튜토리얼 상태, 경기 기록, 세션 식별값(해시), 접속 IP·요청 시각 등 서비스 연결 정보</p>
+                      <p><strong>이전 국가·시기·방법</strong> 미국(오리건주), 계정 등록 및 서비스 이용 중, 인터넷을 통한 서비스 서버·데이터베이스로의 암호화 전송 및 저장</p>
+                      <p><strong>이전받는 자</strong> Render Services, Inc. · 문의: privacy@render.com</p>
+                      <p><strong>이전 목적·보유 기간</strong> 게임 웹 서비스 운영, 계정·진척도 저장 및 온라인 기능 제공 · 회원 탈퇴 시까지</p>
+                      <p><strong>동의 거부</strong> 동의를 거부할 수 있으나 계정 등록과 계정 기반 온라인 기능을 이용할 수 없습니다. 게스트 플레이를 선택할 수 있습니다.</p>
+                    </div>
+                  </details>
+                  <label class="privacy-consent-check"><input id="crossBorderConsentCheckbox" type="checkbox"><span>필수 개인정보 국외 이전에 동의합니다.</span></label>
+                  <label class="privacy-consent-check"><input id="ageConfirmationCheckbox" type="checkbox"><span>만 14세 이상입니다.</span></label>
+              </section>
               <div class="account-actions"><button class="primary" id="accountSubmitButton" type="submit">로그인</button><button id="accountModeButton" type="button">계정 등록</button></div>
             </form>
             <button class="home-account" id="guestPlayButton" type="button">게스트로 플레이하기</button>
@@ -996,8 +1060,18 @@
             <div class="account-stats" id="accountStats"></div>
             <form class="start-form" id="nicknameForm"><label>온라인 닉네임<input id="profileNicknameInput" maxlength="20" autocomplete="nickname" required></label><button class="primary" type="submit">닉네임 변경</button></form>
             <button class="home-account" id="logoutButton" type="button">로그아웃</button>
+              <button class="home-account account-delete-button" id="deleteAccountButton" type="button">계정 및 저장 데이터 삭제</button>
             <button class="home-return" id="accountSettingsHomeButton" type="button">← 시작 화면으로 돌아가기</button>
           </div>
+            <div class="start-screen" id="deleteAccountScreen" hidden>
+              <h3>계정 삭제</h3>
+              <p>계정과 연결된 진척도, 전적, 덱, 세션이 삭제됩니다. 이 작업은 되돌릴 수 없습니다.</p>
+              <form class="start-form" id="deleteAccountForm">
+                <label>비밀번호 확인<input id="deleteAccountPasswordInput" type="password" autocomplete="current-password" required></label>
+                <label class="privacy-consent-check"><input id="deleteAccountConfirmCheckbox" type="checkbox" required><span>계정과 저장 데이터의 영구 삭제를 확인합니다.</span></label>
+                <div class="account-actions"><button class="primary" type="submit">계정 삭제</button><button id="cancelDeleteAccountButton" type="button">취소</button></div>
+              </form>
+            </div>
           <div class="start-screen" id="startMenu" hidden>
             <div class="lobby-mode-panel">
               <div class="lobby-panel-heading"><span class="lobby-panel-kicker">SECOND CHANCE · PLAY</span><h3 id="lobbyModeTitle">멀티 플레이</h3><p id="lobbyModeDescription">방을 만들거나 공개 방에 참가하세요.</p></div>
@@ -1114,7 +1188,8 @@
           <div class="room-code-view" id="roomCodeView" hidden>초대 코드<strong id="roomCodeText"></strong></div>
           <div class="online-player-status" id="onlinePlayerStatus" hidden></div>
           <p class="online-status" id="onlineStatus" role="status" hidden></p>
-          <div class="map-options" id="mapOptions" role="radiogroup" aria-label="플레이 맵 선택"></div>
+          <div class="map-options" id="mapOptions" role="group" aria-label="플레이 맵 선택"></div>
+          <div class="map-detail" aria-live="polite"><strong id="mapPreviewTitle"></strong><span id="mapPreviewDescription"></span></div>
           <div class="map-actions">
             <button id="cancelMapButton">취소</button>
             <button class="primary" id="confirmMapButton">이 맵 확정</button>
@@ -1169,8 +1244,8 @@
       </div>
     </section>
     <section class="hands" aria-label="플레이어 카드">
-      <div class="hand-panel" id="handPanel0"><div class="hand-title"><span class="hand-owner-name" id="handOwner0">플레이어 1</span><span class="hand-hero-name" id="handHero0" hidden tabindex="0"></span></div><div class="hand-row"><div class="hand-cards" id="hand0"></div><button class="trigger-tool" data-owner="0" type="button" aria-label="트리거 배치, 남은 횟수 1" disabled><img src="Trigger_illustration/v3-simple/empty.png" alt="" draggable="false"><span class="trigger-count" aria-hidden="true">1</span></button><button class="game-deck-button" data-owner="0" type="button" title="플레이어 1의 가방" aria-label="플레이어 1의 가방"></button></div></div>
-      <div class="hand-panel" id="handPanel1"><div class="hand-title"><span class="hand-owner-name" id="handOwner1">플레이어 2</span><span class="hand-hero-name" id="handHero1" hidden tabindex="0"></span></div><div class="hand-row"><div class="hand-cards" id="hand1"></div><button class="trigger-tool" data-owner="1" type="button" aria-label="트리거 배치, 남은 횟수 1" disabled><img src="Trigger_illustration/v3-simple/empty.png" alt="" draggable="false"><span class="trigger-count" aria-hidden="true">1</span></button><button class="game-deck-button" data-owner="1" type="button" title="플레이어 2의 가방" aria-label="플레이어 2의 가방"></button></div></div>
+      <div class="hand-panel" id="handPanel0"><div class="hand-title"><span class="hand-owner-name" id="handOwner0">플레이어 1</span><span class="hand-hero-name" id="handHero0" hidden tabindex="0"></span></div><div class="hand-row"><div class="hand-cards" id="hand0"></div><button class="trigger-tool" data-owner="0" type="button" aria-label="트리거 배치, 남은 횟수 1" disabled><img src="Trigger_illustration/v6-organic/empty.webp" alt="" draggable="false"><span class="trigger-count" aria-hidden="true">1</span></button><button class="game-deck-button" data-owner="0" type="button" title="플레이어 1의 가방" aria-label="플레이어 1의 가방"></button></div></div>
+      <div class="hand-panel" id="handPanel1"><div class="hand-title"><span class="hand-owner-name" id="handOwner1">플레이어 2</span><span class="hand-hero-name" id="handHero1" hidden tabindex="0"></span></div><div class="hand-row"><div class="hand-cards" id="hand1"></div><button class="trigger-tool" data-owner="1" type="button" aria-label="트리거 배치, 남은 횟수 1" disabled><img src="Trigger_illustration/v6-organic/empty.webp" alt="" draggable="false"><span class="trigger-count" aria-hidden="true">1</span></button><button class="game-deck-button" data-owner="1" type="button" title="플레이어 2의 가방" aria-label="플레이어 2의 가방"></button></div></div>
     </section>
   </main>
 
@@ -1238,6 +1313,7 @@
     <circle id="aimTip" fill="#f4f0e6" />
   </svg>
   <script src="ai-planner.js"></script>
+  <script src="card-unlocks.js?v=1"></script>
   <section id="tutorialDialogue" class="tutorial-dialogue" role="dialog" aria-modal="true" aria-labelledby="tutorialSpeaker" hidden>
     <img src="영웅 초상화/big boy.png" alt="빅보이" draggable="false">
     <div class="tutorial-dialogue-copy">
@@ -1306,6 +1382,10 @@
       const accountNicknameInput = document.querySelector('#accountNicknameInput');
       const accountNicknameField = document.querySelector('#accountNicknameField');
       const accountSubmitButton = document.querySelector('#accountSubmitButton');
+      const privacyConsentSection = document.querySelector('#privacyConsentSection');
+      const privacyConsentCheckbox = document.querySelector('#privacyConsentCheckbox');
+      const crossBorderConsentCheckbox = document.querySelector('#crossBorderConsentCheckbox');
+      const ageConfirmationCheckbox = document.querySelector('#ageConfirmationCheckbox');
       const accountIdentity = document.querySelector('#accountIdentity');
       const accountStats = document.querySelector('#accountStats');
       const profileNicknameInput = document.querySelector('#profileNicknameInput');
@@ -1382,6 +1462,8 @@
       const resultMessage = document.querySelector('#resultMessage');
       const resultGrid = document.querySelector('#resultGrid');
       const mapOptions = document.querySelector('#mapOptions');
+      const mapPreviewTitle = document.querySelector('#mapPreviewTitle');
+      const mapPreviewDescription = document.querySelector('#mapPreviewDescription');
       const mapSelectTitle = document.querySelector('#mapSelectTitle');
       const mapSelectDescription = document.querySelector('#mapSelectDescription');
       const roomCodeView = document.querySelector('#roomCodeView');
@@ -1437,6 +1519,7 @@
       const ELEVENLABS_SFX = {
         start: '효과음/화면과 진행/SecondChance_GameStart_ElevenLabs_Draft.mp3',
         unitDeath: '효과음/ElevenLabs_Drafts/unit-death.mp3',
+        fallBoom: '효과음/cinematic_boom_sfx,__%231-1793588739342.mp3',
         connected: '효과음/ElevenLabs_Drafts/connected.mp3', speedChange: '효과음/ElevenLabs_Drafts/speed-slow-v2.mp3',
         speedRestore: '효과음/ElevenLabs_Drafts/speed-restore-v1.mp3',
         deal: '효과음/ElevenLabs_Drafts/deal.mp3', heroSelect: '효과음/ElevenLabs_Drafts/hero-select.mp3',
@@ -1447,12 +1530,14 @@
         ammoFire: '효과음/ElevenLabs_Drafts/ammo-fire-rifle-1-5s.mp3',
         turn: '효과음/ElevenLabs_Drafts/turn-change.mp3', win: '효과음/ElevenLabs_Drafts/victory.mp3',
         victoryMusic: '효과음/ElevenLabs_Drafts/victory-sting.mp3', defeatMusic: '효과음/ElevenLabs_Drafts/defeat-sting.mp3',
-        hardening: '효과음/ElevenLabs_Drafts/hardening-freeze-v3.mp3', guard: '효과음/ElevenLabs_Drafts/guard-orbit-v2.mp3',
+        hardening: '효과음/ElevenLabs_Drafts/hardening-crystal-gather-2s.mp3', guard: '효과음/ElevenLabs_Drafts/guard-orbit-v2.mp3',
         pulse: '효과음/ElevenLabs_Drafts/pulse-release.mp3', pulseCharge: '효과음/ElevenLabs_Drafts/pulse-charge-v1.mp3',
         reposition: '효과음/ElevenLabs_Drafts/reposition-gear-v2.mp3',
         drop: '효과음/ElevenLabs_Drafts/structure-drop-iron-v2.mp3', blackhole: '효과음/ElevenLabs_Drafts/blackhole-release-v3.mp3',
         ammoLoad: '효과음/ElevenLabs_Drafts/ammo-load.mp3', bluffing: '효과음/ElevenLabs_Drafts/bluffing-sand-v2.mp3',
         escape: '효과음/ElevenLabs_Drafts/escape-teleport-v2.mp3', card: '효과음/ElevenLabs_Drafts/card-effect.mp3',
+        repulsionField: '효과음/ElevenLabs_Drafts/repulsion-field-v2-mastered.mp3',
+        repulsionCollision: '효과음/ElevenLabs_Drafts/repulsion-collision-v1-mastered.mp3',
         triggerPlace: '효과음/ElevenLabs_Drafts/trigger-place-v1.mp3',
         dataBarrier: '효과음/ElevenLabs_Drafts/data-barrier-form-v1.mp3',
         strongHit: '효과음/ElevenLabs_Drafts/strong-impact-v3.mp3',
@@ -1461,7 +1546,7 @@
       };
       const generatedSoundLastPlayed = new Map();
       const playedOnlineOutcomeKeys = new Set();
-      const generatedSoundCooldowns = { wallHit: 80, guardHit: 90, strongHit: 65 };
+      const generatedSoundCooldowns = { wallHit: 80, guardHit: 90, strongHit: 65, repulsionCollision: 110 };
       const AUDIO_FILES = {
         weakHit: new Audio('효과음/충돌과 타이머/Midhit_1.wav'),
         unitDeath: new Audio('효과음/Unit_death_sound_for_1.wav'),
@@ -1496,7 +1581,7 @@
         restitution: 0.84,
         separation: 0.52
       };
-      const BLACK_HOLE = { range: 136.5, duration: 0.85, impulse: 650 };
+      const BLACK_HOLE = { range: 136.5 * 1.25, duration: 0.85, impulse: 650 };
       const PULSE_RANGE = 150.9375;
       const PULSE_IMPULSE = 274.21875;
       const ENTITY_KIND = Object.freeze({ UNIT: 'unit', STRUCTURE: 'structure', TRIGGER: 'trigger' });
@@ -1507,17 +1592,67 @@
         { id: 'guard', name: '방호벽', description: '중첩하면 위성체가 최대 네 개까지 늘어납니다.', color: '#f1b66e' }
       ];
       const TRIGGER_ART = Object.freeze({
-        blackhole: 'Trigger_illustration/v3-simple/blackhole.png',
-        pulse: 'Trigger_illustration/v3-simple/pulse.png',
-        hardening: 'Trigger_illustration/v3-simple/hardening.png',
-        guard: 'Trigger_illustration/v3-simple/guard.png',
-        empty: 'Trigger_illustration/v3-simple/empty.png'
+        blackhole: 'Trigger_illustration/v6-organic/blackhole.webp',
+        pulse: 'Trigger_illustration/v6-organic/pulse.webp',
+        hardening: 'Trigger_illustration/v6-organic/hardening.webp',
+        guard: 'Trigger_illustration/v6-organic/guard.webp',
+        empty: 'Trigger_illustration/v6-organic/empty.webp',
+        reposition: 'Trigger_illustration/v6-organic/reposition.webp',
+        'adventure-reposition': 'Trigger_illustration/v6-organic/reposition.webp',
+        'adventure-repulsion': 'Trigger_illustration/v6-organic/repulsion.webp',
+        repulsion: 'Trigger_illustration/v6-organic/repulsion.webp'
       });
       const triggerImages = Object.fromEntries(Object.entries(TRIGGER_ART).map(([id, src]) => {
         const image = new Image();
         image.src = src;
         return [id, image];
       }));
+      const triggerFrameSheets = Object.fromEntries(
+        ['empty', 'pulse', 'blackhole', 'guard', 'hardening', 'reposition', 'repulsion'].map(id => {
+          const image = new Image();
+          image.src = `Trigger_illustration/v6-organic/${id}-sheet.webp`;
+          return [id, image];
+        })
+      );
+      const FALSE_WALL_ART = [
+        'in-game-screen/game-objects/fake-wall/false-wall.png',
+        'in-game-screen/game-objects/fake-wall/false-wall-v2.png',
+        'in-game-screen/game-objects/fake-wall/false-wall-v3.png',
+        'in-game-screen/game-objects/fake-wall/false-wall-v4.png',
+        'in-game-screen/game-objects/fake-wall/false-wall-v5.png'
+      ];
+      const falseWallImages = FALSE_WALL_ART.map(src => {
+        const image = new Image();
+        image.src = src;
+        return image;
+      });
+      let falseWallVariantBag = [];
+      let previousFalseWallVariant = -1;
+      function chooseFalseWallVariant() {
+        if (!falseWallVariantBag.length) {
+          falseWallVariantBag = Array.from({ length: falseWallImages.length }, (_, index) => index);
+          for (let i = falseWallVariantBag.length - 1; i > 0; i -= 1) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [falseWallVariantBag[i], falseWallVariantBag[j]] = [falseWallVariantBag[j], falseWallVariantBag[i]];
+          }
+          if (falseWallVariantBag.length > 1 && falseWallVariantBag[falseWallVariantBag.length - 1] === previousFalseWallVariant) {
+            [falseWallVariantBag[0], falseWallVariantBag[falseWallVariantBag.length - 1]] =
+              [falseWallVariantBag[falseWallVariantBag.length - 1], falseWallVariantBag[0]];
+          }
+        }
+        previousFalseWallVariant = falseWallVariantBag.pop();
+        return previousFalseWallVariant;
+      }
+      const MOVING_WALL_ART = [
+        'in-game-screen/game-objects/moving-walls/framed-moving-barrier-v2.png'
+      ];
+      const movingWallImages = MOVING_WALL_ART.map(src => {
+        const image = new Image();
+        image.src = src;
+        return image;
+      });
+      const movingWallTrackImage = new Image();
+      movingWallTrackImage.src = 'in-game-screen/game-objects/moving-walls/embedded-guide-rail.png';
       const CARDS = [
         { id: 'hardening', name: '경질화' }, { id: 'hardening', name: '경질화' },
         { id: 'guard', name: '방호벽' }, { id: 'guard', name: '방호벽' },
@@ -1528,19 +1663,21 @@
         { id: 'ammo', name: '총알 장전' }, { id: 'ammo', name: '총알 장전' },
         { id: 'bluffing', name: '속임수' }, { id: 'bluffing', name: '속임수' },
         { id: 'escape', name: '탈출', unlockLevel: 2 }, { id: 'escape', name: '탈출', unlockLevel: 2 },
-        { id: 'data-barrier', name: '데이터 장벽', unlockLevel: 2 }, { id: 'data-barrier', name: '데이터 장벽', unlockLevel: 2 }
+        { id: 'data-barrier', name: '데이터 장벽', unlockLevel: 2 }, { id: 'data-barrier', name: '데이터 장벽', unlockLevel: 2 },
+        { id: 'repulsion-field', name: '반발장', unlockAdventureStage: 2, unlockLevel: 999 }, { id: 'repulsion-field', name: '반발장', unlockAdventureStage: 2, unlockLevel: 999 }
       ];
       const CARD_DESCRIPTIONS = {
         hardening: '스톤의 마찰력이 3배가 됩니다. 같은 카드 효과는 중첩되어 마찰력과 회색 코팅이 더 강해집니다.',
         guard: '스톤 주위를 도는 위성 방호벽 2개를 추가합니다. 최대 4개까지 중첩되며 충돌로 유닛을 밀어냅니다. 위성체가 지나가는 위치와 타이밍을 확인하세요. 1번 더 중첩해서 사용하면 위성체가 두 방향을 방어합니다.',
         pulse: '스톤을 충전 상태로 만듭니다. 충전된 스톤이 다른 유닛이나 구조물과 충돌하면 주변 스톤과 유닛을 밀쳐내는 강한 파동을 발산합니다. 아군 스톤은 밀려나는 힘이 절반으로 줄어듭니다.',
         reposition: '필드에 있는 자신의 스톤을 한 번 더 발사할 수 있게 됩니다. 파워를 정한 뒤 방향을 지정하세요.',
-        brick: '시작선에서 충분히 떨어진 곳에 움직일 수 있는 벽돌 유닛을 배치합니다.',
-        blackhole: '즉시 주변의 다른 스톤과 벽돌을 끌어당깁니다.',
-        ammo: '자신의 스톤에 사용하면 해당 스톤을 드래그하여 총알을 발사할 수 있습니다. 총알은 강한 충돌 판정을 가지며 방호벽과 벽돌을 파괴합니다.',
-        bluffing: '다음 상대 턴이 종료될 때까지 해당 스톤의 충돌 판정이 사라집니다. 벽돌, 총알, 방호벽, 스톤, 맵 구조물을 통과하지만 방출과 블랙홀 방출의 영향은 받습니다.',
+        brick: '시작선에서 충분히 떨어진 곳에 움직일 수 있는 가벽 유닛을 배치합니다.',
+        blackhole: '즉시 주변의 다른 스톤과 가벽을 끌어당깁니다.',
+        ammo: '자신의 스톤에 사용하면 해당 스톤을 드래그하여 총알을 발사할 수 있습니다. 총알은 강한 충돌 판정을 가지며 방호벽과 가벽을 파괴합니다.',
+        bluffing: '다음 상대 턴이 종료될 때까지 해당 스톤의 충돌 판정이 사라집니다. 가벽, 총알, 방호벽, 스톤, 맵 구조물을 통과하지만 방출과 블랙홀 방출의 영향은 받습니다.',
         escape: '자신의 스톤을 게임에서 제거하는 대신 10점을 획득합니다.',
-        'data-barrier': '내 스톤만 통과 가능한 특수 장벽을 배치합니다. 장벽은 다음 상대 턴까지 유지됩니다.'
+        'data-barrier': '내 스톤만 통과 가능한 특수 장벽을 배치합니다. 장벽은 다음 상대 턴까지 유지됩니다.',
+        'repulsion-field': '자신의 스톤, 구조물에 탄성을 부여합니다.'
       };
       const TURN_LIMIT_MS = 35_000;
       const CARD_DRAW_HOLD_MS = 1050;
@@ -1555,11 +1692,13 @@
         ammo: { art: 'Card_illustration/Load.png', sound: 'ammoLoad' },
         bluffing: { art: 'Card_illustration/Bluffing.png', sound: 'bluffing' },
         escape: { art: 'Card_illustration/Escape.png', sound: 'escape' },
-        'data-barrier': { art: 'Card_illustration/Data Barrier-v5.png', sound: 'dataBarrier' }
+        'data-barrier': { art: 'Card_illustration/Data Barrier-v5.png', sound: 'dataBarrier' },
+        'repulsion-field': { art: 'Card_illustration/Repulsion Field.png', sound: 'repulsionField' }
       };
       const UNIT_EFFECTS = Object.freeze({
         hardening: { maxStacks: Infinity, frictionPerStack: 3 },
-        guard: { maxStacks: 2, satellitesPerStack: 2 }
+        guard: { maxStacks: 2, satellitesPerStack: 2 },
+        'repulsion-field': { maxStacks: 1 }
       });
       const HERO_SELECTION_MS = 15_000;
       const HEROES = [
@@ -1573,12 +1712,13 @@
         guard: { color: '#f1b66e', tip: '위성체 위치와 회전 타이밍을 살펴 스톤을 효과적으로 보호하세요.' },
         pulse: { color: '#00d9ff', tip: '충전한 뒤 충돌을 일으켜 파동을 발산하세요. 아군 스톤은 절반의 힘으로 밀려납니다.' },
         reposition: { color: '#79dfc2', tip: '점수가 낮은 스톤을 구하거나 다른 방향에서 공격할 수 있습니다. 재발사가 끝날 때까지 총알 장전과 함께 사용할 수 없습니다.' },
-        brick: { color: '#c3d0ce', tip: '왼쪽 배치 가능 구역에서 경로를 막거나 충돌 각도를 만드세요. 벽돌도 밀려나고 총탄에 파괴됩니다. 점수는 없습니다.' },
+        brick: { color: '#c3d0ce', tip: '왼쪽 배치 가능 구역에서 경로를 막거나 충돌 각도를 만드세요. 가벽도 밀려나고 총탄에 파괴됩니다. 점수는 없습니다.' },
         blackhole: { color: '#bd75f5', tip: '주변 아군도 함께 끌려옵니다. 시전한 스톤은 잠시 유체 상태가 되어 다른 스톤이 통과합니다.' },
-        ammo: { color: '#ffe58a', tip: '빠른 총탄으로 방호벽 위성체나 벽돌을 제거하세요. 총탄은 마찰을 무시하며 구조물 맵의 벽에서 도탄됩니다.' },
+        ammo: { color: '#ffe58a', tip: '빠른 총탄으로 방호벽 위성체나 가벽을 제거하세요. 총탄은 마찰을 무시하며 구조물 맵의 벽에서 도탄됩니다.' },
         bluffing: { color: '#bdc8e8', tip: '다음 상대 턴이 끝날 때까지 물리 충돌을 피하지만 충격파의 힘은 그대로 받습니다.' },
         escape: { color: '#e7e2d8', tip: '위험한 위치의 스톤을 제거해 확정 점수로 바꿉니다.' },
-        'data-barrier': { color: '#91e9e7', tip: '고정된 장벽은 아군 스톤이 통과하지만 상대 스톤과 벽돌은 막습니다. 총탄에 파괴됩니다.' }
+        'data-barrier': { color: '#91e9e7', tip: '고정된 장벽은 아군 스톤이 통과하지만 상대 스톤과 가벽은 막습니다. 총탄에 파괴됩니다.' },
+        'repulsion-field': { color: '#e9b970', tip: '충돌로 받는 이동은 줄고, 충돌 상대에게 전달하는 힘은 커집니다. 총알을 맞으면 반사합니다.' }
       };
 
       // Card and trigger lessons/catalog entries follow the gameplay registries automatically.
@@ -1597,7 +1737,9 @@
         const counts = new Map();
         for (const id of cards) {
           const card = cardDefinitions().find(item => item.id === id);
-          if (!card || (card.unlockLevel || 1) > level || (card.unlockTutorial && !guestProfile?.tutorialCompleted)) return false;
+          if (!card || (!SecondChanceCardUnlocks.isTemporarilyGranted(card.id) &&
+              (card.unlockAdventureStage ? !hasClearedAdventureStage(card.unlockAdventureStage) : (card.unlockLevel || 1) > level)) ||
+              (card.unlockTutorial && !guestProfile?.tutorialCompleted)) return false;
           counts.set(id, (counts.get(id) || 0) + 1);
           if (counts.get(id) > 2) return false;
         }
@@ -1610,6 +1752,8 @@
       function deckCard(id) { return cardDefinitions().find(item => item.id === id); }
       function playerLevel(owner) { return Math.max(1, Number(state.playerLevels?.[owner]) || 1); }
       function isCardUnlocked(card, owner) {
+        if (SecondChanceCardUnlocks.isTemporarilyGranted(card.id)) return true;
+        if (card.unlockAdventureStage && hasClearedAdventureStage(card.unlockAdventureStage)) return true;
         if (state.adventure && owner === 0) return true;
         return playerLevel(owner) >= (card.unlockLevel || 1) && (!card.unlockTutorial || state.playerTutorialCompleted?.[owner] === true);
       }
@@ -1625,6 +1769,14 @@
         ice: { src: 'in-game-screen/curling-table-maps/ice/background-concept.png', crop: { x: .03, y: .08, width: .94, height: .81 } },
         'moving-walls': { src: 'in-game-screen/curling-table-maps/moving-walls/background-concept.png', crop: { x: .03, y: .10, width: .94, height: .79 } }
       };
+      const MAP_PREVIEW_IMAGES = {
+        classic: MAP_BACKGROUND_CONFIG.classic.src,
+        ice: MAP_BACKGROUND_CONFIG.ice.src,
+        'moving-walls': MAP_BACKGROUND_CONFIG['moving-walls'].src,
+        items: MAP_BACKGROUND_CONFIG.classic.src
+      };
+      let mapPreviewTransitioning = false;
+      let mapPreviewEntryDirection = '';
       const mapBackgroundImages = Object.create(null);
       const adventureImages = Object.create(null);
       const PLAYER = [
@@ -2350,7 +2502,8 @@
             const lock = document.createElement('span');
             lock.className = 'catalog-lock';
             lock.textContent = '🔒';
-            lock.setAttribute('aria-label', entry.unlockTutorial ? '튜토리얼 완료 또는 스킵 시 해금' : `${entry.unlockLevel}레벨에 해금`);
+            lock.setAttribute('aria-label', entry.unlockTutorial ? '튜토리얼 완료 또는 스킵 시 해금' : entry.unlockAdventureStage
+              ? `모험 모드 ${entry.unlockAdventureStage}스테이지 클리어 시 해금` : `${entry.unlockLevel}레벨에 해금`);
             lock.title = lock.getAttribute('aria-label');
             header.append(lock);
             article.append(header);
@@ -2545,7 +2698,13 @@
         playFileSound(important ? 'importantSelection' : 'generalSelection', { volume: important ? 1 : .95 });
       }
 
-      function playUnitImpactSound(impulse) {
+      function playUnitImpactSound(impulse, involvedUnits = []) {
+        const hardened = involvedUnits.filter(unit => getUnitEffectStacks(unit, 'hardening') > 0);
+        if (hardened.length) emitHardeningShards(hardened, impulse);
+        if (involvedUnits.some(hasRepulsionField)) {
+          playElevenLabsSound('repulsionCollision', { volume: 1.25 });
+          return;
+        }
         if (Math.abs(impulse) >= STRONG_HIT_THRESHOLD) playElevenLabsSound('strongHit');
         else playFileSound('weakHit', { volume: .8, cooldown: 65 });
       }
@@ -2629,6 +2788,7 @@
           this.relaunchUsed = false;
           this.activeSpecial = null;
           this.fluidTimer = 0;
+          this.blackholeFrictionTimer = 0;
           this.adventureFrictionTimer = 0;
           this.adventureFrictionMultiplier = 1;
           this.adventurePulseFrictionTimer = 0;
@@ -2649,6 +2809,7 @@
 
         update(dt) {
           this.fluidTimer = Math.max(0, this.fluidTimer - dt);
+          this.blackholeFrictionTimer = Math.max(0, this.blackholeFrictionTimer - dt);
           this.adventureFrictionTimer = Math.max(0, this.adventureFrictionTimer - dt);
           this.adventurePulseFrictionTimer = Math.max(0, this.adventurePulseFrictionTimer - dt);
           this.previousX = this.x;
@@ -2659,6 +2820,8 @@
           const drag = Math.pow(Math.max(0, 1 - this.frictionAtPosition()), dt * 60);
           this.vx *= drag;
           this.vy *= drag;
+          const fallVx = this.vx;
+          const fallVy = this.vy;
           if (Math.hypot(this.vx, this.vy) < CONFIG.stopSpeed) {
             this.vx = 0;
             this.vy = 0;
@@ -2667,10 +2830,24 @@
           const bounds = state.adventure?.stage.fallBounds || TABLE;
           if (this.x < bounds.left || this.x > bounds.right ||
               this.y < bounds.top || this.y > bounds.bottom) {
+            const fallId = `stone-fall-${this.id}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+            const outwardX = this.x < bounds.left ? -1 : this.x > bounds.right ? 1 : 0;
+            const outwardY = this.y < bounds.top ? -1 : this.y > bounds.bottom ? 1 : 0;
+            const speed = Math.hypot(fallVx, fallVy);
+            const directionX = speed > 1 ? fallVx / speed : outwardX;
+            const directionY = speed > 1 ? fallVy / speed : outwardY;
+            const fallDirectionLength = Math.hypot(directionX, directionY) || 1;
+            const fallDx = directionX / fallDirectionLength;
+            const fallDy = directionY / fallDirectionLength;
+            const speedRatio = Math.max(0, Math.min(1, speed / CONFIG.maxLaunchSpeed));
+            const fadeDuration = .92 - speedRatio * .42;
+            const impactDelay = .12;
+            state.effects.push({ type: 'stone-fall', id: fallId, x: this.x, y: this.y,
+              owner: this.owner, vx: fallVx, vy: fallVy, fallDx, fallDy, speedRatio,
+              fadeDuration, impactDelay, age: 0, duration: fadeDuration + impactDelay });
             this.status = 'fallen';
             this.vx = 0;
             this.vy = 0;
-            playFileSound('unitDeath', { volume: .5 });
             settleFallenUnit(this);
           }
         }
@@ -2685,14 +2862,15 @@
           return state.currentMap.friction * multiplier * heroRule(this.owner, 'frictionScale', 1) *
             (this.openingFrictionMultiplier || 1) *
             (this.adventureFrictionTimer > 0 ? this.adventureFrictionMultiplier : 1) *
-            (this.adventurePulseFrictionTimer > 0 ? this.adventurePulseFrictionMultiplier : 1);
+            (this.adventurePulseFrictionTimer > 0 ? this.adventurePulseFrictionMultiplier : 1) *
+            (this.blackholeFrictionTimer > 0 ? .5 : 1);
         }
 
         get isOnTable() { return this.status !== 'fallen'; }
       }
 
       class BrickUnit {
-        constructor({ x, y, owner, barrier = false, expiresAtTurn = null }) {
+        constructor({ x, y, owner, barrier = false, expiresAtTurn = null, variant = 0 }) {
           this.entityKind = ENTITY_KIND.UNIT;
           this.unitKind = 'brick';
           this.id = `brick-${Date.now()}-${state.bricks.length}`;
@@ -2700,7 +2878,9 @@
           this.y = y;
           this.owner = owner;
           this.barrier = barrier;
+          this.variant = variant;
           this.expiresAtTurn = expiresAtTurn;
+          this.blackholeFrictionTimer = 0;
           this.width = 18;
           this.height = 64;
           this.frictionMultiplier = barrier ? 1 : 1.5;
@@ -2714,16 +2894,17 @@
         }
 
         frictionAtPosition() {
-          return state.currentMap.friction * this.frictionMultiplier;
+          return state.currentMap.friction * this.frictionMultiplier * (this.blackholeFrictionTimer > 0 ? .5 : 1);
         }
 
         update(dt) {
+          this.blackholeFrictionTimer = Math.max(0, this.blackholeFrictionTimer - dt);
           this.previousX = this.x;
           this.previousY = this.y;
           if (this.barrier) { this.vx = this.vy = 0; return; }
           this.x += this.vx * dt;
           this.y += this.vy * dt;
-          const drag = Math.pow(Math.max(0, 1 - state.currentMap.friction * this.frictionMultiplier), dt * 60);
+          const drag = Math.pow(Math.max(0, 1 - this.frictionAtPosition()), dt * 60);
           this.vx *= drag;
           this.vy *= drag;
           if (Math.hypot(this.vx, this.vy) < 5) this.vx = this.vy = 0;
@@ -3334,7 +3515,7 @@
           const bulletSpeed = CONFIG.maxLaunchSpeed * CONFIG.bulletSpeedMultiplier;
           state.bullets.push({
             entityKind: ENTITY_KIND.UNIT, unitKind: 'bullet', id: `bullet-${Date.now()}-${state.bullets.length}`,
-            owner: unit.owner, sourceUnitId: unit.id, x: unit.x, y: unit.y,
+            owner: unit.owner, sourceUnitId: unit.id, launcherUnitId: unit.id, x: unit.x, y: unit.y,
             vx: vx / speed * bulletSpeed, vy: vy / speed * bulletSpeed,
             radius: unit.radius * .25, mass: .12, outsideTime: 0
           });
@@ -3384,7 +3565,7 @@
         normal: { name: '뉴트론', fame: 35, portrait: null, description: '필드의 위치를 살피며 카드와 트리거를 조합합니다.', lanes: 18, offsets: [.86, .94, 1.02, 1.1], error: .012,
           meterTolerance: .018, cardChance: .95,
           cards: [...DEFAULT_DECK_IDS, 'data-barrier'] },
-        hard: { name: 'AAB', fame: 75, portrait: null, description: '여러 발사 경로를 비교하고 충돌, 카드, 함정을 적극적으로 활용합니다.', lanes: 24, offsets: [.84, .92, 1, 1.08, 1.16], error: .004,
+        hard: { name: 'AAB', fame: 75, portrait: 'World_illustration/AAB-humanoid-bust-v3.png', description: '여러 발사 경로를 비교하고 충돌, 카드, 함정을 적극적으로 활용합니다.', lanes: 24, offsets: [.84, .92, 1, 1.08, 1.16], error: .004,
           meterTolerance: .01, cardChance: 1,
           cards: ['hardening', 'guard', 'reposition', 'ammo', 'pulse', 'bluffing', 'brick', 'blackhole', 'escape', 'data-barrier'] }
       });
@@ -3449,6 +3630,7 @@
             radius: item.radius, status: item.status, fluidTimer: item.fluidTimer || 0,
             ability: item.ability ? JSON.parse(JSON.stringify(item.ability)) : null,
             pendingPulseTriggers: (item.pendingPulseTriggers || []).map(pulse => ({ ...pulse })),
+            blackholeFrictionTimer: item.blackholeFrictionTimer || 0,
             frictionMultiplier: item.frictionMultiplier,
             openingFrictionMultiplier: item.openingFrictionMultiplier,
             heroFriction: heroRule(item.owner, 'frictionScale', 1),
@@ -3458,7 +3640,8 @@
           bricks: state.bricks.map(brick => ({ x: brick.x, y: brick.y, vx: brick.vx, vy: brick.vy,
             owner: brick.owner, barrier: brick.barrier, expiresAtTurn: brick.expiresAtTurn, particleTimer: brick.particleTimer,
             width: brick.width, height: brick.height, mass: brick.mass,
-            restitution: brick.restitution, frictionMultiplier: brick.frictionMultiplier })),
+            restitution: brick.restitution, frictionMultiplier: brick.frictionMultiplier,
+            blackholeFrictionTimer: brick.blackholeFrictionTimer || 0 })),
           triggers: state.triggers.map(trigger => ({ x: trigger.x, y: trigger.y, radius: trigger.radius,
             type: trigger.type.id, range: trigger.type.range, impulse: trigger.type.impulse }))
         };
@@ -3968,11 +4151,19 @@
             if (relativeVelocity < 0) {
               const impulse = -(1 + CONFIG.restitution) * relativeVelocity / 2;
               if (a.owner !== b.owner) recordTutorialEvent('collision');
-              playUnitImpactSound(impulse);
-              a.vx -= impulse * nx;
-              a.vy -= impulse * ny;
-              b.vx += impulse * nx;
-              b.vy += impulse * ny;
+              playUnitImpactSound(impulse, [a, b]);
+              if (hasRepulsionField(a) || hasRepulsionField(b)) {
+                emitRepulsionCollisionWave((a.x + b.x) / 2, (a.y + b.y) / 2,
+                  hasRepulsionField(a) ? a.owner : b.owner);
+              }
+              const aResponse = hasRepulsionField(a) ? .5 : 1;
+              const bResponse = hasRepulsionField(b) ? .5 : 1;
+              const aImpact = hasRepulsionField(b) ? 1.5 : 1;
+              const bImpact = hasRepulsionField(a) ? 1.5 : 1;
+              a.vx -= impulse * nx * aResponse * aImpact;
+              a.vy -= impulse * ny * aResponse * aImpact;
+              b.vx += impulse * nx * bResponse * bImpact;
+              b.vy += impulse * ny * bResponse * bImpact;
               if (a.status === 'resting') a.status = 'sliding';
               if (b.status === 'resting') b.status = 'sliding';
               detonatePendingPulseTriggers(a);
@@ -4018,12 +4209,20 @@
             if (toward < 0) {
               const impulse = -(1 + brick.restitution) * toward / (1 + (brick.barrier ? 0 : 1 / brick.mass));
               if (state.adventure && brick.id) emitAdventureEvent({ type: 'object-collision', objectId: brick.id });
-              playUnitImpactSound(impulse);
-              unit.vx += impulse * nx;
-              unit.vy += impulse * ny;
+              playUnitImpactSound(impulse, [unit, brick]);
+              if (hasRepulsionField(unit) || hasRepulsionField(brick)) {
+                emitRepulsionCollisionWave((unit.x + brick.x) / 2, (unit.y + brick.y) / 2,
+                  hasRepulsionField(unit) ? unit.owner : brick.owner);
+              }
+              const unitResponse = hasRepulsionField(unit) ? .5 : 1;
+              const brickImpact = hasRepulsionField(brick) ? 1.5 : 1;
+              unit.vx += impulse * nx * unitResponse * brickImpact;
+              unit.vy += impulse * ny * unitResponse * brickImpact;
               if (!brick.barrier) {
-                brick.vx -= impulse * nx / brick.mass;
-                brick.vy -= impulse * ny / brick.mass;
+                const brickResponse = hasRepulsionField(brick) ? .5 : 1;
+                const unitImpact = hasRepulsionField(unit) ? 1.5 : 1;
+                brick.vx -= impulse * nx / brick.mass * brickResponse * unitImpact;
+                brick.vy -= impulse * ny / brick.mass * brickResponse * unitImpact;
               }
               detonatePendingPulseTriggers(unit);
             }
@@ -4053,11 +4252,15 @@
             const relative = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
             if (relative >= 0) continue;
             const impulse = -(1 + Math.min(a.restitution, b.restitution)) * relative / invTotal;
-            a.vx -= impulse * nx * invA;
-            a.vy -= impulse * ny * invA;
-            b.vx += impulse * nx * invB;
-            b.vy += impulse * ny * invB;
-            playUnitImpactSound(impulse);
+            const aResponse = hasRepulsionField(a) ? .5 : 1;
+            const bResponse = hasRepulsionField(b) ? .5 : 1;
+            const aImpact = hasRepulsionField(b) ? 1.5 : 1;
+            const bImpact = hasRepulsionField(a) ? 1.5 : 1;
+            a.vx -= impulse * nx * invA * aResponse * aImpact;
+            a.vy -= impulse * ny * invA * aResponse * aImpact;
+            b.vx += impulse * nx * invB * bResponse * bImpact;
+            b.vy += impulse * ny * invB * bResponse * bImpact;
+            playUnitImpactSound(impulse, [a, b]);
           }
         }
       }
@@ -4094,7 +4297,7 @@
             const toward = unit.vx * worldX + unit.vy * worldY;
             if (toward < 0) {
               emitAdventureEvent({ type: 'object-collision', objectId: prop.id });
-              playUnitImpactSound(-toward);
+              playUnitImpactSound(-toward, [unit]);
               unit.vx -= toward * 1.58 * worldX;
               unit.vy -= toward * 1.58 * worldY;
             }
@@ -4154,6 +4357,7 @@
         state.bricks.forEach(brick => brick.update(dt));
         state.units.forEach(unit => unit.update(dt));
         emitBarrierParticles(dt);
+        emitRepulsionParticles(dt);
         if (state.triggers.length) collectItemTriggers();
         resolveAdventureCollisions(dt);
         resolveCollisions();
@@ -4168,7 +4372,8 @@
         resolveGuardCollisions();
         updateAdventurePower();
         const objectsMoving = state.units.some(unit => unit.status === 'sliding') || state.bullets.length > 0 ||
-          state.bricks.some(brick => Math.hypot(brick.vx, brick.vy) > 5);
+          state.bricks.some(brick => Math.hypot(brick.vx, brick.vy) > 5) ||
+          state.effects.some(effect => effect.type === 'brick-drop');
         if (state.phase === 'reposition' &&
             (!state.repositionUnit || state.repositionUnit.status === 'fallen' || !state.units.includes(state.repositionUnit))) {
           const lostUnit = state.repositionUnit;
@@ -4190,7 +4395,8 @@
         if (state.phase === 'turn-ready' && objectsMoving) state.phase = 'sliding';
         if (state.phase === 'sliding') {
           const moving = state.units.some(unit => unit.status === 'sliding') || state.bullets.length > 0 ||
-            state.bricks.some(brick => Math.hypot(brick.vx, brick.vy) > 5);
+            state.bricks.some(brick => Math.hypot(brick.vx, brick.vy) > 5) ||
+            state.effects.some(effect => effect.type === 'brick-drop');
           if (!moving) state.phase = turns.currentUnit?.status === 'ready' ? 'aiming' : 'turn-ready';
         }
         for (const unit of state.units) {
@@ -4216,6 +4422,10 @@
         if (card.id === 'pulse') {
           const ability = ensureUnitAbility(unit);
           ability.pulse = true;
+        }
+        if (card.id === 'repulsion-field') {
+          if (unit.unitKind === 'brick') unit.repulsionField = true;
+          else ensureUnitAbility(unit).repulsionField = true;
         }
         if (card.id === 'bluffing') {
           ensureUnitAbility(unit).bluffingUntilTurn = turns.globalTurn + 1;
@@ -4267,10 +4477,13 @@
 
       function canUseCardOnUnit(card, owner, unit) {
         if (!card || !unit || unit.owner !== owner || unit.status === 'fallen' || owner !== turns.playerIndex ||
-            !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase) || ['brick', 'data-barrier'].includes(card.id)) return false;
+            !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase) ||
+            (['brick', 'data-barrier'].includes(card.id)) ||
+            (unit.unitKind === 'brick' && card.id !== 'repulsion-field')) return false;
         if (!isCardUnlocked(card, owner)) return false;
         if (unit.status === 'ready' && unit !== turns.currentUnit) return false;
         if (UNIT_EFFECTS[card.id] && getUnitEffectStacks(unit, card.id) >= UNIT_EFFECTS[card.id].maxStacks) return false;
+        if (card.id === 'repulsion-field' && hasRepulsionField(unit)) return false;
         if (card.id === 'pulse' && unit.ability?.pulse) return false;
         if (card.id === 'bluffing' && isCollisionPhased(unit)) return false;
         if (['reposition', 'ammo'].includes(card.id)) {
@@ -4307,15 +4520,44 @@
         if (currentStacks >= definition.maxStacks) return false;
         ability.stacks[effectId] = currentStacks + 1;
         ability[effectId] = true;
+        if (effectId === 'hardening') {
+          state.effects.push({ type: 'hardening-gather', x: unit.x, y: unit.y, radius: unit.radius,
+            stack: currentStacks + 1, age: 0, duration: .72 });
+        }
         return true;
       }
 
-      function findCardTarget(point, owner) {
-        return state.units
+      function emitHardeningShards(units, impulse) {
+        const x = units.reduce((sum, unit) => sum + unit.x, 0) / units.length;
+        const y = units.reduce((sum, unit) => sum + unit.y, 0) / units.length;
+        const count = Math.max(3, Math.min(14, 3 + Math.round(Math.abs(impulse) / 30)));
+        for (let i = 0; i < count; i += 1) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 30 + Math.min(170, Math.abs(impulse) * .38) + Math.random() * 35;
+          state.particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+            life: .42 + Math.random() * .22, size: 2 + Math.random() * 3, shape: 'shard',
+            angle, spin: (Math.random() - .5) * 12, color: ['#bfeaff', '#e5f7ff', '#91cbe8'][i % 3] });
+        }
+      }
+
+      function hasRepulsionField(unit) {
+        return unit?.unitKind === 'brick' ? unit.repulsionField === true : unit?.ability?.repulsionField === true;
+      }
+
+      function emitRepulsionCollisionWave(x, y, owner) {
+        state.effects.push({ type: 'repulsion-wave', x, y, owner, age: 0, duration: .28, shake: 2.4 });
+      }
+
+      function findCardTarget(point, owner, cardId = null) {
+        const targets = state.units
           .filter(unit => unit.owner === owner && unit.status !== 'fallen' &&
             (unit.status !== 'ready' || unit === turns.currentUnit))
-          .map(unit => ({ unit, distance: Math.hypot(point.x - unit.x, point.y - unit.y) }))
-          .filter(candidate => candidate.distance <= candidate.unit.radius + 14)
+          .map(unit => ({ unit, distance: Math.hypot(point.x - unit.x, point.y - unit.y), radius: unit.radius }));
+        if (cardId === 'repulsion-field') {
+          targets.push(...state.bricks.filter(brick => brick.owner === owner && !hasRepulsionField(brick))
+            .map(brick => ({ unit: brick, distance: Math.hypot(point.x - brick.x, point.y - brick.y), radius: Math.hypot(brick.width, brick.height) / 2 })));
+        }
+        return targets.filter(candidate => candidate.distance <= candidate.radius + 14)
           .sort((a, b) => a.distance - b.distance)[0]?.unit ?? null;
       }
 
@@ -4352,9 +4594,16 @@
         if (index < 0 || owner !== turns.playerIndex || !turns.currentUnit ||
             !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase) || !canPlaceBrick(point)) return false;
         const [card] = hand.splice(index, 1);
-        state.bricks.push(new BrickUnit({ ...point, owner, barrier: card.id === 'data-barrier',
-          expiresAtTurn: card.id === 'data-barrier' ? turns.globalTurn + 2 : null }));
-        emitGameFeedback(CARD_PRESENTATION[card.id]?.sound || 'drop', point, card.name, PLAYER[owner].color);
+        if (card.id === 'brick') {
+          const variant = chooseFalseWallVariant();
+          state.effects.push({ type: 'brick-drop', id: `brick-drop-${card.instanceId}-${Date.now()}`,
+            x: point.x, y: point.y, owner, variant, age: 0, duration: .92 });
+        } else {
+          state.bricks.push(new BrickUnit({ ...point, owner, barrier: true,
+            expiresAtTurn: turns.globalTurn + 2 }));
+        }
+        emitGameFeedback(card.id === 'brick' ? 'card' : (CARD_PRESENTATION[card.id]?.sound || 'drop'),
+          point, card.name, PLAYER[owner].color);
         recordTutorialEvent('card', card.id);
         renderHands();
         updateHud();
@@ -4430,7 +4679,7 @@
           drag.ghost.style.visibility = drag.point && canPlaceBrick(drag.point) ? 'hidden' : 'visible';
         } else {
           const card = state.hands[drag.owner].find(item => item.instanceId === drag.id);
-          const target = drag.point && findCardTarget(drag.point, drag.owner);
+          const target = drag.point && findCardTarget(drag.point, drag.owner, drag.type);
           drag.ghost.classList.toggle('valid-target', Boolean(target && canUseCardOnUnit(card, drag.owner, target)));
         }
       }
@@ -4454,7 +4703,7 @@
               else placeStructureCard(drag.id, drag.owner, point);
             }
           } else {
-            const unit = findCardTarget(point, drag.owner);
+            const unit = findCardTarget(point, drag.owner, drag.type);
             if (unit) {
               if (shouldForwardOnlineAction()) sendOnlineAction({ type: 'card', cardId: drag.id, unitId: unit.id });
               else useCard(drag.id, drag.owner, unit);
@@ -4510,7 +4759,7 @@
           state.effects.push({ type: 'item', x: structure.x, y: structure.y, age: 0, duration: .42,
             color: structure.barrier ? '#a5f3ec' : '#c5d2d0' });
         }
-        state.effects.push({ type: 'pulse', x: source.x, y: source.y, age: 0, duration: 0.48, radius: range });
+        state.effects.push({ type: 'pulse', x: source.x, y: source.y, age: 0, duration: 0.48, radius: range, shake: 5.5 });
         for (let i = 0; i < 28; i += 1) {
           const angle = Math.PI * 2 * i / 28;
           const speed = 130 + Math.random() * 260;
@@ -4548,13 +4797,15 @@
       function triggerBlackHole(source, range = BLACK_HOLE.range, playAudio = true) {
         if (playAudio) playSound('blackhole');
         source.fluidTimer = BLACK_HOLE.duration;
-        state.effects.push({ type: 'blackhole', x: source.x, y: source.y, age: 0, duration: BLACK_HOLE.duration, radius: range });
+        state.effects.push({ type: 'blackhole', x: source.x, y: source.y, age: 0,
+          duration: BLACK_HOLE.duration, radius: range, shake: 6.5 });
         for (const target of [...state.units, ...state.bricks]) {
           if (target === source || target.barrier || target.status === 'fallen' || target.status === 'ready') continue;
           const dx = source.x - target.x;
           const dy = source.y - target.y;
           const distance = Math.hypot(dx, dy);
           if (distance > range || distance < 0.001) continue;
+          target.blackholeFrictionTimer = BLACK_HOLE.duration;
           const friction = target.frictionAtPosition();
           const falloff = .72 + .28 * (1 - distance / range);
           const pull = BLACK_HOLE.impulse * falloff / (1 + friction * 18);
@@ -4576,7 +4827,45 @@
       }
 
       function updateEffects(dt) {
-        state.effects = state.effects.filter(effect => (effect.age += dt) < effect.duration);
+        const active = [];
+        for (const effect of state.effects) {
+          effect.age += dt;
+          if (effect.type === 'brick-drop' && effect.age >= effect.duration) {
+            if (onlineSession?.started && onlineSession.role === 'challenger') {
+              active.push(effect);
+              continue;
+            }
+            state.bricks.push(new BrickUnit({ x: effect.x, y: effect.y, owner: effect.owner, variant: effect.variant }));
+            const impact = { type: 'brick-impact', id: `${effect.id}-impact`, x: effect.x, y: effect.y,
+              age: 0, duration: .48, shake: 6, sound: 'drop' };
+            active.push(impact);
+            for (let i = 0; i < 22; i += 1) {
+              const angle = Math.PI * 2 * (i / 22) + (Math.random() - .5) * .3;
+              const speed = 32 + Math.random() * 112;
+              state.particles.push({
+                x: effect.x + Math.cos(angle) * 5, y: effect.y + Math.sin(angle) * 5,
+                vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 8 - Math.random() * 28,
+                life: .2 + Math.random() * .26, size: 2 + Math.random() * 3,
+                color: ['#727879', '#929899', '#b7b9b7'][i % 3]
+              });
+            }
+            if (state.particles.length > 240) state.particles.splice(0, state.particles.length - 240);
+            playSound('drop', 1.05);
+          } else if (effect.type === 'stone-fall' && effect.age >= effect.duration) {
+            if (onlineSession?.started && onlineSession.role === 'challenger') {
+              // The host snapshot owns the impact timing and audio in online matches.
+              active.push(effect);
+              continue;
+            }
+            const impact = { type: 'fall-impact', id: `${effect.id}-impact`, x: effect.x, y: effect.y,
+              age: 0, duration: .62, sound: 'fallBoom' };
+            active.push(impact);
+            playSound('fallBoom', 1.35);
+          } else if (effect.age < effect.duration) {
+            active.push(effect);
+          }
+        }
+        state.effects = active;
       }
 
       function emitGameFeedback(sound, target, label, color) {
@@ -4741,7 +5030,8 @@
           }
           if (trigger.type.id === 'blackhole') triggerBlackHole(unit, trigger.type.range);
           if (trigger.type.id === 'pulse') unit.pendingPulseTriggers.push({ remaining: .5, range: trigger.type.range, impulse: trigger.type.impulse });
-          if (UNIT_EFFECTS[trigger.type.id] && applyUnitEffectStack(unit, trigger.type.id)) playSound('card');
+          if (UNIT_EFFECTS[trigger.type.id] && applyUnitEffectStack(unit, trigger.type.id))
+            playSound(trigger.type.id === 'hardening' ? 'hardening' : 'card');
           state.effects.push({ type: 'item', x: trigger.x, y: trigger.y, age: 0, duration: .45, color: trigger.type.color });
         }
       }
@@ -4769,16 +5059,45 @@
       function updateBullets(dt) {
         if (!state.bullets.length) return;
         const walls = state.currentMap.walls ? wallSegments() : [];
+        const reflectBulletFrom = (bullet, target, normalX, normalY, surfaceX, surfaceY) => {
+          const normalLength = Math.hypot(normalX, normalY) || 1;
+          const nx = normalX / normalLength;
+          const ny = normalY / normalLength;
+          const incomingNormalSpeed = bullet.vx * nx + bullet.vy * ny;
+          const closingSpeed = Math.max(0, -((bullet.vx - target.vx) * nx + (bullet.vy - target.vy) * ny));
+          // Reflect around the actual contact-surface normal. This makes a
+          // glancing impact leave along the matching opposite angle.
+          bullet.vx = (bullet.vx - 2 * incomingNormalSpeed * nx) * .5;
+          bullet.vy = (bullet.vy - 2 * incomingNormalSpeed * ny) * .5;
+          bullet.x = surfaceX + nx * (bullet.radius + 1);
+          bullet.y = surfaceY + ny * (bullet.radius + 1);
+          bullet.sourceUnitId = target.id;
+          bullet.outsideTime = 0;
+          if (closingSpeed > 0) {
+            const impulse = 1.72 * closingSpeed / (1 + 1 / bullet.mass);
+            const response = hasRepulsionField(target) ? .5 : 1;
+            target.vx -= nx * impulse * response;
+            target.vy -= ny * impulse * response;
+            if (target.status === 'resting' && Math.hypot(target.vx, target.vy) > CONFIG.stopSpeed) target.status = 'sliding';
+            if (target.unitKind !== 'brick') {
+              detonatePendingPulseTriggers(target);
+              detonateChargedPulse(target);
+            }
+              playUnitImpactSound(impulse, [target]);
+          }
+          state.effects.push({ type: 'item', x: target.x, y: target.y, age: 0, duration: .48, color: '#baff72' });
+        };
         const removeBullet = (bullet, index) => {
           state.bullets.splice(index, 1);
-          const source = state.units.find(unit => unit.id === bullet.sourceUnitId);
+          const source = state.units.find(unit => unit.id === (bullet.launcherUnitId || bullet.sourceUnitId));
           if (source?.activeSpecial === 'ammo') source.activeSpecial = null;
         };
         for (let index = state.bullets.length - 1; index >= 0; index -= 1) {
           const bullet = state.bullets[index];
           let consumed = false;
+          let reflected = false;
           const steps = Math.max(1, Math.ceil(Math.hypot(bullet.vx, bullet.vy) * dt / Math.max(4, bullet.radius)));
-          for (let step = 0; step < steps && !consumed; step += 1) {
+          for (let step = 0; step < steps && !consumed && !reflected; step += 1) {
             const stepDt = dt / steps;
             bullet.x += bullet.vx * stepDt;
             bullet.y += bullet.vy * stepDt;
@@ -4830,12 +5149,34 @@
               const closestX = Math.max(brick.x - brick.width / 2, Math.min(bullet.x, brick.x + brick.width / 2));
               const closestY = Math.max(brick.y - brick.height / 2, Math.min(bullet.y, brick.y + brick.height / 2));
               if (Math.hypot(bullet.x - closestX, bullet.y - closestY) >= bullet.radius) continue;
+              if (hasRepulsionField(brick)) {
+                let normalX = bullet.x - closestX;
+                let normalY = bullet.y - closestY;
+                if (Math.hypot(normalX, normalY) < .001) {
+                  const edges = [
+                    { distance: Math.abs(bullet.x - (brick.x - brick.width / 2)), x: -1, y: 0, sx: brick.x - brick.width / 2, sy: bullet.y },
+                    { distance: Math.abs(brick.x + brick.width / 2 - bullet.x), x: 1, y: 0, sx: brick.x + brick.width / 2, sy: bullet.y },
+                    { distance: Math.abs(bullet.y - (brick.y - brick.height / 2)), x: 0, y: -1, sx: bullet.x, sy: brick.y - brick.height / 2 },
+                    { distance: Math.abs(brick.y + brick.height / 2 - bullet.y), x: 0, y: 1, sx: bullet.x, sy: brick.y + brick.height / 2 }
+                  ].sort((a, b) => a.distance - b.distance);
+                  const edge = edges[0];
+                  normalX = edge.x; normalY = edge.y;
+                  reflectBulletFrom(bullet, brick, normalX, normalY, edge.sx, edge.sy);
+                } else {
+                  const length = Math.hypot(normalX, normalY);
+                  normalX /= length; normalY /= length;
+                  reflectBulletFrom(bullet, brick, normalX, normalY, closestX, closestY);
+                }
+                reflected = true;
+                break;
+              }
               state.bricks.splice(brickIndex, 1);
               state.effects.push({ type: 'item', x: brick.x, y: brick.y, age: 0, duration: .42, color: '#c5d2d0' });
               removeBullet(bullet, index);
               consumed = true;
               break;
             }
+            if (reflected) break;
             if (consumed) break;
             for (const target of state.units) {
               if (target.id === bullet.sourceUnitId || target.status === 'fallen' || target.fluidTimer > 0 || isCollisionPhased(target)) continue;
@@ -4845,6 +5186,15 @@
               if (distance >= bullet.radius + target.radius) continue;
               const nx = distance > .001 ? dx / distance : 1;
               const ny = distance > .001 ? dy / distance : 0;
+              if (hasRepulsionField(target)) {
+                const normalX = distance > .001 ? (bullet.x - target.x) / distance : -nx;
+                const normalY = distance > .001 ? (bullet.y - target.y) / distance : -ny;
+                const surfaceX = target.x + normalX * target.radius;
+                const surfaceY = target.y + normalY * target.radius;
+                reflectBulletFrom(bullet, target, normalX, normalY, surfaceX, surfaceY);
+                reflected = true;
+                break;
+              }
               const relative = (target.vx - bullet.vx) * nx + (target.vy - bullet.vy) * ny;
               const pulseOnly = target.ability?.pulse;
               if (pulseOnly) detonateChargedPulse(target);
@@ -4889,7 +5239,8 @@
               target.y += ny * overlap;
               const toward = (target.vx - satellite.vx) * nx + (target.vy - satellite.vy) * ny;
               if (toward < 0) {
-                playSound('guardHit', Math.min(1.4, -toward / 250));
+                if (hasRepulsionField(target)) playElevenLabsSound('repulsionCollision', { volume: 1.25 });
+                else playSound('guardHit', Math.min(1.4, -toward / 250));
                 target.vx -= (1 + CONFIG.restitution) * toward * nx;
                 target.vy -= (1 + CONFIG.restitution) * toward * ny;
               }
@@ -4909,7 +5260,7 @@
           };
         };
         const width = 108;
-        const height = 14;
+        const height = 18.4;
         const centerX = (TABLE.left + TABLE.right) / 2;
         const leftTrackMax = centerX - 142 - width;
         const rightTrackMin = centerX + 142;
@@ -4918,17 +5269,17 @@
         const leftBottom = track(TABLE.left + 26, leftTrackMax - 28, Math.PI * .3);
         const rightBottom = track(TABLE.right - 26 - width, rightTrackMin + 28, Math.PI * 1.3);
         const centerTrack = track(TABLE.top + 132, TABLE.bottom - 132 - width, Math.PI / 2, 0.58);
-        const structure = (x, y, w, h, vx = 0, vy = 0) => ({
+        const structure = (x, y, w, h, obstacleIndex, vx = 0, vy = 0) => ({
           entityKind: ENTITY_KIND.STRUCTURE, pushable: false,
-          x, y, width: w, height: h, vx, vy,
+          x, y, width: w, height: h, obstacleIndex, vx, vy,
           x1: x, y1: y, x2: x + w, y2: y + h
         });
         return [
-          structure(leftTop.value, TABLE.top + 32, width, height, leftTop.velocity),
-          structure(rightTop.value, TABLE.top + 32, width, height, rightTop.velocity),
-          structure(leftBottom.value, TABLE.bottom - 32 - height, width, height, leftBottom.velocity),
-          structure(rightBottom.value, TABLE.bottom - 32 - height, width, height, rightBottom.velocity),
-          structure(centerX - height / 2, centerTrack.value, height, width, 0, centerTrack.velocity)
+          structure(leftTop.value, TABLE.top + 32, width, height, 0, leftTop.velocity),
+          structure(rightTop.value, TABLE.top + 32, width, height, 1, rightTop.velocity),
+          structure(leftBottom.value, TABLE.bottom - 32 - height, width, height, 2, leftBottom.velocity),
+          structure(rightBottom.value, TABLE.bottom - 32 - height, width, height, 3, rightBottom.velocity),
+          structure(centerX - height / 2, centerTrack.value, height, width, 4, 0, centerTrack.velocity)
         ];
       }
 
@@ -4955,9 +5306,11 @@
             unit.y += ny * (minimum - distance);
             const relativeNormal = (unit.vx - wall.vx) * nx + (unit.vy - wall.vy) * ny;
             if (relativeNormal < 0) {
-              playSound('wallHit', Math.min(1.4, Math.abs(relativeNormal) / 550));
-              unit.vx -= (1 + CONFIG.restitution) * relativeNormal * nx;
-              unit.vy -= (1 + CONFIG.restitution) * relativeNormal * ny;
+              if (hasRepulsionField(unit)) playElevenLabsSound('repulsionCollision', { volume: 1.25 });
+              else playSound('wallHit', Math.min(1.4, Math.abs(relativeNormal) / 550));
+              const response = hasRepulsionField(unit) ? .5 : 1;
+              unit.vx -= (1 + CONFIG.restitution) * relativeNormal * nx * response;
+              unit.vy -= (1 + CONFIG.restitution) * relativeNormal * ny * response;
             }
             if (unit.status === 'resting' && Math.hypot(unit.vx, unit.vy) > CONFIG.stopSpeed) unit.status = 'sliding';
           }
@@ -4973,9 +5326,11 @@
             brick.y += ny * (horizontal ? 0 : overlapY);
             const relativeNormal = (brick.vx - wall.vx) * nx + (brick.vy - wall.vy) * ny;
             if (relativeNormal < 0) {
-              playSound('wallHit', Math.min(1.4, Math.abs(relativeNormal) / 550));
-              brick.vx -= (1 + brick.restitution) * relativeNormal * nx;
-              brick.vy -= (1 + brick.restitution) * relativeNormal * ny;
+              if (hasRepulsionField(brick)) playElevenLabsSound('repulsionCollision', { volume: 1.25 });
+              else playSound('wallHit', Math.min(1.4, Math.abs(relativeNormal) / 550));
+              const response = hasRepulsionField(brick) ? .5 : 1;
+              brick.vx -= (1 + brick.restitution) * relativeNormal * nx * response;
+              brick.vy -= (1 + brick.restitution) * relativeNormal * ny * response;
             }
           }
         }
@@ -5003,32 +5358,114 @@
       }
 
       function renderMapOptions() {
-        mapOptions.replaceChildren(...MAPS.map(map => {
-          const option = document.createElement('button');
-          option.type = 'button';
-          option.className = 'map-option';
-          option.disabled = Boolean(onlineSession?.localMapConfirmed);
-          option.setAttribute('role', 'radio');
-          option.setAttribute('aria-checked', String(map.id === state.selectedMap.id));
-          const swatch = document.createElement('span');
-          swatch.className = 'map-swatch';
-          swatch.style.backgroundColor = map.color;
-          const copy = document.createElement('span');
-          const title = document.createElement('strong');
-          title.textContent = map.name;
-          const description = document.createElement('span');
-          description.textContent = map.description;
-          copy.append(title, description);
-          option.append(swatch, copy);
-          option.addEventListener('click', () => {
-            state.selectedMap = map;
-            mapOptions.querySelectorAll('[role="radio"]').forEach(item => {
-              item.setAttribute('aria-checked', String(item.dataset.mapId === map.id));
-            });
+        const selectedIndex = Math.max(0, MAPS.findIndex(map => map.id === state.selectedMap?.id));
+        const map = MAPS[selectedIndex];
+        const locked = Boolean(onlineSession && onlineMapChoiceLocked());
+        const previous = document.createElement('button');
+        previous.type = 'button';
+        previous.className = 'map-carousel-arrow';
+        previous.textContent = '‹';
+        previous.setAttribute('aria-label', '이전 맵');
+        previous.disabled = locked || mapPreviewTransitioning || selectedIndex === 0;
+        previous.addEventListener('click', () => selectMapPreview(selectedIndex - 1));
+        const preview = document.createElement('div');
+        preview.className = `map-preview${mapPreviewEntryDirection ? ` enter-from-${mapPreviewEntryDirection}` : ''}`;
+        mapPreviewEntryDirection = '';
+        const image = document.createElement('img');
+        image.className = 'map-preview-base';
+        image.src = MAP_PREVIEW_IMAGES[map.id] || MAP_PREVIEW_IMAGES.classic;
+        image.alt = `${map.name} 미리보기`;
+        preview.append(image);
+        const layer = document.createElement('div');
+        layer.className = 'map-preview-layer';
+        if (map.items) {
+          ['pulse', 'blackhole', 'guard', 'hardening', 'pulse'].forEach((type, index) => {
+            const token = document.createElement('img');
+            token.className = 'map-preview-item';
+            token.src = TRIGGER_ART[type];
+            token.alt = '';
+            token.draggable = false;
+            token.style.left = `${18 + (index % 3) * 28}%`;
+            token.style.top = `${25 + Math.floor(index / 3) * 34 + (index % 2) * 8}%`;
+            layer.append(token);
           });
-          option.dataset.mapId = map.id;
-          return option;
-        }));
+        } else if (map.walls) {
+          const railSrc = 'in-game-screen/game-objects/moving-walls/embedded-guide-rail.png';
+          const wallSrc = 'in-game-screen/game-objects/moving-walls/framed-moving-barrier-v2.png';
+          [[4, 17, 32], [64, 17, 32], [4, 80, 32], [64, 80, 32]].forEach(([left, top, width]) => {
+            const rail = document.createElement('img');
+            rail.className = 'map-preview-rail horizontal';
+            rail.src = railSrc;
+            rail.alt = '';
+            rail.style.left = `${left}%`;
+            rail.style.top = `${top}%`;
+            rail.style.width = `${width}%`;
+            layer.append(rail);
+          });
+          const centerRail = document.createElement('img');
+          centerRail.className = 'map-preview-rail vertical';
+          centerRail.src = railSrc;
+          centerRail.alt = '';
+          centerRail.style.left = '35.5%';
+          centerRail.style.top = '48.6%';
+          layer.append(centerRail);
+          [
+            ['top', 9, 19], ['top', 64, 19], ['bottom', 11, 81], ['bottom', 66, 81], ['side', 42.5, 39]
+          ].forEach(([track, left, top]) => {
+            const wall = document.createElement('img');
+            wall.className = `map-preview-wall ${track}`;
+            wall.src = wallSrc;
+            wall.alt = '';
+            wall.style.left = `${left}%`;
+            wall.style.top = `${top}%`;
+            layer.append(wall);
+          });
+        }
+        preview.append(layer);
+        const next = document.createElement('button');
+        next.type = 'button';
+        next.className = 'map-carousel-arrow';
+        next.textContent = '›';
+        next.setAttribute('aria-label', '다음 맵');
+        next.disabled = locked || mapPreviewTransitioning || selectedIndex === MAPS.length - 1;
+        next.addEventListener('click', () => selectMapPreview(selectedIndex + 1));
+        mapOptions.replaceChildren(previous, preview, next);
+        mapPreviewTitle.textContent = map.name;
+        mapPreviewDescription.textContent = map.description;
+      }
+
+      function selectMapPreview(index) {
+        if (onlineSession && onlineMapChoiceLocked()) return;
+        if (mapPreviewTransitioning) return;
+        const map = MAPS[index];
+        if (!map) return;
+        const currentPreview = mapOptions.querySelector('.map-preview');
+        if (!currentPreview) {
+          state.selectedMap = map;
+          renderMapOptions();
+          return;
+        }
+        mapPreviewTransitioning = true;
+        const direction = index > MAPS.findIndex(item => item.id === state.selectedMap?.id) ? 'left' : 'right';
+        currentPreview.classList.add(`is-sliding-${direction}`);
+        window.setTimeout(() => {
+          state.selectedMap = map;
+          mapPreviewEntryDirection = direction === 'left' ? 'right' : 'left';
+          renderMapOptions();
+          window.setTimeout(() => { mapPreviewTransitioning = false; renderMapOptions(); }, 350);
+        }, 190);
+      }
+
+      function onlineOpponentMapSelected(session = onlineSession) {
+        if (!session?.room) return false;
+        const opponent = session.playerIndex === 0 ? session.room.challenger : session.room.host;
+        return Boolean(opponent?.mapId);
+      }
+
+      function onlineMapChoiceLocked(session = onlineSession) {
+        if (!session?.room) return false;
+        const own = session.playerIndex === 0 ? session.room.host : session.room.challenger;
+        return Boolean(own?.mapId && onlineOpponentMapSelected(session));
       }
 
       async function postOnlineRequest(path, payload) {
@@ -5289,6 +5726,11 @@
         }
         adventureBestMarks.set(key, count);
         return count;
+      }
+
+      function hasClearedAdventureStage(stageNumber) {
+        const stageId = `stage-${String(stageNumber).padStart(2, '0')}`;
+        return bestAdventureMarks(stageId) > 0;
       }
 
       function rememberAdventureMarks(stageId, count) {
@@ -5694,10 +6136,13 @@
         if (room.status === 'playing') onlineSession.started = true;
         if (room.status === 'complete') onlineSession.matchOver = true;
         const ownPlayer = onlineSession.playerIndex === 0 ? room.host : room.challenger;
-        if (ownPlayer?.mapId) onlineSession.localMapConfirmed = true;
-        confirmMapButton.disabled = Boolean(onlineSession.localMapConfirmed);
-        mapOptions.querySelectorAll('.map-option').forEach(option => { option.disabled = Boolean(onlineSession.localMapConfirmed); });
-        confirmMapButton.textContent = onlineSession.localMapConfirmed ? '맵 확정 완료' : '이 맵 확정';
+        onlineSession.localMapConfirmed = Boolean(ownPlayer?.mapId);
+        const choiceLocked = onlineMapChoiceLocked();
+        confirmMapButton.disabled = choiceLocked;
+        confirmMapButton.textContent = choiceLocked
+          ? '맵 선택 완료'
+          : (onlineSession.localMapConfirmed ? '맵 변경 확정' : '이 맵 확정');
+        renderMapOptions();
         PLAYER[0].name = room.host.name || '방장';
         PLAYER[1].name = room.challenger?.name || '도전자 대기 중';
         state.playerLevels = [room.host.level || 1, room.challenger?.level || 1];
@@ -5716,7 +6161,9 @@
           return status;
         }));
         if (room.status === 'waiting') onlineStatus.textContent = '상대가 방 코드로 참가할 때까지 기다리는 중입니다.';
-        else if (room.status === 'choosing') onlineStatus.textContent = onlineSession.localMapConfirmed ? '맵을 확정했습니다. 상대의 선택을 기다리는 중입니다.' : '맵을 선택하고 확정하세요.';
+        else if (room.status === 'choosing') onlineStatus.textContent = onlineSession.localMapConfirmed
+          ? '상대가 맵을 고르기 전까지 선택을 변경할 수 있습니다.'
+          : '맵을 선택하고 확정하세요.';
         else if (room.status === 'ready') onlineStatus.textContent = '양쪽 맵이 확정되었습니다. 대전을 준비합니다.';
         else if (room.status === 'playing') onlineStatus.textContent = '3전 2선승 온라인 대전 진행 중';
         else if (room.status === 'complete') onlineStatus.textContent = '대전이 종료되었습니다.';
@@ -6193,7 +6640,7 @@
       }
 
       async function confirmOnlineMap() {
-        if (!onlineSession || onlineSession.localMapConfirmed) return;
+        if (!onlineSession || onlineMapChoiceLocked()) return;
         startGameMusic();
         const session = onlineSession;
         confirmMapButton.disabled = true;
@@ -6368,6 +6815,20 @@
           playSound(effect.sound);
         }
         while (onlineSession.playedFeedbackIds.size > 256) onlineSession.playedFeedbackIds.delete(onlineSession.playedFeedbackIds.values().next().value);
+        onlineSession.playedFallImpactIds ||= new Set();
+        for (const effect of state.effects) {
+          if (effect.type !== 'fall-impact' || onlineSession.playedFallImpactIds.has(effect.id)) continue;
+          onlineSession.playedFallImpactIds.add(effect.id);
+          playSound(effect.sound || 'fallBoom', 1.35);
+        }
+        while (onlineSession.playedFallImpactIds.size > 128) onlineSession.playedFallImpactIds.delete(onlineSession.playedFallImpactIds.values().next().value);
+        onlineSession.playedBrickImpactIds ||= new Set();
+        for (const effect of state.effects) {
+          if (effect.type !== 'brick-impact' || onlineSession.playedBrickImpactIds.has(effect.id)) continue;
+          onlineSession.playedBrickImpactIds.add(effect.id);
+          playSound(effect.sound || 'drop', 1.05);
+        }
+        while (onlineSession.playedBrickImpactIds.size > 128) onlineSession.playedBrickImpactIds.delete(onlineSession.playedBrickImpactIds.values().next().value);
         state.phase = preserveTriggerSelection ? 'trigger-select' : snapshot.phase;
         if (preserveTriggerSelection) state.phaseBeforeTriggerSelect = snapshot.phase;
         // A remote aiming indicator is display-only; only a local pointer owns local input.
@@ -6473,7 +6934,7 @@
           state.aimPoint = action.aimPoint;
           launchCurrentUnit();
         } else if (action.type === 'card') {
-          const unit = state.units.find(item => item.id === action.unitId);
+          const unit = state.units.find(item => item.id === action.unitId) || state.bricks.find(item => item.id === action.unitId);
           if (unit) useCard(action.cardId, 1, unit);
         } else if (action.type === 'end-turn') {
           endTurn();
@@ -6776,7 +7237,9 @@
           return button;
         }));
         deckPool.replaceChildren(...cardDefinitions()
-          .filter(card => (card.unlockLevel || 1) <= (guestProfile?.level || 1) && (!card.unlockTutorial || guestProfile?.tutorialCompleted))
+          .filter(card => (SecondChanceCardUnlocks.isTemporarilyGranted(card.id) ||
+            (card.unlockAdventureStage ? hasClearedAdventureStage(card.unlockAdventureStage) : (card.unlockLevel || 1) <= (guestProfile?.level || 1))) &&
+            (!card.unlockTutorial || guestProfile?.tutorialCompleted))
           .map(card => {
             const count = counts.get(card.id) || 0;
             const unavailable = draft.length >= 8 || count >= 2 || (count === 1 && doubled);
@@ -6812,7 +7275,7 @@
 
       function addDeckCard(id) {
         const card = deckCard(id);
-        if (!card || (card.unlockLevel || 1) > (guestProfile?.level || 1) || (card.unlockTutorial && !guestProfile?.tutorialCompleted)) return;
+        if (!card || !isCardUnlocked(card, 0) || (card.unlockTutorial && !guestProfile?.tutorialCompleted)) return;
         const draft = deckDrafts[activeDeckPreset] ||= [];
         const count = draft.filter(item => item === id).length;
         if (draft.length >= 8 || count >= 2 || (count && draft.some(item => draft.filter(other => other === item).length > 1))) return;
@@ -7234,11 +7697,40 @@
         if (state.particles.length > 240) state.particles.splice(0, state.particles.length - 240);
       }
 
+      function emitRepulsionParticles(dt) {
+        const emit = (target, radius) => {
+          target.repulsionParticleTimer = (target.repulsionParticleTimer || 0) + dt;
+          while (target.repulsionParticleTimer >= .22) {
+            target.repulsionParticleTimer -= .22;
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 10 + Math.random() * 18;
+            const distance = radius + 4 + Math.random() * 5;
+            state.particles.push({
+              x: target.x + Math.cos(angle) * distance,
+              y: target.y + Math.sin(angle) * distance,
+              vx: Math.cos(angle) * speed + (Math.random() - .5) * 8,
+              vy: Math.sin(angle) * speed + (Math.random() - .5) * 8,
+              life: .24 + Math.random() * .2,
+              size: 1 + Math.random() * 1.5,
+              color: Math.random() < .25 ? '#e4ffbf' : '#baff72',
+              repulsionParticle: true
+            });
+          }
+        };
+        for (const unit of state.units) {
+          if (unit.status !== 'fallen' && hasRepulsionField(unit)) emit(unit, unit.radius);
+        }
+        for (const brick of state.bricks) {
+          if (hasRepulsionField(brick)) emit(brick, Math.hypot(brick.width, brick.height) / 2);
+        }
+        if (state.particles.length > 240) state.particles.splice(0, state.particles.length - 240);
+      }
+
       function updateParticles(dt) {
         state.particles = state.particles.filter(particle => {
           particle.x += particle.vx * dt;
           particle.y += particle.vy * dt;
-          if (!particle.barrierParticle) particle.vy += 720 * dt;
+          if (!particle.barrierParticle && !particle.repulsionParticle) particle.vy += 720 * dt;
           particle.life -= dt;
           return particle.life > 0;
         });
@@ -7249,6 +7741,7 @@
         ctx.fillStyle = '#101416';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         drawMapSurface();
+        if (state.currentMap.walls) drawMovingWallTracks();
         if (tutorialShowsPlacementLimit()) {
           const limitX = brickDropLimitX();
           ctx.save();
@@ -7268,27 +7761,81 @@
         }
         if (state.currentMap.walls) {
           ctx.fillStyle = '#e3bd62';
-          wallSegments().forEach(wall => {
-            if (state.tutorial?.lesson?.id === 'walls') {
-              ctx.save();
-              ctx.shadowColor = '#fff1a8';
-              ctx.shadowBlur = 7 + 5 * (1 + Math.sin(performance.now() / 420));
-            }
-            ctx.fillRect(wall.x, wall.y, wall.width, wall.height);
-            if (state.tutorial?.lesson?.id === 'walls') ctx.restore();
-            ctx.strokeStyle = 'rgba(35, 27, 12, .55)';
-            ctx.lineWidth = 2;
-            if (wall.width > wall.height) {
-              for (let x = wall.x + 8; x < wall.x + wall.width; x += 24) {
-                ctx.beginPath(); ctx.moveTo(x, wall.y + 2); ctx.lineTo(x + 12, wall.y + wall.height - 2); ctx.stroke();
-              }
-            } else {
-              for (let y = wall.y + 8; y < wall.y + wall.height; y += 24) {
-                ctx.beginPath(); ctx.moveTo(wall.x + 2, y); ctx.lineTo(wall.x + wall.width - 2, y + 12); ctx.stroke();
-              }
-            }
-          });
+          wallSegments().forEach(drawMovingWall);
         }
+      }
+
+      function drawMovingWall(wall) {
+        const image = movingWallImages[wall.obstacleIndex % movingWallImages.length];
+        // A soft cast shadow separates the solid carriage from the inset floor rail.
+        ctx.save();
+        ctx.fillStyle = 'rgba(5, 8, 9, .9)';
+        ctx.shadowColor = 'rgba(0, 0, 0, .78)';
+        ctx.shadowBlur = 6;
+        ctx.shadowOffsetY = 3;
+        ctx.fillRect(wall.x + 2, wall.y + 1, Math.max(1, wall.width - 4), Math.max(1, wall.height - 2));
+        ctx.restore();
+        ctx.save();
+        // Keep the transparent edge and full silhouette of the art; collision remains
+        // the fitted rectangle while drawing is no longer source-cropped or clipped.
+        if (image?.complete && image.naturalWidth > 0) {
+          ctx.save();
+          ctx.translate(wall.x + wall.width / 2, wall.y + wall.height / 2);
+          const vertical = wall.height > wall.width;
+          if (vertical) ctx.rotate(Math.PI / 2);
+          const drawWidth = vertical ? wall.height : wall.width;
+          const drawHeight = vertical ? wall.width : wall.height;
+          ctx.filter = 'brightness(1.16) contrast(1.1)';
+          ctx.drawImage(image, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+          ctx.filter = 'none';
+          ctx.restore();
+        } else {
+          ctx.fillStyle = '#71644c';
+          ctx.fillRect(wall.x, wall.y, wall.width, wall.height);
+        }
+        if (state.tutorial?.lesson?.id === 'walls') {
+          const pulse = .5 + .5 * Math.sin(state.mapTime * 2.1 + wall.obstacleIndex * 1.25);
+          ctx.strokeStyle = `rgba(255, 241, 168, ${.65 + pulse * .3})`;
+          ctx.lineWidth = 1.5;
+          ctx.strokeRect(wall.x + 1, wall.y + 1, Math.max(0, wall.width - 2), Math.max(0, wall.height - 2));
+        }
+        ctx.restore();
+      }
+
+      function drawMovingWallTracks() {
+        const image = movingWallTrackImage;
+        if (!image.complete || !image.naturalWidth || !image.naturalHeight) return;
+        const centerX = (TABLE.left + TABLE.right) / 2;
+        const width = 108, height = 18.4;
+        const leftTrackMax = centerX - 142 - width;
+        const rightTrackMin = centerX + 142;
+        const paths = [
+          { x1: TABLE.left + 14, x2: leftTrackMax + width, y: TABLE.top + 32 + height / 2 },
+          { x1: rightTrackMin, x2: TABLE.right - 14, y: TABLE.top + 32 + height / 2 },
+          { x1: TABLE.left + 26, x2: leftTrackMax - 28 + width, y: TABLE.bottom - 32 - height / 2 },
+          { x1: rightTrackMin + 28, x2: TABLE.right - 26, y: TABLE.bottom - 32 - height / 2 },
+          { vertical: true, x: centerX, y1: TABLE.top + 132, y2: TABLE.bottom - 132 }
+        ];
+        const sourceY = image.naturalHeight * .32;
+        const sourceHeight = image.naturalHeight * .4;
+        ctx.save();
+        // Fixed rails stay recessed and visually quieter than the moving carriage.
+        ctx.globalAlpha = .58;
+        for (const path of paths) {
+          if (path.vertical) {
+            const length = path.y2 - path.y1;
+            ctx.save();
+            ctx.translate(path.x, (path.y1 + path.y2) / 2);
+            ctx.rotate(Math.PI / 2);
+            ctx.drawImage(image, 0, sourceY, image.naturalWidth, sourceHeight,
+              -length / 2, -15, length, 30);
+            ctx.restore();
+          } else {
+            ctx.drawImage(image, 0, sourceY, image.naturalWidth, sourceHeight,
+              path.x1, path.y - 15, path.x2 - path.x1, 30);
+          }
+        }
+        ctx.restore();
       }
 
       function drawMapSurface() {
@@ -7386,13 +7933,54 @@
         }
         const hardeningStacks = getUnitEffectStacks(unit, 'hardening');
         for (let stack = 0; stack < hardeningStacks; stack += 1) {
+          const time = performance.now();
+          const breathe = .5 + .5 * Math.sin(time / 260 + stack * .7);
+          const turn = time / (5200 + stack * 800) * (stack % 2 ? -1 : 1) + stack * .23;
+          ctx.save(); ctx.rotate(turn);
           ctx.beginPath();
-          ctx.arc(0, 0, unit.radius * (.88 - stack * .12), 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(145, 155, 160, ${.28 + stack * .12})`;
+          for (let i = 0; i < 8; i += 1) {
+            const a = i * Math.PI / 4;
+            const r = unit.radius * ((i % 2 ? .82 : 1.12) + (i % 2 ? 0 : breathe * .035));
+            const px = Math.cos(a) * r, py = Math.sin(a) * r;
+            if (!i) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+          }
+          ctx.closePath();
+          ctx.fillStyle = `rgba(165, 220, 246, ${.10 + stack * .07 + breathe * .08})`;
           ctx.fill();
-          ctx.strokeStyle = `rgba(235, 241, 243, ${.72 + Math.min(.2, stack * .1)})`;
-          ctx.lineWidth = 2 + stack;
-          ctx.stroke();
+          ctx.strokeStyle = `rgba(206, 239, 255, ${.48 + breathe * .32})`;
+          ctx.lineWidth = 1.4 + stack * .35; ctx.shadowColor = '#a9e3ff'; ctx.shadowBlur = 5 + breathe * 5; ctx.stroke();
+          ctx.restore();
+
+          // Loose inner facets drift, turn and briefly split away before resealing.
+          ctx.save();
+          ctx.beginPath(); ctx.arc(0, 0, unit.radius * .78, 0, Math.PI * 2); ctx.clip();
+          const facetCount = Math.min(7, 3 + stack);
+          for (let facet = 0; facet < facetCount; facet += 1) {
+            const phase = time / (510 + facet * 97 + stack * 70) + facet * 2.399 + stack * .8;
+            const orbit = unit.radius * (.19 + .13 * (.5 + .5 * Math.sin(phase * .73)));
+            const a = phase + Math.sin(phase * .41) * .24;
+            const fx = Math.cos(a) * orbit;
+            const fy = Math.sin(a) * orbit;
+            const shard = unit.radius * (.18 + .055 * (.5 + .5 * Math.sin(phase * 1.3)));
+            ctx.save(); ctx.translate(fx, fy); ctx.rotate(-phase * .68);
+            ctx.beginPath();
+            ctx.moveTo(0, -shard * 1.35);
+            ctx.lineTo(shard * .72, shard * .7);
+            ctx.lineTo(-shard * .62, shard * .9);
+            ctx.closePath();
+            ctx.fillStyle = `rgba(183, 229, 250, ${.12 + breathe * .12})`;
+            ctx.fill();
+            ctx.strokeStyle = `rgba(225, 247, 255, ${.38 + breathe * .3})`;
+            ctx.lineWidth = .8; ctx.stroke();
+            ctx.restore();
+          }
+          // A counter-rotating broken glint keeps the crystal from reading as one rigid box.
+          ctx.rotate(-time / 3400 - stack * .3);
+          ctx.beginPath(); ctx.arc(0, 0, unit.radius * .91, -.12, 1.02);
+          ctx.strokeStyle = `rgba(232, 249, 255, ${.2 + breathe * .32})`;
+          ctx.lineWidth = .8; ctx.stroke();
+          ctx.beginPath(); ctx.arc(0, 0, unit.radius * .91, Math.PI + .18, Math.PI + 1.14); ctx.stroke();
+          ctx.restore();
         }
         if (unit.ability?.pulse) {
           const pulse = .5 + .5 * Math.sin(performance.now() / 55);
@@ -7402,6 +7990,17 @@
           ctx.lineWidth = 3 + pulse;
           ctx.shadowColor = '#00e5ff';
           ctx.shadowBlur = 12 + pulse * 8;
+          ctx.stroke();
+          ctx.shadowBlur = 0;
+        }
+        if (hasRepulsionField(unit)) {
+          const pulse = .5 + .5 * Math.sin(performance.now() / 260);
+          ctx.beginPath();
+          ctx.arc(0, 0, unit.radius + 6 + pulse * 3, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(190, 255, 126, ${.32 + pulse * .3})`;
+          ctx.lineWidth = 2 + pulse;
+          ctx.shadowColor = '#baff72';
+          ctx.shadowBlur = 7 + pulse * 7;
           ctx.stroke();
           ctx.shadowBlur = 0;
         }
@@ -7456,9 +8055,39 @@
         const isOwnBarrier = palette.own;
         ctx.save();
         ctx.globalAlpha = alpha;
+        if (hasRepulsionField(brick)) {
+          const pulse = .5 + .5 * Math.sin(performance.now() / 260);
+          ctx.strokeStyle = `rgba(190, 255, 126, ${.42 + pulse * .3})`;
+          ctx.lineWidth = 2 + pulse;
+          ctx.shadowColor = '#baff72';
+          ctx.shadowBlur = 7 + pulse * 7;
+          ctx.strokeRect(brick.x - brick.width / 2 - 3, brick.y - brick.height / 2 - 3,
+            brick.width + 6, brick.height + 6);
+          ctx.shadowBlur = 0;
+        }
         if (state.tutorial?.lesson?.id === `card-${brick.barrier ? 'data-barrier' : 'brick'}` && !state.tutorial.complete) {
           ctx.shadowColor = '#ffe782';
           ctx.shadowBlur = 9 + 7 * (1 + Math.sin(performance.now() / 360));
+        }
+        const wallImage = !brick.barrier ? falseWallImages[brick.variant || 0] : null;
+        if (!brick.barrier && wallImage?.complete && wallImage.naturalWidth > 0) {
+          ctx.filter = 'brightness(1.22) contrast(1.16) saturate(.9)';
+          ctx.drawImage(wallImage, brick.x - brick.width / 2, brick.y - brick.height / 2,
+            brick.width, brick.height);
+          ctx.filter = 'none';
+          ctx.shadowBlur = 0;
+          const hitboxPulse = .5 + .5 * Math.sin(performance.now() / 210);
+          const own = brick.owner === getLocalPlayerIndex();
+          const hue = own ? [133, 244, 222] : [255, 82, 94];
+          ctx.globalAlpha = alpha * (.2 + hitboxPulse * .72);
+          ctx.strokeStyle = `rgba(${hue[0]}, ${hue[1]}, ${hue[2]}, .98)`;
+          ctx.lineWidth = 1.5;
+          ctx.shadowColor = own ? '#83f4de' : '#ff4858';
+          ctx.shadowBlur = 3 + hitboxPulse * 7;
+          ctx.strokeRect(brick.x - brick.width / 2, brick.y - brick.height / 2,
+            brick.width, brick.height);
+          ctx.restore();
+          return;
         }
         ctx.fillStyle = brick.barrier ? palette.fill : '#59666b';
         ctx.fillRect(brick.x - brick.width / 2, brick.y - brick.height / 2, brick.width, brick.height);
@@ -7543,7 +8172,98 @@
         for (const effect of state.effects) {
           const progress = effect.age / effect.duration;
           ctx.save();
-          if (effect.type === 'feedback') {
+          if (effect.type === 'brick-drop') {
+            const t = Math.max(0, Math.min(1, progress));
+            const descend = t * t;
+            const scale = 2.35 - 1.35 * descend;
+            const y = effect.y - 226 * (1 - descend);
+            const blur = 8 * (1 - descend);
+            const wallImage = falseWallImages[effect.variant || 0];
+            ctx.globalAlpha = .22 + .78 * descend;
+            ctx.filter = `blur(${blur.toFixed(1)}px) brightness(1.22) contrast(1.16)`;
+            if (wallImage?.complete && wallImage.naturalWidth > 0) {
+              ctx.drawImage(wallImage,
+                effect.x - 9 * scale, y - 32 * scale, 18 * scale, 64 * scale);
+            } else {
+              ctx.fillStyle = '#697473';
+              ctx.fillRect(effect.x - 9 * scale, y - 32 * scale, 18 * scale, 64 * scale);
+            }
+            ctx.filter = 'none';
+            ctx.globalAlpha = .13 * (1 - descend);
+            ctx.fillStyle = '#111719';
+            ctx.beginPath(); ctx.ellipse(effect.x, effect.y + 2, 7 + 6 * descend, 4 + 4 * descend, 0, 0, Math.PI * 2); ctx.fill();
+          } else if (effect.type === 'brick-impact') {
+            const t = Math.max(0, Math.min(1, progress));
+            const eased = (t - .14 * t * t) / .86;
+            ctx.globalAlpha = (1 - t) * .22;
+            ctx.strokeStyle = '#d2d7d4';
+            ctx.lineWidth = 2.5 * (1 - t) + .5;
+            ctx.beginPath(); ctx.arc(effect.x, effect.y, 8 + eased * 54, 0, Math.PI * 2); ctx.stroke();
+          } else if (effect.type === 'hardening-gather') {
+            const t = Math.max(0, Math.min(1, progress));
+            const radius = effect.radius * (2.4 - 1.35 * t);
+            ctx.globalAlpha = Math.sin(Math.PI * t) * .82;
+            ctx.strokeStyle = '#c8efff'; ctx.fillStyle = 'rgba(177,226,250,.18)';
+            ctx.lineWidth = 1.5;
+            for (let i = 0; i < 7; i += 1) {
+              const a = i * Math.PI * 2 / 7 + t * .45;
+              const cx = effect.x + Math.cos(a) * radius * (1 - t * .72);
+              const cy = effect.y + Math.sin(a) * radius * (1 - t * .72);
+              const shard = 3 + effect.radius * .28 * (1 - t * .35);
+              ctx.beginPath(); ctx.moveTo(cx, cy - shard); ctx.lineTo(cx + shard * .55, cy + shard * .45);
+              ctx.lineTo(cx - shard * .55, cy + shard * .45); ctx.closePath(); ctx.fill(); ctx.stroke();
+            }
+            ctx.beginPath(); ctx.arc(effect.x, effect.y, effect.radius * (.55 + .25 * t), 0, Math.PI * 2); ctx.stroke();
+          } else if (effect.type === 'repulsion-wave') {
+            const t = Math.max(0, Math.min(1, progress));
+            const eased = (t - .18 * t * t) / .82;
+            const radius = 6 + eased * 27;
+            ctx.globalAlpha = (1 - t) * .35;
+            ctx.fillStyle = '#caff72';
+            ctx.beginPath(); ctx.arc(effect.x, effect.y, radius, 0, Math.PI * 2); ctx.fill();
+            ctx.globalAlpha = (1 - t) * .72;
+            ctx.strokeStyle = '#baff62'; ctx.lineWidth = 2.2 * (1 - t) + .4;
+            ctx.beginPath(); ctx.arc(effect.x, effect.y, radius + 3, 0, Math.PI * 2); ctx.stroke();
+          } else if (effect.type === 'stone-fall') {
+            const fadeDuration = Math.max(.01, effect.fadeDuration || .68);
+            const fallT = Math.max(0, Math.min(1, effect.age / fadeDuration));
+            const dx = effect.fallDx ?? 0;
+            const dy = effect.fallDy ?? 1;
+            const speedRatio = Math.max(0, Math.min(1, effect.speedRatio ??
+              Math.hypot(effect.vx || 0, effect.vy || 0) / CONFIG.maxLaunchSpeed));
+            const fallDistance = (72 + speedRatio * 76) * fallT * fallT;
+            const x = effect.x + dx * fallDistance;
+            const y = effect.y + dy * fallDistance;
+            const radius = CONFIG.unitRadius * (1 - .82 * fallT);
+
+            // A shrinking, receding contact shadow makes the drop read as depth.
+            ctx.save();
+            ctx.translate(effect.x - dx * (8 + fallT * 22), effect.y - dy * (8 + fallT * 22));
+            ctx.rotate(Math.atan2(dy, dx));
+            ctx.globalAlpha = .24 * (1 - fallT);
+            ctx.fillStyle = '#020607';
+            ctx.shadowColor = '#000'; ctx.shadowBlur = 8 * (1 - fallT);
+            ctx.beginPath();
+            ctx.ellipse(0, 0, CONFIG.unitRadius * (1 - .48 * fallT), CONFIG.unitRadius * .34 * (1 - .52 * fallT), 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            ctx.globalAlpha = Math.max(0, 1 - fallT);
+            ctx.translate(x, y);
+            const spin = Math.sin(fallT * Math.PI * 2.2) * .12 + Math.atan2(dy, dx) * fallT * .04;
+            ctx.rotate(spin);
+            ctx.scale(1 - .82 * fallT, 1 - .82 * fallT);
+            const stoneImage = images[effect.owner];
+            if (stoneImage?.complete && stoneImage.naturalWidth > 0) {
+              ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.clip();
+              ctx.drawImage(stoneImage, -radius, -radius, radius * 2, radius * 2);
+            } else {
+              ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2);
+              ctx.fillStyle = PLAYER[effect.owner]?.color || '#d7d8d4'; ctx.fill();
+            }
+          } else if (effect.type === 'fall-impact') {
+            // Rendered in the final overlay pass so fog and props never hide the impact.
+          } else if (effect.type === 'feedback') {
             ctx.globalAlpha = Math.max(0, 1 - progress);
             ctx.strokeStyle = effect.color;
             ctx.lineWidth = 4 * (1 - progress) + 1;
@@ -7603,6 +8323,28 @@
         }
       }
 
+      function drawFallImpacts() {
+        for (const effect of state.effects) {
+          if (effect.type !== 'fall-impact') continue;
+          const t = Math.max(0, Math.min(1, effect.age / effect.duration));
+          // Gentle deceleration: the echo travels steadily, then eases off by about a quarter.
+          const ease = (t - .12 * t * t) / .88;
+          const lingeringAlpha = (1 - t) ** 1.35;
+          ctx.save();
+          ctx.translate(effect.x, effect.y);
+          ctx.globalAlpha = lingeringAlpha * .19;
+          ctx.fillStyle = '#eaf4f3';
+          ctx.beginPath(); ctx.arc(0, 0, 18 + ease * 170, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = lingeringAlpha * .44;
+          ctx.strokeStyle = '#edf5f3'; ctx.lineWidth = 4 * (1 - t) + .8;
+          ctx.beginPath(); ctx.arc(0, 0, 24 + ease * 208, 0, Math.PI * 2); ctx.stroke();
+          ctx.globalAlpha = lingeringAlpha * .24;
+          ctx.lineWidth = 2;
+          ctx.beginPath(); ctx.arc(0, 0, 36 + ease * 260, 0, Math.PI * 2); ctx.stroke();
+          ctx.restore();
+        }
+      }
+
       function drawCardPreview() {
         const drag = state.cardDrag;
         if (!drag?.point) return;
@@ -7619,11 +8361,12 @@
           ctx.restore();
           return;
         }
-        if (drag.type !== 'pulse' && drag.type !== 'blackhole') return;
-        const target = findCardTarget(drag.point, drag.owner);
+        if (!['pulse', 'blackhole', 'repulsion-field'].includes(drag.type)) return;
+        const target = findCardTarget(drag.point, drag.owner, drag.type);
         if (!target) return;
-        const radius = drag.type === 'pulse' ? PULSE_RANGE : BLACK_HOLE.range;
-        const color = drag.type === 'pulse' ? '#00aaff' : '#8b5cf6';
+        const radius = drag.type === 'pulse' ? PULSE_RANGE : drag.type === 'blackhole' ? BLACK_HOLE.range
+          : (target.unitKind === 'brick' ? Math.hypot(target.width, target.height) / 2 : target.radius) + 8;
+        const color = drag.type === 'pulse' ? '#00aaff' : drag.type === 'blackhole' ? '#8b5cf6' : '#baff72';
         ctx.save();
         ctx.globalAlpha = .2;
         ctx.beginPath();
@@ -7631,7 +8374,7 @@
         ctx.fillStyle = color;
         ctx.fill();
         ctx.lineWidth = 3;
-        ctx.strokeStyle = drag.type === 'pulse' ? '#00f5ff' : '#e879f9';
+        ctx.strokeStyle = drag.type === 'pulse' ? '#00f5ff' : drag.type === 'blackhole' ? '#e879f9' : '#d8ff9b';
         ctx.stroke();
         ctx.restore();
       }
@@ -7668,12 +8411,31 @@
         state.particles.forEach(particle => {
           ctx.globalAlpha = Math.max(0, particle.life);
           ctx.fillStyle = particle.color;
-          ctx.fillRect(particle.x, particle.y, particle.size, particle.size);
+          if (particle.shape === 'shard') {
+            ctx.save(); ctx.translate(particle.x, particle.y); ctx.rotate(particle.angle || 0);
+            ctx.beginPath(); ctx.moveTo(0, -particle.size * 1.8); ctx.lineTo(particle.size * .55, particle.size * .5);
+            ctx.lineTo(-particle.size * .45, particle.size * .7); ctx.closePath(); ctx.fill(); ctx.restore();
+          } else ctx.fillRect(particle.x, particle.y, particle.size, particle.size);
         });
         ctx.globalAlpha = 1;
       }
 
       function draw() {
+        ctx.save();
+        const shakeStrength = {
+          'fall-impact': 10,
+          'brick-impact': 6,
+          pulse: 5.5,
+          blackhole: 6.5,
+          'repulsion-wave': 2.4
+        };
+        const shakeEffect = [...state.effects].reverse().find(effect => shakeStrength[effect.type]);
+        if (shakeEffect) {
+          const t = Math.max(0, Math.min(1, shakeEffect.age / shakeEffect.duration));
+          const shake = shakeStrength[shakeEffect.type] * (1 - t) ** 2;
+          const now = performance.now();
+          ctx.translate(Math.sin(now * .071) * shake, Math.cos(now * .093) * shake * .72);
+        }
         drawTable();
         drawAdventureWires();
         drawAdventureProps();
@@ -7691,6 +8453,8 @@
         drawAdventureFog();
         drawAdventureGoal();
         drawSkullEffects();
+        drawFallImpacts();
+        ctx.restore();
       }
 
       function drawAdventureWires() {
@@ -7877,6 +8641,7 @@
         if (hardeningStacks) effects.push(`경질화 ${hardeningStacks}중첩 · 마찰력 ${UNIT_EFFECTS.hardening.frictionPerStack ** hardeningStacks}배`);
         if (guardStacks) effects.push(`방호벽 ${guardStacks}중첩 · 위성체 ${guardStacks * UNIT_EFFECTS.guard.satellitesPerStack}개`);
         if (unit.ability?.pulse) effects.push('방출 충전 · 충돌 시 파동 발산');
+        if (hasRepulsionField(unit)) effects.push('반발장 · 충돌 반응 감소 및 반사');
         if (isCollisionPhased(unit)) effects.push('속임수 · 다음 상대 턴 종료까지 충돌 무시');
         if (unit.fluidTimer > 0) effects.push('블랙홀 방출 · 유체 상태');
         if (unit.relaunchAvailable && !unit.relaunchUsed) effects.push('재배치 가능');
@@ -7889,8 +8654,8 @@
       function getTriggerTooltip(trigger) {
         const descriptions = {
           'adventure-reposition': '닿은 플레이어가 재배치 카드 한 장을 얻습니다.',
-          blackhole: `블랙홀 방출 · 범위 ${Math.round(trigger.type.range)} 안의 스톤과 벽돌을 끌어당깁니다.`,
-          pulse: `방출 · 획득 후 유닛과 충돌하거나 0.5초가 지나면 범위 ${Math.round(trigger.type.range)} 안의 스톤과 벽돌을 강하게 밀쳐냅니다.`,
+          blackhole: `블랙홀 방출 · 범위 ${Math.round(trigger.type.range)} 안의 스톤과 가벽을 끌어당깁니다.`,
+          pulse: `방출 · 획득 후 유닛과 충돌하거나 0.5초가 지나면 범위 ${Math.round(trigger.type.range)} 안의 스톤과 가벽을 강하게 밀쳐냅니다.`,
           hardening: '경질화 · 중첩할 때마다 마찰력이 3배씩 곱해집니다.',
           guard: '방호벽 · 중첩하면 위성체가 최대 네 개까지 늘어납니다.'
         };
@@ -7934,7 +8699,9 @@
             radius: 0,
             content: brick.barrier
               ? { title: '데이터 장벽', detail: '자신의 스톤만 통과할 수 있는 이동 불가능한 구조물입니다.' }
-              : { title: '벽돌 유닛', detail: '충돌 판정이 있고, 밀려날 수 있는 벽돌 유닛입니다.' }
+              : { title: brick.repulsionField ? '가벽 유닛 · 반발장' : '가벽 유닛', detail: brick.repulsionField
+                ? '반발장이 적용되어 충돌을 덜 받고 충돌 상대를 더 강하게 밀쳐냅니다.'
+                : '충돌 판정이 있고, 밀려날 수 있는 가벽 유닛입니다.' }
           }))
         ].filter(candidate => candidate.distance <= candidate.radius).sort((a, b) => a.distance - b.distance);
         const restricted = tutorialShowsPlacementLimit() && point.x >= brickDropLimitX() && point.x <= TABLE.right &&
@@ -7989,19 +8756,17 @@
         const alpha = options.alpha ?? .76;
         const color = type.color;
         const image = triggerImages[type.id] || triggerImages.empty;
+        const sheet = triggerFrameSheets[type.id.replace(/^adventure-/, '')];
         ctx.save();
         ctx.globalAlpha = alpha;
-        if (image.complete && image.naturalWidth) {
+        if ((sheet?.complete && sheet.naturalWidth) || (image.complete && image.naturalWidth)) {
           const size = radius * 2.65 * scale;
           ctx.translate(x, y);
-          ctx.rotate(performance.now() * Math.PI * 2 / 14000);
-          ctx.drawImage(image, -size / 2, -size / 2, size, size);
-          if (type.id === 'adventure-reposition') {
-            ctx.fillStyle = '#f4e6ff';
-            ctx.font = `800 ${Math.max(13, radius)}px sans-serif`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('R', 0, 1);
+          if (sheet?.complete && sheet.naturalWidth) {
+            const frame = Math.floor(performance.now() / 66) % 36;
+            ctx.drawImage(sheet, frame * 256, 0, 256, 256, -size / 2, -size / 2, size, size);
+          } else {
+            ctx.drawImage(image, -size / 2, -size / 2, size, size);
           }
           if (type.id === 'pulse') {
             ctx.globalAlpha = alpha * .35;
@@ -8240,6 +9005,13 @@
         registeringAccount = register;
         accountNicknameField.hidden = true;
         accountNicknameInput.required = false;
+        privacyConsentSection.hidden = !register;
+        privacyConsentCheckbox.required = register;
+        privacyConsentCheckbox.checked = false;
+        crossBorderConsentCheckbox.required = register;
+        crossBorderConsentCheckbox.checked = false;
+        ageConfirmationCheckbox.required = register;
+        ageConfirmationCheckbox.checked = false;
         accountPasswordInput.autocomplete = register ? 'new-password' : 'current-password';
         accountSubmitButton.textContent = register ? '계정 등록' : '로그인';
         accountModeButton.textContent = register ? '돌아가기' : '계정 등록';
@@ -8290,6 +9062,11 @@
           const account = await postOnlineRequest(registeringAccount ? '/api/accounts/register' : '/api/accounts/login', {
             username: accountUsernameInput.value,
             password: accountPasswordInput.value,
+              ...(registeringAccount ? {
+                privacyConsent: privacyConsentCheckbox.checked,
+                crossBorderConsent: crossBorderConsentCheckbox.checked,
+                ageConfirmed: ageConfirmationCheckbox.checked
+              } : {}),
             ...(registeringAccount ? { name: '신입' } : {})
           });
           guestToken = account.token;
@@ -8328,6 +9105,37 @@
         try { localStorage.removeItem('ucc.accountToken.v1'); } catch {}
         showAccountScreen();
         if (token) fetch('/api/accounts/logout', { method: 'POST', headers: { Authorization: `Bearer ${token}` } }).catch(() => {});
+      });
+      document.querySelector('#deleteAccountButton').addEventListener('click', () => {
+        document.querySelector('#deleteAccountPasswordInput').value = '';
+        document.querySelector('#deleteAccountConfirmCheckbox').checked = false;
+        showStartScreen('deleteAccountScreen');
+      });
+      document.querySelector('#cancelDeleteAccountButton').addEventListener('click', () => showStartScreen('accountSettingsScreen'));
+      document.querySelector('#deleteAccountForm').addEventListener('submit', async event => {
+        event.preventDefault();
+        const submit = event.currentTarget.querySelector('[type="submit"]');
+        submit.disabled = true;
+        startStatus.textContent = '';
+        try {
+          await postOnlineRequest('/api/accounts/delete', { password: document.querySelector('#deleteAccountPasswordInput').value,
+            confirmed: document.querySelector('#deleteAccountConfirmCheckbox').checked });
+          guestToken = null;
+          guestProfile = null;
+          savedDecks = [null, null, null];
+          deckDrafts = [null, null, null];
+          activeDeckPreset = 0;
+          refreshLocalDeckSelects();
+          state.playerLevels = [1, 1];
+          guestProfileElement.hidden = true;
+          openAccountButton.hidden = true;
+          try { localStorage.removeItem('ucc.accountToken.v1'); } catch {}
+          document.querySelector('#deleteAccountPasswordInput').value = '';
+          showAccountScreen();
+          setAccountMode(false);
+          startStatus.textContent = '계정과 저장 데이터가 삭제되었습니다.';
+        } catch (error) { startStatus.textContent = error.message; }
+        finally { submit.disabled = false; }
       });
       document.getElementById('playMenuHomeButton').addEventListener('click', () => showStartScreen('homeScreen'));
       document.getElementById('catalogHomeButton').addEventListener('click', returnToHome);
