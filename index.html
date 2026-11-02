@@ -455,8 +455,30 @@
     @keyframes map-preview-out-right { to { opacity: 0; transform: translateX(9%); } }
     @keyframes map-preview-in-left { from { opacity: 0; transform: translateX(9%); } to { opacity: 1; transform: translateX(0); } }
     @keyframes map-preview-in-right { from { opacity: 0; transform: translateX(-9%); } to { opacity: 1; transform: translateX(0); } }
-    @media (prefers-reduced-motion: reduce) { .map-preview-item, .map-preview-wall, .map-preview.is-sliding-left, .map-preview.is-sliding-right, .map-preview.enter-from-left, .map-preview.enter-from-right { animation: none !important; } }
+    @media (prefers-reduced-motion: reduce) {
+      .map-preview-item, .map-preview-wall, .map-preview-duel-stone, .map-preview.is-sliding-left, .map-preview.is-sliding-right, .map-preview.enter-from-left, .map-preview.enter-from-right { animation: none !important; }
+      .map-preview-duel-stone.blue { left: 79%; opacity: 1; transform: translateY(-50%); }
+      .map-preview-duel-stone.red { left: 17%; opacity: 1; transform: translateY(-50%); }
+    }
     .map-preview::after { content: ''; position: absolute; inset: 0; pointer-events: none; border: 1px solid rgba(235,202,139,.16); box-shadow: inset 0 0 36px rgba(4,10,12,.25); }
+    .map-preview-duel-stone { position: absolute; z-index: 3; top: 50%; width: clamp(24px, 5.5%, 58px); aspect-ratio: 1; object-fit: contain; filter: drop-shadow(0 2px 5px rgba(0,0,0,.9)); pointer-events: none; }
+    .map-preview-duel-stone.blue { animation: duel-preview-blue 5.2s linear infinite; }
+    .map-preview-duel-stone.red { animation: duel-preview-red 5.2s linear infinite; }
+    @keyframes duel-preview-blue {
+      0%, 2% { left: 4%; opacity: 0; transform: translateY(-50%) scale(.72); }
+      7% { opacity: 1; transform: translateY(-50%) scale(1); }
+      34% { left: 79%; opacity: 1; transform: translateY(-50%) scale(1); }
+      43% { left: 79%; opacity: 1; transform: translateY(-50%) scale(1); }
+      49% { left: 79%; opacity: 0; transform: translateY(-50%) scale(.58); }
+      100% { left: 79%; opacity: 0; transform: translateY(-50%) scale(.58); }
+    }
+    @keyframes duel-preview-red {
+      0%, 51% { left: 92%; opacity: 0; transform: translateY(-50%) scale(.72); }
+      56% { opacity: 1; transform: translateY(-50%) scale(1); }
+      83% { left: 17%; opacity: 1; transform: translateY(-50%) scale(1); }
+      92% { left: 17%; opacity: 1; transform: translateY(-50%) scale(1); }
+      98%, 100% { left: 17%; opacity: 0; transform: translateY(-50%) scale(.58); }
+    }
     .map-detail { min-height: 75px; margin: 0 64px 12px; text-align: left; }
     .map-detail strong { display: block; color: var(--ink); font-size: 20px; }
     .map-detail span { display: block; margin-top: 5px; color: var(--muted); line-height: 1.5; }
@@ -1569,6 +1591,24 @@
       const STRONG_HIT_THRESHOLD = 500;
 
       const TABLE = { left: 88, right: 1112, top: 68, bottom: 662, goalX: 108, launchX: 1060 };
+      function isDuelMap() { return state.currentMap?.id === 'duel'; }
+      function launchXForOwner(owner) {
+        return isDuelMap() && owner === 0 ? TABLE.left + CONFIG.unitRadius + 16 : TABLE.launchX;
+      }
+      function scoringEdgeX(owner) { return isDuelMap() && owner === 0 ? TABLE.right : TABLE.goalX; }
+      function scoreAtX(x, owner) {
+        if (isDuelMap()) {
+          const progress = owner === 0 ? (x - TABLE.left) / (TABLE.right - TABLE.left) :
+            (TABLE.right - x) / (TABLE.right - TABLE.left);
+          return Math.round(Math.max(0, Math.min(100, progress * 100)));
+        }
+        return Math.round(Math.max(0, 100 * (1 - Math.max(0, x - TABLE.goalX) / (TABLE.right - TABLE.goalX))));
+      }
+      function scoreTargetX(owner, depth) {
+        const edge = scoringEdgeX(owner);
+        const towardCenter = isDuelMap() && owner === 0 ? -1 : 1;
+        return edge + towardCenter * depth;
+      }
       const CONFIG = {
         unitRadius: 29,
         maxTurnsPerPlayer: 5,
@@ -1762,7 +1802,8 @@
         { id: 'classic', name: '기본 맵', description: '적당한 마찰력의 표준 테이블', friction: 0.020625, color: '#1f7770', walls: false },
         { id: 'ice', name: '얼음판 맵', description: '기본 맵보다 마찰이 낮아 더 길게 미끄러집니다', friction: 0.0165, color: '#8edaf2', walls: false },
         { id: 'moving-walls', name: '구조물 맵', description: '왕복하는 다섯 구조물을 활용합니다', friction: 0.020625, color: '#527456', walls: true },
-        { id: 'items', name: '아이템 맵', description: '턴마다 생성되는 트리거를 획득합니다', friction: 0.020625, color: '#356b58', walls: false, items: true }
+        { id: 'items', name: '아이템 맵', description: '턴마다 생성되는 트리거를 획득합니다', friction: 0.020625, color: '#356b58', walls: false, items: true },
+        { id: 'duel', name: '결투 맵', description: '플레이어 1은 왼쪽에서 오른쪽으로, 플레이어 2는 오른쪽에서 왼쪽으로 발사합니다. 양쪽 모두 테이블 전체에 구조물과 트리거를 배치할 수 있습니다.', friction: 0.020625, color: '#1f7770', walls: false, duel: true }
       ];
       const MAP_BACKGROUND_CONFIG = {
         classic: { src: 'in-game-screen/curling-table-maps/classic/background-concept.png', crop: { x: .042, y: .089, width: .90, height: .78 } },
@@ -1773,7 +1814,8 @@
         classic: MAP_BACKGROUND_CONFIG.classic.src,
         ice: MAP_BACKGROUND_CONFIG.ice.src,
         'moving-walls': MAP_BACKGROUND_CONFIG['moving-walls'].src,
-        items: MAP_BACKGROUND_CONFIG.classic.src
+        items: MAP_BACKGROUND_CONFIG.classic.src,
+        duel: MAP_BACKGROUND_CONFIG.classic.src
       };
       let mapPreviewTransitioning = false;
       let mapPreviewEntryDirection = '';
@@ -2937,7 +2979,7 @@
             id: `unit-${this.globalTurn + 1}`,
             owner: this.playerIndex,
             turnNumber: this.playerTurn,
-            x: TABLE.launchX,
+            x: launchXForOwner(this.playerIndex),
             y: 365
           });
           state.units.push(unit);
@@ -3357,8 +3399,8 @@
           let distance = 0;
           let score = 0;
           units.forEach(unit => {
-            unit.distance = Math.max(0, unit.x - TABLE.goalX);
-            unit.score = Math.round(Math.max(0, 100 * (1 - unit.distance / (TABLE.right - TABLE.goalX))));
+            unit.distance = isDuelMap() && index === 0 ? Math.max(0, TABLE.right - unit.x) : Math.max(0, unit.x - TABLE.goalX);
+            unit.score = scoreAtX(unit.x, index);
             distance += unit.distance;
             score += unit.score;
           });
@@ -3791,8 +3833,8 @@
       function aiShotPlan(unit, ammo = false) {
         const enemies = state.units.filter(item => item.owner !== unit.owner && item.isOnTable && item.status !== 'ready');
         if (ammo) {
-          const target = [...enemies].sort((a, b) => a.x - b.x)[0] ||
-            { x: TABLE.goalX + 100, y: (TABLE.top + TABLE.bottom) / 2 };
+          const target = [...enemies].sort((a, b) => Math.hypot(a.x - unit.x, a.y - unit.y) - Math.hypot(b.x - unit.x, b.y - unit.y))[0] ||
+            { x: scoreTargetX(unit.owner, 100), y: (TABLE.top + TABLE.bottom) / 2 };
           const dx = target.x - unit.x, dy = target.y - unit.y;
           const distance = Math.hypot(dx, dy) || 1;
           const pull = Math.min(CONFIG.maxPullDistance, Math.max(105, distance / CONFIG.bulletSpeedMultiplier / CONFIG.launchScale));
@@ -3801,7 +3843,7 @@
         const level = aiLevel();
         const targets = [];
         for (let i = 0; i < level.lanes; i += 1) {
-          targets.push({ x: TABLE.goalX + unit.radius + 45 + Math.random() * 155,
+          targets.push({ x: scoreTargetX(unit.owner, unit.radius + 45 + Math.random() * 155),
             y: TABLE.top + unit.radius + 32 + (TABLE.bottom - TABLE.top - 2 * (unit.radius + 32)) *
               (i + .15 + Math.random() * .7) / level.lanes });
         }
@@ -3818,11 +3860,11 @@
             const result = aiPredictShot(unit, dx, dy, power);
             const onTable = result.x >= TABLE.left + unit.radius && result.x <= TABLE.right - unit.radius &&
               result.y >= TABLE.top + unit.radius && result.y <= TABLE.bottom - unit.radius;
-            const placement = onTable ? Math.max(0, 100 * (1 - (result.x - TABLE.goalX) / (TABLE.right - TABLE.goalX))) : -90;
+            const placement = onTable ? scoreAtX(result.x, unit.owner) : -90;
             const hitValue = result.hit ? (result.hit.owner === unit.owner ? -48 :
-              (state.aiStyle === 'attacker' ? 55 : 30) + (TABLE.right - result.hit.x) / 45) : 0;
+              (state.aiStyle === 'attacker' ? 55 : 30) + scoreAtX(result.hit.x, result.hit.owner) / 4.5) : 0;
             const score = placement + hitValue + (result.trigger ? 12 : 0) - (result.blocked ? 36 : 0) +
-              (state.aiStyle === 'defender' && onTable ? Math.min(12, (TABLE.right - result.x) / 70) : 0) +
+              (state.aiStyle === 'defender' && onTable ? placement * .12 : 0) +
               (Math.random() - .5) * level.error * 180;
             if (!best || score > best.score) best = { dx, dy, power, score };
           }
@@ -3837,13 +3879,13 @@
         const owner = state.aiOwner;
         if (remainingTriggerPlacements(owner) <= 0 || Math.random() > aiLevel().cardChance) return false;
         const enemy = state.units.filter(item => item.owner !== owner && item.isOnTable && item.status !== 'ready')
-          .sort((a, b) => a.x - b.x)[0];
+          .sort((a, b) => scoreAtX(b.x, b.owner) - scoreAtX(a.x, a.owner))[0];
         const typeId = state.aiStyle === 'attacker' ? 'pulse' : state.aiStyle === 'defender' ? 'guard' :
           state.aiStyle === 'controller' ? 'blackhole' : 'hardening';
         const type = ITEM_TRIGGERS.find(item => item.id === typeId);
         for (let attempt = 0; attempt < 18; attempt += 1) {
           const point = { x: Math.min(brickDropLimitX() - 30, Math.max(TABLE.left + 90,
-            (enemy?.x ?? TABLE.goalX + 210) + (Math.random() - .5) * 260)),
+            (enemy?.x ?? scoreTargetX(owner, 210)) + (Math.random() - .5) * 260)),
           y: Math.max(TABLE.top + 55, Math.min(TABLE.bottom - 55,
             (enemy?.y ?? (TABLE.top + TABLE.bottom) / 2) + (Math.random() - .5) * 240)) };
           if (!canPlaceItemTrigger(point)) continue;
@@ -3864,7 +3906,7 @@
         const enemies = state.units.filter(item => item.owner !== owner && item.isOnTable && item.status !== 'ready');
         if (!card || !enemies.length || Math.random() > aiLevel().cardChance *
             (state.aiStyle === 'controller' ? .8 : .35)) return false;
-        const enemy = enemies.sort((a, b) => a.x - b.x)[0];
+        const enemy = enemies.sort((a, b) => scoreAtX(b.x, b.owner) - scoreAtX(a.x, a.owner))[0];
         for (const offset of [-85, 85, -135, 135]) {
           const point = { x: Math.min(brickDropLimitX() - 15, enemy.x + 100),
             y: Math.max(TABLE.top + 35, Math.min(TABLE.bottom - 35, enemy.y + offset)) };
@@ -3877,8 +3919,7 @@
       function aiUsePreparationCard(unit) {
         if (Math.random() > aiLevel().cardChance) return false;
         const enemies = state.units.filter(item => item.owner !== unit.owner && item.isOnTable && item.status !== 'ready');
-        const crowded = enemies.some(item => unit.x - item.x > 15 &&
-          Math.hypot(item.x - unit.x, item.y - unit.y) < BLACK_HOLE.range * .85);
+        const crowded = enemies.some(item => Math.hypot(item.x - unit.x, item.y - unit.y) < BLACK_HOLE.range * .85);
         const options = state.aiStyle === 'attacker' ? ['bluffing', 'blackhole', 'pulse', 'guard'] :
           state.aiStyle === 'defender' ? ['guard', 'bluffing', 'pulse'] :
           state.aiStyle === 'controller' ? ['bluffing', 'pulse', 'guard'] : ['guard', 'bluffing', 'pulse'];
@@ -3894,7 +3935,7 @@
         if (!unit || unit.status === 'fallen') return 0;
         if (unit.x < TABLE.left + unit.radius || unit.x > TABLE.right - unit.radius ||
             unit.y < TABLE.top + unit.radius || unit.y > TABLE.bottom - unit.radius) return -35;
-        return Math.max(0, 100 * (1 - (unit.x - TABLE.goalX) / (TABLE.right - TABLE.goalX)));
+        return scoreAtX(unit.x, unit.owner);
       }
 
       function aiProjectedShotValue(unit, plan) {
@@ -3904,7 +3945,7 @@
           result.y >= TABLE.top + unit.radius && result.y <= TABLE.bottom - unit.radius ?
           aiUnitPositionValue({ ...unit, x: result.x, y: result.y }) : -45;
         if (result.hit) value += result.hit.owner === unit.owner ? -35 :
-          24 + (result.hit.x < TABLE.goalX + 150 ? 22 : 0);
+          24 + (scoreAtX(result.hit.x, result.hit.owner) >= 80 ? 22 : 0);
         if (result.blocked) value -= 22;
         if (result.trigger) value += 8;
         return value;
@@ -3913,7 +3954,7 @@
       function aiAmmoValue(unit) {
         const owner = unit.owner;
         const targets = state.units.filter(item => item.owner !== owner && item.isOnTable && item.status !== 'ready')
-          .sort((a, b) => a.x - b.x);
+          .sort((a, b) => Math.hypot(a.x - unit.x, a.y - unit.y) - Math.hypot(b.x - unit.x, b.y - unit.y));
         let best = 0;
         for (const enemy of targets) {
           const dx = enemy.x - unit.x, dy = enemy.y - unit.y;
@@ -3928,7 +3969,8 @@
             })());
           if (alliesBlocking) continue;
           const guardThreat = enemy.ability?.guard ? 10 : 0;
-          const knockoutChance = enemy.x < TABLE.goalX + 140 ? 30 : enemy.x < TABLE.goalX + 250 ? 17 : 0;
+          const threatScore = scoreAtX(enemy.x, enemy.owner);
+          const knockoutChance = threatScore >= 80 ? 30 : threatScore >= 65 ? 17 : 0;
           let obstructionValue = 0;
           for (let brickIndex = state.bricks.length - 1; brickIndex >= 0; brickIndex -= 1) {
             const brick = state.bricks[brickIndex];
@@ -4562,6 +4604,7 @@
       }
 
       function brickDropLimitX() {
+        if (isDuelMap()) return TABLE.right;
         return TABLE.launchX - (TABLE.launchX - TABLE.left) * 0.35;
       }
 
@@ -4913,7 +4956,7 @@
 
       function canPlaceItemTrigger(point) {
         const radius = CONFIG.unitRadius * .5;
-        if (point.x > brickDropLimitX() || point.x < TABLE.left + radius ||
+        if (point.x > brickDropLimitX() - radius || point.x < TABLE.left + radius ||
             point.y < TABLE.top + radius || point.y > TABLE.bottom - radius) return false;
         return triggerSpawnIsClear(point, radius);
       }
@@ -5376,6 +5419,19 @@
         image.src = MAP_PREVIEW_IMAGES[map.id] || MAP_PREVIEW_IMAGES.classic;
         image.alt = `${map.name} 미리보기`;
         preview.append(image);
+        if (map.duel) {
+          const blueStone = document.createElement('img');
+          blueStone.className = 'map-preview-duel-stone blue';
+          blueStone.src = PLAYER[0].imagePath;
+          blueStone.alt = '';
+          blueStone.draggable = false;
+          const redStone = document.createElement('img');
+          redStone.className = 'map-preview-duel-stone red';
+          redStone.src = PLAYER[1].imagePath;
+          redStone.alt = '';
+          redStone.draggable = false;
+          preview.append(blueStone, redStone);
+        }
         const layer = document.createElement('div');
         layer.className = 'map-preview-layer';
         if (map.items) {
@@ -7854,7 +7910,7 @@
         ctx.fillRect(TABLE.left, TABLE.top, width, height);
         ctx.restore();
 
-        const mapId = state.currentMap.id === 'items' ? 'classic' : state.currentMap.id;
+        const mapId = ['items', 'duel'].includes(state.currentMap.id) ? 'classic' : state.currentMap.id;
         const config = MAP_BACKGROUND_CONFIG[mapId];
         if (!config) return;
         const image = mapBackgroundImages[mapId] || (mapBackgroundImages[mapId] = new Image());
