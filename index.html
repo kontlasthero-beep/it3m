@@ -1936,6 +1936,7 @@
       }
       let onlineStartPending = false;
       let onlineInterpolation = null;
+      let onlineMapClock = null;
       let onlineLastSnapshotAt = null;
       let localAimPointerId = null;
       let selectedPublicRoom = null;
@@ -2139,6 +2140,7 @@
         if (localAimPointerId !== null && canvas.hasPointerCapture?.(localAimPointerId)) canvas.releasePointerCapture(localAimPointerId);
         localAimPointerId = null;
         onlineInterpolation = null;
+        onlineMapClock = null;
         onlineLastSnapshotAt = null;
         Object.assign(state, { units: [], bricks: [], bullets: [], triggers: [], particles: [], effects: [],
           hands: [[], []], decks: [[], []], playerDecks: [[], []], fallPoints: [0, 0], escapePoints: [0, 0], playerLevels: [guestProfile?.level || 1, guestProfile?.level || 1], triggerPlacementUsed: [false, false], triggerPlacementCount: [0, 0],
@@ -2795,17 +2797,29 @@
       }
 
       function updateOnlineInterpolation(timestamp) {
-        if (!onlineInterpolation) return;
-        const amount = Math.min(1, (timestamp - onlineInterpolation.startedAt) / onlineInterpolation.duration);
-        for (const item of onlineInterpolation.units) {
-          item.unit.x = item.fromX + (item.toX - item.fromX) * amount;
-          item.unit.y = item.fromY + (item.toY - item.fromY) * amount;
-          if (item.unit.ability?.guard && item.fromAngle != null) {
-            item.unit.ability.guardAngle = item.fromAngle + (item.toAngle - item.fromAngle) * amount;
+        if (onlineInterpolation) {
+          const amount = Math.min(1, (timestamp - onlineInterpolation.startedAt) / onlineInterpolation.duration);
+          for (const item of onlineInterpolation.units) {
+            item.unit.x = item.fromX + (item.toX - item.fromX) * amount;
+            item.unit.y = item.fromY + (item.toY - item.fromY) * amount;
+            if (item.unit.ability?.guard && item.fromAngle != null) {
+              item.unit.ability.guardAngle = item.fromAngle + (item.toAngle - item.fromAngle) * amount;
+            }
           }
+          if (amount >= 1) onlineInterpolation = null;
         }
-        state.mapTime = onlineInterpolation.fromMapTime + (onlineInterpolation.toMapTime - onlineInterpolation.fromMapTime) * amount;
-        if (amount >= 1) onlineInterpolation = null;
+        if (onlineMapClock) {
+          const elapsed = Math.max(0, Math.min(100, timestamp - onlineMapClock.lastFrame)) / 1000;
+          onlineMapClock.lastFrame = timestamp;
+          if (!onlineMapClock.paused) onlineMapClock.display += elapsed * onlineMapClock.speed;
+          const target = onlineMapClock.target + (onlineMapClock.paused ? 0 : Math.max(0, timestamp - onlineMapClock.syncedAt) / 1000 * onlineMapClock.speed);
+          const error = target - onlineMapClock.display;
+          if (Math.abs(error) > .01 && elapsed > 0) {
+            const correction = Math.max(-elapsed * onlineMapClock.speed * .35, Math.min(elapsed * onlineMapClock.speed * .35, error * .08));
+            onlineMapClock.display = Math.max(onlineMapClock.display, onlineMapClock.display + correction);
+          }
+          state.mapTime = onlineMapClock.display;
+        }
       }
 
       // Units are intentionally self-contained so future abilities can hook into turns or collisions.
@@ -6269,12 +6283,23 @@
 
       function sendOnlineSocketMessage(session, message) {
         if (session?.socket?.readyState !== WebSocket.OPEN) return false;
-        if (session.socket.bufferedAmount > 512 * 1024 && message.type === 'snapshot') return false;
+        if (session.socket.bufferedAmount > 96 * 1024 && message.type === 'snapshot') return false;
         session.socket.send(JSON.stringify(message));
         return true;
       }
 
       function sendOnlineRealtimeMessage(session, message) {
+        if (message.type === 'snapshot') {
+          const channel = session?.snapshotChannel;
+          if (channel?.readyState === 'open' && channel.bufferedAmount < 96 * 1024) {
+            try {
+              channel.send(JSON.stringify(message));
+              session.lastRealtimeTransport = 'datachannel';
+              return true;
+            } catch {}
+          }
+          return sendOnlineSocketMessage(session, message);
+        }
         const channel = session?.dataChannel;
         const preferWebSocket = performance.now() < (session?.forceWebSocketUntil || 0);
         if (!preferWebSocket && channel?.readyState === 'open' && channel.bufferedAmount < 512 * 1024) {
@@ -6374,6 +6399,7 @@
           };
           if (session.role === 'host') {
             attachOnlineDataChannel(session, peer.createDataChannel('game', { ordered: true }));
+            attachOnlineDataChannel(session, peer.createDataChannel('snapshots', { ordered: false, maxRetransmits: 0 }));
             const offer = await peer.createOffer();
             await peer.setLocalDescription(offer);
             signalOnlinePeer(session, peer.localDescription.toJSON());
@@ -6391,9 +6417,12 @@
       }
 
       function attachOnlineDataChannel(session, channel) {
-        session.dataChannel = channel;
+        const isSnapshotChannel = channel.label === 'snapshots';
+        if (isSnapshotChannel) session.snapshotChannel = channel;
+        else session.dataChannel = channel;
         channel.onopen = () => {
           if (onlineSession !== session) return;
+          if (isSnapshotChannel) return;
           session.dataChannelReady = true;
           updateConnectionStatusUI(session);
           session.pendingActions.forEach((action, id) => {
@@ -6407,12 +6436,14 @@
           catch (error) { console.warn('Invalid WebRTC game packet:', error); }
         };
         channel.onclose = () => {
+          if (isSnapshotChannel) { session.snapshotChannel = null; return; }
           session.dataChannelReady = false;
           session.pendingActions?.forEach((action, id) => sendOnlineSocketMessage(session, { type: 'action', actionId: id, action }));
           if (onlineSession === session && session.started) showConnectionNotice('직접 연결 종료 · 서버 연결로 계속합니다');
           updateConnectionStatusUI(session);
         };
         channel.onerror = () => {
+          if (isSnapshotChannel) { session.snapshotChannel = null; return; }
           session.dataChannelReady = false;
           session.forceWebSocketUntil = performance.now() + 12_000;
           session.pendingActions?.forEach((action, id) => sendOnlineSocketMessage(session, { type: 'action', actionId: id, action }));
@@ -6473,8 +6504,10 @@
         session.socket = null;
         session.dataChannelReady = false;
         session.dataChannel?.close();
+        session.snapshotChannel?.close();
         session.peerConnection?.close();
         session.dataChannel = null;
+        session.snapshotChannel = null;
         session.peerConnection = null;
         if (onlineSession === session) updateConnectionStatusUI(null);
       }
@@ -6585,6 +6618,7 @@
         session.rtcSetupPromise = null;
         session.peerConnection = null;
         session.dataChannel = null;
+        session.snapshotChannel = null;
         session.dataChannelReady = false;
         connectOnlineSocket(session);
       }
@@ -6891,7 +6925,7 @@
         state.aiming = preserveAim || (snapshot.aiming && !inputAllowed);
         state.aimPoint = localAim ? localAim.aimPoint : snapshot.aimPoint;
         state.aimTension = localAim ? localAim.aimTension : snapshot.aimTension;
-        state.mapTime = onlineInterpolation.fromMapTime;
+        state.mapTime = onlineMapClock?.display ?? snapshot.mapTime;
         state.repositionMode = snapshot.repositionMode || null;
         const incomingPower = snapshot.powerMeter ? { ...snapshot.powerMeter, lastAt: snapshotTime } : null;
         if (incomingPower?.stage === 'locked') {
@@ -6921,6 +6955,16 @@
           if (pending != null && snapshot.speedLevel === pending) onlineSession.pendingSpeedLevel = null;
           setSpeedLevel(nextSpeed, nextSpeed !== state.speedLevel && pending !== nextSpeed);
         }
+        if (!onlineMapClock || !sameRound) {
+          onlineMapClock = { display: snapshot.mapTime, lastFrame: snapshotTime, target: snapshot.mapTime,
+            syncedAt: snapshotTime, speed: state.gameSpeed, paused: snapshot.turnPaused === true };
+        } else {
+          onlineMapClock.target = snapshot.mapTime;
+          onlineMapClock.syncedAt = snapshotTime;
+          onlineMapClock.speed = state.gameSpeed;
+          onlineMapClock.paused = snapshot.turnPaused === true;
+        }
+        state.mapTime = onlineMapClock.display;
         turns.globalTurn = snapshot.globalTurn;
         turns.startingPlayer = snapshot.startingPlayer || 0;
         state.turnDeadline = Number.isFinite(snapshot.turnRemaining) ? Date.now() + snapshot.turnRemaining : null;

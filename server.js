@@ -148,7 +148,7 @@ function fail(response, status, message) {
 
 function sendSocketJson(socket, message) {
   if (socket?.readyState !== WebSocket.OPEN) return false;
-  if (socket.bufferedAmount > 512 * 1024 && message.type === 'snapshot') return false;
+  if (socket.bufferedAmount > 96 * 1024 && message.type === 'snapshot') return false;
   socket.send(JSON.stringify(message));
   return true;
 }
