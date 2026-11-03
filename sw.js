@@ -1,4 +1,4 @@
-const CACHE_NAME = 'second-chance-v110';
+const CACHE_NAME = 'second-chance-v117';
 const APP_FILES = [
   './',
   './index.html',
@@ -80,6 +80,8 @@ const APP_FILES = [
   './in-game-screen/game-objects/data-center-ruins/collapsed-server-racks.png',
   './in-game-screen/game-objects/data-center-ruins/server-debris-and-cables.png',
   './in-game-screen/game-objects/data-center-ruins/shattered-ventilation-turbine.png',
+  './ai-balance.js',
+  './ai-policy.js',
   './ai-planner.js',
   './card-unlocks.js?v=1',
   './ai-planner-worker.js',
