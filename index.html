@@ -2671,9 +2671,9 @@
         updateConnectionStatusUI(session);
       }
 
-      function playSound(name, intensity = 1) {
+      function playSound(name, intensity = 1, playbackRate = 1) {
         if (!audio.sfxVolume) return;
-        playElevenLabsSound(name, { volume: Math.min(1.5, intensity) });
+        playElevenLabsSound(name, { volume: Math.min(1.5, intensity), playbackRate });
       }
 
       function playPowerLockSound(value) {
@@ -3096,10 +3096,24 @@
         unit.previousX = unit.x;
         unit.previousY = unit.y;
         state.units.push(unit);
-        state.placementAnimation = { unitId: unit.id, age: 0, duration: .3 };
+        state.placementAnimation = { unitId: unit.id, owner: unit.owner, age: 0, duration: .34 };
+        state.effects.push({ type: 'placement-impact', id: `placement-impact-${unit.id}`,
+          x: unit.x, y: unit.y, owner: unit.owner,
+          scale: heroFor(unit.owner)?.id === 'big-boy' ? 1.12 : 1,
+          shake: heroFor(unit.owner)?.id === 'big-boy' ? 2.5 : 2.1,
+          age: 0, duration: .42 });
+        for (let index = 0; index < 8; index += 1) {
+          const angle = Math.PI * 2 * index / 8 + (Math.random() - .5) * .32;
+          const speed = 20 + Math.random() * 38;
+          state.particles.push({ x: unit.x + Math.cos(angle) * 4, y: unit.y + Math.sin(angle) * 4,
+            vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 5,
+            life: .22 + Math.random() * .16, size: 1.5 + Math.random() * 1.7,
+            color: ['#c6b88c', '#b7c2bb', '#e0d6b5'][index % 3] });
+        }
+        if (state.particles.length > 240) state.particles.splice(0, state.particles.length - 240);
         state.placementPreview = null;
         state.phase = 'aiming';
-        playSound('drop', .42);
+        playSound('drop', .42, heroFor(unit.owner)?.id === 'big-boy' ? .72 : 1);
         if (!fromOnlineHost && shouldForwardOnlineAction()) sendOnlineAction({ type: 'place', y });
         updateHud();
         return true;
@@ -6984,7 +6998,11 @@
         while (onlineSession.playedBrickImpactIds.size > 128) onlineSession.playedBrickImpactIds.delete(onlineSession.playedBrickImpactIds.values().next().value);
         const confirmedPlacement = state.phase === 'placement' && snapshot.phase === 'aiming';
         state.phase = preserveTriggerSelection ? 'trigger-select' : snapshot.phase;
-        if (confirmedPlacement && onlineSession.role === 'challenger') playSound('drop', .42);
+        if (confirmedPlacement && onlineSession.role === 'challenger') {
+          const owner = snapshot.placementAnimation?.owner ?? onlineSession.playerIndex;
+          const heroId = snapshot.hero?.choices?.[owner];
+          playSound('drop', .42, heroId === 'big-boy' ? .72 : 1);
+        }
         state.placementPreview = snapshot.phase === 'placement' && state.placementPreview &&
           onlineSession.playerIndex === turns.playerIndex ? state.placementPreview : snapshot.placementPreview;
         state.placementAnimation = snapshot.placementAnimation || null;
@@ -8054,9 +8072,11 @@
         const placement = state.placementAnimation?.unitId === unit.id ? state.placementAnimation : null;
         if (placement) {
           const t = Math.max(0, Math.min(1, placement.age / placement.duration));
-          visualY -= 38 * (1 - t) ** 1.6;
-          introAlpha = .52 + .48 * t;
-          placementScale = .78 + .22 * t;
+          const settle = 1 - (1 - t) ** 3;
+          const startScale = heroFor(placement.owner)?.id === 'big-boy' ? 1.32 : 1.2;
+          visualY -= 42 * (1 - settle) ** 1.25;
+          introAlpha = .78 + .22 * settle;
+          placementScale = startScale - (startScale - 1) * settle;
         }
         if (introDrop?.unitId === unit.id && introDrop.phase === 'falling') {
           const t = Math.min(1, Math.max(0, (performance.now() - introDrop.start) / introDrop.duration));
@@ -8374,6 +8394,17 @@
             ctx.strokeStyle = '#d2d7d4';
             ctx.lineWidth = 2.5 * (1 - t) + .5;
             ctx.beginPath(); ctx.arc(effect.x, effect.y, 8 + eased * 54, 0, Math.PI * 2); ctx.stroke();
+          } else if (effect.type === 'placement-impact') {
+            const t = Math.max(0, Math.min(1, progress));
+            const eased = 1 - (1 - t) ** 2;
+            ctx.globalAlpha = (1 - t) * .16;
+            ctx.fillStyle = '#d7d0b4';
+            const scale = effect.scale || 1;
+            ctx.beginPath(); ctx.arc(effect.x, effect.y, (5 + eased * 24) * scale, 0, Math.PI * 2); ctx.fill();
+            ctx.globalAlpha = (1 - t) * .38;
+            ctx.strokeStyle = '#d8d1b8';
+            ctx.lineWidth = 1.8 * (1 - t) + .35;
+            ctx.beginPath(); ctx.arc(effect.x, effect.y, (8 + eased * 30) * scale, 0, Math.PI * 2); ctx.stroke();
           } else if (effect.type === 'hardening-gather') {
             const t = Math.max(0, Math.min(1, progress));
             const radius = effect.radius * (2.4 - 1.35 * t);
@@ -8600,6 +8631,7 @@
         const shakeStrength = {
           'fall-impact': 10,
           'brick-impact': 6,
+          'placement-impact': 2.1,
           pulse: 5.5,
           blackhole: 6.5,
           'repulsion-wave': 2.4
@@ -8607,7 +8639,7 @@
         const shakeEffect = [...state.effects].reverse().find(effect => shakeStrength[effect.type]);
         if (shakeEffect) {
           const t = Math.max(0, Math.min(1, shakeEffect.age / shakeEffect.duration));
-          const shake = shakeStrength[shakeEffect.type] * (1 - t) ** 2;
+          const shake = (shakeEffect.shake ?? shakeStrength[shakeEffect.type]) * (1 - t) ** 2;
           const now = performance.now();
           ctx.translate(Math.sin(now * .071) * shake, Math.cos(now * .093) * shake * .72);
         }
