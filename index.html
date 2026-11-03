@@ -1719,7 +1719,7 @@
         'data-barrier': '내 스톤만 통과 가능한 특수 장벽을 배치합니다. 장벽은 다음 상대 턴까지 유지됩니다.',
         'repulsion-field': '자신의 스톤, 구조물에 탄성을 부여합니다.'
       };
-      const TURN_LIMIT_MS = 35_000;
+      const TURN_LIMIT_MS = 40_000;
       const CARD_DRAW_HOLD_MS = 1050;
       const CARD_DRAW_DURATION_MS = 1550;
       const CARD_PRESENTATION = {
@@ -1845,6 +1845,8 @@
         playerTutorialCompleted: [false, false],
         particles: [],
         effects: [],
+        placementPreview: null,
+        placementAnimation: null,
         aiming: false,
         aimPoint: null,
         aimTension: 0,
@@ -2973,7 +2975,7 @@
         get playerIndex() { return (this.startingPlayer + this.globalTurn) % PLAYER.length; }
         get playerTurn() { return Math.floor(this.globalTurn / PLAYER.length) + 1; }
 
-        createCurrentUnit() {
+        createCurrentUnit(deferFieldRegistration = false) {
           if (this.isComplete) return null;
           const unit = new CurlingUnit({
             id: `unit-${this.globalTurn + 1}`,
@@ -2982,7 +2984,7 @@
             x: launchXForOwner(this.playerIndex),
             y: 365
           });
-          state.units.push(unit);
+          if (!deferFieldRegistration) state.units.push(unit);
           this.currentUnit = unit;
           return unit;
         }
@@ -3020,6 +3022,8 @@
         state.aiming = false;
         state.aimPoint = null;
         state.aimTension = 0;
+        state.placementPreview = null;
+        state.placementAnimation = null;
         state.powerMeter = null;
         state.aiAction = null;
         state.repositionUnit = null;
@@ -3053,13 +3057,59 @@
           return;
         }
         drawCardForPlayer(turns.playerIndex, () => {
-          turns.createCurrentUnit();
+          const needsPlacement = !state.tutorial && !state.adventure;
+          const unit = turns.createCurrentUnit(needsPlacement);
           state.powerMeter = null;
           if (state.currentMap.items) spawnItemTrigger();
-          state.phase = 'aiming';
+          if (needsPlacement && unit) {
+            state.placementPreview = { x: unit.x, y: TABLE.top + (TABLE.bottom - TABLE.top) * .5, valid: true };
+            state.phase = 'placement';
+          } else {
+            state.placementPreview = null;
+            state.phase = 'aiming';
+          }
           startTurnTimer();
           updateHud();
         });
+      }
+
+      function canPlaceLaunchStone(y) {
+        const unit = turns.currentUnit;
+        if (!unit || !Number.isFinite(y)) return false;
+        const radius = unit.radius;
+        if (y < TABLE.top + radius || y > TABLE.bottom - radius) return false;
+        const x = launchXForOwner(turns.playerIndex);
+        if (state.units.some(other => other !== unit && other.status !== 'fallen' &&
+            Math.hypot(other.x - x, other.y - y) < other.radius + radius + 2)) return false;
+        if (state.bricks.some(brick => Math.abs(brick.x - x) < brick.width / 2 + radius &&
+            Math.abs(brick.y - y) < brick.height / 2 + radius)) return false;
+        if (state.currentMap.walls && wallSegments().some(wall =>
+            x + radius > wall.x1 && x - radius < wall.x2 && y + radius > wall.y1 && y - radius < wall.y2)) return false;
+        return true;
+      }
+
+      function confirmLaunchPlacement(y, fromOnlineHost = false) {
+        if (state.phase !== 'placement' || !turns.currentUnit || !canPlaceLaunchStone(y)) return false;
+        const unit = turns.currentUnit;
+        unit.x = launchXForOwner(turns.playerIndex);
+        unit.y = y;
+        unit.previousX = unit.x;
+        unit.previousY = unit.y;
+        state.units.push(unit);
+        state.placementAnimation = { unitId: unit.id, age: 0, duration: .3 };
+        state.placementPreview = null;
+        state.phase = 'aiming';
+        playSound('drop', .42);
+        if (!fromOnlineHost && shouldForwardOnlineAction()) sendOnlineAction({ type: 'place', y });
+        updateHud();
+        return true;
+      }
+
+      function updatePlacementPreview(point) {
+        if (state.phase !== 'placement' || !canControlPlayer(turns.playerIndex) || !turns.currentUnit) return;
+        const y = Math.max(TABLE.top + turns.currentUnit.radius,
+          Math.min(TABLE.bottom - turns.currentUnit.radius, point.y));
+        state.placementPreview = { x: launchXForOwner(turns.playerIndex), y, valid: canPlaceLaunchStone(y) };
       }
 
       function startTurnTimer() {
@@ -3145,6 +3195,7 @@
         if (turns.isComplete || state.turnDeadline == null) return;
         const unit = turns.currentUnit;
         if (unit && !unit.hasLaunched) {
+          if (!state.units.includes(unit)) state.units.push(unit);
           if (unit.status !== 'fallen') playFileSound('unitDeath', { volume: .5 });
           unit.status = 'fallen';
           unit.vx = 0;
@@ -3168,6 +3219,7 @@
         state.turnDeadline = null;
         state.turnPausedAt = null;
         state.repositionMode = null;
+        state.placementPreview = null;
         playSound('turn');
         turns.finishCurrentTurn();
         prepareTurn();
@@ -3333,7 +3385,7 @@
         });
         endTurnButton.disabled = Boolean(state.adventure) || state.phase !== 'turn-ready' || state.bullets.length > 0 || !canControlPlayer(turns.playerIndex);
         speedToggle.disabled = !canChangeSpeed();
-        actionHint.textContent = state.phase === 'sliding' ? '스톤이 움직이는 중' : state.phase === 'turn-ready' ? '턴을 마치거나 카드를 사용하세요' : state.phase === 'reposition' && state.repositionMode === 'ammo' ? '총알 장전: 당겨서 발사' : state.phase === 'trigger-select' ? '트리거 종류를 선택하세요' : needsPowerMeter() && state.powerMeter?.stage === 'locked' ? '스톤을 드래그해 방향을 지정하세요' : needsPowerMeter() && state.powerMeter?.stage === 'spinning' ? '미터를 보고 파워를 결정하세요' : '스톤 아래 발사 버튼을 누르세요';
+        actionHint.textContent = state.phase === 'placement' ? '발사할 높이를 골라 테이블을 클릭하세요' : state.phase === 'sliding' ? '스톤이 움직이는 중' : state.phase === 'turn-ready' ? '턴을 마치거나 카드를 사용하세요' : state.phase === 'reposition' && state.repositionMode === 'ammo' ? '총알 장전: 당겨서 발사' : state.phase === 'trigger-select' ? '트리거 종류를 선택하세요' : needsPowerMeter() && state.powerMeter?.stage === 'locked' ? '스톤을 드래그해 방향을 지정하세요' : needsPowerMeter() && state.powerMeter?.stage === 'spinning' ? '미터를 보고 파워를 결정하세요' : '스톤 아래 발사 버튼을 누르세요';
         if (state.aiMode && turns.playerIndex === state.aiOwner && !turns.isComplete)
           actionHint.textContent = `${aiLevel().name} · 수를 계산하는 중`;
         handPanels.forEach((panel, index) => panel.classList.toggle('current', !turns.isComplete && index === turns.playerIndex));
@@ -4063,6 +4115,24 @@
         const action = state.aiAction;
         if (timestamp < action.deadline) return;
         const unit = activeLaunchUnit();
+        if (state.phase === 'placement' && unit) {
+          const candidates = [];
+          for (let y = TABLE.top + unit.radius + 4; y <= TABLE.bottom - unit.radius - 4; y += 24) {
+            if (!canPlaceLaunchStone(y)) continue;
+            const x = launchXForOwner(unit.owner);
+            const nearest = state.units.reduce((distance, other) => Math.min(distance,
+              Math.hypot(other.x - x, other.y - y) - other.radius - unit.radius), 240);
+            const obstacleClearance = state.bricks.reduce((distance, brick) => Math.min(distance,
+              Math.hypot(Math.max(0, Math.abs(brick.x - x) - brick.width / 2),
+                Math.max(0, Math.abs(brick.y - y) - brick.height / 2)) - unit.radius), 240);
+            const centerPreference = 18 - Math.abs(y - (TABLE.top + TABLE.bottom) / 2) * .035;
+            candidates.push({ y, score: Math.min(nearest, obstacleClearance) + centerPreference + Math.random() * 13 });
+          }
+          const placement = candidates.sort((a, b) => b.score - a.score)[0];
+          confirmLaunchPlacement(placement?.y ?? (TABLE.top + TABLE.bottom) / 2);
+          action.deadline = timestamp + 650;
+          return;
+        }
         if (['aiming', 'reposition'].includes(state.phase) && unit) {
           if (state.repositionMode === 'ammo') {
             const plan = aiShotPlan(unit, true);
@@ -4396,6 +4466,10 @@
       }
 
       function update(dt, timestamp, refreshHud = true) {
+        if (state.placementAnimation) {
+          state.placementAnimation.age += dt;
+          if (state.placementAnimation.age >= state.placementAnimation.duration) state.placementAnimation = null;
+        }
         state.bricks.forEach(brick => brick.update(dt));
         state.units.forEach(unit => unit.update(dt));
         emitBarrierParticles(dt);
@@ -6772,6 +6846,9 @@
           particles: state.particles.map(particle => ({ ...particle })),
           effects: state.effects.map(effect => ({ ...effect })),
           phase: state.phase === 'trigger-select' ? (state.phaseBeforeTriggerSelect || 'turn-ready') : state.phase,
+          pendingUnit: state.phase === 'placement' && turns.currentUnit ? { ...turns.currentUnit } : null,
+          placementPreview: state.placementPreview ? { ...state.placementPreview } : null,
+          placementAnimation: state.placementAnimation ? { ...state.placementAnimation } : null,
           aiming: state.aiming,
           aimPoint: state.aimPoint ? { ...state.aimPoint } : null,
           aimTension: state.aimTension,
@@ -6833,7 +6910,7 @@
         const previousHeroOffers = state.heroOffers[onlineSession.playerIndex]?.join(',');
         const sameRound = snapshot.series?.roundIndex === onlineSession.roundIndex && snapshot.currentMapId === state.currentMap.id;
         const sameTurn = sameRound && snapshot.globalTurn === turns.globalTurn;
-        const inputAllowed = sameTurn && ['aiming', 'sliding', 'turn-ready', 'reposition'].includes(snapshot.phase) &&
+        const inputAllowed = sameTurn && ['placement', 'aiming', 'sliding', 'turn-ready', 'reposition'].includes(snapshot.phase) &&
           ((snapshot.startingPlayer || 0) + snapshot.globalTurn) % PLAYER.length === onlineSession.playerIndex;
         const localAimUnit = state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit;
         const remoteAimId = snapshot.phase === 'reposition' ? snapshot.repositionUnitId : snapshot.currentUnitId;
@@ -6905,7 +6982,12 @@
           playSound(effect.sound || 'drop', 1.05);
         }
         while (onlineSession.playedBrickImpactIds.size > 128) onlineSession.playedBrickImpactIds.delete(onlineSession.playedBrickImpactIds.values().next().value);
+        const confirmedPlacement = state.phase === 'placement' && snapshot.phase === 'aiming';
         state.phase = preserveTriggerSelection ? 'trigger-select' : snapshot.phase;
+        if (confirmedPlacement && onlineSession.role === 'challenger') playSound('drop', .42);
+        state.placementPreview = snapshot.phase === 'placement' && state.placementPreview &&
+          onlineSession.playerIndex === turns.playerIndex ? state.placementPreview : snapshot.placementPreview;
+        state.placementAnimation = snapshot.placementAnimation || null;
         if (preserveTriggerSelection) state.phaseBeforeTriggerSelect = snapshot.phase;
         // A remote aiming indicator is display-only; only a local pointer owns local input.
         state.aiming = preserveAim || (snapshot.aiming && !inputAllowed);
@@ -6947,7 +7029,10 @@
         state.turnPausedByHost = snapshot.turnPaused === true;
         state.turnPausedAt = state.turnPausedByHost ? Date.now() : null;
         turnTimer.hidden = state.turnDeadline == null;
-        turns.currentUnit = state.units.find(unit => unit.id === snapshot.currentUnitId) || null;
+        turns.currentUnit = state.units.find(unit => unit.id === snapshot.currentUnitId) ||
+          (snapshot.pendingUnit ? Object.assign(new CurlingUnit({ id: snapshot.pendingUnit.id,
+            owner: snapshot.pendingUnit.owner, turnNumber: snapshot.pendingUnit.turnNumber,
+            x: snapshot.pendingUnit.x, y: snapshot.pendingUnit.y }), snapshot.pendingUnit) : null);
         state.repositionUnit = state.units.find(unit => unit.id === snapshot.repositionUnitId) || null;
         mapIndicator.textContent = currentMap.name;
         dealPlayer.textContent = snapshot.dealPlayer;
@@ -6995,8 +7080,13 @@
           return;
         }
         if (!onlineSession?.started || onlineSession.role !== 'host' || packet.playerIndex !== 1 || turns.playerIndex !== 1 ||
-            !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase)) return;
+            !['placement', 'aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase)) return;
         const action = packet.action;
+        if (state.phase === 'placement' && action.type !== 'place') return;
+        if (action.type === 'place' && state.phase === 'placement' && Number.isFinite(action.y)) {
+          confirmLaunchPlacement(action.y, true);
+          return;
+        }
         if (action.type === 'power-start' && needsPowerMeter() && activeLaunchUnit()?.id === action.unitId) {
           startPowerMeter();
         } else if (action.type === 'power-lock' && needsPowerMeter() && activeLaunchUnit()?.id === action.unitId) {
@@ -7960,6 +8050,14 @@
         const introDrop = state.tutorialIntroDrop;
         if (introDrop?.unitId === unit.id && introDrop.phase === 'hidden') { ctx.restore(); return; }
         let introAlpha = 1;
+        let placementScale = 1;
+        const placement = state.placementAnimation?.unitId === unit.id ? state.placementAnimation : null;
+        if (placement) {
+          const t = Math.max(0, Math.min(1, placement.age / placement.duration));
+          visualY -= 38 * (1 - t) ** 1.6;
+          introAlpha = .52 + .48 * t;
+          placementScale = .78 + .22 * t;
+        }
         if (introDrop?.unitId === unit.id && introDrop.phase === 'falling') {
           const t = Math.min(1, Math.max(0, (performance.now() - introDrop.start) / introDrop.duration));
           const offset = t < .72
@@ -7969,6 +8067,7 @@
           introAlpha = Math.min(1, Math.max(0, (t - .04) / .4));
         }
         ctx.translate(unit.x, visualY);
+        ctx.scale(placementScale, placementScale);
         ctx.globalAlpha = introAlpha;
         if (unit.fluidTimer > 0) {
           ctx.beginPath();
@@ -8519,6 +8618,7 @@
         drawAdventureDummies();
         drawItemTriggers();
         state.units.forEach(drawUnit);
+        drawPlacementPreview();
         drawLockedPower();
         state.bricks.forEach(brick => drawBrick(brick));
         state.bullets.forEach(drawBullet);
@@ -8530,6 +8630,29 @@
         drawAdventureGoal();
         drawSkullEffects();
         drawFallImpacts();
+        ctx.restore();
+      }
+
+      function drawPlacementPreview() {
+        const preview = state.placementPreview;
+        const unit = turns.currentUnit;
+        if (state.phase !== 'placement' || !preview || !unit) return;
+        const image = images[unit.owner];
+        ctx.save();
+        ctx.globalAlpha = preview.valid === false ? .28 : .42;
+        ctx.beginPath();
+        ctx.arc(preview.x, preview.y, unit.radius + 4, 0, Math.PI * 2);
+        ctx.fillStyle = preview.valid === false ? 'rgba(208, 76, 68, .28)' : 'rgba(220, 231, 218, .2)';
+        ctx.fill();
+        ctx.strokeStyle = preview.valid === false ? 'rgba(239, 102, 86, .9)' : 'rgba(224, 218, 174, .85)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        if (image.complete && image.naturalWidth) {
+          ctx.beginPath(); ctx.arc(preview.x, preview.y, unit.radius, 0, Math.PI * 2); ctx.clip();
+          ctx.drawImage(image, preview.x - unit.radius, preview.y - unit.radius, unit.radius * 2, unit.radius * 2);
+        }
         ctx.restore();
       }
 
@@ -8948,6 +9071,16 @@
       }
 
       canvas.addEventListener('pointerdown', event => {
+        if (state.phase === 'placement' && canControlPlayer(turns.playerIndex)) {
+          const point = eventPoint(event);
+          updatePlacementPreview(point);
+          if (state.placementPreview?.valid) {
+            if (shouldForwardOnlineAction()) sendOnlineAction({ type: 'place', y: state.placementPreview.y });
+            else confirmLaunchPlacement(state.placementPreview.y);
+          }
+          event.preventDefault();
+          return;
+        }
         if (!['aiming', 'reposition'].includes(state.phase) || !canControlPlayer(turns.playerIndex)) return;
         const point = eventPoint(event);
         const unit = state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit;
@@ -8961,6 +9094,7 @@
       });
 
       canvas.addEventListener('pointermove', event => {
+        if (state.phase === 'placement') updatePlacementPreview(eventPoint(event));
         const unit = state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit;
         if (state.aiming && localAimPointerId === event.pointerId && unit) {
           updateAimFromInput(unit, eventPoint(event));
