@@ -1936,7 +1936,6 @@
       }
       let onlineStartPending = false;
       let onlineInterpolation = null;
-      let onlineMapClock = null;
       let onlineLastSnapshotAt = null;
       let localAimPointerId = null;
       let selectedPublicRoom = null;
@@ -2140,7 +2139,6 @@
         if (localAimPointerId !== null && canvas.hasPointerCapture?.(localAimPointerId)) canvas.releasePointerCapture(localAimPointerId);
         localAimPointerId = null;
         onlineInterpolation = null;
-        onlineMapClock = null;
         onlineLastSnapshotAt = null;
         Object.assign(state, { units: [], bricks: [], bullets: [], triggers: [], particles: [], effects: [],
           hands: [[], []], decks: [[], []], playerDecks: [[], []], fallPoints: [0, 0], escapePoints: [0, 0], playerLevels: [guestProfile?.level || 1, guestProfile?.level || 1], triggerPlacementUsed: [false, false], triggerPlacementCount: [0, 0],
@@ -2797,29 +2795,17 @@
       }
 
       function updateOnlineInterpolation(timestamp) {
-        if (onlineInterpolation) {
-          const amount = Math.min(1, (timestamp - onlineInterpolation.startedAt) / onlineInterpolation.duration);
-          for (const item of onlineInterpolation.units) {
-            item.unit.x = item.fromX + (item.toX - item.fromX) * amount;
-            item.unit.y = item.fromY + (item.toY - item.fromY) * amount;
-            if (item.unit.ability?.guard && item.fromAngle != null) {
-              item.unit.ability.guardAngle = item.fromAngle + (item.toAngle - item.fromAngle) * amount;
-            }
+        if (!onlineInterpolation) return;
+        const amount = Math.min(1, (timestamp - onlineInterpolation.startedAt) / onlineInterpolation.duration);
+        for (const item of onlineInterpolation.units) {
+          item.unit.x = item.fromX + (item.toX - item.fromX) * amount;
+          item.unit.y = item.fromY + (item.toY - item.fromY) * amount;
+          if (item.unit.ability?.guard && item.fromAngle != null) {
+            item.unit.ability.guardAngle = item.fromAngle + (item.toAngle - item.fromAngle) * amount;
           }
-          if (amount >= 1) onlineInterpolation = null;
         }
-        if (onlineMapClock) {
-          const elapsed = Math.max(0, Math.min(100, timestamp - onlineMapClock.lastFrame)) / 1000;
-          onlineMapClock.lastFrame = timestamp;
-          if (!onlineMapClock.paused) onlineMapClock.display += elapsed * onlineMapClock.speed;
-          const target = onlineMapClock.target + (onlineMapClock.paused ? 0 : Math.max(0, timestamp - onlineMapClock.syncedAt) / 1000 * onlineMapClock.speed);
-          const error = target - onlineMapClock.display;
-          if (Math.abs(error) > .01 && elapsed > 0) {
-            const correction = Math.max(-elapsed * onlineMapClock.speed * .35, Math.min(elapsed * onlineMapClock.speed * .35, error * .08));
-            onlineMapClock.display = Math.max(onlineMapClock.display, onlineMapClock.display + correction);
-          }
-          state.mapTime = onlineMapClock.display;
-        }
+        state.mapTime = onlineInterpolation.fromMapTime + (onlineInterpolation.toMapTime - onlineInterpolation.fromMapTime) * amount;
+        if (amount >= 1) onlineInterpolation = null;
       }
 
       // Units are intentionally self-contained so future abilities can hook into turns or collisions.
@@ -6925,7 +6911,7 @@
         state.aiming = preserveAim || (snapshot.aiming && !inputAllowed);
         state.aimPoint = localAim ? localAim.aimPoint : snapshot.aimPoint;
         state.aimTension = localAim ? localAim.aimTension : snapshot.aimTension;
-        state.mapTime = onlineMapClock?.display ?? snapshot.mapTime;
+        state.mapTime = onlineInterpolation.fromMapTime;
         state.repositionMode = snapshot.repositionMode || null;
         const incomingPower = snapshot.powerMeter ? { ...snapshot.powerMeter, lastAt: snapshotTime } : null;
         if (incomingPower?.stage === 'locked') {
@@ -6955,16 +6941,6 @@
           if (pending != null && snapshot.speedLevel === pending) onlineSession.pendingSpeedLevel = null;
           setSpeedLevel(nextSpeed, nextSpeed !== state.speedLevel && pending !== nextSpeed);
         }
-        if (!onlineMapClock || !sameRound) {
-          onlineMapClock = { display: snapshot.mapTime, lastFrame: snapshotTime, target: snapshot.mapTime,
-            syncedAt: snapshotTime, speed: state.gameSpeed, paused: snapshot.turnPaused === true };
-        } else {
-          onlineMapClock.target = snapshot.mapTime;
-          onlineMapClock.syncedAt = snapshotTime;
-          onlineMapClock.speed = state.gameSpeed;
-          onlineMapClock.paused = snapshot.turnPaused === true;
-        }
-        state.mapTime = onlineMapClock.display;
         turns.globalTurn = snapshot.globalTurn;
         turns.startingPlayer = snapshot.startingPlayer || 0;
         state.turnDeadline = Number.isFinite(snapshot.turnRemaining) ? Date.now() + snapshot.turnRemaining : null;
