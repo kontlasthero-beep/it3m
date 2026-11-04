@@ -1004,7 +1004,7 @@
   <link rel="stylesheet" href="collection-layout.css?v=2">
   <link rel="stylesheet" href="refined-card-detail-modal.css?v=2">
   <link rel="stylesheet" href="refinery-visuals.css">
-  <link rel="stylesheet" href="deck-flow.css?v=1">
+  <link rel="stylesheet" href="deck-flow.css?v=2">
 </head>
 <body>
   <main class="app">
@@ -1395,7 +1395,7 @@
           <p class="deck-status" id="deckStatus" role="status"></p>
         </section>
         <section class="deck-section deck-explorer"><h3><span>카드 보관함</span><span class="deck-pool-count" id="deckPoolCount" aria-live="polite"></span></h3>
-          <div class="deck-pool-tools"><input id="deckCardSearch" type="search" placeholder="카드 이름 검색" aria-label="카드 이름 검색"><select id="deckCategoryFilter" aria-label="카드 카테고리"><option value="all">모든 카테고리</option></select><select id="deckAvailabilityFilter" aria-label="카드 사용 조건"><option value="all">전체 카드</option><option value="available">지금 가방에 담기 가능</option><option value="locked">잠긴 카드</option><option value="hero">선택 영웅 사용 가능</option></select></div>
+          <div class="deck-pool-tools"><input id="deckCardSearch" type="search" placeholder="카드 이름 검색" aria-label="카드 이름 검색"><select id="deckCategoryFilter" aria-label="카드 카테고리" hidden><option value="all">모든 카테고리</option></select><select id="deckAvailabilityFilter" aria-label="카드 사용 조건"><option value="all">전체 카드</option><option value="available">지금 가방에 담기 가능</option><option value="locked">잠긴 카드</option><option value="hero">선택 영웅 사용 가능</option></select></div>
           <div class="deck-pool" id="deckPool"></div>
         </section>
       </div>
@@ -1404,7 +1404,7 @@
           <span class="deck-hero-eyebrow">SECOND CHANCE · HERO</span>
           <h3 id="deckHeroScreenTitle">영웅 선택</h3>
           <div class="deck-hero-carousel"><button id="deckHeroPrevButton" type="button" aria-label="이전 영웅">‹</button><div class="deck-hero-portrait-frame"><img id="deckHeroPickerPortrait" alt=""></div><button id="deckHeroNextButton" type="button" aria-label="다음 영웅">›</button></div>
-          <strong id="deckHeroPickerName"></strong><p id="deckHeroPickerDescription"></p><span id="deckHeroPickerCount"></span>
+          <div class="deck-hero-identity" aria-live="polite" aria-atomic="true"><strong id="deckHeroPickerName"></strong><p id="deckHeroPickerDescription"></p><span id="deckHeroPickerCount"></span></div>
           <div class="deck-hero-actions"><button id="deckHeroCancelButton" type="button">이전으로</button><button class="primary" id="deckHeroConfirmButton" type="button">이 영웅으로 만들기</button></div>
         </div>
       </section>
@@ -8229,6 +8229,7 @@
         if (!onlineSession?.maps || onlineSession.role !== 'host') return;
         onlineSession.roundIndex = roundIndex;
         onlineSession.result = null;
+        state.refineryUses = [0, 0];
         const map = MAPS.find(item => item.id === onlineSession.maps[roundIndex]) || MAPS[0];
         state.selectedMap = map;
         state.currentMap = map;
@@ -8560,9 +8561,7 @@
         name.textContent = choice.name;
         const meta = document.createElement('span');
         meta.className = 'map-deck-meta';
-        const categories = choice.cards.map(id => CARD_CATEGORY_NAMES[deckCard(id)?.category] || '공용');
-        const roleCounts = [...new Set(categories)].map(role => `${role} ${categories.filter(value => value === role).length}`);
-        meta.textContent = `${heroName(choice.heroId)} · ${choice.cards.length}장 · ${roleCounts.slice(0, 2).join(' / ') || '기본 구성'}`;
+        meta.textContent = `${heroName(choice.heroId)} · ${choice.cards.length}장`;
         copy.append(name, meta);
         const stack = document.createElement('span');
         stack.className = 'map-deck-stack';
@@ -8639,10 +8638,17 @@
           const hero = HEROES.find(item => item.id === heroId);
           const isEmpty = !savedDecks[index];
           button.type = 'button';
-          button.className = `deck-package${isEmpty ? ' preset-empty' : ''}`;
+          button.className = `deck-package${isEmpty ? ' preset-empty' : ''}${!isEmpty && !hero?.portrait ? ' hero-missing' : ''}`;
           button.setAttribute('aria-label', isEmpty ? `빈 덱 슬롯 ${index + 1}, 새 덱 만들기` : `${savedDeckNames[index]}, ${heroName(heroId)}, 덱 편집`);
           button.title = isEmpty ? `새 덱 만들기 · ${index + 1}번 슬롯` : `${savedDeckNames[index]} · ${heroName(heroId)}`;
-          if (hero?.portrait) button.style.setProperty('--package-image', `url("${hero.portrait}")`);
+          if (!isEmpty && hero?.portrait) {
+            const portrait = document.createElement('img');
+            portrait.className = 'deck-package-portrait';
+            portrait.src = hero.portrait;
+            portrait.alt = '';
+            portrait.loading = 'lazy';
+            button.append(portrait);
+          }
           const label = document.createElement(isEmpty ? 'span' : 'strong');
           label.className = isEmpty ? 'deck-package-plus' : 'deck-package-name';
           label.textContent = isEmpty ? '+' : savedDeckNames[index] || `덱 ${index + 1}`;
@@ -8657,6 +8663,7 @@
       function showDeckView(view) {
         deckView = view;
         deckOverlay.dataset.view = view;
+        deckOverlay.dataset.heroOrigin = view === 'hero' ? deckHeroReturnView : '';
         const heroFromEditor = view === 'hero' && deckHeroReturnView === 'editor';
         deckListScreen.hidden = view === 'editor' || heroFromEditor;
         deckLayout.hidden = view === 'list' || (view === 'hero' && !heroFromEditor);
@@ -11272,6 +11279,7 @@
           updatePlayerNames();
           resultOverlay.hidden = true;
           startOverlay.hidden = false;
+          state.refineryUses = [0, 0];
           state.phase = 'intro';
         } else openMapSelection('result');
       });

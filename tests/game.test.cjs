@@ -56,6 +56,8 @@ function game() {
     setInterval() { return 1; }, clearInterval() {}, crypto: { randomUUID: () => 'test-id' }
   });
   const html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../ai-balance.js'), 'utf8'), context);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '../card-unlocks.js'), 'utf8'), context);
   vm.runInContext(fs.readFileSync(path.join(__dirname, '../tutorial-story.js'), 'utf8'), context);
   const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
   vm.runInContext(script.replace(/\}\)\(\);\s*$/, 'globalThis.run = code => eval(code); })();'), context);
@@ -1260,6 +1262,51 @@ test('hero choices remain active through the second online round', () => {
     assert.equal(remainingTriggerPlacements(1),2);`);
   host.flush(); host.flush();
   host.run(`assert.equal(turns.startingPlayer,1); assert.equal(state.heroChoices[0],'hunter');`);
+});
+
+test('refiner uses reset for a local replay and show three remaining', () => {
+  const g = game();
+  g.run(`state.refineryUses=[2,3]; state.mapSelectionOrigin='result';
+    startSelectedMap();
+    assert.deepEqual([...state.refineryUses],[0,0]);
+    state.heroChoices[0]='refiner';
+    const countNode={textContent:''};
+    const icon={getAttribute(){return '';},setAttribute(){}};
+    const tool={dataset:{owner:'0'},classList:{toggle(){}},
+      querySelector(selector){return selector==='img'?icon:countNode;},
+      setAttribute(name,value){this[name]=value;}};
+    triggerToolButtons.push(tool);
+    updateTriggerTools();
+    assert.equal(countNode.textContent,'3');
+    assert.equal(tool['aria-label'],'가공기, 남은 정제 횟수 3');
+    state.refineryUses[0]=3; updateTriggerTools();
+    assert.equal(countNode.textContent,'0');
+    returnToHome(); assert.deepEqual([...state.refineryUses],[0,0]);`);
+});
+
+test('refiner uses reset for the next online round and reach the challenger', () => {
+  const {host, guest, send} = onlinePair();
+  host.run(`state.heroChoices=['refiner','refiner'];
+    for (let round=0; round<3; round++) {
+      startOnlineRound(round);
+      assert.deepEqual([...state.refineryUses],[0,0]);
+      assert.equal(heroRule(0,'refineLimit',3)-state.refineryUses[0],3);
+      state.refineryUses=[3,3];
+      assert.equal(heroRule(0,'refineLimit',3)-state.refineryUses[0],0);
+    }
+    startOnlineRound(2);
+    assert.deepEqual([...state.refineryUses],[0,0]);`);
+  send(2);
+  guest.run(`assert.deepEqual([...state.refineryUses],[0,0]);`);
+});
+
+test('refiner uses reset when an online game returns to the lobby', () => {
+  const g = game();
+  g.run(`state.refineryUses=[2,1]; onlineSession={code:'ROOM',token:'test'};
+    closeOnlineSocket=()=>{}; postOnlineRequest=()=>Promise.resolve();
+    replayButton.listeners.click();
+    assert.deepEqual([...state.refineryUses],[0,0]);
+    assert.equal(state.phase,'intro');`);
 });
 
 test('joker pays the fall penalty on an expired unlaunched turn', () => {
