@@ -6,7 +6,8 @@ const net = require('node:net');
 const path = require('node:path');
 const { WebSocket } = require('ws');
 const { createProfileStore, fameAtLevel, matchOutcome } = require('../progression');
-const { DEFAULT_DECK, validateDeck, deckForPreset } = require('../deck-config');
+const { DEFAULT_DECK, DECK_PRESET_COUNT, validateDeck, deckForPreset } = require('../deck-config');
+const emptyDeckSlots = () => Array(DECK_PRESET_COUNT).fill(null);
 
 test('eight-card bags allow one duplicate and respect unlock levels', async () => {
   const doubleHardening = ['hardening', 'hardening', 'guard', 'pulse', 'reposition', 'brick', 'blackhole', 'ammo'];
@@ -19,18 +20,18 @@ test('eight-card bags allow one duplicate and respect unlock levels', async () =
   assert.equal(validateDeck([...DEFAULT_DECK.slice(0, 7), 'data-barrier'], 1), false);
   assert.equal(validateDeck([...DEFAULT_DECK.slice(0, 7), 'data-barrier'], 2), true);
   assert.equal(validateDeck(DEFAULT_DECK.slice(0, 7), 2), false);
-  assert.deepEqual(deckForPreset([null, null, null], 0, 1, true), DEFAULT_DECK);
-  assert.equal(deckForPreset([null, null, null], 0, 1, false).includes('reposition'), false);
+  assert.deepEqual(deckForPreset(emptyDeckSlots(), 0, 1, true), DEFAULT_DECK);
+  assert.equal(deckForPreset(emptyDeckSlots(), 0, 1, false).includes('reposition'), false);
   const store = createProfileStore('');
   const account = await store.register('deck_owner', 'long-password', 'DECK');
   assert.equal(account.profile.tutorialCompleted, false);
-  await assert.rejects(store.saveDecks(account.token, [doubleHardening, null, null], 0), /가방은/);
+  await assert.rejects(store.saveDecks(account.token, [doubleHardening, ...emptyDeckSlots().slice(1)], 0), /가방은/);
   const completed = await store.completeTutorial(account.token);
   assert.equal(completed.tutorialCompleted, true);
   assert.equal(completed.adventureUnlocked, true);
   assert.equal((await store.completeTutorial(account.token)).tutorialCompleted, true);
-  await assert.rejects(store.saveDecks(account.token, [[...DEFAULT_DECK.slice(0, 7), 'escape'], null, null], 0), /가방은/);
-  const saved = await store.saveDecks(account.token, [null, doubleHardening, null], 1);
+  await assert.rejects(store.saveDecks(account.token, [[...DEFAULT_DECK.slice(0, 7), 'escape'], ...emptyDeckSlots().slice(1)], 0), /가방은/);
+  const saved = await store.saveDecks(account.token, [null, doubleHardening, ...emptyDeckSlots().slice(2)], 1);
   assert.deepEqual(saved.decks[1], doubleHardening);
   assert.equal(saved.activePreset, 1);
   assert.deepEqual((await store.login('deck_owner', 'long-password')).profile.decks[1], doubleHardening);
@@ -46,7 +47,7 @@ test('local level 100 is a view-only override for memory profiles and deck valid
   const account = await local.register('local_level100', 'long-password', '테스터');
   assert.equal(account.profile.level, 100);
   const deck = [...DEFAULT_DECK.slice(0, 7), 'data-barrier'];
-  const saved = await local.saveDecks(account.token, [deck, null, null], 0);
+  const saved = await local.saveDecks(account.token, [deck, ...emptyDeckSlots().slice(1)], 0);
   assert.equal(saved.level, 100);
   assert.deepEqual(saved.decks[0], deck);
   const ordinary = createProfileStore('');

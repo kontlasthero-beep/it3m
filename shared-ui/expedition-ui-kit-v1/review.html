@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Second Chance · UI asset review</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, "Noto Sans KR", sans-serif; background:#0b1114; color:#eee9dc; }
+    * { box-sizing:border-box; }
+    body { margin:0; }
+    header { position:sticky; top:0; z-index:10; background:#0c1315ed; border-bottom:1px solid #455353; backdrop-filter:blur(15px); }
+    .bar { max-width:1380px; margin:auto; padding:13px 24px; display:flex; align-items:center; gap:20px; flex-wrap:wrap; }
+    .brand { margin:0 auto 0 0; }
+    h1 { font-family:Georgia,serif; letter-spacing:.09em; margin:0; font-size:1.4rem; font-weight:500; }
+    .subtitle { display:block; font-size:11px; color:#aab4ad; letter-spacing:.12em; margin-top:4px; }
+    select,button { color:#e8e5d9; border:1px solid #648079; background:#172428; border-radius:5px; font:inherit; padding:8px 11px; }
+    button { cursor:pointer; }
+    button.active { border-color:#e5b978; background:#3b342b; }
+    .controls { display:flex; gap:7px; align-items:center; flex-wrap:wrap; }
+    main { max-width:1380px; margin:auto; padding:30px 24px 100px; }
+    .intro { max-width:760px; color:#b5c2bb; line-height:1.65; font-size:14px; }
+    .eyebrow { color:#e5b978; font-size:11px; letter-spacing:.2em; text-transform:uppercase; }
+    h2 { margin:40px 0 8px; font:normal 30px Georgia,serif; }
+    h3 { margin:28px 0 14px; font-size:15px; color:#d7b986; font-weight:500; border-bottom:1px solid #39494a; padding-bottom:10px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:12px; }
+    .tile { min-width:0; padding:17px; border:1px solid #344548; border-radius:7px; background:#101a1d; }
+    .tile:hover { border-color:#6c8e86; }
+    .demo { min-height:95px; display:flex; align-items:center; justify-content:center; padding:10px; border-radius:4px; background:radial-gradient(circle at 50% 40%,#263235,#141b1d 70%); overflow:hidden; }
+    .skin { position:relative; width:min(100%,var(--asset-w)); height:auto; aspect-ratio:var(--asset-w) / var(--asset-h); flex:none; }
+    .skin img { display:block; width:100%; height:100%; }
+    .skin .label { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; text-align:center; font-size:clamp(12px,1.1vw,18px); font-weight:750; text-shadow:0 1px 4px #000b; padding:0 20%; line-height:1.3; pointer-events:none; }
+    .skin.square .label { display:none; }
+    .skin.tile .label { padding:0 15% 0 29%; font-size:clamp(11px,.9vw,15px); }
+    .skin.compact .label { padding:0 15% 0 24%; font-size:clamp(11px,.9vw,15px); }
+    .module-skin { width:min(100%,var(--asset-w)); position:relative; aspect-ratio:var(--asset-w) / var(--asset-h); }
+    .module-skin img { display:block; width:100%; height:100%; }
+    .module-skin .content { position:absolute; inset:9% 7%; pointer-events:none; display:flex; flex-direction:column; justify-content:center; gap:6px; font-size:clamp(9px,.9vw,15px); overflow:hidden; }
+    .module-skin .content strong { color:#ebd4a6; font-size:1.18em; }
+    .module-skin .content em { font-style:normal; color:#9db9b1; }
+    .module-skin.type-card .content { justify-content:end; align-items:center; inset:4% 4% 5%; }
+    .module-skin.type-deck-builder .content, .module-skin.type-collection .content, .module-skin.type-settings .content, .module-skin.type-stage .content { justify-content:start; }
+    .module-skin.type-deck-builder .content,.module-skin.type-collection .content { inset:4% 5%; }
+    .module-skin.type-hand-active .content,.module-skin.type-hand-inactive .content { justify-content:start; }
+    .meta { margin:14px 0 0; font-size:13px; color:#c7d0c8; }
+    .meta b { color:#efe9dc; font-weight:650; }
+    .sub { font-size:11px; color:#879b93; margin:5px 0 0; word-break:break-all; }
+    .links { display:flex; gap:10px; margin-top:11px; font-size:11px; }
+    a { color:#8fd0c4; }
+    .moodboards { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:12px; margin-top:12px; }
+    .moodboards img { max-width:100%; aspect-ratio:3/2; object-fit:contain; background:#182224; border:1px solid #3c4d4e; }
+    .moodboards figure { margin:0; font-size:12px; color:#abbab1; }
+    .moodboards figcaption { margin:7px 0; }
+    @media(max-width:680px){ .bar { padding:10px 15px; } main { padding:20px 14px 80px; } .grid { grid-template-columns:1fr; } h2 { font-size:25px; } }
+  </style>
+</head>
+<body>
+<header><div class="bar"><div class="brand"><h1>SECOND CHANCE</h1><span class="subtitle">UI ASSET EXPLORATION · REVIEW ONLY</span></div><div class="controls"><select id="theme" aria-label="디자인 계열"><option value="salvage">A · Salvage Terminal</option><option value="signal">B · AAB Signal</option></select><select id="state" aria-label="버튼 상태"><option value="idle">기본</option><option value="hover">마우스 올림</option><option value="pressed">누름</option><option value="disabled">비활성</option></select><button id="desktop" class="active" type="button">큰 화면</button><button id="compact" type="button">작은 화면</button></div></div></header>
+<main>
+  <span class="eyebrow">visual language / design proposal</span>
+  <h2>탐사 장비에서 시작한 인터페이스</h2>
+  <p class="intro">A는 회수한 장비의 프레임과 절제된 황동, B는 AAB의 신호와 회로를 담았습니다. 중앙은 실제 게임 문구가 들어갈 공간으로 비워 두었습니다. 버튼 상태와 좁은 화면을 바꿔 보며 검토할 수 있습니다. 이 페이지와 파일은 시안이며 게임 화면에 연결되지 않았습니다.</p>
+  <h2>버튼 <span id="buttonCount"></span></h2><div id="buttons"></div>
+  <h2>HUD와 창 <span id="moduleCount"></span></h2><div id="modules"></div>
+  <h2>초기 분위기 탐색 이미지</h2><p class="intro">아래 두 이미지는 제작 방향을 잡기 위한 무드보드입니다. 재사용 가능한 실제 파일은 위의 SVG·PNG·WebP 세트입니다.</p>
+  <div class="moodboards"><figure><img src="../../game-lobby-screen/button-concepts/source-moodboards/a-salvage-terminal.png" alt="Salvage Terminal moodboard"><figcaption>A · 회수 장비와 황동</figcaption></figure><figure><img src="../../game-lobby-screen/button-concepts/source-moodboards/b-quiet-circuit.png" alt="AAB Signal moodboard"><figcaption>B · 얇은 신호와 어두운 회로</figcaption></figure></div>
+</main>
+<script src="./review-data.js"></script>
+<script>
+  const kit = window.UI_KIT;
+  const state = { theme:'salvage', variant:'desktop', state:'idle' };
+  const esc = text => String(text).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
+  const labels = { identity:['방랑자 7199','Lv 100 · 탐사 기록'], fame:['명성치 918620 / 942250','Lv 100'], score:['방랑자 7199','89점'], match:['매치 진행','기본 맵'], timer:['17'], stones:['● ● ● ● ○'], speed:['▶ 100%'], turn:['1번째 턴'], trigger:['트리거','1'], bag:['가방','6'], card:['재배치'], 'card-selected':['재배치'], 'card-locked':['잠김'], 'hand-active':['방랑자 7199 · 헌터','재배치   방출   탈출'], 'hand-inactive':['뉴트론 · 트랩 마스터','총알 장전'], 'deck-builder':['카드 덱 만들기','카드 풀  /  가방 8장','프리셋 1   2   3'], collection:['도감','카드   영웅   트리거'], portrait:['AAB','● ● ●'], stage:['데이터 센터','스테이지 01'], dialogue:['빅보이','너가 이번에 새로 들어왔다는 신입이냐.'], tooltip:['데이터 장벽','자신의 스톤만 통과할 수 있는 구조물입니다.'], settings:['게임 설정','배경음악  ━━━●━━','효과음      ━━━━━●'], power:['POWER','64%'], 'room-row':['탐사 방 42','2 / 2'], result:['스테이지 클리어','탐사 표식 획득'], reward:['탐사 표식','◆   ◆   ◇'], map:['기본 맵','마찰 계수'], hero:['헌터','새로운 세상에서 길을 찾는다.'], 'trigger-picker':['트리거 선택','방출 · 증폭 · 교란'], input:['방 코드','A1B2C3'], tabs:['카드   /   영웅   /   트리거'], connection:['온라인','연결됨'], 'map-badge':['기본 맵'], 'score-breakdown':['점수 내역','거리 72 · 밀쳐내기 10','보너스 7'], 'deck-presets':['1     2     3'], 'card-inspector':['재배치','발사 기회를 다시 얻습니다.'], 'card-draw':['카드 획득'], 'stage-locked':['미발견 구역'], 'stage-objective':['목표','조건을 만족해 데이터 센터로 이동'], 'tutorial-step':['02','상대 스톤을 밀쳐내세요'], achievement:['새로운 기록','탐사 레벨 상승'], 'mark-strip':['◆    ◆    ◇'], volume:['배경음악  65%'], loading:['탐사 구역 연결 중'] };
+  function group(items) { return Object.groupBy ? Object.groupBy(items, x=>x.group) : items.reduce((out,x)=>((out[x.group]??=[]).push(x),out),{}); }
+  function paths(base) { return `<div class="links"><a href="${base}">SVG</a><a href="${base.replace('.svg','.png')}">PNG 2×</a><a href="${base.replace('.svg','.webp')}">WebP 2×</a></div>`; }
+  function button(item) {
+    const file=item.files[state.theme][state.variant][state.state];
+    const size=kit.buttonSizes[item.role][state.variant];
+    return `<article class="tile"><div class="demo ${state.theme}"><div class="skin ${item.role}" style="--asset-w:${size[0]}px;--asset-h:${size[1]}px"><img src="${file}" alt=""><span class="label">${esc(item.label)}</span></div></div><p class="meta"><b>${esc(item.label)}</b> · ${esc(item.purpose)}</p><p class="sub">${esc(item.id)} · ${size.join('×')} · ${esc(item.targets.join(', '))}</p>${paths(file)}</article>`;
+  }
+  function module(item) {
+    const file=item.files[state.theme][state.variant], size=state.variant==='desktop'?item.size:item.compact;
+    const sample=labels[item.type]??[item.purpose];
+    const content=sample.map((s,i)=>i===0?`<strong>${esc(s)}</strong>`:`<em>${esc(s)}</em>`).join('');
+    return `<article class="tile"><div class="demo ${state.theme}"><div class="module-skin type-${item.type}" style="--asset-w:${size[0]}px;--asset-h:${size[1]}px"><img src="${file}" alt=""><div class="content">${content}</div></div></div><p class="meta"><b>${esc(item.id)}</b> · ${esc(item.purpose)}</p><p class="sub">${size.join('×')} · ${esc(item.targets.join(', '))}</p>${paths(file)}</article>`;
+  }
+  function render() {
+    for (const [id,items,fn] of [['buttons',kit.buttons,button],['modules',kit.modules,module]]) {
+      document.getElementById(id).innerHTML=Object.entries(group(items)).map(([name,list])=>`<h3>${esc(name)}</h3><div class="grid">${list.map(fn).join('')}</div>`).join('');
+    }
+    document.getElementById('buttonCount').textContent=`${kit.buttons.length}종`;
+    document.getElementById('moduleCount').textContent=`${kit.modules.length}종`;
+  }
+  document.getElementById('theme').onchange=e=>{state.theme=e.target.value;render();};
+  document.getElementById('state').onchange=e=>{state.state=e.target.value;render();};
+  for (const v of ['desktop','compact']) document.getElementById(v).onclick=()=>{state.variant=v;for(const x of ['desktop','compact'])document.getElementById(x).classList.toggle('active',v===x);render();};
+  render();
+</script>
+</body>
+</html>

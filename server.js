@@ -4,7 +4,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { WebSocket, WebSocketServer } = require('ws');
 const { createProfileStore, matchOutcome, parseBearer } = require('./progression');
-const { deckForPreset } = require('./deck-config');
+const { deckForPreset, validateDeck, HERO_IDS } = require('./deck-config');
 
 const ROOT = __dirname;
 const PORT = Number(process.env.PORT) || 4173;
@@ -133,8 +133,8 @@ function roomView(room) {
   return {
     code: room.code,
     status: room.status,
-    host: { name: room.host.name, level: room.host.level, tutorialCompleted: room.host.tutorialCompleted, deck: room.host.deck, mapId: room.host.mapId },
-    challenger: room.challenger ? { name: room.challenger.name, level: room.challenger.level, tutorialCompleted: room.challenger.tutorialCompleted, deck: room.challenger.deck, mapId: room.challenger.mapId } : null,
+    host: { name: room.host.name, level: room.host.level, tutorialCompleted: room.host.tutorialCompleted, deck: room.host.deck, deckName: room.host.deckName, heroId: room.host.heroId, mapId: room.host.mapId },
+    challenger: room.challenger ? { name: room.challenger.name, level: room.challenger.level, tutorialCompleted: room.challenger.tutorialCompleted, deck: room.challenger.deck, deckName: room.challenger.deckName, heroId: room.challenger.heroId, mapId: room.challenger.mapId } : null,
     seriesMaps: room.seriesMaps,
     matchId: room.matchId || null,
     snapshotRevision: room.snapshotRevision,
@@ -414,7 +414,7 @@ async function handleApi(request, response, url) {
     if (!token) return fail(response, 401, '프로필 인증이 필요합니다.');
     const data = await readJson(request);
     try {
-      const profile = await profiles.saveDecks(token, data.decks, data.activePreset);
+      const profile = await profiles.saveDecks(token, data.decks, data.activePreset, data.deckNames, data.deckHeroes);
       if (!profile) return fail(response, 401, '계정 로그인이 필요합니다.');
       return sendJson(response, 200, { profile, persistent: profiles.persistent });
     } catch (error) {
@@ -491,6 +491,8 @@ async function handleApi(request, response, url) {
       code,
       host: { name: profile.profile.name, level: profile.profile.level, tutorialCompleted: profile.profile.tutorialCompleted,
         deck: deckForPreset(profile.profile.decks, profile.profile.activePreset, profile.profile.level, profile.profile.tutorialCompleted),
+        deckName: profile.profile.deckNames?.[profile.profile.activePreset] || `덱 ${profile.profile.activePreset + 1}`,
+        heroId: profile.profile.deckHeroes?.[profile.profile.activePreset] || null,
         token, mapId: null, profileId: profile.internalId },
       isPublic: data.isPublic === true,
       passwordHash: createPasswordHash(password),
@@ -535,6 +537,8 @@ async function handleApi(request, response, url) {
     const token = crypto.randomBytes(24).toString('base64url');
     room.challenger = { name: profile.profile.name, level: profile.profile.level, tutorialCompleted: profile.profile.tutorialCompleted,
       deck: deckForPreset(profile.profile.decks, profile.profile.activePreset, profile.profile.level, profile.profile.tutorialCompleted),
+      deckName: profile.profile.deckNames?.[profile.profile.activePreset] || `덱 ${profile.profile.activePreset + 1}`,
+      heroId: profile.profile.deckHeroes?.[profile.profile.activePreset] || null,
       token, mapId: null, profileId: profile.internalId };
     room.status = 'choosing';
     broadcastRoom(room);
@@ -558,17 +562,26 @@ async function handleApi(request, response, url) {
 
   if (request.method === 'POST' && parts.length === 4 && parts[3] === 'map') {
     if (['playing', 'complete'].includes(room.status)) return fail(response, 409, '맵을 선택할 수 없는 상태입니다.');
-    if (!MAP_IDS.includes(data.mapId)) return fail(response, 400, '올바르지 않은 맵입니다.');
-    const opponent = member.role === 'host' ? room.challenger : room.host;
-    if (opponent?.mapId && member.player.mapId && member.player.mapId !== data.mapId) {
-      return fail(response, 409, '상대가 맵을 선택해 변경할 수 없습니다.');
+    if (data.mapId !== null && !MAP_IDS.includes(data.mapId)) return fail(response, 400, '올바르지 않은 맵입니다.');
+    if (data.mapId === null) {
+      member.player.mapId = null;
+      room.seriesMaps = null;
+      room.status = room.challenger ? 'choosing' : 'waiting';
+    } else {
+      if (data.heroId != null && !HERO_IDS.includes(data.heroId)) return fail(response, 400, '올바르지 않은 영웅입니다.');
+      if (data.deck != null && !validateDeck(data.deck, member.player.level, member.player.tutorialCompleted === true)) {
+        return fail(response, 400, '선택한 덱 구성이 올바르지 않습니다.');
+      }
+      member.player.mapId = data.mapId;
+      if (Array.isArray(data.deck)) member.player.deck = [...data.deck];
+      if (typeof data.deckName === 'string') member.player.deckName = data.deckName.trim().slice(0, 24);
+      member.player.heroId = data.heroId ?? null;
+      if (room.challenger && room.host.mapId && room.challenger.mapId) {
+        const randomMap = MAP_IDS[crypto.randomInt(MAP_IDS.length)];
+        room.seriesMaps = [room.host.mapId, room.challenger.mapId, randomMap];
+        room.status = 'ready';
+      } else room.status = room.challenger ? 'choosing' : 'waiting';
     }
-    member.player.mapId = data.mapId;
-    if (room.challenger && room.host.mapId && room.challenger.mapId) {
-      const randomMap = MAP_IDS[crypto.randomInt(MAP_IDS.length)];
-      room.seriesMaps = [room.host.mapId, room.challenger.mapId, randomMap];
-      room.status = 'ready';
-    } else if (room.challenger) room.status = 'choosing';
     broadcastRoom(room);
     return sendJson(response, 200, { room: roomView(room) });
   }

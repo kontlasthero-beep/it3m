@@ -9,6 +9,22 @@ const CARD_LEVELS = Object.freeze({
 const DEFAULT_DECK = Object.freeze([
   'brick', 'hardening', 'ammo', 'guard', 'pulse', 'blackhole', 'bluffing', 'reposition'
 ]);
+const DECK_PRESET_COUNT = 9;
+const HERO_IDS = Object.freeze(['trap-master', 'hunter', 'big-boy', 'joker', 'refiner']);
+
+function normalizeDeckNames(value) {
+  const names = Array.isArray(value) ? value : [];
+  return Array.from({ length: DECK_PRESET_COUNT }, (_, index) => {
+    const name = typeof names[index] === 'string' ? names[index].trim().slice(0, 24) : '';
+    return name || `덱 ${index + 1}`;
+  });
+}
+
+function normalizeDeckHeroes(value) {
+  const heroes = Array.isArray(value) ? value : [];
+  return Array.from({ length: DECK_PRESET_COUNT }, (_, index) =>
+    HERO_IDS.includes(heroes[index]) ? heroes[index] : null);
+}
 
 function validateDeck(cards, level, tutorialCompleted = false) {
   if (!Array.isArray(cards) || cards.length !== 8) return false;
@@ -26,11 +42,11 @@ function validateDeck(cards, level, tutorialCompleted = false) {
 
 function normalizeDecks(value, level, tutorialCompleted = false) {
   const decks = Array.isArray(value) ? value : [];
-  return Array.from({ length: 3 }, (_, index) => validateDeck(decks[index], level, tutorialCompleted) ? [...decks[index]] : null);
+  return Array.from({ length: DECK_PRESET_COUNT }, (_, index) => validateDeck(decks[index], level, tutorialCompleted) ? [...decks[index]] : null);
 }
 
 function deckForPreset(decks, activePreset, level, tutorialCompleted = false) {
   return normalizeDecks(decks, level, tutorialCompleted)[activePreset] || DEFAULT_DECK.map(id => id === 'reposition' && !tutorialCompleted ? 'hardening' : id);
 }
 
-module.exports = { CARD_LEVELS, DEFAULT_DECK, validateDeck, normalizeDecks, deckForPreset };
+module.exports = { CARD_LEVELS, DEFAULT_DECK, DECK_PRESET_COUNT, HERO_IDS, validateDeck, normalizeDecks, normalizeDeckNames, normalizeDeckHeroes, deckForPreset };

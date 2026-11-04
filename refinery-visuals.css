@@ -1,0 +1,403 @@
+/* Second Chance — Refiner ability and refined-card visuals.
+   Load this file after the inline game styles. All rules are limited to
+   existing game components or the explicit sc-refinery/refined-card hooks. */
+
+/* The trigger slot becomes the compact refinery control for this hero. */
+body .trigger-tool.refinery-mode {
+  position: relative;
+  isolation: isolate;
+  flex-basis: 52px;
+  width: 52px;
+  height: 60px;
+  padding: 2px 2px 15px;
+  place-items: start center;
+  border: 1px solid rgba(184, 151, 94, .72);
+  border-radius: 7px;
+  background:
+    linear-gradient(145deg, rgba(33, 53, 50, .96), rgba(12, 25, 26, .96) 68%),
+    #102022;
+  box-shadow: inset 0 0 0 1px rgba(120, 159, 148, .18),
+              0 3px 8px rgba(0, 0, 0, .28);
+  color: #e9e1cc;
+  touch-action: manipulation;
+}
+
+body .trigger-tool.refinery-mode::before {
+  content: "가공기";
+  position: absolute;
+  z-index: 2;
+  right: 2px;
+  bottom: 2px;
+  left: 2px;
+  overflow: hidden;
+  color: #d8cba9;
+  font-family: inherit;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 11px;
+  letter-spacing: .02em;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+body .trigger-tool.refinery-mode img,
+body .trigger-tool.refinery-mode .refinery-machine-image {
+  width: 34px;
+  height: 36px;
+  margin-top: 1px;
+  object-fit: contain;
+  opacity: .96;
+  animation: sc-refinery-core-glow 2.8s ease-in-out infinite;
+  filter: drop-shadow(0 0 3px rgba(221, 157, 83, .24));
+}
+
+body .trigger-tool.refinery-mode .trigger-count,
+body .trigger-tool.refinery-mode .refinery-count {
+  position: absolute;
+  z-index: 3;
+  top: -5px;
+  right: -5px;
+  bottom: auto;
+  left: auto;
+  display: grid;
+  min-width: 17px;
+  width: auto;
+  height: 17px;
+  padding: 0 4px;
+  place-items: center;
+  border: 1px solid #c4a76e;
+  border-radius: 9px;
+  background: #172322;
+  color: #f0dfb7;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .5);
+  font-size: 9px;
+  line-height: 1;
+  transform: none;
+}
+
+body .trigger-tool.refinery-mode .refinery-label {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  left: 2px;
+  overflow: hidden;
+  color: #d8cba9;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 11px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+body .trigger-tool.refinery-mode:hover:not([disabled]),
+body .trigger-tool.refinery-mode:focus-visible {
+  border-color: #d7bd82;
+  background: linear-gradient(145deg, #263d38, #122326 72%);
+  filter: drop-shadow(0 0 7px rgba(193, 161, 105, .26));
+}
+
+body .trigger-tool.refinery-mode:focus-visible {
+  outline: 2px solid rgba(203, 183, 139, .82);
+  outline-offset: 2px;
+}
+
+body .trigger-tool.refinery-mode[disabled] {
+  border-color: rgba(130, 137, 126, .46);
+  background: rgba(23, 31, 31, .82);
+  box-shadow: none;
+  filter: grayscale(.55);
+}
+
+body.game-active .trigger-tool.refinery-mode {
+  flex-basis: 46px;
+  width: 46px;
+  height: 54px;
+  padding-bottom: 14px;
+}
+
+body.game-active .trigger-tool.refinery-mode img,
+body.game-active .trigger-tool.refinery-mode .refinery-machine-image {
+  width: 29px;
+  height: 31px;
+}
+
+body.game-active .trigger-tool.refinery-mode::before,
+body.game-active .trigger-tool.refinery-mode .refinery-label {
+  font-size: 8px;
+  line-height: 10px;
+}
+
+/* Lavender is reserved for refined cards; regular cards keep their current look. */
+body .ability-card.refined-card {
+  isolation: isolate;
+  filter: drop-shadow(0 0 3px rgba(187, 154, 231, .24));
+}
+
+body .ability-card.refined-card::before {
+  position: absolute;
+  z-index: 0;
+  inset: -3px;
+  border: 1px solid rgba(195, 165, 231, .58);
+  border-radius: 7px;
+  background: linear-gradient(135deg, rgba(191, 157, 232, .11), transparent 48%, rgba(165, 137, 210, .08));
+  content: "";
+  opacity: .64;
+  pointer-events: none;
+  animation: sc-refined-aura 3.2s ease-in-out infinite;
+}
+
+body .ability-card.refined-card .card-face,
+body .card-face.refined-card,
+body .deck-card.refined-card .card-face,
+body .deck-card.refined-card > .card-face {
+  position: relative;
+  z-index: 1;
+  border-color: rgba(190, 163, 224, .82);
+  box-shadow: inset 0 0 0 1px rgba(204, 180, 237, .16),
+              0 0 8px rgba(168, 136, 213, .15),
+              0 3px 8px rgba(0, 0, 0, .28);
+}
+
+body .ability-card.refined-card .card-name,
+body .card-face.refined-card .card-name,
+body .deck-card.refined-card .card-name {
+  border-top-color: rgba(186, 160, 221, .62);
+}
+
+body .ability-card.refined-card .card-art,
+body .card-face.refined-card .card-art,
+body .deck-card.refined-card .card-art,
+body .refined-art {
+  filter: sepia(.16) hue-rotate(225deg) saturate(1.24) drop-shadow(0 0 5px rgba(183, 151, 224, .34));
+}
+
+body .ability-card.refined-card:hover,
+body .deck-card.refined-card:hover {
+  filter: drop-shadow(0 0 6px rgba(193, 164, 231, .34));
+}
+
+/* Optional wrapper for the refined-card picker/modal preview. */
+body .sc-refinery-card-option.refined-card,
+body .sc-refinery-preview.refined-card {
+  border-color: rgba(190, 163, 224, .78);
+  box-shadow: inset 0 0 0 1px rgba(204, 180, 237, .12),
+              0 0 10px rgba(168, 136, 213, .16);
+}
+
+body .refinery-select-overlay[hidden] { display: none !important; }
+body .refinery-select-overlay {
+  position: fixed;
+  z-index: 1800;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: clamp(12px, 3vw, 34px);
+  background: rgba(3, 9, 10, .76);
+  backdrop-filter: blur(5px);
+  animation: sc-refinery-overlay-in 180ms ease-out both;
+}
+
+body .refinery-select-dialog {
+  width: min(780px, 96vw);
+  max-height: min(82dvh, 760px);
+  overflow: auto;
+  padding: clamp(18px, 3vw, 30px);
+  border: 1px solid rgba(190, 163, 224, .64);
+  border-radius: 8px;
+  color: #eee8f3;
+  background: linear-gradient(150deg, rgba(27, 39, 42, .99), rgba(11, 20, 23, .99));
+  box-shadow: 0 24px 72px rgba(0,0,0,.65), inset 0 0 0 3px rgba(7, 14, 15, .72), 0 0 28px rgba(160, 126, 203, .12);
+  animation: sc-refinery-dialog-in 220ms cubic-bezier(.2,.8,.2,1) both;
+}
+
+body .refinery-select-dialog .catalog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(190, 163, 224, .3);
+}
+
+body .refinery-select-dialog .catalog-header h2 {
+  margin: 0;
+  color: #f0e5d4;
+  font: 400 clamp(22px, 3vw, 30px)/1.35 "SecondChance Gowun Batang", Batang, serif;
+}
+
+body .refinery-select-dialog .catalog-header button {
+  min-width: 72px;
+  min-height: 40px;
+  border: 1px solid rgba(169, 138, 93, .78);
+  border-radius: 4px;
+  color: #eee8dc;
+  background: linear-gradient(#243638, #132326);
+  cursor: pointer;
+}
+
+body .refinery-select-dialog > p {
+  color: #bac3bf;
+  min-height: 3.2em;
+  max-height: 3.2em;
+  margin: 12px 0 8px;
+  overflow: hidden;
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+body .refinery-card-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  align-items: start;
+  gap: 10px;
+  max-height: min(43dvh, 380px);
+  overflow: auto;
+  padding: 5px 4px 12px;
+}
+
+body .refinery-card-option {
+  display: block;
+  min-width: 0;
+  height: 158px;
+  padding: 0;
+  border: 1px solid rgba(111, 135, 127, .66);
+  border-radius: 6px;
+  background: rgba(7, 15, 17, .56);
+  cursor: pointer;
+  transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+body .refinery-card-option .card-face {
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+body .refinery-card-option .card-art { height: 70%; object-fit: cover; }
+body .refinery-card-option .card-name {
+  display: flex;
+  min-height: 35px;
+  flex: 1 0 0;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 5px;
+  overflow: hidden;
+  font-size: 11px;
+  line-height: 1.2;
+  text-align: center;
+  text-wrap: balance;
+}
+body .refinery-card-option .card-rules { display: none !important; }
+body .refinery-card-option.refinery-preview-refined {
+  border-color: #c2a2e7;
+  box-shadow: 0 0 18px rgba(181, 145, 223, .35), inset 0 0 0 1px rgba(220, 199, 249, .3);
+}
+body .refinery-card-option.refinery-preview-refined .card-face {
+  filter: saturate(1.1) hue-rotate(12deg) drop-shadow(0 0 7px rgba(190, 150, 239, .38));
+}
+
+body .refined-reposition-picker[hidden] { display: none !important; }
+body .refined-reposition-picker {
+  width: min(270px, 82vw);
+  padding: 10px;
+  border: 1px solid rgba(195, 162, 235, .78);
+  border-radius: 6px;
+  background: linear-gradient(150deg, rgba(31, 28, 43, .98), rgba(12, 18, 25, .98));
+  box-shadow: 0 0 20px rgba(160, 119, 219, .26), 0 8px 24px rgba(0, 0, 0, .55);
+  color: #f0e7fb;
+  font: 12px/1.4 "SecondChance Plex", "Malgun Gothic", sans-serif;
+  pointer-events: auto;
+}
+body .power-control.refined-reposition-control { width: min(270px, 82vw); }
+body .refined-reposition-picker strong { display: block; margin-bottom: 8px; color: #e7d5fa; }
+body .refined-reposition-options { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
+body .refined-reposition-options button {
+  min-height: 34px;
+  padding: 4px;
+  border: 1px solid rgba(192, 159, 230, .74);
+  border-radius: 4px;
+  background: rgba(88, 66, 117, .42);
+  color: #f5eaff;
+  font-weight: 700;
+  cursor: pointer;
+}
+body .refined-reposition-options button:hover,
+body .refined-reposition-options button:focus-visible { background: rgba(141, 102, 184, .7); outline: 1px solid #e5c9ff; }
+body .refined-reposition-picker > span { display: block; margin-top: 7px; color: #b8b0c4; font-size: 10px; }
+
+body .bullet-aim-path {
+  stroke: rgba(213, 224, 218, .57);
+  stroke-width: 2.2px;
+  stroke-dasharray: 2 9;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 3px rgba(206, 231, 227, .34));
+  animation: sc-bullet-trail-flow .62s linear infinite;
+}
+body .bullet-aim-path.center { stroke: rgba(255, 232, 170, .76); }
+@keyframes sc-bullet-trail-flow { to { stroke-dashoffset: -22; } }
+
+body .refinery-card-option:hover,
+body .refinery-card-option:focus-visible {
+  transform: translateY(-3px);
+  border-color: #c2a2e7;
+  outline: none;
+  box-shadow: 0 0 15px rgba(181, 145, 223, .28);
+}
+
+@keyframes sc-refinery-core-glow {
+  0%, 100% { filter: drop-shadow(0 0 2px rgba(221, 157, 83, .2)); }
+  50% { filter: drop-shadow(0 0 5px rgba(232, 173, 103, .42)); }
+}
+
+@keyframes sc-refined-aura {
+  0%, 100% { opacity: .42; }
+  50% { opacity: .76; }
+}
+
+@keyframes sc-refinery-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sc-refinery-dialog-in {
+  from { opacity: 0; transform: translateY(12px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 700px) {
+  body .refinery-card-options { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+  body .refinery-card-option { height: 142px; }
+  body .power-control.refined-reposition-control { width: min(248px, 82vw); }
+  body .trigger-tool.refinery-mode {
+    flex-basis: 44px;
+    width: 44px;
+    height: 52px;
+    padding-bottom: 13px;
+  }
+
+  body .trigger-tool.refinery-mode img,
+  body .trigger-tool.refinery-mode .refinery-machine-image {
+    width: 28px;
+    height: 30px;
+  }
+
+  body .trigger-tool.refinery-mode::before,
+  body .trigger-tool.refinery-mode .refinery-label {
+    font-size: 8px;
+    line-height: 9px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body .trigger-tool.refinery-mode img,
+  body .trigger-tool.refinery-mode .refinery-machine-image,
+  body .ability-card.refined-card::before {
+    animation: none;
+  }
+}

@@ -676,11 +676,20 @@
     .privacy-consent[hidden] { display: none; }
     .home-menu button { min-height: 52px; font-size: 17px; }
     .deck-entry-button { width: 100%; margin-top: 10px; }
-    .deck-dialog { width: min(1120px, 100%); text-align: left; }
-    .deck-layout { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(260px, 1fr); gap: 18px; margin-top: 16px; }
-    .deck-section { min-width: 0; }
-    .deck-section h3 { margin: 0 0 10px; font-size: 18px; }
-    .deck-pool { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 9px; max-height: min(64dvh, 610px); padding: 18px; overflow-y: auto; }
+    .deck-dialog { width: min(1480px, calc(100vw - 32px)); max-height: calc(100dvh - 28px); overflow-y: auto; text-align: left; }
+    .deck-layout { display: grid; grid-template-columns: minmax(172px, .62fr) minmax(0, 1.38fr) minmax(300px, .98fr); gap: 15px; margin-top: 16px; transition: opacity .16s ease, transform .16s ease; }
+    .deck-layout.is-switching { opacity: .18; transform: translateX(10px); }
+    .deck-layout.is-entering { animation: deck-preset-enter .22s ease-out both; }
+    @keyframes deck-preset-enter { from { opacity: .35; transform: translateX(-12px); } to { opacity: 1; transform: none; } }
+    .deck-section, .deck-storage { min-width: 0; padding: 12px; border: 1px solid rgba(112, 139, 132, .48); border-radius: 6px; background: linear-gradient(145deg, rgba(20, 34, 35, .92), rgba(12, 23, 25, .94)); box-shadow: inset 0 1px rgba(231, 212, 161, .05), 0 10px 24px rgba(0,0,0,.18); }
+    .deck-section h3, .deck-storage h3 { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0 0 10px; font-size: 18px; }
+    .deck-storage { display: flex; flex-direction: column; min-height: 0; max-height: min(70dvh, 700px); }
+    .deck-storage-note { margin: 0 0 9px; color: var(--muted); font-size: 11px; line-height: 1.4; }
+    .deck-pool-tools { display: grid; grid-template-columns: minmax(0, 1fr) minmax(105px, .72fr); gap: 7px; margin: 0 0 9px; }
+    .deck-pool-tools input, .deck-pool-tools select { width: 100%; min-width: 0; min-height: 36px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 4px; background: #0f191b; color: var(--ink); font: inherit; font-size: 12px; }
+    .deck-pool-tools select { grid-column: 1 / -1; }
+    .deck-pool-count { color: var(--muted); font-size: 11px; font-weight: 500; }
+    .deck-pool { display: grid; grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 9px; max-height: min(62dvh, 610px); padding: 2px; overflow-y: auto; align-content: start; }
     .deck-card { position: relative; display: block; width: 100%; min-width: 0; padding: 0; border-radius: 5px; background: transparent; text-align: left; touch-action: none; cursor: grab; }
     .deck-card .card-face { height: 168px; }
     .deck-card .card-art { height: 67%; }
@@ -688,16 +697,62 @@
     .deck-card .card-rules { display: none; }
     .deck-card.bonus-ready { box-shadow: 0 0 0 2px rgba(185, 140, 255, .5), 0 0 15px rgba(159, 89, 226, .5); }
     .deck-card.unavailable { opacity: .38; filter: grayscale(1); cursor: not-allowed; }
-    .deck-card.locked { opacity: .42; filter: grayscale(1) blur(1px); cursor: not-allowed; }
-    .deck-bag { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; min-height: 230px; padding: 10px; border: 1px dashed #79938c; border-radius: 5px; align-content: start; }
+    .deck-card.locked { opacity: .82; filter: none; cursor: not-allowed; }
+    .deck-card.locked .card-art { filter: grayscale(1) blur(2px) brightness(.55); }
+    .deck-card.locked::after { content: "🔒"; position: absolute; z-index: 4; top: 34%; left: 50%; transform: translate(-50%, -50%); font-size: 20px; filter: drop-shadow(0 2px 5px #000); pointer-events: none; }
+    .deck-bag { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; min-height: 230px; padding: 10px; border: 1px dashed #79938c; border-radius: 5px; background: rgba(8, 17, 19, .45); align-content: start; }
     .deck-bag.drop-ready, .deck-pool.drop-ready { outline: 2px solid #9de5c8; outline-offset: 2px; }
     .deck-bag .deck-card .card-face { height: 102px; }
     .deck-bag .deck-card .card-art { height: 73%; }
     .deck-bag .deck-card .card-name { min-height: 25px; padding: 3px; font-size: 10px; }
     .deck-count { color: var(--muted); font-size: 13px; }
-    .deck-presets { display: flex; gap: 7px; margin: 12px 0; }
-    .deck-presets button { width: 38px; height: 38px; padding: 0; }
-    .deck-presets button[aria-pressed="true"] { border-color: #8ce6cf; background: #247667; }
+    .deck-presets { display: grid; grid-template-columns: 1fr; gap: 8px; max-height: min(62dvh, 610px); min-height: 0; overflow-y: auto; padding: 2px 3px 4px 0; }
+    .deck-package { position: relative; display: block; width: 100%; min-height: 82px; overflow: hidden; padding: 0; border: 1px solid #65766f; border-radius: 5px; background: #111e20; color: var(--ink); text-align: left; isolation: isolate; }
+    .deck-package::before { position: absolute; z-index: -2; inset: 0; content: ''; background-image: linear-gradient(110deg, rgba(6, 12, 13, .08), rgba(7, 14, 15, .84) 68%), var(--package-image, linear-gradient(135deg, #34423e, #10191a)); background-size: cover; background-position: center 28%; }
+    .deck-package::after { position: absolute; z-index: -1; inset: 0; content: ''; background: linear-gradient(0deg, rgba(6, 11, 12, .94), transparent 75%); }
+    .deck-package[aria-pressed="true"] { border-color: #d5ad62; box-shadow: 0 0 0 1px rgba(213,173,98,.45), 0 0 16px rgba(213,173,98,.12); }
+    .deck-package.preset-empty { border-style: dashed; background: rgba(10, 19, 20, .55); }
+    .deck-package.preset-empty::before, .deck-package.preset-empty::after { display: none; }
+    .deck-package-index { position: absolute; top: 6px; left: 7px; color: rgba(242, 229, 201, .82); font-size: 10px; font-variant-numeric: tabular-nums; text-shadow: 0 1px 4px #000; }
+    .deck-package-name { position: absolute; right: 7px; bottom: 21px; left: 7px; overflow: hidden; color: #f4f0e6; font-family: var(--display-font, Georgia, serif); font-size: 14px; font-weight: 700; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 5px #000; }
+    .deck-package-meta { position: absolute; right: 7px; bottom: 6px; left: 7px; color: #b8c5be; font-size: 10px; line-height: 1; text-shadow: 0 1px 4px #000; }
+    .deck-package-status { position: absolute; top: 5px; right: 6px; padding: 2px 4px; border: 1px solid rgba(234,203,135,.55); border-radius: 3px; background: rgba(9,15,16,.72); color: #efd194; font-size: 9px; }
+    .deck-package.is-stowed { animation: deck-package-stow .44s cubic-bezier(.2,.8,.2,1) both; }
+    @keyframes deck-package-stow { from { opacity: .5; transform: translateX(-9px) scale(.94); filter: brightness(1.35); } to { opacity: 1; transform: none; filter: none; } }
+    .deck-count { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+    .deck-layout > .deck-section:last-child > h3 { position: sticky; top: 0; z-index: 5; padding: 4px 0; background: #142223; }
+    .deck-capacity-meter { height: 5px; margin: -3px 0 10px; overflow: hidden; border: 1px solid #465c57; border-radius: 99px; background: #0a1315; }
+    .deck-layout > .deck-section:last-child > .deck-capacity-meter { position: sticky; top: 30px; z-index: 5; }
+    .deck-capacity-meter > span { display: block; width: var(--capacity, 0%); height: 100%; background: linear-gradient(90deg, #58bca9, #dfbd72); transition: width .18s ease; }
+    .deck-loadout-fields { display: grid; gap: 9px; margin: 8px 0 12px; }
+    .deck-loadout-fields label, .map-loadout-row label { display: grid; gap: 5px; color: var(--muted); font-size: 13px; }
+    .deck-loadout-fields input, .deck-loadout-fields select, .map-loadout-row select { width: 100%; min-width: 0; min-height: 40px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; background: #0f191b; color: var(--ink); font: inherit; }
+    .map-loadout-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 64px 12px; padding: 10px 12px; border: 1px solid rgba(138,168,158,.35); border-radius: 5px; background: rgba(9,17,19,.72); }
+    .map-loadout-row[data-player-count="1"] { grid-template-columns: minmax(0, 1fr); }
+    .map-loadout-row[hidden], .map-loadout-row label[hidden] { display: none; }
+    .map-loadout-row label { min-width: 0; }
+    .map-loadout-lane { min-width: 0; }
+    .map-loadout-lane[hidden] { display: none; }
+    .map-loadout-lane-title { display: block; margin: 0 0 6px; color: var(--muted); font-size: 12px; }
+    .map-deck-carousel { display: grid; grid-template-columns: 34px minmax(0, 1fr) 34px; align-items: stretch; gap: 6px; }
+    .map-deck-arrow { min-width: 34px; min-height: 72px; padding: 4px; color: #e4cb91; font-size: 19px; }
+    .map-deck-arrow:disabled { opacity: .38; cursor: not-allowed; }
+    .map-deck-package { position: relative; display: grid; grid-template-columns: 62px minmax(0, 1fr); align-items: center; gap: 9px; min-width: 0; min-height: 72px; padding: 6px; overflow: hidden; border: 1px solid #85734b; border-radius: 5px; background: linear-gradient(115deg, rgba(35,48,45,.94), rgba(11,20,22,.98)); color: var(--ink); text-align: left; }
+    .map-deck-package.is-shifting { opacity: 0; transition: opacity .1s ease, transform .1s ease; }
+    .map-deck-package.is-shifting[data-slide-step="1"] { transform: translateX(-12px); }
+    .map-deck-package.is-shifting[data-slide-step="-1"] { transform: translateX(12px); }
+    .map-deck-package.is-arriving[data-slide-step="1"] { animation: map-package-arrive-next .18s ease-out both; }
+    .map-deck-package.is-arriving[data-slide-step="-1"] { animation: map-package-arrive-prev .18s ease-out both; }
+    @keyframes map-package-arrive-next { from { opacity: .3; transform: translateX(12px); } to { opacity: 1; transform: none; } }
+    @keyframes map-package-arrive-prev { from { opacity: .3; transform: translateX(-12px); } to { opacity: 1; transform: none; } }
+    .map-deck-portrait { width: 62px; height: 58px; overflow: hidden; border: 1px solid #766847; border-radius: 3px; background: radial-gradient(ellipse, #54605a, #152022 70%); }
+    .map-deck-portrait img { width: 100%; height: 100%; object-fit: cover; object-position: center 20%; }
+    .map-deck-copy { min-width: 0; }
+    .map-deck-name { display: block; overflow: hidden; color: #f1e4c4; font-family: var(--display-font, Georgia, serif); font-size: 15px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+    .map-deck-meta { display: block; margin-top: 4px; overflow: hidden; color: var(--muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+    .map-deck-stack { position: absolute; right: 7px; bottom: 6px; display: flex; align-items: flex-end; height: 17px; }
+    .map-deck-stack i { width: 10px; height: 14px; margin-left: -5px; border: 1px solid #c5ae70; border-radius: 2px; background: #243c38; box-shadow: 0 1px 3px #000; }
+    .map-loadout-row label.deck-select-sr { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; clip-path: inset(50%); }
     .deck-actions { display: flex; flex-wrap: wrap; gap: 8px; }
     #deckSaveButton:disabled { border-color: #5c6a69; background: #39484a; color: #abb7b5; box-shadow: none; opacity: 1; cursor: not-allowed; }
     .deck-status { min-height: 24px; color: #f1c275; font-size: 13px; }
@@ -710,10 +765,24 @@
     .deck-drag-ghost.from-bag .card-art { height: 60%; }
     .deck-drag-ghost.from-bag .card-rules { display: block; font-size: 10px; }
     .local-deck-choice { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    @media (max-width: 680px) { .deck-layout { grid-template-columns: 1fr; } .deck-pool { max-height: 30dvh; } .deck-bag { min-height: 170px; } }
+    .deck-card-category { display: block; min-height: 16px; padding: 1px 4px 3px; overflow: hidden; color: #8fbcb2; font-size: 9px; line-height: 1.25; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+    .deck-card-hero-lock { display: block; padding: 0 3px 3px; color: #e7c47c; font-size: 9px; line-height: 1.2; text-align: center; }
+    .deck-bag .deck-card.hero-unavailable { position: relative; opacity: .62; filter: grayscale(.75); }
+    .deck-bag .deck-card.hero-unavailable::after { content: "영웅 제한"; position: absolute; top: 50%; right: 4px; left: 4px; transform: translateY(-50%); padding: 3px 2px; border: 1px solid rgba(226,176,105,.7); border-radius: 3px; background: rgba(12,18,19,.88); color: #f0ca86; font-size: 9px; line-height: 1.2; text-align: center; pointer-events: none; }
+    .deck-pool .deck-card .card-face { height: 150px; }
+    .deck-pool .deck-card .card-art { height: 65%; }
+    .deck-pool .deck-card .card-name { padding: 5px 3px; font-size: 12px; }
+    .deck-bag .deck-card .card-face { height: 104px; }
+    .deck-bag .deck-card .card-art { height: 70%; }
+    @media (max-width: 1050px) { .deck-layout { grid-template-columns: minmax(145px, .5fr) minmax(0, 1.2fr) minmax(270px, 1fr); gap: 9px; } .deck-pool { grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); } .deck-section, .deck-storage { padding: 9px; } .deck-bag { padding: 7px; gap: 5px; } }
+    @media (max-width: 760px) { .deck-layout { grid-template-columns: minmax(0, 1fr) minmax(230px, .82fr); } .deck-storage { grid-column: 1 / -1; } .deck-presets { grid-template-columns: repeat(3, minmax(0, 1fr)); overflow-x: hidden; max-height: 200px; } .deck-pool { max-height: 52dvh; } .map-loadout-row { margin: 0 8px 12px; } }
+    @media (max-width: 560px) { .deck-dialog { width: calc(100vw - 16px); padding: 12px; } .deck-layout { grid-template-columns: minmax(0, 1fr) minmax(130px, .78fr); gap: 7px; } .deck-storage { grid-column: 1 / -1; } .deck-presets { grid-template-columns: repeat(3, minmax(0, 1fr)); max-height: 176px; } .deck-package { min-height: 68px; } .deck-package-name { font-size: 11px; } .deck-package-meta { font-size: 9px; } .deck-pool { grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 48dvh; } .deck-pool .deck-card .card-face { height: 132px; } .deck-pool .deck-card .card-name { font-size: 10px; } .deck-bag { grid-template-columns: repeat(2, minmax(0, 1fr)); min-height: 160px; padding: 5px; gap: 4px; } .deck-bag .deck-card .card-face { height: 92px; } .deck-bag .deck-card .card-name { font-size: 9px; } .deck-pool-tools { grid-template-columns: 1fr; } .deck-pool-tools select { grid-column: auto; } .map-loadout-row { grid-template-columns: minmax(0, 1fr); margin: 0 0 12px; } }
+    @media (prefers-reduced-motion: reduce) { .deck-layout, .deck-capacity-meter > span { transition: none !important; animation: none !important; } }
     @media (orientation: landscape) and (max-height: 560px) and (pointer: coarse) {
       .deck-dialog { width: 100%; max-width: none; }
-      .deck-layout { grid-template-columns: 1fr; }
+      .deck-layout { grid-template-columns: minmax(0, 1fr) minmax(230px, .82fr); }
+      .deck-storage { grid-column: 1 / -1; max-height: 110px; }
+      .deck-presets { grid-template-columns: repeat(3, minmax(0, 1fr)); max-height: 76px; }
       .deck-pool { max-height: 28dvh; }
     }
     .home-account { width: 100%; margin-top: 10px; }
@@ -779,6 +848,7 @@
     .settings-leave { margin: 12px 0; border-top: 1px solid var(--line); padding-top: 12px; }
     .settings-leave > button { width: 100%; border-color: #a6544d; background: #482826; color: #ffe5df; }
     .settings-leave > button:hover { background: #60322e; }
+    @media (max-width: 680px) { .map-loadout-row { grid-template-columns: 1fr; margin: 0 0 10px; } }
     @media (max-width: 600px) {
       .catalog-list, .hero-options { grid-template-columns: 1fr; }
       .catalog-header { flex-wrap: wrap; }
@@ -932,6 +1002,9 @@
   <link rel="stylesheet" href="game-lobby-screen/lobby-layout.css?v=4">
   <link rel="stylesheet" href="entry-layout.css?v=3">
   <link rel="stylesheet" href="collection-layout.css?v=2">
+  <link rel="stylesheet" href="refined-card-detail-modal.css?v=2">
+  <link rel="stylesheet" href="refinery-visuals.css">
+  <link rel="stylesheet" href="deck-flow.css?v=1">
 </head>
 <body>
   <main class="app">
@@ -969,6 +1042,16 @@
           <div class="power-track" id="powerTrack" role="meter" aria-label="발사 파워" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="power-needle" id="powerNeedle"></div></div>
           <div class="power-value" id="powerValue">0%</div>
           <button class="power-confirm" id="powerConfirmButton" type="button">결정</button>
+        </div>
+        <div class="refined-reposition-picker" id="refinedRepositionPicker" hidden>
+          <strong>정제된 재배치 · 파워 선택</strong>
+          <div class="refined-reposition-options" role="group" aria-label="재배치 발사 파워">
+            <button type="button" data-refined-power="0.3">30%</button>
+            <button type="button" data-refined-power="0.5">50%</button>
+            <button type="button" data-refined-power="0.7">70%</button>
+            <button type="button" data-refined-power="1">100%</button>
+          </div>
+          <span>파워를 고른 뒤 스톤을 당겨 방향을 정하세요.</span>
         </div>
       </div>
       <div class="board-dock" aria-label="턴 조작">
@@ -1210,6 +1293,18 @@
           <div class="room-code-view" id="roomCodeView" hidden>초대 코드<strong id="roomCodeText"></strong></div>
           <div class="online-player-status" id="onlinePlayerStatus" hidden></div>
           <p class="online-status" id="onlineStatus" role="status" hidden></p>
+      <div class="map-loadout-row" id="mapLoadoutRow" hidden>
+        <section class="map-loadout-lane" id="mapLoadoutLane0" aria-label="플레이어 1 덱 선택">
+          <span class="map-loadout-lane-title" id="mapLoadoutLaneTitle0">사용할 덱</span>
+          <div class="map-deck-carousel"><button class="map-deck-arrow" type="button" data-map-deck-step="-1" data-map-deck-owner="0" aria-label="이전 덱">‹</button><div class="map-deck-package" id="mapDeckPackage0" aria-live="polite"></div><button class="map-deck-arrow" type="button" data-map-deck-step="1" data-map-deck-owner="0" aria-label="다음 덱">›</button></div>
+          <label class="deck-select-sr" id="mapDeckLabel0">사용할 덱<select id="mapDeckSelect0"></select></label>
+        </section>
+        <section class="map-loadout-lane" id="mapLoadoutLane1" aria-label="플레이어 2 덱 선택" hidden>
+          <span class="map-loadout-lane-title" id="mapLoadoutLaneTitle1">플레이어 2 덱</span>
+          <div class="map-deck-carousel"><button class="map-deck-arrow" type="button" data-map-deck-step="-1" data-map-deck-owner="1" aria-label="이전 덱">‹</button><div class="map-deck-package" id="mapDeckPackage1" aria-live="polite"></div><button class="map-deck-arrow" type="button" data-map-deck-step="1" data-map-deck-owner="1" aria-label="다음 덱">›</button></div>
+          <label class="deck-select-sr" id="mapDeckLabel1">플레이어 2 덱<select id="mapDeckSelect1"></select></label>
+        </section>
+      </div>
           <div class="map-options" id="mapOptions" role="group" aria-label="플레이 맵 선택"></div>
           <div class="map-detail" aria-live="polite"><strong id="mapPreviewTitle"></strong><span id="mapPreviewDescription"></span></div>
           <div class="map-actions">
@@ -1282,15 +1377,37 @@
   </div>
   <div class="overlay" id="deckOverlay" hidden>
     <div class="dialog deck-dialog" role="dialog" aria-modal="true" aria-labelledby="deckTitle">
-      <div class="catalog-header"><h2 id="deckTitle">카드 덱 만들기</h2><button id="deckBackButton" type="button">돌아가기</button></div>
-      <div class="deck-layout">
-        <section class="deck-section"><h3>보유 카드</h3><div class="deck-pool" id="deckPool"></div></section>
-        <section class="deck-section"><h3>가방 <span class="deck-count" id="deckCount">0 / 8</span></h3><div class="deck-bag" id="deckBag" aria-label="가방, 최대 8장"></div>
-          <div class="deck-presets" id="deckPresets" aria-label="가방 프리셋"></div>
-          <div class="deck-actions"><button class="primary" id="deckSaveButton" type="button" disabled>저장</button><button id="deckResetButton" type="button">카드 덱 초기화</button></div>
+      <div class="catalog-header deck-header"><h2 id="deckTitle">덱 보관함</h2><button id="deckBackButton" type="button" hidden>← 돌아가기</button></div>
+      <section class="deck-list-screen" id="deckListScreen" aria-label="저장된 덱">
+        <div class="deck-presets" id="deckPresets" aria-label="덱 슬롯"></div>
+        <div class="deck-list-actions"><button id="deckListBackButton" type="button">돌아가기</button><button class="primary" id="deckCreateButton" type="button">새 덱 만들기</button></div>
+        <p class="deck-status" id="deckListStatus" role="status"></p>
+      </section>
+      <div class="deck-layout" id="deckLayout" hidden>
+        <section class="deck-editor-summary" aria-label="현재 덱 구성">
+          <div class="deck-editor-hero"><img id="deckHeroPortrait" alt=""><div class="deck-editor-hero-info"><span>선택한 영웅</span><strong id="deckHeroName"></strong><button id="deckHeroChangeButton" type="button">영웅 변경</button></div></div>
+          <label class="deck-name-label">덱 이름<input id="deckNameInput" maxlength="24" autocomplete="off" placeholder="덱 이름을 입력하세요"></label>
+          <select id="deckHeroSelect" aria-label="선택된 영웅" hidden><option value="">무작위 영웅</option></select>
+          <h3 class="deck-bag-heading"><span>가방</span><span class="deck-count" id="deckCount">0 / 8</span></h3>
+          <div class="deck-capacity-meter" id="deckCapacityMeter" role="progressbar" aria-label="덱 용량" aria-valuemin="0" aria-valuemax="8" aria-valuenow="0"><span></span></div>
+          <div class="deck-bag" id="deckBag" aria-label="가방, 최대 8장"></div>
+          <div class="deck-actions"><button class="primary" id="deckSaveButton" type="button" disabled>덱 저장</button><button id="deckResetButton" type="button">카드 덱 초기화</button></div>
           <p class="deck-status" id="deckStatus" role="status"></p>
         </section>
+        <section class="deck-section deck-explorer"><h3><span>카드 보관함</span><span class="deck-pool-count" id="deckPoolCount" aria-live="polite"></span></h3>
+          <div class="deck-pool-tools"><input id="deckCardSearch" type="search" placeholder="카드 이름 검색" aria-label="카드 이름 검색"><select id="deckCategoryFilter" aria-label="카드 카테고리"><option value="all">모든 카테고리</option></select><select id="deckAvailabilityFilter" aria-label="카드 사용 조건"><option value="all">전체 카드</option><option value="available">지금 가방에 담기 가능</option><option value="locked">잠긴 카드</option><option value="hero">선택 영웅 사용 가능</option></select></div>
+          <div class="deck-pool" id="deckPool"></div>
+        </section>
       </div>
+      <section class="deck-hero-screen" id="deckHeroScreen" role="dialog" aria-modal="true" aria-labelledby="deckHeroScreenTitle" hidden>
+        <div class="deck-hero-dialog">
+          <span class="deck-hero-eyebrow">SECOND CHANCE · HERO</span>
+          <h3 id="deckHeroScreenTitle">영웅 선택</h3>
+          <div class="deck-hero-carousel"><button id="deckHeroPrevButton" type="button" aria-label="이전 영웅">‹</button><div class="deck-hero-portrait-frame"><img id="deckHeroPickerPortrait" alt=""></div><button id="deckHeroNextButton" type="button" aria-label="다음 영웅">›</button></div>
+          <strong id="deckHeroPickerName"></strong><p id="deckHeroPickerDescription"></p><span id="deckHeroPickerCount"></span>
+          <div class="deck-hero-actions"><button id="deckHeroCancelButton" type="button">이전으로</button><button class="primary" id="deckHeroConfirmButton" type="button">이 영웅으로 만들기</button></div>
+        </div>
+      </section>
     </div>
   </div>
   <div class="overlay" id="gameDeckOverlay" hidden>
@@ -1330,7 +1447,26 @@
     </div>
   </div>
 
+  <div class="overlay refinery-select-overlay" id="refinerySelectOverlay" hidden>
+    <div class="dialog refinery-select-dialog" role="dialog" aria-modal="true" aria-labelledby="refinerySelectTitle">
+      <div class="catalog-header"><h2 id="refinerySelectTitle">가공기 · 카드 정제</h2><button id="refineryCancelButton" type="button">취소</button></div>
+      <p id="refinerySelectStatus">정제할 손패 카드를 선택하세요. 정제한 카드는 더 강한 효과로 바뀝니다.</p>
+      <div id="refineryCardOptions" class="refinery-card-options" role="listbox" aria-label="정제할 카드"></div>
+    </div>
+  </div>
+
   <svg id="aimOverlay" aria-hidden="true">
+    <defs>
+      <radialGradient id="blackholeAimGradient">
+        <stop offset="0" stop-color="#c8a8ff" stop-opacity=".02" />
+        <stop offset=".64" stop-color="#aa83e9" stop-opacity=".12" />
+        <stop offset="1" stop-color="#84d7e7" stop-opacity=".22" />
+      </radialGradient>
+    </defs>
+    <path id="blackholeAimSector" fill="url(#blackholeAimGradient)" stroke="rgba(205,178,255,.62)" />
+    <path id="bulletAimPathLeft" class="bullet-aim-path" fill="none" />
+    <path id="bulletAimPathCenter" class="bullet-aim-path center" fill="none" />
+    <path id="bulletAimPathRight" class="bullet-aim-path" fill="none" />
     <path id="aimPath" fill="none" stroke-linecap="round" />
     <circle id="aimTip" fill="#f4f0e6" />
   </svg>
@@ -1338,6 +1474,8 @@
   <script src="ai-policy.js"></script>
   <script src="ai-planner.js"></script>
   <script src="card-unlocks.js?v=1"></script>
+  <script src="refined-card-registry.js"></script>
+  <script src="refined-card-detail-modal.js?v=2"></script>
   <section id="tutorialDialogue" class="tutorial-dialogue" role="dialog" aria-modal="true" aria-labelledby="tutorialSpeaker" hidden>
     <img src="영웅 초상화/big boy.png" alt="빅보이" draggable="false">
     <div class="tutorial-dialogue-copy">
@@ -1368,6 +1506,7 @@
       const powerTrack = document.querySelector('#powerTrack');
       const powerNeedle = document.querySelector('#powerNeedle');
       const powerValue = document.querySelector('#powerValue');
+      const refinedRepositionPicker = document.querySelector('#refinedRepositionPicker');
       const learningUI = Object.fromEntries([
         'tutorialPanel', 'tutorialTitle', 'tutorialLessonSelect', 'tutorialInstruction', 'tutorialObjective', 'tutorialCompletion',
         'tutorialNextButton', 'catalogOverlay', 'catalogList',
@@ -1376,6 +1515,12 @@
       const aimOverlay = document.querySelector('#aimOverlay');
       const aimPath = document.querySelector('#aimPath');
       const aimTip = document.querySelector('#aimTip');
+      const blackholeAimSector = document.querySelector('#blackholeAimSector');
+      const bulletAimPaths = [
+        document.querySelector('#bulletAimPathLeft'),
+        document.querySelector('#bulletAimPathCenter'),
+        document.querySelector('#bulletAimPathRight')
+      ];
       const entityTooltip = document.querySelector('#entityTooltip');
       const entityTooltipTitle = document.querySelector('#entityTooltipTitle');
       const entityTooltipDetail = document.querySelector('#entityTooltipDetail');
@@ -1433,13 +1578,33 @@
         'adventureIllustrationOverlay', 'adventureIllustrationImage', 'adventureIllustrationNext'
       ].map(id => [id, document.getElementById(id)]));
       const deckOverlay = document.querySelector('#deckOverlay');
+      const deckLayout = document.querySelector('#deckLayout');
+      const deckListScreen = document.querySelector('#deckListScreen');
+      const deckHeroScreen = document.querySelector('#deckHeroScreen');
+      const deckTitle = document.querySelector('#deckTitle');
+      const deckBackButton = document.querySelector('#deckBackButton');
+      const deckListStatus = document.querySelector('#deckListStatus');
+      const deckCreateButton = document.querySelector('#deckCreateButton');
+      const deckHeroPortrait = document.querySelector('#deckHeroPortrait');
+      const deckHeroName = document.querySelector('#deckHeroName');
+      const deckHeroPickerPortrait = document.querySelector('#deckHeroPickerPortrait');
+      const deckHeroPickerName = document.querySelector('#deckHeroPickerName');
+      const deckHeroPickerDescription = document.querySelector('#deckHeroPickerDescription');
+      const deckHeroPickerCount = document.querySelector('#deckHeroPickerCount');
       const deckPool = document.querySelector('#deckPool');
       const deckBag = document.querySelector('#deckBag');
       const deckPresets = document.querySelector('#deckPresets');
       const deckCount = document.querySelector('#deckCount');
+      const deckPoolCount = document.querySelector('#deckPoolCount');
+      const deckCapacityMeter = document.querySelector('#deckCapacityMeter');
+      const deckCardSearch = document.querySelector('#deckCardSearch');
+      const deckCategoryFilter = document.querySelector('#deckCategoryFilter');
+      const deckAvailabilityFilter = document.querySelector('#deckAvailabilityFilter');
       const deckSaveButton = document.querySelector('#deckSaveButton');
       const deckResetButton = document.querySelector('#deckResetButton');
       const deckStatus = document.querySelector('#deckStatus');
+      const deckNameInput = document.querySelector('#deckNameInput');
+      const deckHeroSelect = document.querySelector('#deckHeroSelect');
       const gameDeckOverlay = document.querySelector('#gameDeckOverlay');
       const gameDeckList = document.querySelector('#gameDeckList');
       const gameDeckTitle = document.querySelector('#gameDeckTitle');
@@ -1490,6 +1655,15 @@
       const mapPreviewDescription = document.querySelector('#mapPreviewDescription');
       const mapSelectTitle = document.querySelector('#mapSelectTitle');
       const mapSelectDescription = document.querySelector('#mapSelectDescription');
+      const mapLoadoutRow = document.querySelector('#mapLoadoutRow');
+      const mapDeckLabels = [document.querySelector('#mapDeckLabel0'), document.querySelector('#mapDeckLabel1')];
+      const mapDeckSelects = [document.querySelector('#mapDeckSelect0'), document.querySelector('#mapDeckSelect1')];
+      const mapLoadoutLanes = [document.querySelector('#mapLoadoutLane0'), document.querySelector('#mapLoadoutLane1')];
+      const mapLoadoutLaneTitles = [document.querySelector('#mapLoadoutLaneTitle0'), document.querySelector('#mapLoadoutLaneTitle1')];
+      const mapDeckPackages = [document.querySelector('#mapDeckPackage0'), document.querySelector('#mapDeckPackage1')];
+      const mapDeckLastValues = ['', ''];
+      const mapCarouselIndices = [0, 0];
+      const mapCarouselTransitioning = [false, false];
       const roomCodeView = document.querySelector('#roomCodeView');
       const roomCodeText = document.querySelector('#roomCodeText');
       const onlinePlayerStatus = document.querySelector('#onlinePlayerStatus');
@@ -1500,6 +1674,10 @@
       const triggerTypeOptions = document.querySelector('#triggerTypeOptions');
       const confirmTriggerButton = document.querySelector('#confirmTriggerButton');
       const cancelTriggerButton = document.querySelector('#cancelTriggerButton');
+      const refinerySelectOverlay = document.querySelector('#refinerySelectOverlay');
+      const refinerySelectStatus = document.querySelector('#refinerySelectStatus');
+      const refineryCardOptions = document.querySelector('#refineryCardOptions');
+      const refineryCancelButton = document.querySelector('#refineryCancelButton');
       const mapIndicator = document.querySelector('#mapIndicator');
       const remainingEls = [document.querySelector('#remaining0'), document.querySelector('#remaining1')];
       const endTurnButton = document.querySelector('#endTurnButton');
@@ -1625,6 +1803,7 @@
         separation: AI_BALANCE.motion.separation
       };
       const BLACK_HOLE = AI_BALANCE.blackhole;
+      const REFINED_BLACKHOLE_RANGE = BLACK_HOLE.range * 1.35;
       const PULSE_RANGE = AI_BALANCE.pulse.range;
       const PULSE_IMPULSE = AI_BALANCE.pulse.impulse;
       const ENTITY_KIND = Object.freeze({ UNIT: 'unit', STRUCTURE: 'structure', TRIGGER: 'trigger' });
@@ -1709,6 +1888,23 @@
         { id: 'data-barrier', name: '데이터 장벽', unlockLevel: 2 }, { id: 'data-barrier', name: '데이터 장벽', unlockLevel: 2 },
         { id: 'repulsion-field', name: '반발장', unlockAdventureStage: 2, unlockLevel: 999 }, { id: 'repulsion-field', name: '반발장', unlockAdventureStage: 2, unlockLevel: 999 }
       ];
+      const CARD_METADATA = Object.freeze({
+        hardening: { category: 'defense', tags: ['스톤 대상', '마찰 증가', '정제 가능'] },
+        guard: { category: 'defense', tags: ['스톤 대상', '위성체', '밀치기', '정제 가능'] },
+        pulse: { category: 'attack', tags: ['스톤 대상', '충전', '밀치기', '정제 가능'] },
+        reposition: { category: 'mobility', tags: ['스톤 대상', '재발사', '정제 가능'] },
+        brick: { category: 'installation', tags: ['가벽', '구조물 대상', '충돌', '정제 가능'] },
+        blackhole: { category: 'attack', tags: ['스톤 대상', '끌어당기기', '유체화', '정제 가능'] },
+        ammo: { category: 'attack', tags: ['투사체', '가벽 파괴', '위성체 파괴', '정제 가능'] },
+        bluffing: { category: 'defense', tags: ['스톤 대상', '충돌 회피', '정제 가능'] },
+        escape: { category: 'tactic', tags: ['스톤 대상', '확정 점수', '정제 가능'] },
+        'data-barrier': { category: 'installation', tags: ['장벽', '구조물 대상', '아군 통과', '정제 가능'] },
+        'repulsion-field': { category: 'defense', tags: ['스톤 대상', '구조물 대상', '탄성', '정제 가능'] }
+      });
+      const CARD_CATEGORY_NAMES = Object.freeze({
+        all: '모든 카테고리', attack: '공격', defense: '방어',
+        mobility: '이동', installation: '설치', tactic: '전술'
+      });
       const CARD_DESCRIPTIONS = {
         hardening: '스톤의 마찰력이 3배가 됩니다. 같은 카드 효과는 중첩되어 마찰력과 회색 코팅이 더 강해집니다.',
         guard: '스톤 주위를 도는 위성 방호벽 2개를 추가합니다. 최대 4개까지 중첩되며 충돌로 유닛을 밀어냅니다. 위성체가 지나가는 위치와 타이밍을 확인하세요. 1번 더 중첩해서 사용하면 위성체가 두 방향을 방어합니다.',
@@ -1726,17 +1922,17 @@
       const CARD_DRAW_HOLD_MS = 1050;
       const CARD_DRAW_DURATION_MS = 1550;
       const CARD_PRESENTATION = {
-        hardening: { art: 'Card_illustration/hardening.png', sound: 'hardening' },
-        guard: { art: 'Card_illustration/Protective barrier.png', sound: 'guard' },
-        pulse: { art: 'Card_illustration/release .png', sound: 'pulseCharge' },
-        reposition: { art: 'Card_illustration/Relocation.png', sound: 'reposition' },
-        brick: { art: 'Card_illustration/Structure Drop.png', sound: 'drop' },
-        blackhole: { art: 'Card_illustration/blackhole release.png', sound: 'blackhole' },
-        ammo: { art: 'Card_illustration/Load.png', sound: 'ammoLoad' },
-        bluffing: { art: 'Card_illustration/Bluffing.png', sound: 'bluffing' },
-        escape: { art: 'Card_illustration/Escape.png', sound: 'escape' },
-        'data-barrier': { art: 'Card_illustration/Data Barrier-v5.png', sound: 'dataBarrier' },
-        'repulsion-field': { art: 'Card_illustration/Repulsion Field.png', sound: 'repulsionField' }
+        hardening: { art: 'Card_illustration/hardening.png', refinedArt: 'Card_illustration/refined/hardening.webp', sound: 'hardening' },
+        guard: { art: 'Card_illustration/Protective barrier.png', refinedArt: 'Card_illustration/refined/guard.webp', sound: 'guard' },
+        pulse: { art: 'Card_illustration/release .png', refinedArt: 'Card_illustration/refined/pulse.webp', sound: 'pulseCharge' },
+        reposition: { art: 'Card_illustration/Relocation.png', refinedArt: 'Card_illustration/refined/reposition.webp', sound: 'reposition' },
+        brick: { art: 'Card_illustration/Structure Drop.png', refinedArt: 'Card_illustration/refined/brick.webp', sound: 'drop' },
+        blackhole: { art: 'Card_illustration/blackhole release.png', refinedArt: 'Card_illustration/refined/blackhole.webp', sound: 'blackhole' },
+        ammo: { art: 'Card_illustration/Load.png', refinedArt: 'Card_illustration/refined/ammo.webp', sound: 'ammoLoad' },
+        bluffing: { art: 'Card_illustration/Bluffing.png', refinedArt: 'Card_illustration/refined/bluffing.webp', sound: 'bluffing' },
+        escape: { art: 'Card_illustration/Escape.png', refinedArt: 'Card_illustration/refined/escape.webp', sound: 'escape' },
+        'data-barrier': { art: 'Card_illustration/Data Barrier-v5.png', refinedArt: 'Card_illustration/refined/data-barrier.webp', sound: 'dataBarrier' },
+        'repulsion-field': { art: 'Card_illustration/Repulsion Field.png', refinedArt: 'Card_illustration/refined/repulsion-field.webp', sound: 'repulsionField' }
       };
       const UNIT_EFFECTS = Object.freeze({
         hardening: { maxStacks: Infinity, frictionPerStack: AI_BALANCE.hardening.frictionPerStack },
@@ -1748,7 +1944,8 @@
         { id: 'trap-master', name: '트랩 마스터', portrait: '영웅 초상화/trap master.png', description: '트리거를 게임당 두 번까지 설치할 수 있습니다.', color: '#71dbbf', trapLimit: 2 },
         { id: 'hunter', name: '헌터', portrait: '영웅 초상화/hunter.png', description: '첫 카드와 마지막 차례의 카드를 총알 장전으로 받습니다. 이 카드들은 카드 풀을 소모하지 않습니다.', color: '#f1c275', firstCard: 'ammo', lastCard: 'ammo' },
         { id: 'big-boy', name: '빅 보이', portrait: '영웅 초상화/big boy.png', description: '자신의 스톤 크기가 20% 커지고 기본 마찰 계수가 35% 증가합니다.', color: '#92b6f7', capScale: 1.2, frictionScale: 1.35, powerScale: 1.15 },
-        { id: 'joker', name: '조커', portrait: '영웅 초상화/joker.png', description: '상대 스톤을 떨어뜨리면 40점을 얻지만 자신의 스톤이 떨어지면 10점을 잃습니다.', color: '#ef9bc6', knockoutPoints: 40, fallPenalty: 10 }
+        { id: 'joker', name: '조커', portrait: '영웅 초상화/joker.png', description: '상대 스톤을 떨어뜨리면 40점을 얻지만 자신의 스톤이 떨어지면 10점을 잃습니다.', color: '#ef9bc6', knockoutPoints: 40, fallPenalty: 10 },
+        { id: 'refiner', name: '리파이너', portrait: '영웅 초상화/en-smith-refiner.png', description: '트리거 대신 가공기를 사용합니다. 손패 카드의 효과를 게임당 최대 세 번 정제할 수 있습니다.', color: '#c8a9ee', refineLimit: 3, trapLimit: 0 }
       ];
       const LEARNING_DETAILS = {
         hardening: { color: '#aeb8bc', tip: '목표 지점에 도착한 스톤에 쓰면 위치를 지키기 좋습니다. 발사 전에 쓰면 이동 거리가 크게 줄어듭니다.' },
@@ -1765,16 +1962,75 @@
       };
 
       // Card and trigger lessons/catalog entries follow the gameplay registries automatically.
-      function cardDefinitions() { return [...new Map(CARDS.map(card => [card.id, card])).values()]; }
+      function cardDefinitions() { return [...new Map(CARDS.map(card => [card.id, card])).values()].map(card => ({ ...card, ...CARD_METADATA[card.id], heroIds: CARD_METADATA[card.id]?.heroIds || null })); }
+      function refinedCardDefinition(cardOrId) {
+        const id = typeof cardOrId === 'string' ? cardOrId : cardOrId?.id;
+        return window.SecondChanceRefinedCardDefinitions?.[id] || null;
+      }
+      function cardDisplayName(card) {
+        return card?.refined ? refinedCardDefinition(card)?.name || `정제된 ${card.name}` : card?.name || '';
+      }
+      function cardDisplayDescription(card) {
+        return card?.refined ? refinedCardDefinition(card)?.description || CARD_DESCRIPTIONS[card.id] || '' : CARD_DESCRIPTIONS[card?.id] || '';
+      }
+      function openCardDetail(cardOrId, options = {}) {
+        const card = typeof cardOrId === 'string'
+          ? cardDefinitions().find(item => item.id === cardOrId) || deckCard(cardOrId)
+          : cardOrId;
+        if (!card || !window.SecondChanceCardDetail) return;
+        const unlocked = isCardUnlocked(card, 0) && (!card.unlockTutorial || state.playerTutorialCompleted?.[0] === true);
+        const showRecord = options.context === 'catalog';
+        const refined = showRecord && unlocked ? refinedCardDefinition(card) : null;
+        const artSrc = card.refined
+          ? CARD_PRESENTATION[card.id]?.refinedArt || CARD_PRESENTATION[card.id]?.art || ''
+          : CARD_PRESENTATION[card.id]?.art || '';
+        window.SecondChanceCardDetail.open({
+          card: { name: cardDisplayName(card), description: unlocked
+            ? cardDisplayDescription(card) || card.description || card.name
+            : '잠금 해제 후 카드 효과를 확인할 수 있습니다.' },
+          refinedCard: refined ? { name: refined.name, description: refined.description,
+            artSrc: CARD_PRESENTATION[card.id]?.refinedArt || CARD_PRESENTATION[card.id]?.art || '', artAlt: `${refined.name} 카드 삽화` } : null,
+          artSrc,
+          storyText: refined?.storyPlaceholder || '',
+          showRecord,
+          addToBag: options.onAddToBag,
+          addDisabled: options.addDisabled === true,
+          addButtonLabel: options.addButtonLabel || '가방에 추가하기'
+        });
+      }
       const DEFAULT_DECK_IDS = ['brick', 'hardening', 'ammo', 'guard', 'pulse', 'blackhole', 'bluffing', 'reposition'];
       function defaultPlayerDeck(completed = guestProfile?.tutorialCompleted === true) {
         return DEFAULT_DECK_IDS.map(id => id === 'reposition' && !completed ? 'hardening' : id);
       }
-      let savedDecks = [null, null, null];
-      let deckDrafts = [null, null, null];
+      function randomHeroId() { return HEROES[Math.floor(Math.random() * HEROES.length)]?.id || 'hunter'; }
+      function heroName(heroId) { return HEROES.find(hero => hero.id === heroId)?.name || '무작위 영웅'; }
+      function activeDeckHero(preset) { return savedDeckHeroes[preset] || null; }
+      const DECK_PRESET_COUNT = 9;
+      const emptyDeckSlots = () => Array.from({ length: DECK_PRESET_COUNT }, () => null);
+      const defaultDeckNames = () => Array.from({ length: DECK_PRESET_COUNT }, (_, index) => `덱 ${index + 1}`);
+      const normalizeDeckNameList = value => Array.from({ length: DECK_PRESET_COUNT }, (_, index) =>
+        (typeof value?.[index] === 'string' && value[index].trim() ? value[index].trim().slice(0, 24) : `덱 ${index + 1}`));
+      const normalizeDeckHeroList = value => Array.from({ length: DECK_PRESET_COUNT }, (_, index) =>
+        HEROES.some(hero => hero.id === value?.[index]) ? value[index] : null);
+      let savedDecks = emptyDeckSlots();
+      let deckDrafts = emptyDeckSlots().map(() => []);
+      let deckDraftsInitialized = false;
+      let savedDeckNames = defaultDeckNames();
+      let savedDeckHeroes = emptyDeckSlots();
+      let deckDraftNames = defaultDeckNames();
+      let deckDraftHeroes = emptyDeckSlots();
+      const mapLoadoutRandomHeroes = [null, null];
       let activeDeckPreset = 0;
       let deckReturnScreen = 'homeScreen';
       let deckDrag = null;
+      let deckClickSuppressUntil = 0;
+      let deckPresetSwitchPending = false;
+      let deckView = 'list';
+      let deckHeroReturnView = 'list';
+      let deckPendingPreset = 0;
+      let deckEditingPreset = 0;
+      let deckHeroPickerIndex = 0;
+      let deckSaving = false;
       function deckIsValid(cards, level = guestProfile?.level || 1) {
         if (!Array.isArray(cards) || cards.length !== 8) return false;
         const counts = new Map();
@@ -1790,9 +2046,27 @@
       }
       function selectedDeck(preset, level = guestProfile?.level || 1) {
         const deck = savedDecks[preset];
-        return deckIsValid(deck, level) ? [...deck] : defaultPlayerDeck();
+        return deckIsValid(deck, level) && deckIsCompatibleWithHero(deck, savedDeckHeroes[preset]) ? [...deck] : defaultPlayerDeck();
       }
       function deckCard(id) { return cardDefinitions().find(item => item.id === id); }
+      function deckIsCompatibleWithHero(cards, heroId) {
+        return Array.isArray(cards) && cards.every(id => {
+          const card = deckCard(id);
+          return card && (!Array.isArray(card.heroIds) || !card.heroIds.length || (heroId && card.heroIds.includes(heroId)));
+        });
+      }
+      function cardAllowedForDeckHero(card, heroId) {
+        return !Array.isArray(card?.heroIds) || !card.heroIds.length || Boolean(heroId && card.heroIds.includes(heroId));
+      }
+      function deckCardUnlocked(card) {
+        return isCardUnlocked(card, 0) && (!card.unlockTutorial || state.playerTutorialCompleted?.[0] === true);
+      }
+      function deckDraftIsSaved(index) {
+        const draft = deckDrafts[index] || [];
+        const saved = savedDecks[index] || [];
+        return Boolean(savedDecks[index]) && draft.length === saved.length && draft.every((id, item) => id === saved[item]) &&
+          (deckDraftNames[index] || '') === (savedDeckNames[index] || '') && (deckDraftHeroes[index] || '') === (savedDeckHeroes[index] || '');
+      }
       function playerLevel(owner) { return Math.max(1, Number(state.playerLevels?.[owner]) || 1); }
       function isCardUnlocked(card, owner) {
         if (SecondChanceCardUnlocks.isTemporarilyGranted(card.id)) return true;
@@ -1874,6 +2148,7 @@
         repositionUnit: null,
         triggerPlacementUsed: [false, false],
         triggerPlacementCount: [0, 0],
+        refineryUses: [0, 0],
         heroOffers: [[], []],
         heroChoices: [null, null],
         heroDeadline: null,
@@ -1981,10 +2256,10 @@
 
       function chooseAiHeroOffer() {
         const priorities = {
-          balanced: { 'big-boy': 4, hunter: 3, 'trap-master': 2, joker: 2 },
-          attacker: { hunter: 4, joker: 3, 'big-boy': 2, 'trap-master': 1 },
-          controller: { 'trap-master': 4, 'big-boy': 3, hunter: 2, joker: 1 },
-          defender: { 'big-boy': 4, 'trap-master': 3, hunter: 2, joker: 1 }
+          balanced: { 'big-boy': 4, hunter: 3, refiner: 3, 'trap-master': 2, joker: 2 },
+          attacker: { hunter: 4, joker: 3, refiner: 2, 'big-boy': 2, 'trap-master': 1 },
+          controller: { 'trap-master': 4, 'big-boy': 3, refiner: 3, hunter: 2, joker: 1 },
+          defender: { 'big-boy': 4, 'trap-master': 3, refiner: 3, hunter: 2, joker: 1 }
         };
         const weights = priorities[state.aiStyle] || priorities.balanced;
         return [...state.heroOffers[state.aiOwner]].sort((a, b) => (weights[b] || 0) - (weights[a] || 0))[0];
@@ -2146,7 +2421,7 @@
         onlineInterpolation = null;
         onlineLastSnapshotAt = null;
         Object.assign(state, { units: [], bricks: [], bullets: [], triggers: [], particles: [], effects: [],
-          hands: [[], []], decks: [[], []], playerDecks: [[], []], fallPoints: [0, 0], escapePoints: [0, 0], playerLevels: [guestProfile?.level || 1, guestProfile?.level || 1], triggerPlacementUsed: [false, false], triggerPlacementCount: [0, 0],
+          hands: [[], []], decks: [[], []], playerDecks: [[], []], fallPoints: [0, 0], escapePoints: [0, 0], playerLevels: [guestProfile?.level || 1, guestProfile?.level || 1], triggerPlacementUsed: [false, false], triggerPlacementCount: [0, 0], refineryUses: [0, 0],
           playerTutorialCompleted: [guestProfile?.tutorialCompleted === true, guestProfile?.tutorialCompleted === true],
           heroOffers: [[], []], heroChoices: [null, null], heroDeadline: null, heroSelectionMode: null,
           heroSelectionOwner: 0, heroTransitionTimer: null, heroPendingChoice: null, heroCardDraws: [0, 0],
@@ -2154,7 +2429,7 @@
           pendingTriggerPlacement: null, selectedTriggerType: null, phaseBeforeTriggerSelect: null,
           turnDeadline: null, turnPausedAt: null, turnPausedByHost: false, timerTurn: -1, mapTime: 0 });
         turns.reset();
-        for (const overlay of [resultOverlay, adventureUI.adventureOutcomeOverlay, adventureUI.adventureDialogueOverlay, adventureUI.adventureIllustrationOverlay, mapSelectOverlay, heroSelectOverlay, dealOverlay, triggerSelectOverlay,
+        for (const overlay of [resultOverlay, adventureUI.adventureOutcomeOverlay, adventureUI.adventureDialogueOverlay, adventureUI.adventureIllustrationOverlay, mapSelectOverlay, heroSelectOverlay, dealOverlay, triggerSelectOverlay, refinerySelectOverlay,
           publicRoomPasswordOverlay, learningUI.catalogOverlay, gameSettingsOverlay]) overlay.hidden = true;
         entityTooltip.hidden = true;
         turnTimer.hidden = true;
@@ -2534,7 +2809,13 @@
         learningUI.catalogList.setAttribute('aria-labelledby', isHero ? 'heroCatalogTab' : isTrigger ? 'triggerCatalogTab' : 'cardCatalogTab');
         learningUI.catalogList.replaceChildren(...definitions.map(entry => {
           const locked = !isHero && !isTrigger && !isCardUnlocked(entry, 0);
-          const article = document.createElement('article'); article.className = `catalog-entry${isHero ? ' hero-catalog-entry' : ''}${locked ? ' locked-card' : ''}`;
+          const article = document.createElement('article'); article.className = `catalog-entry${isHero ? ' hero-catalog-entry' : ''}${locked ? ' locked-card' : ''}${!isHero && !isTrigger ? ' catalog-card-entry' : ''}`;
+          if (!isHero && !isTrigger) {
+            article.dataset.cardId = entry.id;
+            article.tabIndex = 0;
+            article.setAttribute('role', 'button');
+            article.setAttribute('aria-label', `${entry.name} 카드 정보 보기`);
+          }
           const header = document.createElement('header');
           const preview = document.createElement('img');
           preview.className = isHero ? 'catalog-portrait' : isTrigger ? 'catalog-trigger-art' : 'catalog-card-art';
@@ -2576,6 +2857,17 @@
           renderCatalog();
         }, () => learningUI.cardCatalogTab.focus());
       }
+      learningUI.catalogList.addEventListener('click', event => {
+        const cardEntry = event.target.closest('.catalog-card-entry[data-card-id]');
+        if (cardEntry) openCardDetail(cardEntry.dataset.cardId, { context: 'catalog' });
+      });
+      learningUI.catalogList.addEventListener('keydown', event => {
+        if (!['Enter', ' '].includes(event.key)) return;
+        const cardEntry = event.target.closest('.catalog-card-entry[data-card-id]');
+        if (!cardEntry) return;
+        event.preventDefault();
+        openCardDetail(cardEntry.dataset.cardId, { context: 'catalog' });
+      });
 
       function showConnectionNotice(message) {
         connectionNotice.textContent = message;
@@ -2836,6 +3128,8 @@
           this.activeSpecial = null;
           this.fluidTimer = 0;
           this.blackholeFrictionTimer = 0;
+          this.refinedPulseFrictionTimer = 0;
+          this.refinedAmmo = false;
           this.adventureFrictionTimer = 0;
           this.adventureFrictionMultiplier = 1;
           this.adventurePulseFrictionTimer = 0;
@@ -2859,6 +3153,7 @@
           this.blackholeFrictionTimer = Math.max(0, this.blackholeFrictionTimer - dt);
           this.adventureFrictionTimer = Math.max(0, this.adventureFrictionTimer - dt);
           this.adventurePulseFrictionTimer = Math.max(0, this.adventurePulseFrictionTimer - dt);
+          this.refinedPulseFrictionTimer = Math.max(0, this.refinedPulseFrictionTimer - dt);
           this.previousX = this.x;
           this.previousY = this.y;
           if (this.status !== 'sliding') return;
@@ -2900,16 +3195,23 @@
         }
 
         frictionAtPosition() {
+          const ignoreAddedFriction = this.refinedPulseFrictionTimer > 0;
           const hardeningStacks = this.ability?.stacks?.hardening ?? (this.ability?.hardening ? 1 : 0);
-          let multiplier = this.frictionMultiplier ?? (UNIT_EFFECTS.hardening.frictionPerStack ** hardeningStacks);
+          const refinedHardeningStacks = Math.min(hardeningStacks, this.ability?.refinedHardeningStacks || 0);
+          const standardHardeningStacks = hardeningStacks - refinedHardeningStacks;
+          let multiplier = ignoreAddedFriction ? 1 : (this.frictionMultiplier ?? 1);
+          if (!ignoreAddedFriction) {
+            multiplier *= (UNIT_EFFECTS.hardening.frictionPerStack ** standardHardeningStacks) *
+              (4 ** refinedHardeningStacks);
+          }
           for (const brick of isCollisionPhased(this) ? [] : state.bricks) {
             if (!(brick.barrier && brick.owner === this.owner) && Math.abs(this.x - brick.x) <= brick.width / 2 + this.radius &&
                 Math.abs(this.y - brick.y) <= brick.height / 2 + this.radius) multiplier += brick.frictionMultiplier - 1;
           }
-          return state.currentMap.friction * multiplier * heroRule(this.owner, 'frictionScale', 1) *
-            (this.openingFrictionMultiplier || 1) *
-            (this.adventureFrictionTimer > 0 ? this.adventureFrictionMultiplier : 1) *
-            (this.adventurePulseFrictionTimer > 0 ? this.adventurePulseFrictionMultiplier : 1) *
+          return state.currentMap.friction * multiplier * (ignoreAddedFriction ? 1 : heroRule(this.owner, 'frictionScale', 1)) *
+            (ignoreAddedFriction ? 1 : (this.openingFrictionMultiplier || 1)) *
+            (ignoreAddedFriction || this.adventureFrictionTimer <= 0 ? 1 : this.adventureFrictionMultiplier) *
+            (ignoreAddedFriction || this.adventurePulseFrictionTimer <= 0 ? 1 : this.adventurePulseFrictionMultiplier) *
             (this.blackholeFrictionTimer > 0 ? AI_BALANCE.blackhole.affectedFrictionMultiplier : 1);
         }
 
@@ -2917,7 +3219,7 @@
       }
 
       class BrickUnit {
-        constructor({ x, y, owner, barrier = false, expiresAtTurn = null, variant = 0 }) {
+        constructor({ x, y, owner, barrier = false, expiresAtTurn = null, permanent = false, variant = 0, sizeMultiplier = 1, widthMultiplier = null, refined = false }) {
           this.entityKind = ENTITY_KIND.UNIT;
           this.unitKind = 'brick';
           this.id = `brick-${Date.now()}-${state.bricks.length}`;
@@ -2925,11 +3227,15 @@
           this.y = y;
           this.owner = owner;
           this.barrier = barrier;
+          this.refined = Boolean(refined);
           this.variant = variant;
           this.expiresAtTurn = expiresAtTurn;
+          this.permanent = Boolean(permanent || (barrier && expiresAtTurn === Infinity));
           this.blackholeFrictionTimer = 0;
-          this.width = AI_BALANCE.structure.width;
-          this.height = AI_BALANCE.structure.height;
+          const wholeSizeMultiplier = Number.isFinite(sizeMultiplier) ? sizeMultiplier
+            : Number.isFinite(widthMultiplier) ? widthMultiplier : 1;
+          this.width = AI_BALANCE.structure.width * wholeSizeMultiplier;
+          this.height = AI_BALANCE.structure.height * wholeSizeMultiplier;
           this.frictionMultiplier = barrier ? AI_BALANCE.structure.barrierFrictionMultiplier : AI_BALANCE.structure.frictionMultiplier;
           this.mass = AI_BALANCE.structure.mass;
           this.restitution = AI_BALANCE.structure.restitution;
@@ -2997,9 +3303,12 @@
           if (this.globalTurn === 0 && this.currentUnit) this.currentUnit.openingFrictionMultiplier = 1.25;
           this.currentUnit = null;
           this.globalTurn += 1;
-          state.bricks = state.bricks.filter(brick => !brick.barrier || brick.expiresAtTurn > this.globalTurn);
+          state.bricks = state.bricks.filter(brick => !brick.barrier || brick.permanent || brick.expiresAtTurn > this.globalTurn);
           for (const unit of state.units) {
-            if (unit.ability?.bluffingUntilTurn < this.globalTurn) delete unit.ability.bluffingUntilTurn;
+            if (unit.ability?.bluffingUntilTurn < this.globalTurn) {
+              delete unit.ability.bluffingUntilTurn;
+              delete unit.ability.refinedEffectImmunity;
+            }
           }
         }
       }
@@ -3335,15 +3644,86 @@
       function updateTriggerTools() {
         triggerToolButtons.forEach(button => {
           const owner = Number(button.dataset.owner);
-          const remaining = remainingTriggerPlacements(owner);
+          const isRefiner = heroFor(owner)?.id === 'refiner';
+          const remaining = isRefiner
+            ? Math.max(0, heroRule(owner, 'refineLimit', 3) - (state.refineryUses[owner] || 0))
+            : remainingTriggerPlacements(owner);
           const spent = remaining <= 0;
-          button.dataset.description = '원하는 위치에 스톤과 상호작용하는 특수 함정을 설치합니다.';
+          button.classList.toggle('refinery-mode', isRefiner);
+          const image = button.querySelector('img');
+          const imageSource = isRefiner ? 'in-game-screen/hero-abilities/refiner/refinery-machine.gif' : 'Trigger_illustration/v6-organic/empty.webp';
+          if (image && image.getAttribute('src') !== imageSource) image.setAttribute('src', imageSource);
+          button.dataset.description = isRefiner
+            ? `가공기 · 손패 카드를 정제합니다. 남은 횟수 ${remaining}회.`
+            : '원하는 위치에 스톤과 상호작용하는 특수 함정을 설치합니다.';
           button.title = button.dataset.description;
-          button.setAttribute('aria-label', `트리거 배치, 남은 횟수 ${remaining}`);
-          button.disabled = Boolean(state.adventure) || spent || owner !== turns.playerIndex || !canControlPlayer(owner) || !turns.currentUnit ||
+          button.setAttribute('aria-label', isRefiner ? `가공기, 남은 정제 횟수 ${remaining}` : `트리거 배치, 남은 횟수 ${remaining}`);
+          const hasRefinableCard = isRefiner && state.hands[owner]?.some(card => refinedCardDefinition(card) && !card.refined);
+          button.disabled = (Boolean(state.adventure) && !isRefiner) || spent || (isRefiner && !hasRefinableCard) || owner !== turns.playerIndex || !canControlPlayer(owner) || !turns.currentUnit ||
             !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase);
           button.querySelector('.trigger-count').textContent = String(remaining);
         });
+      }
+
+      function openRefinerySelection(owner) {
+        if (owner !== turns.playerIndex || heroFor(owner)?.id !== 'refiner' || !canControlPlayer(owner) || !turns.currentUnit) return;
+        const remaining = Math.max(0, heroRule(owner, 'refineLimit', 3) - (state.refineryUses[owner] || 0));
+        if (!remaining || !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase)) return;
+        const cards = state.hands[owner].filter(card => refinedCardDefinition(card) && !card.refined);
+        if (!cards.length) return;
+        refinerySelectStatus.textContent = `정제 횟수 ${remaining}회 남음 · 카드를 선택하세요. 올려두면 정제 후 효과를 미리 볼 수 있습니다.`;
+        refineryCardOptions.replaceChildren(...cards.map(card => {
+          const option = document.createElement('button');
+          option.type = 'button';
+          option.className = 'refinery-card-option';
+          option.setAttribute('role', 'option');
+          const baseFace = createCardFace(card);
+          option.append(baseFace);
+          const refined = refinedCardDefinition(card);
+          const previewRefined = () => {
+            if (!refined) return;
+            option.replaceChildren(createCardFace({ ...card, name: refined.name, description: refined.description, refined: true }));
+            option.classList.add('refinery-preview-refined');
+            refinerySelectStatus.textContent = `${refined.name} · ${refined.description}`;
+          };
+          const previewBase = () => {
+            option.replaceChildren(createCardFace(card));
+            option.classList.remove('refinery-preview-refined');
+            refinerySelectStatus.textContent = `정제 횟수 ${remaining}회 남음 · 카드를 선택하세요. 올려두면 정제 후 효과를 미리 볼 수 있습니다.`;
+          };
+          option.addEventListener('pointerenter', previewRefined);
+          option.addEventListener('pointerleave', previewBase);
+          option.addEventListener('click', () => requestRefinement(card.instanceId, owner));
+          return option;
+        }));
+        refinerySelectOverlay.hidden = false;
+        refineryCardOptions.querySelector('button')?.focus();
+      }
+
+      function refineHandCard(instanceId, owner, { authoritative = false } = {}) {
+        if (heroFor(owner)?.id !== 'refiner' || owner !== turns.playerIndex || (!authoritative && !canControlPlayer(owner)) || !turns.currentUnit ||
+            !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase)) return false;
+        if ((state.refineryUses[owner] || 0) >= heroRule(owner, 'refineLimit', 3)) return false;
+        const card = state.hands[owner].find(item => item.instanceId === instanceId);
+        if (!card || card.refined || !refinedCardDefinition(card)) return false;
+        card.refined = true;
+        state.refineryUses[owner] = (state.refineryUses[owner] || 0) + 1;
+        playSound('card', .9);
+        refinerySelectOverlay.hidden = true;
+        renderHands();
+        updateHud();
+        return true;
+      }
+
+      function requestRefinement(instanceId, owner) {
+        if (shouldForwardOnlineAction()) {
+          refinerySelectOverlay.hidden = true;
+          sendOnlineAction({ type: 'refine-card', cardInstanceId: instanceId });
+          return;
+        }
+        if (refineHandCard(instanceId, owner) && onlineSession?.started && onlineSession.role === 'host') {
+          publishOnlineSnapshot(performance.now());
+        }
       }
 
       function updateGameDeckButtons() {
@@ -3505,7 +3885,9 @@
       }
 
       function needsPowerMeter() {
-        return ['aiming', 'reposition'].includes(state.phase) && state.repositionMode !== 'ammo';
+        const unit = activeLaunchUnit();
+        const refinedPresetShot = state.phase === 'reposition' && state.repositionMode === 'reposition' && unit?.refinedReposition;
+        return ['aiming', 'reposition'].includes(state.phase) && !['ammo', 'blackhole'].includes(state.repositionMode) && !refinedPresetShot;
       }
 
       function startPowerMeter() {
@@ -3547,17 +3929,21 @@
       function renderPowerControl() {
         const unit = activeLaunchUnit();
         const meter = state.powerMeter?.unitId === unit?.id ? state.powerMeter : null;
+        const refinedPresetShot = state.phase === 'reposition' && state.repositionMode === 'reposition' && Boolean(unit?.refinedReposition);
+        const showRefinedPicker = refinedPresetShot && unit.refinedRepositionPower == null && canControlPlayer(unit.owner);
+        refinedRepositionPicker.hidden = !showRefinedPicker;
         const dismissing = meter?.stage === 'locked';
-        const visible = needsPowerMeter() && unit && unit.status !== 'fallen' &&
+        const visible = (needsPowerMeter() || showRefinedPicker) && unit && unit.status !== 'fallen' &&
           !['intro', 'dealing', 'finished'].includes(state.phase) &&
           (meter || canControlPlayer(unit.owner)) && (!dismissing || performance.now() - meter.lockedAt < 300);
         powerControl.hidden = !visible;
         if (!visible) { powerControl.classList.remove('viewport-meter'); return; }
         const canChoose = canControlPlayer(unit.owner);
+        powerControl.classList.toggle('refined-reposition-control', showRefinedPicker);
         powerControl.classList.toggle('big-boy', heroRule(unit.owner, 'powerScale', 1) > 1);
-        powerLaunchButton.hidden = Boolean(meter);
+        powerLaunchButton.hidden = Boolean(meter) || showRefinedPicker;
         powerLaunchButton.disabled = !canChoose;
-        powerPanel.hidden = !meter;
+        powerPanel.hidden = !meter || showRefinedPicker;
         powerPanel.classList.toggle('power-dismissing', dismissing);
         if (meter) {
           const limit = Math.round(heroRule(unit.owner, 'powerScale', 1) * 100);
@@ -3599,7 +3985,11 @@
         if (!unit || !state.aimPoint || !['aiming', 'reposition'].includes(state.phase)) return;
         const launchedFromReposition = state.phase === 'reposition';
         const firingAmmo = state.repositionMode === 'ammo';
-        if (!firingAmmo && (state.powerMeter?.unitId !== unit.id || state.powerMeter.stage !== 'locked')) return;
+        const channelingRefinedBlackHole = state.repositionMode === 'blackhole';
+        const refinedPresetShot = launchedFromReposition && state.repositionMode === 'reposition' && unit.refinedReposition;
+        if (refinedPresetShot && ![.3, .5, .7, 1].includes(unit.refinedRepositionPower)) return;
+        if (!firingAmmo && !channelingRefinedBlackHole && !refinedPresetShot &&
+            (state.powerMeter?.unitId !== unit.id || state.powerMeter.stage !== 'locked')) return;
         if (launchedFromReposition && !unit.relaunchAvailable) {
           state.aiming = false;
           state.aimPoint = null;
@@ -3610,7 +4000,7 @@
         const dx = unit.x - state.aimPoint.x;
         const dy = unit.y - state.aimPoint.y;
         const directionLength = Math.hypot(dx, dy);
-        if (directionLength < (firingAmmo ? 35 / CONFIG.launchScale : 8)) {
+        if (directionLength < (firingAmmo || channelingRefinedBlackHole ? 35 / CONFIG.launchScale : 8)) {
           state.aiming = false;
           state.aimPoint = null;
           state.aimTension = 0;
@@ -3618,19 +4008,43 @@
           return;
         }
         const powerScale = heroRule(unit.owner, 'powerScale', 1);
-        let vx = firingAmmo ? dx : dx / directionLength *
-          Math.max(35, Math.min(CONFIG.maxLaunchSpeed, CONFIG.maxPullDistance * state.powerMeter.value * CONFIG.launchScale) * powerScale);
-        let vy = firingAmmo ? dy : dy / directionLength *
-          Math.max(35, Math.min(CONFIG.maxLaunchSpeed, CONFIG.maxPullDistance * state.powerMeter.value * CONFIG.launchScale) * powerScale);
+        const launchPower = refinedPresetShot ? unit.refinedRepositionPower : state.powerMeter?.value ?? 1;
+        let vx = (firingAmmo || channelingRefinedBlackHole) ? dx : dx / directionLength *
+          Math.max(35, Math.min(CONFIG.maxLaunchSpeed, CONFIG.maxPullDistance * launchPower * CONFIG.launchScale) * powerScale);
+        let vy = (firingAmmo || channelingRefinedBlackHole) ? dy : dy / directionLength *
+          Math.max(35, Math.min(CONFIG.maxLaunchSpeed, CONFIG.maxPullDistance * launchPower * CONFIG.launchScale) * powerScale);
         const speed = Math.hypot(vx, vy);
-        if (firingAmmo) {
+        if (channelingRefinedBlackHole) {
+          triggerDirectionalBlackHole(unit, state.aimPoint.x - unit.x, state.aimPoint.y - unit.y, REFINED_BLACKHOLE_RANGE);
+          unit.activeSpecial = null;
+          unit.blackholeCharged = false;
+          unit.relaunchAvailable = false;
+          state.repositionUnit = null;
+          state.repositionMode = null;
+          state.phase = 'sliding';
+          state.powerMeter = null;
+          state.aiming = false;
+          state.aimPoint = null;
+          state.aimTension = 0;
+          aimOverlay.style.display = 'none';
+          updateHud();
+          return;
+        } else if (firingAmmo) {
           const bulletSpeed = CONFIG.maxLaunchSpeed * CONFIG.bulletSpeedMultiplier;
-          state.bullets.push({
-            entityKind: ENTITY_KIND.UNIT, unitKind: 'bullet', id: `bullet-${Date.now()}-${state.bullets.length}`,
-            owner: unit.owner, sourceUnitId: unit.id, launcherUnitId: unit.id, x: unit.x, y: unit.y,
-            vx: vx / speed * bulletSpeed, vy: vy / speed * bulletSpeed,
-            radius: unit.radius * AI_BALANCE.bullet.radiusScale, mass: AI_BALANCE.bullet.mass, outsideTime: 0
-          });
+          const baseAngle = Math.atan2(vy, vx);
+          const pullRatio = Math.min(1, directionLength / CONFIG.maxPullDistance);
+          const spreadHalfAngle = ammoFanHalfAngle(pullRatio);
+          const fanAngles = unit.refinedAmmo ? [-spreadHalfAngle, 0, spreadHalfAngle] : [0];
+          for (const spread of fanAngles) {
+            state.bullets.push({
+              entityKind: ENTITY_KIND.UNIT, unitKind: 'bullet', id: `bullet-${Date.now()}-${state.bullets.length}`,
+              owner: unit.owner, sourceUnitId: unit.id, launcherUnitId: unit.id, x: unit.x, y: unit.y,
+              vx: Math.cos(baseAngle + spread) * bulletSpeed, vy: Math.sin(baseAngle + spread) * bulletSpeed,
+              radius: unit.radius * AI_BALANCE.bullet.radiusScale, mass: AI_BALANCE.bullet.mass,
+              impactMultiplier: unit.refinedAmmo ? .5 : 1, outsideTime: 0
+            });
+          }
+          unit.refinedAmmo = false;
           unit.activeSpecial = 'ammo';
           state.repositionMode = null;
           playSound('ammoFire', 0.7);
@@ -3646,6 +4060,8 @@
             unit.relaunchUsed = true;
             unit.activeSpecial = 'reposition';
             unit.specialFired = true;
+            unit.refinedReposition = false;
+            unit.refinedRepositionPower = null;
           }
         }
         if (launchedFromReposition) state.repositionUnit = null;
@@ -3669,6 +4085,12 @@
         const scale = rawDistance > 0 ? distance / rawDistance : 0;
         state.aimPoint = { x: unit.x + dx * scale, y: unit.y + dy * scale };
         state.aimTension = distance / maxDistance;
+      }
+
+      function ammoFanHalfAngle(pullRatio) {
+        const maxPullSpread = Math.min(1, Math.max(0, pullRatio) / .7);
+        const totalAngle = (5 + 30 * maxPullSpread) * Math.PI / 180;
+        return totalAngle / 2;
       }
 
       const AI_LEVELS = Object.freeze({
@@ -4174,13 +4596,46 @@
         return false;
       }
 
+      function aiRefineHandCard(owner, unit) {
+        if (heroFor(owner)?.id !== 'refiner' || (state.refineryUses[owner] || 0) >= heroRule(owner, 'refineLimit', 3)) return false;
+        const hand = state.hands[owner] || [];
+        const enemies = state.units.filter(item => item.owner !== owner && item.isOnTable && item.status !== 'ready');
+        const allies = state.units.filter(item => item.owner === owner && item.isOnTable && item.status !== 'ready');
+        const closeEnemies = enemies.filter(item => Math.hypot(item.x - (unit?.x ?? TABLE.left), item.y - (unit?.y ?? (TABLE.top + TABLE.bottom) / 2)) < BLACK_HOLE.range);
+        const hardeningThreat = enemies.reduce((total, item) => total + (item.ability?.stacks?.hardening || 0), 0);
+        const threatenedAlly = allies.some(ally => enemies.some(enemy =>
+          Math.hypot(ally.x - enemy.x, ally.y - enemy.y) < ally.radius + enemy.radius + 100));
+        const candidates = hand.filter(card => !card.refined && refinedCardDefinition(card) &&
+          aiCanUseCard(card.id) && isCardUnlocked(card, owner)).map(card => {
+          let value = 0;
+          switch (card.id) {
+            case 'blackhole': value = closeEnemies.length >= 2 ? 12 + closeEnemies.length : closeEnemies.length ? 6 : 0; break;
+            case 'ammo': value = aiAmmoValue(unit) + (enemies.length > 1 ? 2 : 0); break;
+            case 'pulse': value = hardeningThreat * 5 + (state.aiStyle === 'controller' ? 2 : 0); break;
+            case 'escape': value = Math.max(0, 72 - Math.max(0, ...allies.map(item => scoreAtX(item.x, owner)))) / 12; break;
+            case 'hardening': value = unit?.ability?.stacks?.hardening ? 1 : 5; break;
+            case 'guard': value = threatenedAlly ? 7 : 3; break;
+            case 'brick': value = state.currentMap.walls || closeEnemies.length ? 6 : 3; break;
+            case 'data-barrier': value = state.currentMap.walls || closeEnemies.length ? 7 : 2; break;
+            case 'bluffing': value = enemies.some(item => item.ability?.guard) ? 7 : 2; break;
+            case 'repulsion-field': value = threatenedAlly ? 6 : 2; break;
+          }
+          return { card, value };
+        }).sort((a, b) => b.value - a.value);
+        const best = candidates[0];
+        return Boolean(best && best.value >= 2 && refineHandCard(best.card.instanceId, owner, { authoritative: true }));
+      }
+
       function aiUsePreparationCard(unit) {
         if (Math.random() > aiLevel().cardChance) return false;
         const enemies = state.units.filter(item => item.owner !== unit.owner && item.isOnTable && item.status !== 'ready');
         const crowded = enemies.some(item => Math.hypot(item.x - unit.x, item.y - unit.y) < BLACK_HOLE.range * .85);
         const options = state.aiStyle === 'attacker' ? ['bluffing', 'blackhole', 'pulse', 'guard'] :
           state.aiStyle === 'defender' ? ['guard', 'bluffing', 'pulse'] :
-          state.aiStyle === 'controller' ? ['bluffing', 'pulse', 'guard'] : ['guard', 'bluffing', 'pulse'];
+          state.aiStyle === 'controller' ? ['blackhole', 'bluffing', 'pulse', 'guard'] : ['guard', 'bluffing', 'pulse'];
+        if (crowded && state.hands[state.aiOwner].some(card => card.id === 'blackhole' && card.refined) && !options.includes('blackhole')) {
+          options.unshift('blackhole');
+        }
         for (const id of options) {
           if (!aiCanUseCard(id) || id === 'blackhole' && !crowded) continue;
           const card = state.hands[state.aiOwner].find(item => item.id === id);
@@ -4338,6 +4793,14 @@
         const action = state.aiAction;
         if (timestamp < action.deadline) return;
         const unit = activeLaunchUnit();
+        if (!action.refinementConsidered && heroFor(state.aiOwner)?.id === 'refiner' &&
+            ['aiming', 'reposition', 'sliding', 'turn-ready'].includes(state.phase)) {
+          action.refinementConsidered = true;
+          if (aiRefineHandCard(state.aiOwner, turns.currentUnit || unit)) {
+            action.deadline = timestamp + 280;
+            return;
+          }
+        }
         if (state.phase === 'placement' && unit) {
           if (!action.placementPlanRequested && globalThis.UCCAiPlanner) {
             action.placementPlanRequested = true;
@@ -4402,6 +4865,41 @@
           return;
         }
         if (['aiming', 'reposition'].includes(state.phase) && unit) {
+          if (state.repositionMode === 'blackhole') {
+            const targets = [...state.units, ...state.bricks].filter(target => target !== unit && !target.barrier &&
+              target.status !== 'fallen' && target.status !== 'ready' && !isRefinedImmune(target, 'blackhole') &&
+              Math.hypot(target.x - unit.x, target.y - unit.y) <= REFINED_BLACKHOLE_RANGE);
+            const halfAngle = Math.PI * .23;
+            const angles = targets.flatMap(target => {
+              const angle = Math.atan2(target.y - unit.y, target.x - unit.x);
+              return [angle, angle - halfAngle * .55, angle + halfAngle * .55];
+            });
+            const best = angles.map(angle => {
+              let value = 0;
+              for (const target of targets) {
+                const targetAngle = Math.atan2(target.y - unit.y, target.x - unit.x);
+                const difference = Math.atan2(Math.sin(targetAngle - angle), Math.cos(targetAngle - angle));
+                if (Math.abs(difference) > halfAngle) continue;
+                const distanceScale = 1 - Math.hypot(target.x - unit.x, target.y - unit.y) / REFINED_BLACKHOLE_RANGE;
+                const weight = target.unitKind === 'brick' ? 5 : target.owner === state.aiOwner
+                  ? -10 - scoreAtX(target.x, state.aiOwner) / 16
+                  : 13 + scoreAtX(target.x, target.owner) / 18;
+                value += weight * (.65 + Math.max(0, distanceScale) * .35);
+              }
+              return { angle, value };
+            }).sort((a, b) => b.value - a.value)[0];
+            const pullAngle = best?.angle ?? (unit.owner === 0 ? 0 : Math.PI);
+            const dragAngle = pullAngle + Math.PI;
+            state.powerMeter = null;
+            state.aiming = true;
+            state.aimPoint = { x: unit.x + Math.cos(dragAngle) * CONFIG.directionPullDistance,
+              y: unit.y + Math.sin(dragAngle) * CONFIG.directionPullDistance };
+            launchCurrentUnit();
+            action.launchedAt = timestamp;
+            action.inFlightCardAt = timestamp + 450;
+            action.deadline = timestamp + 700;
+            return;
+          }
           if (state.repositionMode === 'ammo') {
             const ammoPlan = action.ammoPlan;
             const ammoPlanNeedsRefresh = state.currentMap.walls && ammoPlan && Number.isFinite(ammoPlan.plannedMapTime) &&
@@ -4482,6 +4980,17 @@
               action.planApplied = true;
               if (action.planSource === 'simulation') aiApplyPlannedSetup(action, unit);
               else { aiPlaceTrigger(); aiUsePreparationCard(unit); }
+            }
+            if (state.phase === 'reposition' && state.repositionMode === 'reposition' && unit.refinedReposition) {
+              const presets = [.3, .5, .7, 1];
+              const desired = Number.isFinite(action.plan?.power) ? action.plan.power : .7;
+              unit.refinedRepositionPower = presets.reduce((best, value) =>
+                Math.abs(value - desired) < Math.abs(best - desired) ? value : best, presets[0]);
+              state.aimPoint = action.plan?.aimPoint || aiShotPlan(unit, true).aimPoint;
+              state.aiming = true;
+              launchCurrentUnit();
+              action.deadline = timestamp + 700;
+              return;
             }
             startPowerMeter();
             action.meterDeadline = timestamp + (state.aiDifficulty === 'easy' ? 1600 : 2900);
@@ -4652,6 +5161,8 @@
               a.vy -= impulse * ny * aResponse * aImpact;
               b.vx += impulse * nx * bResponse * bImpact;
               b.vy += impulse * ny * bResponse * bImpact;
+              markRefinedEscapeMovement(a);
+              markRefinedEscapeMovement(b);
               if (a.status === 'resting') a.status = 'sliding';
               if (b.status === 'resting') b.status = 'sliding';
               detonatePendingPulseTriggers(a);
@@ -4706,6 +5217,7 @@
               const brickImpact = hasRepulsionField(brick) ? AI_BALANCE.repulsion.impactMultiplier : 1;
               unit.vx += impulse * nx * unitResponse * brickImpact;
               unit.vy += impulse * ny * unitResponse * brickImpact;
+              markRefinedEscapeMovement(unit);
               if (!brick.barrier) {
                 const brickResponse = hasRepulsionField(brick) ? AI_BALANCE.repulsion.responseMultiplier : 1;
                 const unitImpact = hasRepulsionField(unit) ? AI_BALANCE.repulsion.impactMultiplier : 1;
@@ -4862,6 +5374,7 @@
         updateBullets(dt);
         updateAbilityEffects(dt);
         resolveGuardCollisions();
+        resolveRefinedEscapes();
         updateAdventurePower();
         const objectsMoving = state.units.some(unit => unit.status === 'sliding') || state.bullets.length > 0 ||
           state.bricks.some(brick => Math.hypot(brick.vx, brick.vy) > 5) ||
@@ -4909,20 +5422,48 @@
         if (cardIndex < 0) return false;
         const card = hand[cardIndex];
         if (!canUseCardOnUnit(card, owner, unit)) return false;
-        if (UNIT_EFFECTS[card.id] && !applyUnitEffectStack(unit, card.id)) return false;
-        if (card.id === 'blackhole') triggerBlackHole(unit, BLACK_HOLE.range, false);
+        if (UNIT_EFFECTS[card.id] && !applyUnitEffectStack(unit, card.id, Boolean(card.refined))) return false;
+        if (card.id === 'blackhole' && !card.refined) triggerBlackHole(unit, BLACK_HOLE.range, false);
+        if (card.id === 'blackhole' && card.refined) {
+          state.powerMeter = null;
+          unit.relaunchAvailable = true;
+          unit.activeSpecial = 'blackhole';
+          unit.blackholeCharged = true;
+          state.repositionUnit = unit;
+          state.repositionMode = 'blackhole';
+          state.phase = 'reposition';
+        }
         if (card.id === 'pulse') {
           const ability = ensureUnitAbility(unit);
           ability.pulse = true;
+          ability.refinedPulse = Boolean(card.refined);
         }
         if (card.id === 'repulsion-field') {
-          if (unit.unitKind === 'brick') unit.repulsionField = true;
-          else ensureUnitAbility(unit).repulsionField = true;
+          if (unit.unitKind === 'brick') {
+            unit.repulsionField = true;
+            if (card.refined) {
+              unit.width *= 1.3;
+              unit.height *= 1.3;
+              unit.refinedRepulsionSize = true;
+            }
+          } else {
+            ensureUnitAbility(unit).repulsionField = true;
+            if (card.refined && !unit.refinedRepulsionSize) {
+              unit.radius *= 1.3;
+              unit.refinedRepulsionSize = true;
+            }
+          }
         }
         if (card.id === 'bluffing') {
-          ensureUnitAbility(unit).bluffingUntilTurn = turns.globalTurn + 1;
+          const ability = ensureUnitAbility(unit);
+          ability.bluffingUntilTurn = turns.globalTurn + 1;
+          if (card.refined) ability.refinedEffectImmunity = ['pulse', 'blackhole'];
         }
-        if (card.id === 'escape') {
+        if (card.id === 'escape' && card.refined) {
+          const ability = ensureUnitAbility(unit);
+          ability.escapePending = true;
+          ability.escapeTriggered = false;
+        } else if (card.id === 'escape') {
           unit.status = 'fallen';
           unit.vx = 0;
           unit.vy = 0;
@@ -4947,6 +5488,8 @@
           unit.relaunchAvailable = true;
           state.repositionUnit = unit;
           unit.activeSpecial = 'reposition';
+          unit.refinedReposition = Boolean(card.refined);
+          unit.refinedRepositionPower = null;
           state.repositionMode = 'reposition';
           state.phase = 'reposition';
         }
@@ -4955,10 +5498,12 @@
           unit.relaunchAvailable = true;
           state.repositionUnit = unit;
           unit.activeSpecial = 'ammo';
+          unit.refinedAmmo = Boolean(card.refined);
           state.repositionMode = 'ammo';
           state.phase = 'reposition';
         }
-        emitGameFeedback(CARD_PRESENTATION[card.id]?.sound || 'card', unit, card.name, PLAYER[owner].color);
+        if (card.refined) state.effects.push({ type: 'refined-card-use', x: unit.x, y: unit.y, age: 0, duration: .58 });
+        emitGameFeedback(CARD_PRESENTATION[card.id]?.sound || 'card', unit, cardDisplayName(card), card.refined ? '#c4a7ee' : PLAYER[owner].color);
         recordTutorialEvent('card', card.id);
         if (state.adventure && owner === 0) emitAdventureEvent({ type: 'card-used', cardId: card.id });
         hand.splice(cardIndex, 1);
@@ -4972,6 +5517,8 @@
             !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase) ||
             (['brick', 'data-barrier'].includes(card.id)) ||
             (unit.unitKind === 'brick' && card.id !== 'repulsion-field')) return false;
+        if (card.id === 'ammo' && (state.repositionMode === 'blackhole' ||
+            state.effects.some(effect => effect.type === 'blackhole-fan' && effect.age < effect.duration))) return false;
         if (!isCardUnlocked(card, owner)) return false;
         if (unit.status === 'ready' && unit !== turns.currentUnit) return false;
         if (UNIT_EFFECTS[card.id] && getUnitEffectStacks(unit, card.id) >= UNIT_EFFECTS[card.id].maxStacks) return false;
@@ -5004,7 +5551,7 @@
         return unit.ability?.stacks?.[effectId] ?? (unit.ability?.[effectId] ? 1 : 0);
       }
 
-      function applyUnitEffectStack(unit, effectId) {
+      function applyUnitEffectStack(unit, effectId, refined = false) {
         const definition = UNIT_EFFECTS[effectId];
         if (!definition) return false;
         const ability = ensureUnitAbility(unit);
@@ -5012,6 +5559,11 @@
         if (currentStacks >= definition.maxStacks) return false;
         ability.stacks[effectId] = currentStacks + 1;
         ability[effectId] = true;
+        if (effectId === 'hardening' && refined) ability.refinedHardeningStacks = (ability.refinedHardeningStacks || 0) + 1;
+        if (effectId === 'guard' && refined) {
+          ability.refinedGuardOrbit = true;
+          if (!Number.isFinite(ability.guardOrbitPhase)) ability.guardOrbitPhase = 0;
+        }
         if (effectId === 'hardening') {
           state.effects.push({ type: 'hardening-gather', x: unit.x, y: unit.y, radius: unit.radius,
             stack: currentStacks + 1, age: 0, duration: .72 });
@@ -5063,10 +5615,10 @@
         return ['card-brick', 'card-data-barrier', 'placement'].includes(lesson?.id) || lesson?.kind === 'trigger';
       }
 
-      function canPlaceBrick(point) {
+      function canPlaceBrick(point, refined = false) {
         if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return false;
-        const halfW = 9;
-        const halfH = 32;
+        const halfW = AI_BALANCE.structure.width * (refined ? 1.5 : 1) / 2;
+        const halfH = AI_BALANCE.structure.height * (refined ? 1.5 : 1) / 2;
         if (point.x > brickDropLimitX() || point.x < TABLE.left + halfW || point.x > TABLE.right - halfW ||
             point.y < TABLE.top + halfH || point.y > TABLE.bottom - halfH) return false;
         const overlapsUnit = state.units.some(unit => {
@@ -5084,19 +5636,22 @@
         const hand = state.hands[owner];
         const index = hand.findIndex(card => card.instanceId === cardId &&
           ['brick', 'data-barrier'].includes(card.id) && isCardUnlocked(card, owner));
+        const card = hand[index];
         if (index < 0 || owner !== turns.playerIndex || !turns.currentUnit ||
-            !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase) || !canPlaceBrick(point)) return false;
-        const [card] = hand.splice(index, 1);
+            !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase) ||
+            !canPlaceBrick(point, card?.id === 'brick' && Boolean(card?.refined))) return false;
+        hand.splice(index, 1);
         if (card.id === 'brick') {
           const variant = chooseFalseWallVariant();
           state.effects.push({ type: 'brick-drop', id: `brick-drop-${card.instanceId}-${Date.now()}`,
-            x: point.x, y: point.y, owner, variant, age: 0, duration: .92 });
+            x: point.x, y: point.y, owner, variant, sizeMultiplier: card.refined ? 1.5 : 1, age: 0, duration: .92 });
         } else {
           state.bricks.push(new BrickUnit({ ...point, owner, barrier: true,
-            expiresAtTurn: turns.globalTurn + 2 }));
+            refined: Boolean(card.refined), permanent: Boolean(card.refined), expiresAtTurn: card.refined ? null : turns.globalTurn + 2 }));
         }
+        if (card.refined) state.effects.push({ type: 'refined-card-use', x: point.x, y: point.y, age: 0, duration: .58 });
         emitGameFeedback(card.id === 'brick' ? 'card' : (CARD_PRESENTATION[card.id]?.sound || 'drop'),
-          point, card.name, PLAYER[owner].color);
+          point, cardDisplayName(card), card.refined ? '#c4a7ee' : PLAYER[owner].color);
         recordTutorialEvent('card', card.id);
         renderHands();
         updateHud();
@@ -5130,6 +5685,7 @@
         if (state.cardDrag) return;
         const button = event.currentTarget;
         const owner = Number(button.dataset.owner);
+        if (heroFor(owner)?.id === 'refiner') return;
         if (owner !== turns.playerIndex || !canControlPlayer(owner) || remainingTriggerPlacements(owner) <= 0 || !turns.currentUnit ||
             !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase)) return;
         event.preventDefault();
@@ -5169,7 +5725,8 @@
             drag.preview.style.height = `${diameter}px`;
           }
         } else if (['brick', 'data-barrier'].includes(drag.type)) {
-          drag.ghost.style.visibility = drag.point && canPlaceBrick(drag.point) ? 'hidden' : 'visible';
+          const refined = Boolean(state.hands[drag.owner].find(card => card.instanceId === drag.id)?.refined);
+          drag.ghost.style.visibility = drag.point && canPlaceBrick(drag.point, refined && drag.type === 'brick') ? 'hidden' : 'visible';
         } else {
           const card = state.hands[drag.owner].find(item => item.instanceId === drag.id);
           const target = drag.point && findCardTarget(drag.point, drag.owner, drag.type);
@@ -5191,7 +5748,8 @@
           if (drag.type === 'trigger-placement') {
             if (remainingTriggerPlacements(drag.owner) > 0 && canPlaceItemTrigger(point)) triggerDrop = point;
           } else if (['brick', 'data-barrier'].includes(drag.type)) {
-            if (canPlaceBrick(point)) {
+            const refined = Boolean(state.hands[drag.owner].find(card => card.instanceId === drag.id)?.refined);
+            if (canPlaceBrick(point, refined && drag.type === 'brick')) {
               if (shouldForwardOnlineAction()) sendOnlineAction({ type: 'brick', cardId: drag.id, point });
               else placeStructureCard(drag.id, drag.owner, point);
             }
@@ -5224,17 +5782,67 @@
         for (const source of state.units) {
           const ability = source.ability;
           if (!ability || source.status === 'fallen') continue;
-          if (ability.guard) ability.guardAngle += dt * 1.6875;
+          if (ability.guard) {
+            if (ability.refinedGuardOrbit) {
+              if (!Number.isFinite(ability.guardOrbitPhase)) ability.guardOrbitPhase = 0;
+              ability.guardOrbitPhase = (ability.guardOrbitPhase + dt * Math.PI * 2 / 5.2) % (Math.PI * 2);
+              ability.guardAngle += dt * 1.6875 * refinedGuardOrbitSpeedMultiplier(ability);
+            } else ability.guardAngle += dt * 1.6875;
+          }
         }
+      }
+
+      function refinedGuardOrbitSpeedMultiplier(ability) {
+        const phase = Number.isFinite(ability?.guardOrbitPhase) ? ability.guardOrbitPhase : 0;
+        // The two harmonics vary the pace while keeping its cycle average at 1.5x.
+        return 1.5 + .56 * Math.sin(phase) + .12 * Math.sin(phase * 2);
+      }
+
+      function isRefinedImmune(unit, effect) {
+        return Boolean(unit?.ability?.refinedEffectImmunity?.includes(effect));
+      }
+
+      function markRefinedEscapeMovement(unit) {
+        if (unit?.unitKind === 'stone' && unit.status !== 'fallen' && unit.ability?.escapePending &&
+            Math.hypot(unit.vx, unit.vy) > CONFIG.stopSpeed * .2) unit.ability.escapeTriggered = true;
+      }
+
+      function resolveRefinedEscapes() {
+        let changed = false;
+        for (const unit of state.units) {
+          if (unit.status === 'fallen' || !unit.ability?.escapePending || !unit.ability.escapeTriggered) continue;
+          unit.ability.escapePending = false;
+          unit.ability.escapeTriggered = false;
+          unit.status = 'fallen';
+          unit.vx = unit.vy = 0;
+          unit.fallResolved = true;
+          unit.fallRewarded = true;
+          unit.removedByEscape = true;
+          state.escapePoints[unit.owner] += 10;
+          state.effects.push({ type: 'refined-card-use', x: unit.x, y: unit.y, age: 0, duration: .68 });
+          if (state.repositionUnit === unit) {
+            state.repositionUnit = null;
+            state.repositionMode = null;
+            state.powerMeter = null;
+            state.aiming = false;
+            state.aimPoint = null;
+            state.aimTension = 0;
+          }
+          if (turns.currentUnit === unit && state.phase === 'aiming') state.phase = 'turn-ready';
+          changed = true;
+        }
+        if (changed) updateHud();
       }
 
       function triggerPulse(source, range = PULSE_RANGE, impulse = PULSE_IMPULSE, chargedCard = false) {
         playFileSound('pulseCast', { volume: .75 });
         latchAdventurePulseHits(source.x, source.y, range);
+        const refinedPulse = chargedCard && Boolean(source.ability?.refinedPulse);
         const targets = chargedCard ? state.units : [...state.units, ...state.bricks];
         for (const target of targets) {
           if (target === source || target.status === 'fallen' || target.status === 'ready') continue;
           if (target.barrier) continue;
+          if (isRefinedImmune(target, 'pulse')) continue;
           const dx = target.x - source.x;
           const dy = target.y - source.y;
           const distance = Math.hypot(dx, dy);
@@ -5243,6 +5851,8 @@
           const teamScale = chargedCard && target.owner === source.owner && target.unitKind !== 'brick' ? .5 : 1;
           target.vx += Math.cos(angle) * impulse * teamScale;
           target.vy += Math.sin(angle) * impulse * teamScale;
+          if (refinedPulse && target.unitKind === 'stone' && target.owner !== source.owner) target.refinedPulseFrictionTimer = 3.5;
+          markRefinedEscapeMovement(target);
           if (target.unitKind !== 'brick') target.status = 'sliding';
         }
         if (chargedCard) for (let index = state.bricks.length - 1; index >= 0; index -= 1) {
@@ -5293,7 +5903,7 @@
         state.effects.push({ type: 'blackhole', x: source.x, y: source.y, age: 0,
           duration: BLACK_HOLE.duration, radius: range, shake: 6.5 });
         for (const target of [...state.units, ...state.bricks]) {
-          if (target === source || target.barrier || target.status === 'fallen' || target.status === 'ready') continue;
+          if (target === source || target.barrier || target.status === 'fallen' || target.status === 'ready' || isRefinedImmune(target, 'blackhole')) continue;
           const dx = source.x - target.x;
           const dy = source.y - target.y;
           const distance = Math.hypot(dx, dy);
@@ -5304,6 +5914,7 @@
           const pull = BLACK_HOLE.impulse * falloff / (1 + friction * 18);
           target.vx += dx / distance * pull;
           target.vy += dy / distance * pull;
+          markRefinedEscapeMovement(target);
           if (target.unitKind !== 'brick') target.status = 'sliding';
         }
         for (let i = 0; i < 36; i += 1) {
@@ -5319,6 +5930,44 @@
         }
       }
 
+      function triggerDirectionalBlackHole(source, dragX, dragY, range = BLACK_HOLE.range) {
+        const dragLength = Math.hypot(dragX, dragY) || 1;
+        const centerAngle = Math.atan2(-dragY / dragLength, -dragX / dragLength);
+        const halfAngle = Math.PI * .23;
+        playSound('blackhole');
+        source.fluidTimer = BLACK_HOLE.duration;
+        state.effects.push({ type: 'blackhole-fan', sourceUnitId: source.id, x: source.x, y: source.y, angle: centerAngle,
+          age: 0, duration: BLACK_HOLE.duration, radius: range, halfAngle, shake: 6.5 });
+        for (const target of [...state.units, ...state.bricks]) {
+          if (target === source || target.barrier || target.status === 'fallen' || target.status === 'ready' ||
+              isRefinedImmune(target, 'blackhole')) continue;
+          const dx = source.x - target.x;
+          const dy = source.y - target.y;
+          const distance = Math.hypot(dx, dy);
+          if (distance > range || distance < .001) continue;
+          const targetAngle = Math.atan2(target.y - source.y, target.x - source.x);
+          const angleDifference = Math.atan2(Math.sin(targetAngle - centerAngle), Math.cos(targetAngle - centerAngle));
+          if (Math.abs(angleDifference) > halfAngle) continue;
+          target.blackholeFrictionTimer = BLACK_HOLE.duration;
+          const friction = target.frictionAtPosition();
+          const falloff = .72 + .28 * (1 - distance / range);
+          const coneFalloff = .78 + .22 * (1 - Math.abs(angleDifference) / halfAngle);
+          const pull = BLACK_HOLE.impulse * falloff * coneFalloff / (1 + friction * 18);
+          target.vx += dx / distance * pull;
+          target.vy += dy / distance * pull;
+          markRefinedEscapeMovement(target);
+          if (target.unitKind !== 'brick') target.status = 'sliding';
+        }
+        for (let i = 0; i < 30; i += 1) {
+          const a = centerAngle + (Math.random() - .5) * halfAngle * 2;
+          const distance = range * (.5 + Math.random() * .5);
+          const speed = 70 + Math.random() * 130;
+          state.particles.push({ x: source.x + Math.cos(a) * distance, y: source.y + Math.sin(a) * distance,
+            vx: -Math.cos(a) * speed, vy: -Math.sin(a) * speed, life: .28 + Math.random() * .3,
+            size: 2 + Math.random() * 4, color: i % 2 ? '#bca0ef' : '#e8d9ff' });
+        }
+      }
+
       function updateEffects(dt) {
         const active = [];
         for (const effect of state.effects) {
@@ -5328,7 +5977,8 @@
               active.push(effect);
               continue;
             }
-            state.bricks.push(new BrickUnit({ x: effect.x, y: effect.y, owner: effect.owner, variant: effect.variant }));
+            state.bricks.push(new BrickUnit({ x: effect.x, y: effect.y, owner: effect.owner, variant: effect.variant,
+              sizeMultiplier: effect.sizeMultiplier || effect.widthMultiplier || 1 }));
             const impact = { type: 'brick-impact', id: `${effect.id}-impact`, x: effect.x, y: effect.y,
               age: 0, duration: .48, shake: 6, sound: 'drop' };
             active.push(impact);
@@ -5532,7 +6182,9 @@
 
       function guardSatellites(source) {
         const orbitRadius = source.radius * 1.875;
-        const angularSpeed = 1.6875;
+        const speedMultiplier = source.ability.refinedGuardOrbit
+          ? refinedGuardOrbitSpeedMultiplier(source.ability) : 1;
+        const angularSpeed = 1.6875 * speedMultiplier;
         const count = Math.min(UNIT_EFFECTS.guard.maxStacks, getUnitEffectStacks(source, 'guard'));
         const offsets = Array.from({ length: count * UNIT_EFFECTS.guard.satellitesPerStack }, (_, index) => index * Math.PI / count);
         return offsets.map((offset, index) => {
@@ -5568,10 +6220,11 @@
           bullet.sourceUnitId = target.id;
           bullet.outsideTime = 0;
           if (closingSpeed > 0) {
-            const impulse = AI_BALANCE.bullet.targetImpulseScale * closingSpeed / (1 + 1 / bullet.mass);
+            const impulse = AI_BALANCE.bullet.targetImpulseScale * closingSpeed / (1 + 1 / bullet.mass) * (bullet.impactMultiplier || 1);
             const response = hasRepulsionField(target) ? AI_BALANCE.repulsion.responseMultiplier : 1;
             target.vx -= nx * impulse * response;
             target.vy -= ny * impulse * response;
+            markRefinedEscapeMovement(target);
             if (target.status === 'resting' && Math.hypot(target.vx, target.vy) > CONFIG.stopSpeed) target.status = 'sliding';
             if (target.unitKind !== 'brick') {
               detonatePendingPulseTriggers(target);
@@ -5693,9 +6346,10 @@
               const pulseOnly = target.ability?.pulse;
               if (pulseOnly) detonateChargedPulse(target);
               else if (relative < 0) {
-                const impulse = -AI_BALANCE.bullet.targetImpulseScale * relative / (1 + 1 / bullet.mass);
+                const impulse = -AI_BALANCE.bullet.targetImpulseScale * relative / (1 + 1 / bullet.mass) * (bullet.impactMultiplier || 1);
                 target.vx += impulse * nx;
                 target.vy += impulse * ny;
+                markRefinedEscapeMovement(target);
                 if (Math.hypot(target.vx, target.vy) > CONFIG.stopSpeed) target.status = 'sliding';
                 playUnitImpactSound(impulse);
               }
@@ -5737,6 +6391,7 @@
                 else playSound('guardHit', Math.min(1.4, -toward / 250));
                 target.vx -= (1 + CONFIG.restitution) * toward * nx;
                 target.vy -= (1 + CONFIG.restitution) * toward * ny;
+                markRefinedEscapeMovement(target);
               }
               if (target.status === 'resting' && Math.hypot(target.vx, target.vy) > CONFIG.stopSpeed) target.status = 'sliding';
             }
@@ -5947,9 +6602,13 @@
         mapPreviewDescription.textContent = map.description;
       }
 
-      function selectMapPreview(index) {
+      async function selectMapPreview(index) {
         if (onlineSession && onlineMapChoiceLocked()) return;
         if (mapPreviewTransitioning) return;
+        if (onlineSession?.localMapConfirmed) {
+          const wasUnreadied = await unreadyOnlineSelection();
+          if (!wasUnreadied || !onlineSession || onlineMapChoiceLocked()) return;
+        }
         const map = MAPS[index];
         if (!map) return;
         const currentPreview = mapOptions.querySelector('.map-preview');
@@ -5979,6 +6638,20 @@
         if (!session?.room) return false;
         const own = session.playerIndex === 0 ? session.room.host : session.room.challenger;
         return Boolean(own?.mapId && onlineOpponentMapSelected(session));
+      }
+
+      async function unreadyOnlineSelection() {
+        const session = onlineSession;
+        if (!session || !session.localMapConfirmed || onlineMapChoiceLocked(session)) return false;
+        try {
+          const result = await postOnlineRequest(`/api/rooms/${session.code}/map`, { token: session.token, mapId: null });
+          if (onlineSession !== session) return false;
+          updateOnlineRoomView(result.room);
+          return true;
+        } catch (error) {
+          onlineStatus.textContent = `준비를 취소하지 못했습니다 · ${error.message}`;
+          return false;
+        }
       }
 
       async function postOnlineRequest(path, payload) {
@@ -6019,7 +6692,7 @@
           username: null, name: name || '게스트', fame: 0, played: 0, wins: 0, losses: 0, draws: 0,
           level: 1, levelStart: 0, nextLevel: 100,
           tutorialCompleted: hasGuestTutorialCompletion(), adventureUnlocked: hasGuestTutorialCompletion(),
-          decks: [null, null, null], activePreset: 0
+          decks: emptyDeckSlots(), deckNames: defaultDeckNames(), deckHeroes: emptyDeckSlots(), activePreset: 0
         });
       }
 
@@ -6038,8 +6711,11 @@
         }
         profile = localLevel100Profile(profile);
         guestProfile = profile;
-        savedDecks = Array.isArray(profile.decks) ? profile.decks.map(cards => cards ? [...cards] : null) : [null, null, null];
-        activeDeckPreset = Number.isInteger(profile.activePreset) ? profile.activePreset : 0;
+        savedDecks = Array.from({ length: DECK_PRESET_COUNT }, (_, index) => profile.decks?.[index] ? [...profile.decks[index]] : null);
+        savedDeckNames = normalizeDeckNameList(profile.deckNames);
+        savedDeckHeroes = normalizeDeckHeroList(profile.deckHeroes);
+        deckDraftsInitialized = false;
+        activeDeckPreset = Number.isInteger(profile.activePreset) && profile.activePreset < DECK_PRESET_COUNT ? profile.activePreset : 0;
         refreshLocalDeckSelects();
         guestProfilePersistent = persistent;
         guestProfileElement.hidden = false;
@@ -6628,16 +7304,19 @@
         heroSelectOverlay.hidden = true;
         mapSelectOverlay.hidden = false;
         mapSelectTitle.textContent = '온라인 맵 선택';
-        mapSelectDescription.textContent = '두 플레이어가 맵을 확정하면 방장, 도전자, 랜덤 맵 순으로 대전을 시작합니다.';
+        mapSelectDescription.textContent = '덱과 맵을 고른 뒤 준비하세요. 상대가 준비하기 전에는 준비를 취소하고 변경할 수 있습니다.';
         roomCodeView.hidden = false;
         roomCodeText.textContent = onlineSession.code;
         onlinePlayerStatus.hidden = false;
         onlineStatus.hidden = false;
-        confirmMapButton.textContent = '이 맵 확정';
+        confirmMapButton.textContent = '준비';
         confirmMapButton.disabled = false;
         cancelMapButton.textContent = '방 나가기';
         onlineSession.localMapConfirmed = false;
+        mapLoadoutRandomHeroes[0] = null;
+        mapLoadoutRandomHeroes[1] = null;
         renderMapOptions();
+        refreshMapLoadoutControls();
         updateOnlineRoomView(onlineSession.room);
       }
 
@@ -6650,17 +7329,20 @@
         if (room.status === 'complete') onlineSession.matchOver = true;
         const ownPlayer = onlineSession.playerIndex === 0 ? room.host : room.challenger;
         onlineSession.localMapConfirmed = Boolean(ownPlayer?.mapId);
-        const choiceLocked = onlineMapChoiceLocked();
-        confirmMapButton.disabled = choiceLocked;
-        confirmMapButton.textContent = choiceLocked
-          ? '맵 선택 완료'
-          : (onlineSession.localMapConfirmed ? '맵 변경 확정' : '이 맵 확정');
+        const choiceLocked = onlineMapChoiceLocked(onlineSession);
+        confirmMapButton.disabled = ['playing', 'complete'].includes(room.status) || choiceLocked;
+        confirmMapButton.textContent = onlineSession.localMapConfirmed ? '취소' : '준비';
+        mapDeckSelects[0].disabled = choiceLocked || ['playing', 'complete'].includes(room.status);
         renderMapOptions();
         PLAYER[0].name = room.host.name || '방장';
         PLAYER[1].name = room.challenger?.name || '도전자 대기 중';
         state.playerLevels = [room.host.level || 1, room.challenger?.level || 1];
         state.playerTutorialCompleted = [room.host.tutorialCompleted === true, room.challenger?.tutorialCompleted === true];
         updatePlayerNames();
+        if (state.mapSelectionOrigin === 'online') {
+          mapLoadoutLaneTitles[0].textContent = `${PLAYER[onlineSession.playerIndex]?.name || '내 플레이어'} · 사용할 덱`;
+          renderMapLoadoutCarousel(0);
+        }
         if (onlineSession.role === 'host' && !previousChallenger && room.challenger) {
           showConnectionNotice(`${room.challenger.name} 님이 참가했습니다`);
           playSound('connected');
@@ -6669,15 +7351,15 @@
           const status = document.createElement('span');
           const map = player?.mapId ? MAPS.find(item => item.id === player.mapId)?.name : null;
           status.textContent = player
-            ? `${index === 0 ? '방장' : '도전자'} · ${player.name}${map ? ` · ${map} 확정` : ' · 맵 선택 대기'}`
+            ? `${index === 0 ? '방장' : '도전자'} · ${player.name} · ${player.deckName || '기본 덱'} · ${heroName(player.heroId)}${map ? ` · ${map} 준비 완료` : ' · 선택 중'}`
             : '도전자 · 참가 대기 중';
           return status;
         }));
         if (room.status === 'waiting') onlineStatus.textContent = '상대가 방 코드로 참가할 때까지 기다리는 중입니다.';
         else if (room.status === 'choosing') onlineStatus.textContent = onlineSession.localMapConfirmed
-          ? '상대가 맵을 고르기 전까지 선택을 변경할 수 있습니다.'
-          : '맵을 선택하고 확정하세요.';
-        else if (room.status === 'ready') onlineStatus.textContent = '양쪽 맵이 확정되었습니다. 대전을 준비합니다.';
+          ? '준비를 취소한 뒤 맵과 덱을 바꿀 수 있습니다. 상대의 준비 전까지 변경할 수 있습니다.'
+          : '맵과 덱을 고른 뒤 준비를 누르세요.';
+        else if (room.status === 'ready') onlineStatus.textContent = '두 플레이어가 준비했습니다. 대전을 시작합니다.';
         else if (room.status === 'playing') onlineStatus.textContent = '3전 2선승 온라인 대전 진행 중';
         else if (room.status === 'complete') onlineStatus.textContent = '대전이 종료되었습니다.';
         if (room.status === 'playing') {
@@ -7174,22 +7856,24 @@
 
       async function confirmOnlineMap() {
         if (!onlineSession || onlineMapChoiceLocked()) return;
-        startGameMusic();
         const session = onlineSession;
         confirmMapButton.disabled = true;
-        onlineStatus.textContent = '맵 선택을 서버에 저장하는 중입니다.';
+        const cancelReady = session.localMapConfirmed;
+        onlineStatus.textContent = cancelReady ? '준비를 취소하는 중입니다.' : '맵과 덱을 준비하는 중입니다.';
         try {
+          const loadout = cancelReady ? null : mapLoadoutFor(session.playerIndex, 0);
           const result = await postOnlineRequest(`/api/rooms/${session.code}/map`, {
             token: session.token,
-            mapId: state.selectedMap.id
+            mapId: cancelReady ? null : state.selectedMap.id,
+            ...(loadout ? { deck: loadout.deck, deckName: loadout.deckName, heroId: loadout.heroId } : {})
           });
-          session.localMapConfirmed = true;
           updateOnlineRoomView(result.room);
           renderMapOptions();
+          if (!cancelReady) startGameMusic();
           await startOnlineMatchIfReady(session, result.room);
         } catch (error) {
           if (onlineSession === session) {
-            onlineStatus.textContent = `맵 확정 실패 · ${error.message}`;
+            onlineStatus.textContent = `${cancelReady ? '준비 취소' : '준비'} 실패 · ${error.message}`;
             confirmMapButton.disabled = false;
           }
         }
@@ -7208,7 +7892,9 @@
           session.wins = [0, 0];
           session.totalScores = [0, 0];
           session.roundResults = [];
-          state.heroChoices = [null, null];
+          state.refineryUses = [0, 0];
+          state.heroChoices = [started.room.host?.heroId || randomHeroId(), started.room.challenger?.heroId || randomHeroId()];
+          state.playerLoadoutNames = [started.room.host?.deckName || '기본 덱', started.room.challenger?.deckName || '기본 덱'];
           startOnlineRound(0);
           ensureOnlinePeerConnection(session);
         } catch (error) {
@@ -7238,6 +7924,7 @@
           mapTime: state.mapTime,
           triggerPlacementUsed: [...state.triggerPlacementUsed],
           triggerPlacementCount: [...state.triggerPlacementCount],
+          refineryUses: [...state.refineryUses],
           hero: {
             offers: state.heroOffers.map(options => [...options]),
             choices: [...state.heroChoices],
@@ -7391,6 +8078,7 @@
         state.powerMeter = localPower || incomingPower;
         state.triggerPlacementUsed = snapshot.triggerPlacementUsed;
         state.triggerPlacementCount = snapshot.triggerPlacementCount;
+        state.refineryUses = snapshot.refineryUses || [0, 0];
         if (snapshot.hero) {
           state.heroOffers = snapshot.hero.offers;
           state.heroChoices = snapshot.hero.choices;
@@ -7469,6 +8157,10 @@
         if (!onlineSession?.started || onlineSession.role !== 'host' || packet.playerIndex !== 1 || turns.playerIndex !== 1 ||
             !['placement', 'aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase)) return;
         const action = packet.action;
+        if (action.type === 'refine-card' && heroFor(1)?.id === 'refiner') {
+          if (refineHandCard(action.cardInstanceId, 1, { authoritative: true })) publishOnlineSnapshot(performance.now());
+          return;
+        }
         if (state.phase === 'placement' && action.type !== 'place') return;
         if (action.type === 'place' && state.phase === 'placement' && Number.isFinite(action.y)) {
           confirmLaunchPlacement(action.y, true);
@@ -7479,8 +8171,13 @@
         } else if (action.type === 'power-lock' && needsPowerMeter() && activeLaunchUnit()?.id === action.unitId) {
           lockPowerMeter(action.value);
         } else if (action.type === 'launch' && ['aiming', 'reposition'].includes(state.phase) && action.aimPoint) {
-          const dx = action.aimPoint.x - (state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit)?.x;
-          const dy = action.aimPoint.y - (state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit)?.y;
+          const launchUnit = state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit;
+          if (state.phase === 'reposition' && state.repositionMode === 'reposition' && launchUnit?.refinedReposition) {
+            if (![.3, .5, .7, 1].includes(action.power)) return;
+            launchUnit.refinedRepositionPower = action.power;
+          }
+          const dx = action.aimPoint.x - launchUnit?.x;
+          const dy = action.aimPoint.y - launchUnit?.y;
           const maxDistance = state.repositionMode === 'ammo' ? CONFIG.maxPullDistance : CONFIG.directionPullDistance;
           if (!Number.isFinite(dx) || !Number.isFinite(dy) || Math.hypot(dx, dy) > maxDistance + 1) return;
           state.aiming = true;
@@ -7545,8 +8242,8 @@
         replayButton.hidden = true;
         dealOverlay.hidden = true;
         updateMatchHud();
-        if (roundIndex === 0 && !state.heroChoices.every(Boolean)) startHeroSelection('online');
-        else dealCards();
+        heroSelectOverlay.hidden = true;
+        dealCards();
       }
 
       function roundStartingPlayer() {
@@ -7604,9 +8301,10 @@
         onlinePlayerStatus.hidden = true;
         onlineStatus.hidden = true;
         confirmMapButton.disabled = false;
-        confirmMapButton.textContent = '이 맵 확정';
+        confirmMapButton.textContent = origin === 'online' ? '준비' : '게임 시작';
         cancelMapButton.textContent = '취소';
         entityTooltip.hidden = true;
+        refreshMapLoadoutControls();
         renderMapOptions();
         mapOptions.querySelector('[aria-checked="true"]')?.focus();
       }
@@ -7637,17 +8335,23 @@
           confirmOnlineMap();
           return;
         }
+        applyMapLoadoutSelection(0, false);
+        if (state.mapSelectionOrigin === 'start') applyMapLoadoutSelection(1, false);
         startGameMusic();
         playSound('start');
         state.currentMap = state.selectedMap;
         state.mapTime = 0;
+        state.refineryUses = [0, 0];
         mapIndicator.textContent = state.currentMap.name;
         mapSelectOverlay.hidden = true;
         dealOverlay.hidden = true;
-        startHeroSelection(state.aiMode ? 'ai' : 'local');
+        heroSelectOverlay.hidden = true;
+        dealCards();
       }
 
       function startLocalGame() {
+        mapLoadoutRandomHeroes[0] = null;
+        mapLoadoutRandomHeroes[1] = null;
         state.aiMode = false;
         state.aiAction = null;
         PLAYER[0].name = localPlayerNameInputs[0].value.trim().slice(0, 20) || '플레이어 1';
@@ -7657,12 +8361,18 @@
         state.playerTutorialCompleted = [guestProfile?.tutorialCompleted === true, guestProfile?.tutorialCompleted === true];
         state.playerDecks = localDeckSelects.map(select => select.value === '-1'
           ? defaultPlayerDeck() : selectedDeck(Number(select.value), localLevel));
+        state.heroChoices = localDeckSelects.map(select => select.value === '-1'
+          ? randomHeroId() : savedDeckHeroes[Number(select.value)] || randomHeroId());
+        state.playerLoadoutNames = localDeckSelects.map(select => select.value === '-1'
+          ? '기본 덱' : savedDeckNames[Number(select.value)] || `덱 ${Number(select.value) + 1}`);
         updatePlayerNames();
         openMapSelection('start');
       }
 
       function startAiGame() {
         if (!selectedAiDifficulty) return;
+        mapLoadoutRandomHeroes[0] = null;
+        mapLoadoutRandomHeroes[1] = null;
         state.aiMode = true;
         state.aiOwner = 1;
         state.aiDifficulty = selectedAiDifficulty;
@@ -7691,6 +8401,15 @@
         state.playerDecks = [
           aiDeckSelect.value === '-1' ? defaultPlayerDeck() : selectedDeck(Number(aiDeckSelect.value), localLevel),
           aiDeck
+        ];
+        state.heroOffers[state.aiOwner] = randomHeroOptions();
+        state.heroChoices = [
+          aiDeckSelect.value === '-1' ? randomHeroId() : savedDeckHeroes[Number(aiDeckSelect.value)] || randomHeroId(),
+          chooseAiHeroOffer()
+        ];
+        state.playerLoadoutNames = [
+          aiDeckSelect.value === '-1' ? '기본 덱' : savedDeckNames[Number(aiDeckSelect.value)] || `덱 ${Number(aiDeckSelect.value) + 1}`,
+          `클럽 AI · ${aiLevel().name}`
         ];
         updatePlayerNames();
         openMapSelection('ai');
@@ -7733,7 +8452,7 @@
 
       function createCardFace(card, concealed = false) {
         const face = document.createElement('div');
-        face.className = `card-face${concealed ? ' card-back-face' : ''}`;
+        face.className = `card-face${concealed ? ' card-back-face' : ''}${card?.refined ? ' refined-card' : ''}`;
         if (concealed) {
           const name = document.createElement('strong');
           name.className = 'card-name';
@@ -7743,16 +8462,18 @@
         }
         const art = document.createElement('img');
         art.className = 'card-art';
-        art.src = CARD_PRESENTATION[card.id]?.art || '';
+        art.src = card?.refined
+          ? CARD_PRESENTATION[card.id]?.refinedArt || CARD_PRESENTATION[card.id]?.art || ''
+          : CARD_PRESENTATION[card.id]?.art || '';
         art.dataset.cardId = card.id;
         art.alt = '';
         art.draggable = false;
         const name = document.createElement('strong');
         name.className = 'card-name';
-        name.textContent = card.name;
+        name.textContent = cardDisplayName(card);
         const rules = document.createElement('div');
         rules.className = 'card-rules';
-        rules.textContent = CARD_DESCRIPTIONS[card.id] || '';
+        rules.textContent = cardDisplayDescription(card);
         face.append(art, name, rules);
         return face;
       }
@@ -7760,9 +8481,9 @@
       function refreshLocalDeckSelects() {
         [...localDeckSelects, aiDeckSelect].forEach((select, owner) => {
           const previous = select.value || (owner === 0 || select === aiDeckSelect ? String(activeDeckPreset) : '-1');
-          const choices = [{ label: '기본 덱', value: '-1' }];
+          const choices = [{ label: '기본 덱 · 무작위 영웅', value: '-1' }];
           savedDecks.forEach((cards, index) => {
-            if (deckIsValid(cards)) choices.push({ label: `가방 ${index + 1}`, value: String(index) });
+            if (deckIsValid(cards)) choices.push({ label: `${savedDeckNames[index]} · ${heroName(savedDeckHeroes[index])}`, value: String(index) });
           });
           select.replaceChildren(...choices.map(choice => {
             const option = document.createElement('option');
@@ -7774,116 +8495,436 @@
         });
       }
 
+      function mapLoadoutFor(owner, selectIndex = owner) {
+        const presetValue = mapDeckSelects[selectIndex].value;
+        const savedLevel = state.mapSelectionOrigin === 'online' ? guestProfile?.level || 1 : playerLevel(owner);
+        const tutorialDone = state.mapSelectionOrigin === 'online'
+          ? guestProfile?.tutorialCompleted === true : state.playerTutorialCompleted?.[owner] === true;
+        const randomHero = () => mapLoadoutRandomHeroes[selectIndex] || (mapLoadoutRandomHeroes[selectIndex] = randomHeroId());
+        if (presetValue === '-1') return {
+          deck: defaultPlayerDeck(tutorialDone),
+          deckName: '기본 덱', heroId: randomHero()
+        };
+        const preset = Number(presetValue);
+        return {
+          deck: selectedDeck(preset, savedLevel),
+          deckName: savedDeckNames[preset] || `덱 ${preset + 1}`,
+          heroId: savedDeckHeroes[preset] || randomHero()
+        };
+      }
+
+      function applyMapLoadoutSelection(owner, rerollRandom = true, selectIndex = owner) {
+        if (rerollRandom) mapLoadoutRandomHeroes[selectIndex] = null;
+        const loadout = mapLoadoutFor(owner, selectIndex);
+        state.playerDecks[owner] = loadout.deck;
+        state.heroChoices[owner] = loadout.heroId;
+        state.playerLoadoutNames ||= ['', ''];
+        state.playerLoadoutNames[owner] = loadout.deckName;
+        return loadout;
+      }
+
+      function mapDeckChoices() {
+        return [
+          { value: '-1', name: '기본 덱', heroId: null, cards: defaultPlayerDeck(state.playerTutorialCompleted?.[0] === true) },
+          ...savedDecks.map((cards, index) => deckIsValid(cards) && deckIsCompatibleWithHero(cards, savedDeckHeroes[index]) ? {
+            value: String(index), name: savedDeckNames[index] || `덱 ${index + 1}`, heroId: savedDeckHeroes[index], cards
+          } : null).filter(Boolean)
+        ];
+      }
+
+      function renderMapLoadoutCarousel(selectIndex) {
+        const select = mapDeckSelects[selectIndex];
+        const target = mapDeckPackages[selectIndex];
+        if (!select || !target) return;
+        const choices = mapDeckChoices();
+        const index = Math.max(0, choices.findIndex(choice => choice.value === select.value));
+        mapCarouselIndices[selectIndex] = index;
+        const choice = choices[index] || choices[0];
+        const hero = HEROES.find(item => item.id === choice.heroId);
+        target.replaceChildren();
+        const portrait = document.createElement('span');
+        portrait.className = 'map-deck-portrait';
+        if (hero?.portrait) {
+          const image = document.createElement('img');
+          image.src = hero.portrait;
+          image.alt = `${hero.name} 초상화`;
+          portrait.append(image);
+        } else {
+          portrait.textContent = '···';
+          portrait.setAttribute('aria-label', '무작위 영웅');
+        }
+        const copy = document.createElement('span');
+        copy.className = 'map-deck-copy';
+        const name = document.createElement('strong');
+        name.className = 'map-deck-name';
+        name.textContent = choice.name;
+        const meta = document.createElement('span');
+        meta.className = 'map-deck-meta';
+        const categories = choice.cards.map(id => CARD_CATEGORY_NAMES[deckCard(id)?.category] || '공용');
+        const roleCounts = [...new Set(categories)].map(role => `${role} ${categories.filter(value => value === role).length}`);
+        meta.textContent = `${heroName(choice.heroId)} · ${choice.cards.length}장 · ${roleCounts.slice(0, 2).join(' / ') || '기본 구성'}`;
+        copy.append(name, meta);
+        const stack = document.createElement('span');
+        stack.className = 'map-deck-stack';
+        stack.setAttribute('aria-hidden', 'true');
+        for (let cardIndex = 0; cardIndex < Math.min(4, choice.cards.length); cardIndex += 1) stack.append(document.createElement('i'));
+        target.append(portrait, copy, stack);
+        const locked = state.mapSelectionOrigin === 'online' && onlineMapChoiceLocked();
+        document.querySelectorAll(`.map-deck-arrow[data-map-deck-owner="${selectIndex}"]`).forEach(button => { button.disabled = locked || mapCarouselTransitioning[selectIndex] || choices.length <= 1; });
+      }
+
+      async function stepMapDeckPackage(selectIndex, delta) {
+        const select = mapDeckSelects[selectIndex];
+        const choices = mapDeckChoices();
+        if (!select || !choices.length || mapCarouselTransitioning[selectIndex] || (selectIndex === 1 && state.mapSelectionOrigin !== 'start')) return;
+        const current = Math.max(0, choices.findIndex(choice => choice.value === select.value));
+        const next = (current + delta + choices.length) % choices.length;
+        const target = mapDeckPackages[selectIndex];
+        mapCarouselTransitioning[selectIndex] = true;
+        target.dataset.slideStep = String(delta);
+        target.classList.add('is-shifting');
+        renderMapLoadoutCarousel(selectIndex);
+        await new Promise(resolve => setTimeout(resolve, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 105));
+        select.value = choices[next].value;
+        mapCarouselIndices[selectIndex] = next;
+        target.classList.remove('is-shifting');
+        renderMapLoadoutCarousel(selectIndex);
+        target.dataset.slideStep = String(delta);
+        target.classList.add('is-arriving');
+        setTimeout(() => target.classList.remove('is-arriving'), matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 220);
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        if (!(onlineSession && !onlineSession.started && onlineSession.localMapConfirmed)) {
+          mapCarouselTransitioning[selectIndex] = false;
+          renderMapLoadoutCarousel(selectIndex);
+        }
+      }
+
+      function refreshMapLoadoutControls() {
+        const origin = state.mapSelectionOrigin;
+        const visible = ['start', 'ai', 'online'].includes(origin);
+        mapLoadoutRow.hidden = !visible;
+        mapLoadoutRow.dataset.playerCount = origin === 'start' ? '2' : '1';
+        mapLoadoutLanes[0].hidden = !visible;
+        mapLoadoutLanes[1].hidden = origin !== 'start';
+        mapLoadoutLaneTitles[0].textContent = origin === 'online'
+          ? `${PLAYER[onlineSession?.playerIndex ?? 0]?.name || '내 플레이어'} · 사용할 덱`
+          : origin === 'ai' ? '플레이어 · 사용할 덱' : '플레이어 1 · 사용할 덱';
+        mapLoadoutLaneTitles[1].textContent = '플레이어 2 · 사용할 덱';
+        for (const [owner, select] of mapDeckSelects.entries()) {
+          if (owner === 1 && origin !== 'start') continue;
+          const previous = origin === 'online' ? String(activeDeckPreset)
+            : origin === 'ai' ? aiDeckSelect.value : localDeckSelects[owner].value;
+          const choices = mapDeckChoices().map(choice => ({ value: choice.value, label: `${choice.name} · ${heroName(choice.heroId)}` }));
+          select.replaceChildren(...choices.map(choice => {
+            const option = document.createElement('option');
+            option.value = choice.value;
+            option.textContent = choice.label;
+            return option;
+          }));
+          select.value = choices.some(choice => choice.value === previous) ? previous : '-1';
+          mapDeckLastValues[owner] = select.value;
+          renderMapLoadoutCarousel(owner);
+        }
+        if (visible) {
+          const localOwner = origin === 'online' ? onlineSession?.playerIndex ?? 0 : 0;
+          applyMapLoadoutSelection(localOwner, false, 0);
+          if (origin === 'start') applyMapLoadoutSelection(1, false);
+        }
+      }
+
+      function renderDeckPackages() {
+        deckPresets.replaceChildren(...Array.from({ length: DECK_PRESET_COUNT }, (_, index) => {
+          const button = document.createElement('button');
+          const heroId = savedDeckHeroes[index];
+          const hero = HEROES.find(item => item.id === heroId);
+          const isEmpty = !savedDecks[index];
+          button.type = 'button';
+          button.className = `deck-package${isEmpty ? ' preset-empty' : ''}`;
+          button.setAttribute('aria-label', isEmpty ? `빈 덱 슬롯 ${index + 1}, 새 덱 만들기` : `${savedDeckNames[index]}, ${heroName(heroId)}, 덱 편집`);
+          button.title = isEmpty ? `새 덱 만들기 · ${index + 1}번 슬롯` : `${savedDeckNames[index]} · ${heroName(heroId)}`;
+          if (hero?.portrait) button.style.setProperty('--package-image', `url("${hero.portrait}")`);
+          const label = document.createElement(isEmpty ? 'span' : 'strong');
+          label.className = isEmpty ? 'deck-package-plus' : 'deck-package-name';
+          label.textContent = isEmpty ? '+' : savedDeckNames[index] || `덱 ${index + 1}`;
+          label.setAttribute('aria-hidden', String(isEmpty));
+          button.append(label);
+          button.addEventListener('click', () => selectDeckPreset(index));
+          return button;
+        }));
+        deckCreateButton.disabled = savedDecks.every(Boolean);
+      }
+
+      function showDeckView(view) {
+        deckView = view;
+        deckOverlay.dataset.view = view;
+        const heroFromEditor = view === 'hero' && deckHeroReturnView === 'editor';
+        deckListScreen.hidden = view === 'editor' || heroFromEditor;
+        deckLayout.hidden = view === 'list' || (view === 'hero' && !heroFromEditor);
+        deckHeroScreen.hidden = view !== 'hero';
+        deckListScreen.inert = view === 'hero';
+        deckLayout.inert = view === 'hero';
+        deckBackButton.inert = view === 'hero';
+        deckListScreen.classList.toggle('is-under-hero', view === 'hero' && !heroFromEditor);
+        deckLayout.classList.toggle('is-under-hero', heroFromEditor);
+        deckBackButton.hidden = view === 'list';
+        deckTitle.textContent = view === 'list' ? '덱 보관함' : view === 'hero' ? '영웅 선택' : '덱 구성';
+        deckOverlay.querySelector('.deck-dialog').scrollTop = 0;
+        if (view === 'hero') document.querySelector('#deckHeroPrevButton').focus({ preventScroll: true });
+        if (view === 'editor') deckNameInput.focus({ preventScroll: true });
+      }
+
+      function renderDeckHeroChoice() {
+        const hero = HEROES[deckHeroPickerIndex];
+        deckHeroPickerPortrait.src = hero.portrait;
+        deckHeroPickerPortrait.alt = `${hero.name} 초상화`;
+        deckHeroPickerName.textContent = hero.name;
+        deckHeroPickerDescription.textContent = hero.description;
+        deckHeroPickerCount.textContent = `${deckHeroPickerIndex + 1} / ${HEROES.length}`;
+        document.querySelector('#deckHeroConfirmButton').textContent = deckHeroReturnView === 'editor' ? '영웅 변경 확정' : '이 영웅으로 만들기';
+      }
+
+      function openDeckHeroChoice(index, returnView = 'list') {
+        deckPendingPreset = index;
+        deckHeroReturnView = returnView;
+        const currentHero = deckDraftHeroes[index] || savedDeckHeroes[index];
+        deckHeroPickerIndex = Math.max(0, HEROES.findIndex(hero => hero.id === currentHero));
+        renderDeckHeroChoice();
+        showDeckView('hero');
+      }
+
+      function createNewDeck() {
+        const index = savedDecks.findIndex(cards => !cards);
+        if (index < 0) {
+          deckListStatus.textContent = '덱 슬롯 9개를 모두 사용 중입니다.';
+          return;
+        }
+        deckListStatus.textContent = '';
+        openDeckHeroChoice(index);
+      }
+
+      function renderDeckPool(draft, counts, doubled) {
+        const query = deckCardSearch.value.trim().toLocaleLowerCase();
+        const categoryFilter = deckCategoryFilter.value || 'all';
+        const availabilityFilter = deckAvailabilityFilter.value || 'all';
+        const selectedHero = deckDraftHeroes[deckEditingPreset] || '';
+        const cards = cardDefinitions().filter(card => {
+          const unlocked = deckCardUnlocked(card);
+          const heroAllowed = cardAllowedForDeckHero(card, selectedHero);
+          const count = counts.get(card.id) || 0;
+          const canAdd = unlocked && heroAllowed && draft.length < 8 && count < 2 && !(count && doubled);
+          const categoryName = CARD_CATEGORY_NAMES[card.category] || '';
+          const searchable = [card.name, CARD_DESCRIPTIONS[card.id], categoryName, ...(card.tags || [])].join(' ').toLocaleLowerCase();
+          if (query && !searchable.includes(query)) return false;
+          if (categoryFilter !== 'all' && card.category !== categoryFilter) return false;
+          if (availabilityFilter === 'available' && !canAdd) return false;
+          if (availabilityFilter === 'locked' && unlocked) return false;
+          if (availabilityFilter === 'hero' && !heroAllowed) return false;
+          return true;
+        });
+        deckPoolCount.textContent = `${cards.length} / ${cardDefinitions().length}종`;
+        deckPool.replaceChildren(...cards.map(card => {
+          const count = counts.get(card.id) || 0;
+          const unlocked = deckCardUnlocked(card);
+          const heroAllowed = cardAllowedForDeckHero(card, selectedHero);
+          const canAdd = unlocked && heroAllowed && draft.length < 8 && count < 2 && !(count && doubled);
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = `deck-card${count === 1 && !doubled && draft.length < 8 ? ' bonus-ready' : ''}${!canAdd ? ' unavailable' : ''}${!unlocked ? ' locked' : ''}`;
+          button.dataset.deckId = card.id;
+          button.dataset.deckSource = 'pool';
+          button.dataset.canAdd = String(canAdd);
+          button.setAttribute('aria-disabled', String(!canAdd));
+          const limits = !unlocked ? '잠금 해제 후 담을 수 있습니다.' : !heroAllowed ? `${heroName(selectedHero)} 전용 영웅 범위와 맞지 않습니다.`
+            : draft.length >= 8 ? '가방이 가득 찼습니다.' : count >= 2 ? '같은 카드는 두 장까지만 담을 수 있습니다.'
+              : count && doubled ? '두 장을 넣은 카드 종류는 하나만 선택할 수 있습니다.' : '클릭하거나 가방으로 끌어 담습니다.';
+          button.title = `${card.name} · ${CARD_DESCRIPTIONS[card.id]} · ${limits}`;
+          button.append(createCardFace(card));
+          if (count) {
+            const countLabel = document.createElement('span');
+            countLabel.className = 'deck-card-category';
+            countLabel.textContent = `${count}장 담김`;
+            button.append(countLabel);
+          }
+          if (Array.isArray(card.heroIds) && card.heroIds.length) {
+            const restriction = document.createElement('span');
+            restriction.className = 'deck-card-hero-lock';
+            restriction.textContent = `사용 영웅 · ${card.heroIds.map(heroName).join('·')}`;
+            button.append(restriction);
+          }
+          return button;
+        }));
+      }
+
       function renderDeckEditor() {
-        const draft = deckDrafts[activeDeckPreset] || [];
+        const draft = deckDrafts[deckEditingPreset] || [];
         const counts = new Map();
         draft.forEach(id => counts.set(id, (counts.get(id) || 0) + 1));
         const doubled = [...counts.values()].some(count => count === 2);
         deckCount.textContent = `${draft.length} / 8`;
-        deckSaveButton.disabled = !deckIsValid(draft);
-        deckPresets.replaceChildren(...[0, 1, 2].map(index => {
+        deckCapacityMeter.setAttribute('aria-valuenow', String(draft.length));
+        deckCapacityMeter.style.setProperty('--capacity', `${Math.min(100, draft.length / 8 * 100)}%`);
+        deckNameInput.value = deckDraftNames[deckEditingPreset] || `덱 ${deckEditingPreset + 1}`;
+        const selectedHero = deckDraftHeroes[deckEditingPreset] || '';
+        const hero = HEROES.find(item => item.id === selectedHero);
+        deckHeroName.textContent = hero?.name || '무작위 영웅';
+        if (hero?.portrait) deckHeroPortrait.src = hero.portrait;
+        else deckHeroPortrait.removeAttribute('src');
+        deckHeroPortrait.alt = hero ? `${hero.name} 초상화` : '영웅 미지정';
+        deckHeroSelect.replaceChildren(
+          Object.assign(document.createElement('option'), { value: '', textContent: '무작위 영웅' }),
+          ...HEROES.map(hero => Object.assign(document.createElement('option'), { value: hero.id, textContent: hero.name }))
+        );
+        deckHeroSelect.value = selectedHero;
+        if (deckCategoryFilter.options.length !== Object.keys(CARD_CATEGORY_NAMES).length) {
+          deckCategoryFilter.replaceChildren(
+            Object.assign(document.createElement('option'), { value: 'all', textContent: CARD_CATEGORY_NAMES.all }),
+            ...Object.entries(CARD_CATEGORY_NAMES).filter(([id]) => id !== 'all').map(([id, name]) => Object.assign(document.createElement('option'), { value: id, textContent: name }))
+          );
+        }
+        deckSaveButton.disabled = deckSaving || !deckIsValid(draft) || !deckIsCompatibleWithHero(draft, selectedHero);
+        renderDeckPool(draft, counts, doubled);
+        deckBag.replaceChildren(...draft.map((id, index) => {
           const button = document.createElement('button');
           button.type = 'button';
-          button.textContent = String(index + 1);
-          button.setAttribute('aria-pressed', String(index === activeDeckPreset));
-          button.title = savedDecks[index] ? `가방 ${index + 1} 저장됨` : `가방 ${index + 1} 비어 있음`;
-          button.addEventListener('click', () => selectDeckPreset(index));
-          return button;
-        }));
-        deckPool.replaceChildren(...cardDefinitions()
-          .filter(card => (SecondChanceCardUnlocks.isTemporarilyGranted(card.id) ||
-            (card.unlockAdventureStage ? hasClearedAdventureStage(card.unlockAdventureStage) : (card.unlockLevel || 1) <= (guestProfile?.level || 1))) &&
-            (!card.unlockTutorial || guestProfile?.tutorialCompleted))
-          .map(card => {
-            const count = counts.get(card.id) || 0;
-            const unavailable = draft.length >= 8 || count >= 2 || (count === 1 && doubled);
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.className = `deck-card${count === 1 && !doubled && draft.length < 8 ? ' bonus-ready' : ''}${count && doubled || unavailable ? ' unavailable' : ''}`;
-            button.dataset.deckId = card.id;
-            button.dataset.deckSource = 'pool';
-            button.disabled = unavailable;
-            button.title = `${card.name} · ${CARD_DESCRIPTIONS[card.id]}`;
-            button.append(createCardFace(card));
-            return button;
-          }));
-        deckBag.replaceChildren(...Array.from({ length: 8 }, (_, index) => {
-          const id = draft[index];
-          if (!id) {
-            const slot = document.createElement('div');
-            slot.className = 'deck-empty-slot';
-            slot.style.cssText = 'min-height:102px;border:1px dashed #526a65;border-radius:4px';
-            return slot;
-          }
-          const button = document.createElement('button');
-          button.type = 'button';
-          button.className = 'deck-card';
+          const card = deckCard(id);
+          const heroAllowed = cardAllowedForDeckHero(card, deckDraftHeroes[deckEditingPreset]);
+          button.className = `deck-card${heroAllowed ? '' : ' hero-unavailable'}`;
           button.dataset.deckId = id;
           button.dataset.deckIndex = String(index);
           button.dataset.deckSource = 'bag';
-          button.title = `${deckCard(id).name} · 가방에서 빼기`;
-          button.append(createCardFace(deckCard(id)));
+          button.title = `${card.name} · Delete 키로 가방에서 빼기${heroAllowed ? '' : ` · ${heroName(deckDraftHeroes[deckEditingPreset])}에게 허용되지 않음`}`;
+          button.setAttribute('aria-label', button.title);
+          button.style.setProperty('--bag-order', String(index));
+          const art = document.createElement('img');
+          art.className = 'deck-mini-art';
+          art.src = CARD_PRESENTATION[id]?.art || '';
+          art.alt = '';
+          art.draggable = false;
+          const name = document.createElement('strong');
+          name.className = 'deck-mini-name';
+          name.textContent = card.name;
+          button.append(art, name);
           return button;
         }));
+        if (!draft.length) {
+          const empty = document.createElement('div');
+          empty.className = 'deck-bag-empty';
+          empty.textContent = '카드를 선택하거나 이곳으로 끌어 담으세요.';
+          deckBag.append(empty);
+        }
+        if (draft.length && !deckIsCompatibleWithHero(draft, selectedHero)) {
+          deckStatus.textContent = '선택한 영웅이 사용할 수 없는 카드를 가방에서 빼야 저장할 수 있습니다.';
+        } else if (deckStatus.textContent.startsWith('선택한 영웅이 사용할 수 없는 카드')) {
+          deckStatus.textContent = '';
+        }
+      }
+
+      function refreshDeckPoolOnly() {
+        const draft = deckDrafts[deckEditingPreset] || [];
+        const counts = new Map();
+        draft.forEach(id => counts.set(id, (counts.get(id) || 0) + 1));
+        renderDeckPool(draft, counts, [...counts.values()].some(count => count === 2));
       }
 
       function addDeckCard(id) {
+        if (deckSaving || deckPresetSwitchPending) return false;
         const card = deckCard(id);
-        if (!card || !isCardUnlocked(card, 0) || (card.unlockTutorial && !guestProfile?.tutorialCompleted)) return;
-        const draft = deckDrafts[activeDeckPreset] ||= [];
+        if (!card || !deckCardUnlocked(card) || !cardAllowedForDeckHero(card, deckDraftHeroes[deckEditingPreset])) return false;
+        const draft = deckDrafts[deckEditingPreset] ||= [];
         const count = draft.filter(item => item === id).length;
-        if (draft.length >= 8 || count >= 2 || (count && draft.some(item => draft.filter(other => other === item).length > 1))) return;
+        if (draft.length >= 8 || count >= 2 || (count && draft.some(item => draft.filter(other => other === item).length > 1))) return false;
         draft.push(id);
         deckStatus.textContent = '';
         renderDeckEditor();
+        return true;
       }
 
       function removeDeckCard(index) {
-        const draft = deckDrafts[activeDeckPreset];
+        if (deckSaving || deckPresetSwitchPending) return;
+        const draft = deckDrafts[deckEditingPreset];
         if (!draft || index < 0 || index >= draft.length) return;
         draft.splice(index, 1);
         deckStatus.textContent = '';
         renderDeckEditor();
       }
 
-      async function persistDeckSettings(nextDecks, nextPreset) {
+      async function persistDeckSettings(nextDecks, nextPreset, nextNames = savedDeckNames, nextHeroes = savedDeckHeroes) {
         if (guestProfile?.username && guestToken) {
           const response = await fetch('/api/profile/decks', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${guestToken}` },
-            body: JSON.stringify({ decks: nextDecks, activePreset: nextPreset })
+            body: JSON.stringify({ decks: nextDecks, activePreset: nextPreset, deckNames: nextNames, deckHeroes: nextHeroes })
           });
           const data = await response.json().catch(() => ({}));
           if (!response.ok) throw new Error(data.error || '가방 저장에 실패했습니다.');
-          guestProfile = data.profile;
+          guestProfile = localLevel100Profile(data.profile);
         }
-        savedDecks = nextDecks.map(cards => cards ? [...cards] : null);
+        savedDecks = Array.from({ length: DECK_PRESET_COUNT }, (_, index) => nextDecks[index] ? [...nextDecks[index]] : null);
+        savedDeckNames = normalizeDeckNameList(nextNames);
+        savedDeckHeroes = normalizeDeckHeroList(nextHeroes);
         activeDeckPreset = nextPreset;
         refreshLocalDeckSelects();
       }
 
       async function selectDeckPreset(index) {
-        if (index === activeDeckPreset) return;
+        if (deckPresetSwitchPending || deckSaving) return;
+        if (!savedDecks[index]) {
+          openDeckHeroChoice(index);
+          return;
+        }
+        deckPresetSwitchPending = true;
         try {
-          await persistDeckSettings(savedDecks, index);
+          deckEditingPreset = index;
           if (!deckDrafts[index]) deckDrafts[index] = savedDecks[index] ? [...savedDecks[index]] : [];
-          deckStatus.textContent = savedDecks[index] ? '' : '저장한 가방이 없으면 기본 덱으로 플레이합니다.';
+          if (!deckDraftNames[index]) deckDraftNames[index] = savedDeckNames[index] || `덱 ${index + 1}`;
+          if (deckDraftHeroes[index] === undefined) deckDraftHeroes[index] = savedDeckHeroes[index] || null;
+          deckStatus.textContent = '';
           renderDeckEditor();
-        } catch (error) { deckStatus.textContent = error.message; }
+          showDeckView('editor');
+        } catch (error) {
+          deckListStatus.textContent = error.message;
+        } finally { deckPresetSwitchPending = false; }
+      }
+
+      async function confirmDeckHeroChoice() {
+        if (deckPresetSwitchPending || deckSaving) return;
+        const index = deckPendingPreset;
+        const hero = HEROES[deckHeroPickerIndex];
+        deckPresetSwitchPending = true;
+        try {
+          deckEditingPreset = index;
+          deckDrafts[index] ||= [];
+          deckDraftNames[index] ||= savedDeckNames[index] || `덱 ${index + 1}`;
+          deckDraftHeroes[index] = hero.id;
+          deckStatus.textContent = '';
+          renderDeckEditor();
+          showDeckView('editor');
+        } catch (error) {
+          deckListStatus.textContent = error.message;
+        } finally { deckPresetSwitchPending = false; }
       }
 
       function openDeckEditor(fromScreen) {
         deckReturnScreen = fromScreen;
-        deckDrafts = savedDecks.map(cards => cards ? [...cards] : []);
-        deckStatus.textContent = savedDecks[activeDeckPreset] ? '' : '저장한 가방이 없으면 기본 덱으로 플레이합니다.';
-        renderDeckEditor();
+        deckEditingPreset = activeDeckPreset;
+        if (!deckDraftsInitialized) {
+          deckDrafts = savedDecks.map(cards => cards ? [...cards] : []);
+          deckDraftNames = [...savedDeckNames];
+          deckDraftHeroes = [...savedDeckHeroes];
+          deckDraftsInitialized = true;
+        }
+        deckListStatus.textContent = '';
+        renderDeckPackages();
+        showDeckView('list');
         runLobbyTransition(() => {
           startOverlay.hidden = true;
           deckOverlay.hidden = false;
+          deckPresets.children[0]?.focus({ preventScroll: true });
         });
       }
 
       function closeDeckEditor() {
+        if (deckSaving) return;
         runLobbyTransition(() => {
           deckOverlay.hidden = true;
           startOverlay.hidden = false;
@@ -7893,7 +8934,8 @@
 
       function beginDeckDrag(event) {
         const cardElement = event.target.closest('.deck-card[data-deck-id]');
-        if (!cardElement || cardElement.disabled || deckOverlay.hidden) return;
+        if (!cardElement || cardElement.disabled || deckOverlay.hidden || deckSaving || deckPresetSwitchPending) return;
+        if (cardElement.dataset.deckSource === 'pool' && cardElement.dataset.canAdd === 'false') return;
         event.preventDefault();
         deckDrag = {
           id: cardElement.dataset.deckId, source: cardElement.dataset.deckSource,
@@ -7925,8 +8967,11 @@
         deckDrag.ghost?.remove();
         deckBag.classList.remove('drop-ready');
         deckPool.classList.remove('drop-ready');
-        if (deckDrag.source === 'pool' && (!moved || deckBag.contains(target))) addDeckCard(deckDrag.id);
-        if (deckDrag.source === 'bag' && (!moved || deckPool.contains(target))) removeDeckCard(deckDrag.index);
+        if (moved) {
+          deckClickSuppressUntil = Date.now() + 280;
+          if (deckDrag.source === 'pool' && deckBag.contains(target)) addDeckCard(deckDrag.id);
+          if (deckDrag.source === 'bag' && deckPool.contains(target)) removeDeckCard(deckDrag.index);
+        }
         deckDrag = null;
       }
 
@@ -8013,7 +9058,8 @@
           const existing = new Map(Array.from(hand.children).map(element => [element.dataset.cardId, element]));
           for (const element of existing.values()) {
             if (state.hands[owner].some(card => card.instanceId === element.dataset.cardId &&
-                card.id === element.dataset.kind && element.dataset.concealed === String(concealed))) continue;
+                card.id === element.dataset.kind && element.dataset.concealed === String(concealed) &&
+                String(Boolean(card.refined)) === element.dataset.refined)) continue;
             if (element === inspectedCardElement) hideCardInspector();
             fadeConsumedCard(element);
             element.remove();
@@ -8026,11 +9072,13 @@
             element.append(createCardFace(card, concealed));
             element.dataset.cardId = card.instanceId;
             element.dataset.kind = card.id;
+            element.dataset.refined = String(Boolean(card.refined));
             element.dataset.owner = String(owner);
             element.dataset.concealed = String(concealed);
             element.setAttribute('role', 'button');
             element.tabIndex = concealed ? -1 : 0;
-            element.setAttribute('aria-label', concealed ? '상대 비공개 카드' : `${card.name} 카드`);
+            element.setAttribute('aria-label', concealed ? '상대 비공개 카드' : `${cardDisplayName(card)} 카드`);
+            element.classList.toggle('refined-card', Boolean(card.refined));
             if (!concealed) {
               element.addEventListener('pointerdown', beginCardDrag);
               element.addEventListener('pointerenter', event => { if (event.pointerType !== 'touch') scheduleCardInspector(element); });
@@ -8497,19 +9545,33 @@
           ctx.fillText(unit.owner + 1, 0, 1);
         }
         const hardeningStacks = getUnitEffectStacks(unit, 'hardening');
+        const refinedHardeningStacks = Math.min(hardeningStacks, unit.ability?.refinedHardeningStacks || 0);
         for (let stack = 0; stack < hardeningStacks; stack += 1) {
           const time = performance.now();
           const breathe = .5 + .5 * Math.sin(time / 260 + stack * .7);
           const turn = time / (5200 + stack * 800) * (stack % 2 ? -1 : 1) + stack * .23;
+          const refinedStack = stack >= hardeningStacks - refinedHardeningStacks;
+          const traceCrystal = scale => {
+            ctx.beginPath();
+            for (let i = 0; i < 8; i += 1) {
+              const a = i * Math.PI / 4;
+              const r = unit.radius * scale * ((i % 2 ? .82 : 1.12) + (i % 2 ? 0 : breathe * .035));
+              const px = Math.cos(a) * r, py = Math.sin(a) * r;
+              if (!i) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+          };
           ctx.save(); ctx.rotate(turn);
-          ctx.beginPath();
-          for (let i = 0; i < 8; i += 1) {
-            const a = i * Math.PI / 4;
-            const r = unit.radius * ((i % 2 ? .82 : 1.12) + (i % 2 ? 0 : breathe * .035));
-            const px = Math.cos(a) * r, py = Math.sin(a) * r;
-            if (!i) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+          if (refinedStack) {
+            traceCrystal(1.12);
+            ctx.strokeStyle = `rgba(200, 164, 239, ${.28 + breathe * .28})`;
+            ctx.lineWidth = 3 + breathe;
+            ctx.shadowColor = '#c5a2ef';
+            ctx.shadowBlur = 8 + breathe * 8;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
           }
-          ctx.closePath();
+          traceCrystal(1);
           ctx.fillStyle = `rgba(165, 220, 246, ${.10 + stack * .07 + breathe * .08})`;
           ctx.fill();
           ctx.strokeStyle = `rgba(206, 239, 255, ${.48 + breathe * .32})`;
@@ -8547,6 +9609,16 @@
           ctx.beginPath(); ctx.arc(0, 0, unit.radius * .91, Math.PI + .18, Math.PI + 1.14); ctx.stroke();
           ctx.restore();
         }
+        if (unit.ability?.escapePending) {
+          const pulse = .5 + .5 * Math.sin(performance.now() / 300);
+          ctx.setLineDash([3, 3]);
+          ctx.beginPath();
+          ctx.arc(0, 0, unit.radius + 8 + pulse * 2, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(215, 185, 247, ${.55 + pulse * .3})`;
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
         if (unit.ability?.pulse) {
           const pulse = .5 + .5 * Math.sin(performance.now() / 55);
           ctx.beginPath();
@@ -8568,6 +9640,29 @@
           ctx.shadowBlur = 7 + pulse * 7;
           ctx.stroke();
           ctx.shadowBlur = 0;
+        }
+        const channelingBlackHole = unit.blackholeCharged && unit.relaunchAvailable;
+        const aimingBlackHole = state.aiming && state.repositionMode === 'blackhole' && state.repositionUnit === unit;
+        const emittingBlackHole = state.effects.some(effect => effect.type === 'blackhole-fan' &&
+          effect.sourceUnitId === unit.id && effect.age < .72);
+        if (channelingBlackHole || aimingBlackHole || emittingBlackHole) {
+          const time = performance.now() / 1000;
+          const particleCount = aimingBlackHole || emittingBlackHole ? 14 : 7;
+          ctx.save();
+          ctx.globalCompositeOperation = 'lighter';
+          for (let particle = 0; particle < particleCount; particle += 1) {
+            const angle = time * (particle % 2 ? -.92 : .72) + particle * Math.PI * 2 / particleCount;
+            const orbit = unit.radius + 5 + (particle % 3) * 3 + Math.sin(time * 2.2 + particle) * 2;
+            const alpha = (aimingBlackHole || emittingBlackHole ? .44 : .28) + .16 * Math.sin(time * 4 + particle);
+            ctx.globalAlpha = Math.max(.12, alpha);
+            ctx.fillStyle = particle % 3 ? '#c5a0ff' : '#f0ddff';
+            ctx.shadowColor = '#ad79f4';
+            ctx.shadowBlur = aimingBlackHole || emittingBlackHole ? 8 : 5;
+            ctx.beginPath();
+            ctx.arc(Math.cos(angle) * orbit, Math.sin(angle) * orbit, particle % 4 === 0 ? 2.5 : 1.7, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
         }
         ctx.restore();
         const lesson = state.tutorial?.lesson;
@@ -8660,6 +9755,17 @@
         ctx.lineWidth = 2;
         ctx.strokeRect(brick.x - brick.width / 2, brick.y - brick.height / 2, brick.width, brick.height);
         if (brick.barrier) {
+          if (brick.refined) {
+            const pulse = .5 + .5 * Math.sin(performance.now() / 310);
+            ctx.save();
+            ctx.shadowColor = '#bd8cff';
+            ctx.shadowBlur = 12 + pulse * 9;
+            ctx.strokeStyle = `rgba(205, 167, 255, ${.38 + pulse * .24})`;
+            ctx.lineWidth = 3 + pulse * 1.5;
+            ctx.strokeRect(brick.x - brick.width / 2 - 3, brick.y - brick.height / 2 - 3,
+              brick.width + 6, brick.height + 6);
+            ctx.restore();
+          }
           const left = brick.x - brick.width / 2 + 2;
           const top = brick.y - brick.height / 2 + 2;
           const width = Math.max(0, brick.width - 4);
@@ -8747,11 +9853,17 @@
             ctx.globalAlpha = .22 + .78 * descend;
             ctx.filter = `blur(${blur.toFixed(1)}px) brightness(1.22) contrast(1.16)`;
             if (wallImage?.complete && wallImage.naturalWidth > 0) {
+              const sizeMultiplier = effect.sizeMultiplier || effect.widthMultiplier || 1;
+              const width = AI_BALANCE.structure.width * sizeMultiplier;
+              const height = AI_BALANCE.structure.height * sizeMultiplier;
               ctx.drawImage(wallImage,
-                effect.x - 9 * scale, y - 32 * scale, 18 * scale, 64 * scale);
+                effect.x - width / 2 * scale, y - height / 2 * scale, width * scale, height * scale);
             } else {
               ctx.fillStyle = '#697473';
-              ctx.fillRect(effect.x - 9 * scale, y - 32 * scale, 18 * scale, 64 * scale);
+              const sizeMultiplier = effect.sizeMultiplier || effect.widthMultiplier || 1;
+              const width = AI_BALANCE.structure.width * sizeMultiplier;
+              const height = AI_BALANCE.structure.height * sizeMultiplier;
+              ctx.fillRect(effect.x - width / 2 * scale, y - height / 2 * scale, width * scale, height * scale);
             }
             ctx.filter = 'none';
             ctx.globalAlpha = .13 * (1 - descend);
@@ -8775,6 +9887,33 @@
             ctx.strokeStyle = '#d8d1b8';
             ctx.lineWidth = 1.8 * (1 - t) + .35;
             ctx.beginPath(); ctx.arc(effect.x, effect.y, (8 + eased * 30) * scale, 0, Math.PI * 2); ctx.stroke();
+          } else if (effect.type === 'refinery-refine' || effect.type === 'refined-card-use') {
+            const t = Math.max(0, Math.min(1, progress));
+            const radius = 12 + t * (effect.type === 'refinery-refine' ? 54 : 38);
+            ctx.translate(effect.x, effect.y);
+            ctx.globalAlpha = Math.sin(Math.PI * t) * .76;
+            ctx.strokeStyle = '#c6a5ef';
+            ctx.lineWidth = 2.2 * (1 - t) + .7;
+            ctx.shadowColor = '#b58bdd';
+            ctx.shadowBlur = 14 * (1 - t);
+            for (let ring = 0; ring < 3; ring += 1) {
+              ctx.beginPath();
+              ctx.ellipse(0, 0, radius * (1 - ring * .15), radius * (.34 + ring * .08),
+                t * Math.PI * (ring % 2 ? -1 : 1) + ring * .7, .15, Math.PI * 1.73);
+              ctx.stroke();
+            }
+            for (let shard = 0; shard < 7; shard += 1) {
+              const angle = shard * Math.PI * 2 / 7 - t * Math.PI * 1.8;
+              const distance = radius * (.45 + .4 * (1 - t));
+              ctx.globalAlpha = Math.sin(Math.PI * t) * .68;
+              ctx.fillStyle = shard % 2 ? '#e4d2ff' : '#a88acb';
+              ctx.beginPath();
+              ctx.moveTo(Math.cos(angle) * distance, Math.sin(angle) * distance);
+              ctx.lineTo(Math.cos(angle + .19) * (distance + 5), Math.sin(angle + .19) * (distance + 5));
+              ctx.lineTo(Math.cos(angle - .1) * (distance + 1), Math.sin(angle - .1) * (distance + 1));
+              ctx.closePath(); ctx.fill();
+            }
+            ctx.shadowBlur = 0;
           } else if (effect.type === 'hardening-gather') {
             const t = Math.max(0, Math.min(1, progress));
             const radius = effect.radius * (2.4 - 1.35 * t);
@@ -8894,6 +10033,47 @@
             ctx.strokeStyle = '#d946ef';
             ctx.lineWidth = 3;
             ctx.stroke();
+          } else if (effect.type === 'blackhole-fan') {
+            const radius = effect.radius * (1 - progress * .38);
+            const halfAngle = effect.halfAngle || Math.PI * .23;
+            ctx.translate(effect.x, effect.y);
+            ctx.rotate(effect.angle + progress * .08);
+            const fanGradient = ctx.createRadialGradient(0, 0, 8, 0, 0, radius);
+            fanGradient.addColorStop(0, 'rgba(190, 151, 255, .25)');
+            fanGradient.addColorStop(.58, 'rgba(139, 91, 212, .12)');
+            fanGradient.addColorStop(1, 'rgba(100, 72, 168, 0)');
+            ctx.globalAlpha = (1 - progress) * .72;
+            ctx.fillStyle = fanGradient;
+            ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, radius, -halfAngle, halfAngle); ctx.closePath(); ctx.fill();
+            ctx.globalAlpha = (1 - progress) * .64;
+            ctx.strokeStyle = '#d8c0ff';
+            ctx.lineWidth = 2.2 * (1 - progress) + .6;
+            for (let band = 0; band < 4; band += 1) {
+              const ripple = .5 + .5 * Math.sin(performance.now() / 155 + band * 1.7);
+              const bandRadius = radius * (.42 + band * .135) * (.98 + ripple * .025);
+              ctx.beginPath();
+              ctx.arc(0, 0, bandRadius, -halfAngle * (1 - band * .065), halfAngle * (1 - band * .065));
+              ctx.stroke();
+            }
+            ctx.globalAlpha = (1 - progress) * .5;
+            for (let stream = 0; stream < 5; stream += 1) {
+              const lane = -halfAngle * .78 + stream * halfAngle * .39;
+              ctx.beginPath();
+              for (let step = 0; step <= 16; step += 1) {
+                const t = step / 16;
+                const r = radius * t;
+                const a = lane + Math.sin(t * 8 - performance.now() / 210 + stream) * .035 * t;
+                const x = Math.cos(a) * r;
+                const y = Math.sin(a) * r;
+                if (!step) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+              }
+              ctx.strokeStyle = stream % 2 ? '#ad8cf1' : '#e4d5ff';
+              ctx.lineWidth = stream === 2 ? 1.8 : 1;
+              ctx.setLineDash([5, 7]);
+              ctx.lineDashOffset = -performance.now() / 38;
+              ctx.stroke();
+            }
+            ctx.setLineDash([]);
           }
           ctx.restore();
         }
@@ -8926,9 +10106,13 @@
         if (!drag?.point) return;
         if (drag.type === 'trigger-placement') return;
         if (['brick', 'data-barrier'].includes(drag.type)) {
-          const legal = canPlaceBrick(drag.point);
+          const refined = Boolean(state.hands[drag.owner].find(card => card.instanceId === drag.id)?.refined);
+          const legal = canPlaceBrick(drag.point, refined && drag.type === 'brick');
           if (!legal) return;
-          const preview = { ...drag.point, width: 18, height: 64, barrier: drag.type === 'data-barrier' };
+          const sizeMultiplier = refined && drag.type === 'brick' ? 1.5 : 1;
+          const preview = { ...drag.point, width: AI_BALANCE.structure.width * sizeMultiplier,
+            height: AI_BALANCE.structure.height * sizeMultiplier, barrier: drag.type === 'data-barrier',
+            refined: refined && drag.type === 'data-barrier' };
           drawBrick(preview, .58);
           ctx.save();
           ctx.strokeStyle = '#b8f274';
@@ -8940,7 +10124,7 @@
         if (!['pulse', 'blackhole', 'repulsion-field'].includes(drag.type)) return;
         const target = findCardTarget(drag.point, drag.owner, drag.type);
         if (!target) return;
-        const radius = drag.type === 'pulse' ? PULSE_RANGE : drag.type === 'blackhole' ? BLACK_HOLE.range
+          const radius = drag.type === 'pulse' ? PULSE_RANGE : drag.type === 'blackhole' ? BLACK_HOLE.range
           : (target.unitKind === 'brick' ? Math.hypot(target.width, target.height) / 2 : target.radius) + 8;
         const color = drag.type === 'pulse' ? '#00aaff' : drag.type === 'blackhole' ? '#8b5cf6' : '#baff72';
         ctx.save();
@@ -8959,6 +10143,8 @@
         const unit = state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit;
         if (!state.aiming || !unit || !state.aimPoint) {
           aimOverlay.style.display = 'none';
+          bulletAimPaths.forEach(path => path?.setAttribute('d', ''));
+          blackholeAimSector?.setAttribute('d', '');
           return;
         }
         const rect = canvas.getBoundingClientRect();
@@ -8969,6 +10155,53 @@
         const start = screenPoint(unit);
         const end = screenPoint(state.aimPoint);
         const scale = rect.width / canvas.width;
+        const aimingBlackHole = state.repositionMode === 'blackhole';
+        const aimingAmmo = state.repositionMode === 'ammo';
+        if (aimingBlackHole) {
+          aimPath.setAttribute('d', '');
+          aimTip.setAttribute('display', 'none');
+          bulletAimPaths.forEach(path => path?.setAttribute('d', ''));
+          const dragX = state.aimPoint.x - unit.x;
+          const dragY = state.aimPoint.y - unit.y;
+          const centerAngle = Math.atan2(-dragY, -dragX);
+          const halfAngle = Math.PI * .23;
+          const segments = 26;
+          let sector = `M ${start.x.toFixed(1)} ${start.y.toFixed(1)}`;
+          for (let step = 0; step <= segments; step += 1) {
+            const angle = centerAngle - halfAngle + (2 * halfAngle * step / segments);
+            const point = screenPoint({
+              x: unit.x + Math.cos(angle) * REFINED_BLACKHOLE_RANGE,
+              y: unit.y + Math.sin(angle) * REFINED_BLACKHOLE_RANGE
+            });
+            sector += ` L ${point.x.toFixed(1)} ${point.y.toFixed(1)}`;
+          }
+          sector += ' Z';
+          blackholeAimSector?.setAttribute('d', sector);
+          aimOverlay.style.display = 'block';
+          return;
+        }
+        blackholeAimSector?.setAttribute('d', '');
+        aimTip.setAttribute('display', aimingAmmo ? 'none' : 'block');
+        if (aimingAmmo) {
+          aimPath.setAttribute('d', '');
+          const pullRatio = Math.min(1, Math.hypot(unit.x - state.aimPoint.x, unit.y - state.aimPoint.y) / CONFIG.maxPullDistance);
+          const spreadHalfAngle = unit.refinedAmmo ? ammoFanHalfAngle(pullRatio) : 0;
+          const baseAngle = Math.atan2(unit.y - state.aimPoint.y, unit.x - state.aimPoint.x);
+          const angles = unit.refinedAmmo ? [baseAngle - spreadHalfAngle, baseAngle, baseAngle + spreadHalfAngle] : [baseAngle];
+          const pathSlots = unit.refinedAmmo ? bulletAimPaths : [bulletAimPaths[1]];
+          bulletAimPaths.forEach(path => path?.setAttribute('d', ''));
+          angles.forEach((angle, index) => {
+            const destination = screenPoint({ x: unit.x + Math.cos(angle) * 146, y: unit.y + Math.sin(angle) * 146 });
+            const path = pathSlots[index];
+            if (!path) return;
+            path.setAttribute('d', `M ${start.x.toFixed(1)} ${start.y.toFixed(1)} L ${destination.x.toFixed(1)} ${destination.y.toFixed(1)}`);
+            path.setAttribute('stroke-width', String(2.2 * scale));
+            path.setAttribute('stroke-dasharray', `${2 * scale} ${8 * scale}`);
+          });
+          aimOverlay.style.display = 'block';
+          return;
+        }
+        bulletAimPaths.forEach(path => path?.setAttribute('d', ''));
         aimPath.setAttribute('d', `M ${start.x.toFixed(1)} ${start.y.toFixed(1)} L ${end.x.toFixed(1)} ${end.y.toFixed(1)}`);
         aimPath.setAttribute('stroke', PLAYER[unit.owner].color);
         aimPath.setAttribute('stroke-width', String(5 * scale));
@@ -9237,14 +10470,32 @@
         const hero = heroFor(unit.owner);
         if (hero) effects.push(`영웅 · ${hero.name}`);
         const hardeningStacks = getUnitEffectStacks(unit, 'hardening');
+        const refinedHardeningStacks = Math.min(hardeningStacks, unit.ability?.refinedHardeningStacks || 0);
+        const standardHardeningStacks = hardeningStacks - refinedHardeningStacks;
         const guardStacks = getUnitEffectStacks(unit, 'guard');
         if (unit.openingFrictionMultiplier > 1) effects.push('선공 첫 스톤 · 추가 마찰력 25%');
-        if (hardeningStacks) effects.push(`경질화 ${hardeningStacks}중첩 · 마찰력 ${UNIT_EFFECTS.hardening.frictionPerStack ** hardeningStacks}배`);
-        if (guardStacks) effects.push(`방호벽 ${guardStacks}중첩 · 위성체 ${guardStacks * UNIT_EFFECTS.guard.satellitesPerStack}개`);
-        if (unit.ability?.pulse) effects.push('방출 충전 · 충돌 시 파동 발산');
-        if (hasRepulsionField(unit)) effects.push('반발장 · 충돌 반응 감소 및 반사');
+        if (hardeningStacks) {
+          const frictionMultiplier = UNIT_EFFECTS.hardening.frictionPerStack ** standardHardeningStacks * 4 ** refinedHardeningStacks;
+          const frictionLabel = Number.isInteger(frictionMultiplier) ? frictionMultiplier : Number(frictionMultiplier.toFixed(2));
+          const refinementLabel = refinedHardeningStacks ? ` · 정제 ${refinedHardeningStacks}중첩` : '';
+          effects.push(`경질화 ${hardeningStacks}중첩${refinementLabel} · 마찰력 ${frictionLabel}배`);
+        }
+        if (guardStacks) {
+          const refinementLabel = unit.ability?.refinedGuardOrbit
+            ? ' · 위성체 동기 회전, 평균 속도 1.5배(주기적 가감속)' : '';
+          effects.push(`방호벽 ${guardStacks}중첩 · 위성체 ${guardStacks * UNIT_EFFECTS.guard.satellitesPerStack}개${refinementLabel}`);
+        }
+        if (unit.ability?.pulse) effects.push(unit.ability.refinedPulse
+          ? '정제된 방출 충전 · 충돌 시 파동 발산, 상대 스톤의 추가 마찰 무시'
+          : '방출 충전 · 충돌 시 파동 발산');
+        if (hasRepulsionField(unit)) effects.push(`반발장 · 충돌 반응 감소 및 반사${unit.refinedRepulsionSize ? ' · 크기 30% 증가' : ''}`);
         if (isCollisionPhased(unit)) effects.push('속임수 · 다음 상대 턴 종료까지 충돌 무시');
         if (unit.fluidTimer > 0) effects.push('블랙홀 방출 · 유체 상태');
+        if (unit.blackholeCharged) effects.push('정제된 블랙홀 방출 · 방향 지정 흡인, 사거리 35% 증가');
+        if (unit.refinedAmmo) effects.push('정제된 총알 장전 · 위력 감소, 세 발 부채꼴 발사');
+        if (unit.refinedReposition) effects.push('정제된 재배치 · 파워 프리셋 발사');
+        if (unit.ability?.escapePending) effects.push('정제된 탈출 · 움직임을 받으면 제거 후 10점 획득');
+        if (unit.ability?.refinedEffectImmunity?.length) effects.push('정제된 속임수 · 방출 및 블랙홀 방출 면역');
         if (unit.relaunchAvailable && !unit.relaunchUsed) effects.push('재배치 가능');
         return {
           title: `${PLAYER[unit.owner].name} · ${unit.turnNumber}번째 스톤`,
@@ -9299,9 +10550,11 @@
             distance: 0,
             radius: 0,
             content: brick.barrier
-              ? { title: '데이터 장벽', detail: '자신의 스톤만 통과할 수 있는 이동 불가능한 구조물입니다.' }
+              ? { title: '데이터 장벽', detail: brick.refined
+                ? '정제된 데이터 장벽 · 자신의 스톤만 통과할 수 있으며 사라지지 않는 이동 불가능한 구조물입니다.'
+                : '자신의 스톤만 통과할 수 있는 이동 불가능한 구조물입니다.' }
               : { title: brick.repulsionField ? '가벽 유닛 · 반발장' : '가벽 유닛', detail: brick.repulsionField
-                ? '반발장이 적용되어 충돌을 덜 받고 충돌 상대를 더 강하게 밀쳐냅니다.'
+                ? `반발장이 적용되어 충돌을 덜 받고 충돌 상대를 더 강하게 밀쳐냅니다.${brick.refinedRepulsionSize ? ' 정제 효과로 크기가 30% 증가했습니다.' : ''}`
                 : '충돌 판정이 있고, 밀려날 수 있는 가벽 유닛입니다.' }
           }))
         ].filter(candidate => candidate.distance <= candidate.radius).sort((a, b) => a.distance - b.distance);
@@ -9488,6 +10741,8 @@
         const unit = state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit;
         if (!unit) return;
         if (needsPowerMeter() && (state.powerMeter?.unitId !== unit.id || state.powerMeter.stage !== 'locked')) return;
+        if (state.phase === 'reposition' && state.repositionMode === 'reposition' && unit.refinedReposition &&
+            unit.refinedRepositionPower == null) return;
         if (Math.hypot(point.x - unit.x, point.y - unit.y) > unit.radius + 12) return;
         state.aiming = true;
         localAimPointerId = event.pointerId;
@@ -9512,7 +10767,7 @@
         const unit = state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit;
         if (unit) updateAimFromInput(unit, eventPoint(event));
         if (shouldForwardOnlineAction()) {
-          sendOnlineAction({ type: 'launch', aimPoint: state.aimPoint });
+          sendOnlineAction({ type: 'launch', aimPoint: state.aimPoint, power: unit?.refinedRepositionPower });
           state.aiming = false;
           state.aimPoint = null;
           state.aimTension = 0;
@@ -9544,6 +10799,14 @@
         if (!unit || !canControlPlayer(unit.owner) || !lockPowerMeter(value)) return;
         if (shouldForwardOnlineAction()) sendOnlineAction({ type: 'power-lock', unitId: unit.id, value });
       });
+      refinedRepositionPicker.querySelectorAll('[data-refined-power]').forEach(button => button.addEventListener('click', () => {
+        const unit = activeLaunchUnit();
+        const value = Number(button.dataset.refinedPower);
+        if (!unit?.refinedReposition || ![.3, .5, .7, 1].includes(value) || !canControlPlayer(unit.owner)) return;
+        unit.refinedRepositionPower = value;
+        playSound('importantSelection');
+        updateHud();
+      }));
 
       function openLobbyMode(mode) {
         startOverlay.dataset.lobbyMode = mode;
@@ -9563,38 +10826,151 @@
       document.querySelector('#openCatalogButton').addEventListener('click', openCatalog);
       document.querySelector('#openHomeDeckButton').addEventListener('click', () => openDeckEditor('homeScreen'));
       document.querySelector('#openMenuDeckButton').addEventListener('click', () => openDeckEditor('startMenu'));
-      document.querySelector('#deckBackButton').addEventListener('click', closeDeckEditor);
+      deckBackButton.addEventListener('click', () => {
+        if (deckSaving || deckPresetSwitchPending) return;
+        if (deckView === 'hero') showDeckView(deckHeroReturnView);
+        else if (deckView === 'editor') {
+          renderDeckPackages();
+          showDeckView('list');
+          deckPresets.children[deckEditingPreset]?.focus({ preventScroll: true });
+        }
+        else closeDeckEditor();
+      });
+      document.querySelector('#deckListBackButton').addEventListener('click', closeDeckEditor);
+      deckCreateButton.addEventListener('click', createNewDeck);
+      document.querySelector('#deckHeroChangeButton').addEventListener('click', () => {
+        if (!deckSaving && !deckPresetSwitchPending) openDeckHeroChoice(deckEditingPreset, 'editor');
+      });
+      document.querySelector('#deckHeroPrevButton').addEventListener('click', () => {
+        deckHeroPickerIndex = (deckHeroPickerIndex - 1 + HEROES.length) % HEROES.length;
+        renderDeckHeroChoice();
+      });
+      document.querySelector('#deckHeroNextButton').addEventListener('click', () => {
+        deckHeroPickerIndex = (deckHeroPickerIndex + 1) % HEROES.length;
+        renderDeckHeroChoice();
+      });
+      document.querySelector('#deckHeroCancelButton').addEventListener('click', () => {
+        if (deckPresetSwitchPending) return;
+        showDeckView(deckHeroReturnView);
+        (deckHeroReturnView === 'editor' ? document.querySelector('#deckHeroChangeButton') : deckPresets.children[deckPendingPreset])?.focus({ preventScroll: true });
+      });
+      deckHeroScreen.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          event.stopPropagation();
+          if (!deckPresetSwitchPending) document.querySelector('#deckHeroCancelButton').click();
+          return;
+        }
+        if (event.key !== 'Tab') return;
+        const controls = [...deckHeroScreen.querySelectorAll('button:not(:disabled)')];
+        if (!controls.length) return;
+        const first = controls[0], last = controls[controls.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+      });
+      document.querySelector('#deckHeroConfirmButton').addEventListener('click', confirmDeckHeroChoice);
+      deckNameInput.addEventListener('input', () => {
+        deckDraftNames[deckEditingPreset] = deckNameInput.value.trim().slice(0, 24) || `덱 ${deckEditingPreset + 1}`;
+      });
+      deckHeroSelect.addEventListener('change', () => {
+        deckDraftHeroes[deckEditingPreset] = deckHeroSelect.value || null;
+        renderDeckEditor();
+      });
+      deckCardSearch.addEventListener('input', refreshDeckPoolOnly);
+      deckCategoryFilter.addEventListener('change', refreshDeckPoolOnly);
+      deckAvailabilityFilter.addEventListener('change', refreshDeckPoolOnly);
       deckSaveButton.addEventListener('click', async () => {
-        const cards = deckDrafts[activeDeckPreset];
-        if (!deckIsValid(cards)) return;
+        const cards = deckDrafts[deckEditingPreset];
+        if (deckSaving || !deckIsValid(cards) || !deckIsCompatibleWithHero(cards, deckDraftHeroes[deckEditingPreset])) return;
+        deckSaving = true;
         deckSaveButton.disabled = true;
+        deckNameInput.disabled = true;
+        document.querySelector('#deckHeroChangeButton').disabled = true;
+        deckResetButton.disabled = true;
         try {
-          const next = savedDecks.map((deck, index) => index === activeDeckPreset ? [...cards] : deck);
-          await persistDeckSettings(next, activeDeckPreset);
-          deckStatus.textContent = `가방 ${activeDeckPreset + 1}을 저장했습니다.`;
-          renderDeckEditor();
+          const next = savedDecks.map((deck, index) => index === deckEditingPreset ? [...cards] : deck);
+          const nextNames = [...savedDeckNames];
+          const nextHeroes = [...savedDeckHeroes];
+          nextNames[deckEditingPreset] = deckNameInput.value.trim().slice(0, 24) || `덱 ${deckEditingPreset + 1}`;
+          nextHeroes[deckEditingPreset] = deckHeroSelect.value || null;
+          await persistDeckSettings(next, activeDeckPreset, nextNames, nextHeroes);
+          deckDrafts[deckEditingPreset] = [...cards];
+          deckDraftNames[deckEditingPreset] = nextNames[deckEditingPreset];
+          deckDraftHeroes[deckEditingPreset] = nextHeroes[deckEditingPreset];
+          deckBag.classList.add('is-stowing');
+          await new Promise(resolve => setTimeout(resolve, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 440));
+          deckBag.classList.remove('is-stowing');
+          deckListStatus.textContent = `${savedDeckNames[deckEditingPreset]}을 저장했습니다.`;
+          renderDeckPackages();
+          const packedDeck = deckPresets.children[deckEditingPreset];
+          showDeckView('list');
+          packedDeck?.classList.add('is-stowed');
+          packedDeck?.focus({ preventScroll: true });
+          setTimeout(() => packedDeck?.classList.remove('is-stowed'), 500);
         } catch (error) {
           deckStatus.textContent = error.message;
+        } finally {
+          deckSaving = false;
+          deckNameInput.disabled = false;
+          document.querySelector('#deckHeroChangeButton').disabled = false;
+          deckResetButton.disabled = false;
+          deckBag.classList.remove('is-stowing');
           renderDeckEditor();
         }
       });
       deckResetButton.addEventListener('click', async () => {
+        if (deckSaving || deckPresetSwitchPending) return;
+        deckPresetSwitchPending = true;
         try {
-          const next = savedDecks.map((deck, index) => index === activeDeckPreset ? null : deck);
-          await persistDeckSettings(next, activeDeckPreset);
-          deckDrafts[activeDeckPreset] = [];
-          deckStatus.textContent = '가방을 비웠습니다. 저장한 가방이 없으면 기본 덱으로 플레이합니다.';
-          renderDeckEditor();
+          const next = savedDecks.map((deck, index) => index === deckEditingPreset ? null : deck);
+          const names = [...savedDeckNames];
+          const heroes = [...savedDeckHeroes];
+          names[deckEditingPreset] = `덱 ${deckEditingPreset + 1}`;
+          heroes[deckEditingPreset] = null;
+          await persistDeckSettings(next, activeDeckPreset, names, heroes);
+          deckDrafts[deckEditingPreset] = [];
+          deckDraftNames[deckEditingPreset] = names[deckEditingPreset];
+          deckDraftHeroes[deckEditingPreset] = null;
+          deckListStatus.textContent = '덱을 비웠습니다.';
+          renderDeckPackages();
+          showDeckView('list');
+          deckPresets.children[deckEditingPreset]?.focus({ preventScroll: true });
         } catch (error) { deckStatus.textContent = error.message; }
+        finally { deckPresetSwitchPending = false; }
       });
       deckPool.addEventListener('pointerdown', beginDeckDrag);
       deckBag.addEventListener('pointerdown', beginDeckDrag);
+      deckBag.addEventListener('keydown', event => {
+        if (event.key !== 'Delete' && event.key !== 'Backspace') return;
+        const card = event.target.closest('.deck-card[data-deck-index]');
+        if (!card) return;
+        event.preventDefault();
+        const index = Number(card.dataset.deckIndex);
+        removeDeckCard(index);
+        const next = deckBag.querySelectorAll('.deck-card');
+        (next[Math.min(index, next.length - 1)] || document.querySelector('#deckHeroChangeButton'))?.focus({ preventScroll: true });
+      });
       for (const zone of [deckPool, deckBag]) zone.addEventListener('click', event => {
-        if (event.detail !== 0) return;
+        if (deckSaving || deckPresetSwitchPending || Date.now() < deckClickSuppressUntil) return;
         const card = event.target.closest('.deck-card[data-deck-id]');
         if (!card) return;
-        if (card.dataset.deckSource === 'pool' && !card.disabled) addDeckCard(card.dataset.deckId);
-        if (card.dataset.deckSource === 'bag') removeDeckCard(Number(card.dataset.deckIndex));
+        const fromPool = card.dataset.deckSource === 'pool';
+        const canAdd = fromPool && card.dataset.canAdd === 'true';
+        const draft = deckDrafts[deckEditingPreset] || [];
+        const count = draft.filter(id => id === card.dataset.deckId).length;
+        const selectedCard = deckCard(card.dataset.deckId);
+        const reason = !deckCardUnlocked(selectedCard) ? '아직 잠겨 있는 카드입니다.'
+          : !cardAllowedForDeckHero(selectedCard, deckDraftHeroes[deckEditingPreset]) ? `${heroName(deckDraftHeroes[deckEditingPreset])}에게 허용되지 않은 카드입니다.`
+          : draft.length >= 8 ? '가방이 가득 찼습니다.'
+          : count >= 2 ? '같은 카드는 두 장까지만 담을 수 있습니다.'
+          : count === 1 && draft.some(id => draft.filter(other => other === id).length > 1) ? '이미 두 장 넣은 카드가 있습니다.'
+          : '잠금 해제 후 덱에 넣을 수 있습니다.';
+        openCardDetail(card.dataset.deckId, {
+          context: 'deck',
+          onAddToBag: canAdd ? () => addDeckCard(card.dataset.deckId) : null,
+          addDisabled: fromPool && !canAdd,
+          addButtonLabel: canAdd ? '가방에 추가하기' : reason
+        });
       });
       document.addEventListener('pointermove', moveDeckDrag);
       document.addEventListener('pointerup', finishDeckDrag);
@@ -9707,8 +11083,13 @@
         const token = guestToken;
         guestToken = null;
         guestProfile = null;
-        savedDecks = [null, null, null];
-        deckDrafts = [null, null, null];
+        savedDecks = emptyDeckSlots();
+        deckDrafts = emptyDeckSlots().map(() => []);
+        deckDraftsInitialized = false;
+        savedDeckNames = defaultDeckNames();
+        deckDraftNames = defaultDeckNames();
+        savedDeckHeroes = emptyDeckSlots();
+        deckDraftHeroes = emptyDeckSlots();
         activeDeckPreset = 0;
         refreshLocalDeckSelects();
         state.playerLevels = [1, 1];
@@ -9734,8 +11115,13 @@
             confirmed: document.querySelector('#deleteAccountConfirmCheckbox').checked });
           guestToken = null;
           guestProfile = null;
-          savedDecks = [null, null, null];
-          deckDrafts = [null, null, null];
+          savedDecks = emptyDeckSlots();
+          deckDrafts = emptyDeckSlots().map(() => []);
+          deckDraftsInitialized = false;
+          savedDeckNames = defaultDeckNames();
+          deckDraftNames = defaultDeckNames();
+          savedDeckHeroes = emptyDeckSlots();
+          deckDraftHeroes = emptyDeckSlots();
           activeDeckPreset = 0;
           refreshLocalDeckSelects();
           state.playerLevels = [1, 1];
@@ -9894,8 +11280,41 @@
         if (onlineSession && !onlineSession.started) startSelectedMap();
         else runLobbyTransition(startSelectedMap);
       });
+      mapDeckSelects.forEach((select, selectIndex) => select.addEventListener('change', async () => {
+        if (selectIndex === 1 && state.mapSelectionOrigin !== 'start') return;
+        const previousValue = mapDeckLastValues[selectIndex];
+        const owner = state.mapSelectionOrigin === 'online' ? onlineSession?.playerIndex ?? 0 : selectIndex;
+        if (onlineSession && !onlineSession.started && onlineSession.localMapConfirmed) {
+          mapCarouselTransitioning[selectIndex] = true;
+          renderMapLoadoutCarousel(selectIndex);
+          select.disabled = true;
+          const wasUnreadied = await unreadyOnlineSelection();
+          if (!wasUnreadied) {
+            select.value = previousValue || '-1';
+            applyMapLoadoutSelection(owner, false, selectIndex);
+            select.disabled = onlineMapChoiceLocked();
+            mapCarouselTransitioning[selectIndex] = false;
+            renderMapLoadoutCarousel(selectIndex);
+            return;
+          }
+        }
+        mapDeckLastValues[selectIndex] = select.value;
+        if (state.mapSelectionOrigin === 'ai') aiDeckSelect.value = select.value;
+        if (state.mapSelectionOrigin === 'start') localDeckSelects[selectIndex].value = select.value;
+        applyMapLoadoutSelection(owner, true, selectIndex);
+        mapCarouselTransitioning[selectIndex] = false;
+        renderMapLoadoutCarousel(selectIndex);
+      }));
+      document.querySelectorAll('.map-deck-arrow').forEach(button => button.addEventListener('click', () => {
+        stepMapDeckPackage(Number(button.dataset.mapDeckOwner), Number(button.dataset.mapDeckStep));
+      }));
       cancelMapButton.addEventListener('click', () => runLobbyTransition(cancelMapSelection));
       triggerToolButtons.forEach(button => button.addEventListener('pointerdown', beginTriggerPlacementDrag));
+      triggerToolButtons.forEach(button => button.addEventListener('click', () => {
+        const owner = Number(button.dataset.owner);
+        if (heroFor(owner)?.id === 'refiner') openRefinerySelection(owner);
+      }));
+      refineryCancelButton.addEventListener('click', () => { refinerySelectOverlay.hidden = true; });
       confirmTriggerButton.addEventListener('click', confirmItemTriggerPlacement);
       cancelTriggerButton.addEventListener('click', cancelItemTriggerPlacement);
       endTurnButton.addEventListener('click', endTurn);

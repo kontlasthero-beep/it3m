@@ -1,6 +1,6 @@
 const crypto = require('node:crypto');
 const { promisify } = require('node:util');
-const { normalizeDecks, validateDeck } = require('./deck-config');
+const { normalizeDecks, normalizeDeckNames, normalizeDeckHeroes, validateDeck, DECK_PRESET_COUNT, HERO_IDS } = require('./deck-config');
 const scrypt = promisify(crypto.scrypt);
 
 const PLAY_FAME = 50;
@@ -48,7 +48,9 @@ function presentProfile(row) {
     tutorialCompleted: row.tutorialCompleted === true,
     adventureUnlocked: row.tutorialCompleted === true,
     decks: normalizeDecks(row.decks, level, row.tutorialCompleted === true),
-    activePreset: Number.isInteger(row.activePreset) && row.activePreset >= 0 && row.activePreset < 3 ? row.activePreset : 0
+    deckNames: normalizeDeckNames(row.deckNames),
+    deckHeroes: normalizeDeckHeroes(row.deckHeroes),
+    activePreset: Number.isInteger(row.activePreset) && row.activePreset >= 0 && row.activePreset < DECK_PRESET_COUNT ? row.activePreset : 0
   };
 }
 
@@ -195,15 +197,18 @@ function createMemoryStore(now = Date.now, localTestLevel = null) {
       row.tutorialCompleted = true;
       return profileView(row);
     },
-    async saveDecks(token, decks, activePreset) {
+    async saveDecks(token, decks, activePreset, deckNames, deckHeroes) {
       const row = lookup(token);
       if (!row?.username) return null;
       const level = profileView(row).level;
-      if (!Array.isArray(decks) || decks.length !== 3 ||
+      if (!Array.isArray(decks) || decks.length !== DECK_PRESET_COUNT ||
           decks.some(deck => deck !== null && !validateDeck(deck, level, row.tutorialCompleted === true)) ||
-          !Number.isInteger(activePreset) || activePreset < 0 || activePreset > 2)
+          !Number.isInteger(activePreset) || activePreset < 0 || activePreset >= DECK_PRESET_COUNT ||
+          (deckHeroes != null && (!Array.isArray(deckHeroes) || deckHeroes.length !== DECK_PRESET_COUNT || deckHeroes.some(hero => hero != null && !HERO_IDS.includes(hero)))))
         throw new Error('가방은 8장으로 구성하고, 한 종류만 두 장 넣을 수 있습니다.');
       row.decks = decks.map(deck => deck ? [...deck] : null);
+      row.deckNames = normalizeDeckNames(deckNames);
+      row.deckHeroes = normalizeDeckHeroes(deckHeroes);
       row.activePreset = activePreset;
       return profileView(row);
     },
@@ -287,7 +292,9 @@ function createPostgresStore(connectionString) {
         ADD COLUMN IF NOT EXISTS wins INTEGER NOT NULL DEFAULT 0,
         ADD COLUMN IF NOT EXISTS losses INTEGER NOT NULL DEFAULT 0,
         ADD COLUMN IF NOT EXISTS draws INTEGER NOT NULL DEFAULT 0,
-        ADD COLUMN IF NOT EXISTS decks JSONB NOT NULL DEFAULT '[null,null,null]'::jsonb,
+        ADD COLUMN IF NOT EXISTS decks JSONB NOT NULL DEFAULT '[null,null,null,null,null,null,null,null,null]'::jsonb,
+        ADD COLUMN IF NOT EXISTS deck_names JSONB NOT NULL DEFAULT '["덱 1","덱 2","덱 3","덱 4","덱 5","덱 6","덱 7","덱 8","덱 9"]'::jsonb,
+        ADD COLUMN IF NOT EXISTS deck_heroes JSONB NOT NULL DEFAULT '[null,null,null,null,null,null,null,null,null]'::jsonb,
         ADD COLUMN IF NOT EXISTS active_preset INTEGER NOT NULL DEFAULT 0,
         ADD COLUMN IF NOT EXISTS tutorial_completed BOOLEAN NOT NULL DEFAULT FALSE,
         ADD COLUMN IF NOT EXISTS privacy_consent_version TEXT,
@@ -316,7 +323,8 @@ function createPostgresStore(connectionString) {
   function fromRow(row) {
     return { id: row.id, publicId: row.public_id, username: row.username, name: row.name, fame: row.fame,
       played: row.played, wins: row.wins, losses: row.losses, draws: row.draws,
-      decks: row.decks, activePreset: row.active_preset, tutorialCompleted: row.tutorial_completed };
+      decks: row.decks, deckNames: row.deck_names, deckHeroes: row.deck_heroes,
+      activePreset: row.active_preset, tutorialCompleted: row.tutorial_completed };
   }
   async function insertSession(client, id) {
     const token = newSession();
@@ -399,17 +407,18 @@ function createPostgresStore(connectionString) {
       const { rows } = await pool.query('UPDATE ucc_profiles SET tutorial_completed = TRUE WHERE id = $1 RETURNING *', [member.internalId]);
       return rows[0] ? presentProfile(fromRow(rows[0])) : null;
     },
-    async saveDecks(token, decks, activePreset) {
+    async saveDecks(token, decks, activePreset, deckNames, deckHeroes) {
       await ensureReady();
       const member = await this.findByToken(token);
       if (!member?.profile.username) return null;
-      if (!Array.isArray(decks) || decks.length !== 3 ||
+      if (!Array.isArray(decks) || decks.length !== DECK_PRESET_COUNT ||
           decks.some(deck => deck !== null && !validateDeck(deck, member.profile.level, member.profile.tutorialCompleted)) ||
-          !Number.isInteger(activePreset) || activePreset < 0 || activePreset > 2)
+          !Number.isInteger(activePreset) || activePreset < 0 || activePreset >= DECK_PRESET_COUNT ||
+          (deckHeroes != null && (!Array.isArray(deckHeroes) || deckHeroes.length !== DECK_PRESET_COUNT || deckHeroes.some(hero => hero != null && !HERO_IDS.includes(hero)))))
         throw new Error('가방은 8장으로 구성하고, 한 종류만 두 장 넣을 수 있습니다.');
       const { rows } = await pool.query(
-        'UPDATE ucc_profiles SET decks = $1::jsonb, active_preset = $2 WHERE id = $3 RETURNING *',
-        [JSON.stringify(decks), activePreset, member.internalId]
+        'UPDATE ucc_profiles SET decks = $1::jsonb, active_preset = $2, deck_names = $3::jsonb, deck_heroes = $4::jsonb WHERE id = $5 RETURNING *',
+        [JSON.stringify(decks), activePreset, JSON.stringify(normalizeDeckNames(deckNames)), JSON.stringify(normalizeDeckHeroes(deckHeroes)), member.internalId]
       );
       return rows[0] ? presentProfile(fromRow(rows[0])) : null;
     },
