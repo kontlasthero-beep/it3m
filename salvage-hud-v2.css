@@ -1,0 +1,223 @@
+/* Second Chance HUD skin. The art stays separate from live text and layout. */
+:root {
+  --hud-panel-art: url("shared-ui/salvage-hud-v2/panel.png");
+  --hud-button-art: url("shared-ui/salvage-hud-v2/button.png");
+  --hud-compact-art: url("shared-ui/salvage-hud-v2/button-compact.png");
+  --hud-tile-art: url("shared-ui/salvage-hud-v2/tile.png");
+  --hud-badge-art: url("shared-ui/salvage-hud-v2/badge.png");
+  --hud-card-art: url("shared-ui/salvage-hud-v2/card-frame.png");
+  --hud-slate-art: url("shared-ui/salvage-hud-v2/panel-slate.png");
+  --hud-plum-art: url("shared-ui/salvage-hud-v2/button-plum.png");
+  --hud-copper: #b98a5d;
+  --hud-ivory: #f0e5d1;
+}
+
+/* Nine-slice dimensions are visual only: the original element box remains intact. */
+body .overlay:not(#startOverlay) .dialog:not(.deck-dialog),
+body.game-active .tutorial-dialogue,
+body.game-active .tutorial-panel {
+  border: 1px solid transparent;
+  border-image-source: var(--hud-panel-art);
+  border-image-slice: 88 100 88 100 fill;
+  border-image-width: 18px;
+  border-image-repeat: stretch;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: 0 19px 48px #0009;
+  color: var(--hud-ivory);
+}
+
+/* Controls keep their existing dimensions and DOM labels. */
+body .overlay:not(#startOverlay):not(#deckOverlay):not(#gameDeckOverlay):not(#catalogOverlay) .dialog button:not(.ai-opponent):not(.hero-option):not(.deck-card):not(.map-option):not(.catalog-entry):not(.deck-storage-slot):not(.trigger-type-option),
+body #startOverlay.is-home-lobby .start-screen:not(#homeScreen):not(#startMenu):not(#accountScreen):not(#guestWarningScreen) button:not(.ai-opponent):not(.deck-package):not(.adventure-stage-browser button),
+body.game-active .board-dock #endTurnButton,
+body.game-active .board-dock .speed-toggle,
+body.game-active .power-control .power-launch,
+body.game-active .power-control .power-confirm,
+body.game-active .tutorial-actions button,
+body.game-active .tutorial-dialogue-actions button,
+body.game-active .game-deck-button {
+  border: 1px solid transparent;
+  border-image-source: var(--hud-button-art);
+  border-image-slice: 76 152 76 152 fill;
+  border-image-width: 11px 13px;
+  border-image-repeat: stretch;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--hud-ivory);
+  text-shadow: 0 1px 2px #000d;
+}
+
+body .overlay:not(#startOverlay):not(#deckOverlay):not(#gameDeckOverlay):not(#catalogOverlay) .dialog button:not(.ai-opponent):not(.hero-option):not(.deck-card):not(.map-option):not(.catalog-entry):not(.deck-storage-slot):not(.trigger-type-option):hover,
+body #startOverlay.is-home-lobby .start-screen:not(#homeScreen):not(#startMenu):not(#accountScreen):not(#guestWarningScreen) button:not(.ai-opponent):not(.deck-package):not(.adventure-stage-browser button):hover,
+body.game-active .board-dock #endTurnButton:hover,
+body.game-active .board-dock .speed-toggle:hover,
+body.game-active .power-control .power-launch:hover,
+body.game-active .power-control .power-confirm:hover,
+body.game-active .tutorial-actions button:hover,
+body.game-active .tutorial-dialogue-actions button:hover {
+  filter: brightness(1.14);
+}
+
+body .overlay .dialog button:disabled,
+body #startOverlay.is-home-lobby .start-screen button:disabled,
+body.game-active .board-dock button:disabled,
+body.game-active .power-control button:disabled {
+  filter: grayscale(.78) brightness(.72);
+}
+
+body .overlay .dialog button:focus-visible,
+body #startOverlay.is-home-lobby .start-screen button:focus-visible,
+body.game-active :is(.board-dock button, .power-control button, .game-deck-button):focus-visible {
+  outline: 2px solid #e7bf80;
+  outline-offset: 2px;
+}
+
+body.game-active :is(.board-hud .player-panel, .board-dock .remaining-player, .board-dock .turn-status, .hand-panel, .power-panel),
+body .overlay :is(.ai-opponent-detail, .adventure-stage-detail, .result-grid > div, .trigger-type-option) {
+  border: 1px solid transparent;
+  border-image-source: var(--hud-tile-art);
+  border-image-slice: 136 fill;
+  border-image-width: 11px 13px;
+  border-image-repeat: stretch;
+  border-radius: 0;
+  background: transparent;
+}
+
+body.game-active .hand-panel {
+  box-shadow: 0 -12px 24px #0008, 0 9px 25px #0009;
+}
+body.game-active .hand-panel.current {
+  box-shadow: 0 -12px 24px #0008, 0 0 19px #c4945c42, 0 9px 25px #0009;
+}
+body.game-active .hand-panel:not(.current) { opacity: 1; }
+
+body.game-active .board-map,
+body.game-active .entity-tooltip,
+body.game-active .connection-details {
+  border: 1px solid transparent;
+  border-image-source: var(--hud-slate-art);
+  border-image-slice: 88 104 88 104 fill;
+  border-image-width: 9px;
+  border-radius: 0;
+  background: transparent;
+  color: var(--hud-ivory);
+}
+
+body.game-active .map-settings-button,
+body.game-active .connection-status-button,
+body.game-active .refined-reposition-options button {
+  border: 1px solid transparent;
+  border-image-source: var(--hud-compact-art);
+  border-image-slice: 106 136 106 136 fill;
+  border-image-width: 7px;
+  border-radius: 0;
+  background: transparent;
+  color: var(--hud-ivory);
+}
+
+body.game-active .board-dock .speed-toggle[aria-pressed="true"] {
+  border-image-source: var(--hud-plum-art);
+  border-image-slice: 84 154 84 154 fill;
+  background: transparent;
+}
+
+body.game-active .game-deck-button .stack-count {
+  border: 1px solid transparent;
+  border-image-source: var(--hud-badge-art);
+  border-image-slice: 128 196 128 196 fill;
+  border-image-width: 4px;
+  border-radius: 0;
+  background: transparent;
+}
+
+body .overlay .dialog .volume-row input[type="range"] {
+  accent-color: #c28a57;
+}
+
+body.game-active :is(.board-hud .table-clock, .board-hud .table-clock-bar > strong,
+  .board-hud .table-clock-bar > span, .power-value, .board-dock .turn-status strong),
+body .overlay .adventure-stage-browser > button {
+  font-variant-numeric: tabular-nums;
+}
+
+body.game-active .power-panel {
+  box-shadow: 0 10px 25px #000b;
+}
+body.game-active .power-track {
+  border: 2px solid #ac784d;
+  border-radius: 5px;
+  background: linear-gradient(to top, #183b39, #416c62 45%, #855f44 78%, #be8152);
+  box-shadow: inset 0 0 14px #000b;
+}
+
+body.game-active .board-hud .turn-timer {
+  border: 1px solid transparent;
+  border-image-source: var(--hud-badge-art);
+  border-image-slice: 128 196 128 196 fill;
+  border-image-width: 8px 10px;
+  border-radius: 0;
+  background: transparent;
+  color: var(--hud-ivory);
+}
+
+body .overlay:not(#startOverlay) .dialog.refinery-select-dialog {
+  border-image-source: var(--hud-slate-art);
+  border-image-slice: 88 104 88 104 fill;
+}
+body .overlay .dialog.refinery-select-dialog button:not(:disabled) {
+  border-image-source: var(--hud-plum-art);
+  border-image-slice: 84 154 84 154 fill;
+}
+
+/* Card art is never covered; only its outer edge receives the new material. */
+body .card-face {
+  border: 1px solid transparent;
+  border-image-source: var(--hud-card-art);
+  border-image-slice: 104 92 104 92;
+  border-image-width: 8px;
+  border-image-repeat: stretch;
+}
+body .card-face .card-name {
+  color: var(--hud-ivory);
+}
+body .ability-card .card-face::after { background-image: none; }
+
+body.game-active .game-deck-button .stack-card {
+  border: 1px solid transparent;
+  border-image-source: var(--hud-compact-art);
+  border-image-slice: 106 136 106 136 fill;
+  border-image-width: 6px;
+  background: transparent;
+}
+
+body .overlay :is(.ai-opponent, .hero-option, .map-option) {
+  border: 1px solid transparent;
+  border-image-source: var(--hud-tile-art);
+  border-image-slice: 136;
+  border-image-width: 11px 13px;
+  border-image-repeat: stretch;
+}
+body .overlay :is(.ai-opponent, .hero-option, .map-option).selected {
+  box-shadow: 0 0 0 1px #d1a368, 0 0 18px #bc855047;
+}
+
+body .overlay :is(.catalog-entry, .ai-opponent-detail, .result-grid > div,
+  .adventure-stage-detail) :is(h3, h4, strong) {
+  color: var(--hud-ivory);
+}
+
+@media (max-width: 700px) {
+  body .overlay:not(#startOverlay) .dialog:not(.deck-dialog),
+  body.game-active .tutorial-dialogue,
+  body.game-active .tutorial-panel { border-image-width: 12px; }
+  body.game-active :is(.board-hud .player-panel, .board-dock .remaining-player,
+    .board-dock .turn-status, .hand-panel, .power-panel) { border-image-width: 7px 9px; }
+  body.game-active .power-control .power-launch { min-width: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body .overlay .dialog button,
+  body.game-active .power-control button { transition: none; }
+}

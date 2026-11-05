@@ -26,6 +26,13 @@ body:has(#deckOverlay:not([hidden])) {
   text-align: left;
 }
 
+#catalogOverlay > .catalog-dialog {
+  border: 0;
+  border-radius: 0;
+  background: #0d191a url("shared-ui/deck-redesign/deck-window-v2.png") center / 100% 100% no-repeat;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .62), 0 4px 18px rgba(0, 0, 0, .36);
+}
+
 #catalogOverlay .catalog-header,
 #deckOverlay .catalog-header {
   flex: 0 0 auto;
@@ -63,6 +70,30 @@ body:has(#deckOverlay:not([hidden])) {
   min-height: 42px;
   padding: 8px 13px;
   font-size: 14px;
+  border: 1px solid transparent;
+  border-image: url("shared-ui/deck-redesign/deck-slot-v2.png") 18% 7% fill / 6px / 0 stretch;
+  border-radius: 0;
+  background: #0c191a;
+  box-shadow: inset 0 1px rgba(242, 218, 169, .12), 0 3px 8px rgba(0, 0, 0, .24);
+  color: #e7deca;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .75);
+  transition: filter .14s ease, transform .14s ease;
+}
+
+#catalogOverlay .catalog-tabs button:hover:not(:disabled) {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+
+#catalogOverlay .catalog-tabs button[aria-selected="true"] {
+  filter: brightness(1.2) saturate(.92);
+  color: #f4e6c9;
+  box-shadow: inset 0 0 0 1px rgba(222, 180, 105, .46), 0 4px 11px rgba(0, 0, 0, .32);
+}
+
+#catalogOverlay .catalog-tabs button:focus-visible {
+  outline: 2px solid #e8cb92;
+  outline-offset: 2px;
 }
 
 #catalogOverlay .catalog-list {
@@ -80,6 +111,11 @@ body:has(#deckOverlay:not([hidden])) {
 
 #catalogOverlay .catalog-entry {
   padding: clamp(14px, 1.4vw, 20px);
+  border: 1px solid transparent;
+  border-image: url("shared-ui/deck-redesign/deck-slot-v2.png") 18% 7% fill / 9px / 0 stretch;
+  border-radius: 0;
+  background: #102022;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, .22);
 }
 
 #catalogOverlay .catalog-entry header {
@@ -90,6 +126,10 @@ body:has(#deckOverlay:not([hidden])) {
   width: 112px;
   height: 84px;
   flex-basis: 112px;
+  border-color: rgba(171, 135, 81, .76);
+  border-radius: 2px;
+  background-color: #0e1b1d;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, .38), inset 0 1px rgba(241, 222, 184, .12);
 }
 
 #catalogOverlay .catalog-lock {
@@ -114,6 +154,28 @@ body:has(#deckOverlay:not([hidden])) {
 
 #catalogOverlay .catalog-entry .strategy-tip {
   color: #acd7ca;
+}
+
+#catalogOverlay .catalog-entry h3 {
+  color: #f0e1c4;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .7);
+}
+
+#catalogOverlay .catalog-entry p {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .58);
+}
+
+@media (max-width: 700px) {
+  #catalogOverlay > .catalog-dialog {
+    background-size: 100% 100%;
+  }
+}
+
+@media (max-width: 440px) {
+  #catalogOverlay .catalog-entry {
+    border-width: 7px;
+    border-image-width: 7px;
+  }
 }
 
 /* Both deck zones fit the same panel; their contents have independent scroll. */

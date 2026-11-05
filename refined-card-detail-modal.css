@@ -42,17 +42,16 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: clamp(20px, 3.4vw, 38px);
-  border: 1px solid var(--sc-card-detail-gold);
-  border-radius: 8px;
+  border: 10px solid transparent;
+  border-image: url("shared-ui/deck-redesign/deck-window-v2.png") 13% 10% fill / 10px / 0 stretch;
+  border-radius: 0;
   outline: none;
   color: var(--sc-card-detail-text);
-  background:
-    linear-gradient(155deg, rgba(28, 44, 45, 0.98), rgba(13, 24, 26, 0.99) 62%),
-    var(--sc-card-detail-panel);
+  background: #0d191a;
   box-shadow:
     0 28px 80px rgba(0, 0, 0, 0.72),
     inset 0 0 0 3px rgba(7, 14, 15, 0.92),
-    inset 0 0 0 4px rgba(93, 117, 108, 0.56);
+    inset 0 0 0 2px rgba(93, 117, 108, 0.35);
   transform: translateY(14px) scale(0.985);
   transition: transform 180ms ease, box-shadow 220ms ease, border-color 220ms ease;
 }
@@ -69,9 +68,9 @@
 }
 
 .sc-card-detail-dialog::before {
-  inset: 7px;
-  border: 1px solid rgba(109, 143, 132, 0.54);
-  border-radius: 4px;
+  inset: 9px;
+  border: 1px solid rgba(109, 143, 132, 0.48);
+  border-radius: 0;
 }
 
 .sc-card-detail-dialog::after {
@@ -152,10 +151,12 @@
   place-items: center;
   min-width: 44px;
   min-height: 42px;
-  border: 1px solid var(--sc-card-detail-gold);
-  border-radius: 4px;
+  border: 1px solid transparent;
+  border-image: url("shared-ui/deck-redesign/deck-slot-v2.png") 18% 7% fill / 6px / 0 stretch;
+  border-radius: 0;
   color: var(--sc-card-detail-text);
-  background: linear-gradient(180deg, #233638, #142225);
+  background-color: #0c191a;
+  box-shadow: inset 0 1px rgba(242, 218, 169, .13), 0 3px 8px rgba(0, 0, 0, .3);
   font-family: "SecondChance Plex", "Malgun Gothic", sans-serif;
   cursor: pointer;
   transition: color 130ms ease, border-color 130ms ease, background 130ms ease, box-shadow 130ms ease, transform 130ms ease;
@@ -171,9 +172,8 @@
 .sc-card-detail-close:hover,
 .sc-card-detail-toggle:hover:not(:disabled),
 .sc-card-detail-add:hover:not(:disabled) {
-  border-color: var(--sc-card-detail-gold-bright);
-  background: linear-gradient(180deg, #2b4141, #182a2b);
-  box-shadow: 0 0 14px rgba(181, 138, 80, 0.16);
+  filter: brightness(1.15);
+  box-shadow: inset 0 1px rgba(242, 218, 169, .2), 0 5px 12px rgba(0, 0, 0, .36);
 }
 
 .sc-card-detail-close:active,
@@ -198,11 +198,9 @@
   min-height: 260px;
   max-height: 430px;
   overflow: hidden;
-  border: 1px solid rgba(169, 138, 93, 0.84);
-  border-radius: 5px;
-  background:
-    radial-gradient(ellipse at 50% 35%, rgba(91, 108, 99, 0.28), transparent 65%),
-    linear-gradient(155deg, #172729, #0b1416);
+  border: 1px solid rgba(169, 138, 93, 0.5);
+  border-radius: 2px;
+  background: #0b1517 url("shared-ui/deck-redesign/deck-slot-v2.png") center / 100% 100% no-repeat;
   box-shadow: inset 0 0 0 3px rgba(7, 13, 14, 0.78), 0 8px 20px rgba(0, 0, 0, 0.25);
   transition: border-color 200ms ease, box-shadow 200ms ease;
 }
@@ -225,6 +223,16 @@
   background: radial-gradient(ellipse at 50% 50%, rgba(177, 137, 226, .28), rgba(122, 90, 171, .12) 46%, transparent 76%);
   opacity: 0;
   transition: opacity 180ms ease;
+}
+
+.sc-card-detail-art-frame::before {
+  position: absolute;
+  z-index: 2;
+  inset: -1px;
+  content: "";
+  pointer-events: none;
+  background: url("shared-ui/deck-redesign/hero-portrait-frame-v2.png") center / 100% 100% no-repeat;
+  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, .28));
 }
 
 .sc-card-detail-dialog.sc-card-detail-is-refined .sc-card-detail-art-frame::after { opacity: .88; }
@@ -273,9 +281,11 @@
 .sc-card-detail-effect-section {
   min-width: 0;
   padding: clamp(17px, 2.4vw, 26px);
-  border: 1px solid rgba(93, 117, 108, 0.66);
-  border-radius: 4px;
-  background: linear-gradient(150deg, rgba(18, 32, 34, 0.95), rgba(12, 22, 24, 0.88));
+  border: 1px solid transparent;
+  border-image: url("shared-ui/deck-redesign/deck-slot-v2.png") 18% 7% fill / 8px / 0 stretch;
+  border-radius: 0;
+  background: #0b1517;
+  box-shadow: inset 0 1px rgba(238, 212, 163, .08), inset 0 -5px 12px rgba(0, 0, 0, .24), 0 4px 12px rgba(0, 0, 0, .17);
 }
 
 .sc-card-detail-section-label { margin-bottom: 12px; }
@@ -315,26 +325,27 @@
 }
 
 .sc-card-detail-add:disabled {
-  border-color: rgba(111, 126, 119, .62);
   color: #8e9a94;
-  background: linear-gradient(180deg, #202d2e, #121c1e);
+  background-color: #11191b;
+  filter: grayscale(.55) brightness(.78);
   cursor: not-allowed;
   opacity: .76;
 }
 
 .sc-card-detail-dialog.sc-card-detail-is-refined .sc-card-detail-toggle {
-  border-color: rgba(185, 154, 220, 0.8);
   color: #f2e8ff;
-  background: linear-gradient(180deg, rgba(95, 72, 121, 0.72), rgba(44, 35, 61, 0.88));
-  box-shadow: 0 0 16px rgba(171, 132, 220, 0.16);
+  background-color: #191622;
+  box-shadow: inset 0 0 0 100px rgba(84, 61, 111, .26), 0 0 10px rgba(171, 132, 220, 0.16);
 }
 
 .sc-card-detail-toggle:disabled { cursor: wait; }
 
 .sc-card-detail-story {
   padding: 18px clamp(17px, 2.4vw, 26px) 20px;
-  border-top: 1px solid rgba(121, 184, 173, 0.3);
-  background: linear-gradient(90deg, rgba(85, 127, 118, 0.08), transparent 70%);
+  border: 1px solid transparent;
+  border-image: url("shared-ui/deck-redesign/deck-slot-v2.png") 18% 7% fill / 7px / 0 stretch;
+  background: #0b1517;
+  box-shadow: inset 0 1px rgba(231, 207, 160, .05);
 }
 
 .sc-card-detail-story-title {

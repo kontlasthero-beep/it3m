@@ -1,0 +1,73 @@
+{
+  "name": "Second Chance Salvage HUD v2",
+  "version": 2,
+  "format": "PNG",
+  "alpha": "transparent outside silhouettes; card-frame center is transparent",
+  "nineSliceConvention": "Insets are top, right, bottom, left in source-image pixels. Preserve corners and frame thickness; stretch only the center and straight edge sections.",
+  "assets": [
+    {
+      "file": "panel.png",
+      "dimensions": [1514, 938],
+      "role": "Large reusable panel background",
+      "palette": "oxidized petrol teal, worn copper/rust",
+      "nineSlice": { "top": 88, "right": 100, "bottom": 88, "left": 100, "fillCenter": true },
+      "safeArea": { "left": "8%", "right": "8%", "top": "9%", "bottom": "9%" }
+    },
+    {
+      "file": "button.png",
+      "dimensions": [2149, 544],
+      "role": "Wide primary or secondary button face; label is separate HTML text",
+      "palette": "dark oxidized teal, copper/rust edge",
+      "nineSlice": { "top": 76, "right": 152, "bottom": 76, "left": 152, "fillCenter": true },
+      "safeArea": { "left": "10%", "right": "10%", "top": "22%", "bottom": "22%" }
+    },
+    {
+      "file": "button-compact.png",
+      "dimensions": [1834, 657],
+      "role": "Compact action, tab, or small control button",
+      "palette": "dark teal-slate, heavier worn copper/rust edge",
+      "nineSlice": { "top": 106, "right": 136, "bottom": 106, "left": 136, "fillCenter": true },
+      "safeArea": { "left": "12%", "right": "12%", "top": "24%", "bottom": "24%" }
+    },
+    {
+      "file": "tile.png",
+      "dimensions": [1192, 1189],
+      "role": "Selectable tile, portrait backplate, or inventory slot",
+      "palette": "muted olive-slate, copper/rust edge",
+      "nineSlice": { "top": 136, "right": 136, "bottom": 136, "left": 136, "fillCenter": true },
+      "safeArea": { "all": "12%" }
+    },
+    {
+      "file": "badge.png",
+      "dimensions": [1321, 700],
+      "role": "Small status, count, or compact label plate",
+      "palette": "muted plum-rust metal, copper edge",
+      "nineSlice": { "top": 128, "right": 196, "bottom": 128, "left": 196, "fillCenter": true },
+      "safeArea": { "left": "18%", "right": "18%", "top": "24%", "bottom": "24%" }
+    },
+    {
+      "file": "card-frame.png",
+      "dimensions": [1024, 1536],
+      "role": "Transparent overlay frame for portrait card art",
+      "palette": "slate-teal inner rim, worn copper/rust edge",
+      "nineSlice": { "top": 104, "right": 92, "bottom": 104, "left": 92, "fillCenter": false },
+      "safeArea": { "artWindow": "Transparent center; place art beneath this frame and keep its crop inside the inner teal rim." }
+    },
+    {
+      "file": "button-plum.png",
+      "dimensions": [2171, 690],
+      "role": "Wide button palette variant",
+      "palette": "muted plum-slate face, copper/rust edge",
+      "nineSlice": { "top": 84, "right": 154, "bottom": 84, "left": 154, "fillCenter": true },
+      "safeArea": { "left": "10%", "right": "10%", "top": "22%", "bottom": "22%" }
+    },
+    {
+      "file": "panel-slate.png",
+      "dimensions": [1732, 821],
+      "role": "Large panel palette variant",
+      "palette": "muted slate-charcoal, subdued copper/rust edge",
+      "nineSlice": { "top": 88, "right": 104, "bottom": 88, "left": 104, "fillCenter": true },
+      "safeArea": { "left": "8%", "right": "8%", "top": "9%", "bottom": "9%" }
+    }
+  ]
+}

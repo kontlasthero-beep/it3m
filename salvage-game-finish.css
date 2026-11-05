@@ -1,0 +1,286 @@
+/* Load after salvage-hud-v2.css. This layer only finishes exposed game UI. */
+
+/* The in-match bag is intentionally outside the shared dialog skin. */
+#gameDeckOverlay .deck-dialog {
+  border: 1px solid transparent;
+  border-image: var(--hud-panel-art) 88 100 88 100 fill / 18px / 0 stretch;
+  border-radius: 0;
+  background: transparent;
+  color: var(--hud-ivory);
+  box-shadow: 0 19px 48px #0009;
+}
+#gameDeckOverlay #gameDeckBackButton {
+  border: 1px solid transparent;
+  border-image: var(--hud-compact-art) 106 136 106 136 fill / 8px 10px / 0 stretch;
+  border-radius: 0;
+  background: transparent;
+  color: var(--hud-ivory);
+}
+#gameDeckOverlay #gameDeckBackButton:hover:not(:disabled) { filter: brightness(1.12); }
+#gameDeckOverlay #gameDeckBackButton:disabled { filter: grayscale(.75) brightness(.72); }
+
+/* Keep the existing gear SVG visible above the reusable metal frame. */
+body.game-active #gameSettingsButton { position: relative; }
+body.game-active #gameSettingsButton::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 19px;
+  height: 19px;
+  background: url("shared-ui/expedition-ui-kit-v1/icons/settings.svg") center / contain no-repeat;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* Selection is a copper inset on the existing tile, not another glowing frame. */
+#triggerSelectOverlay .trigger-type-option[aria-checked="true"] {
+  box-shadow: inset 0 0 0 2px #c29461, 0 3px 8px #0007;
+}
+#triggerSelectOverlay .trigger-type-option[aria-checked="true"] strong { color: var(--hud-ivory); }
+
+/* Live card labels and hidden card faces use a quiet recessed metal surface. */
+body.game-active .card-face .card-name {
+  border-top-color: #8c704e;
+  background: linear-gradient(180deg, #213638, #142529);
+  color: var(--hud-ivory);
+  text-shadow: 0 1px 2px #000c;
+}
+body.game-active .card-face.card-back-face {
+  border-style: solid;
+  background: linear-gradient(155deg, #1b3534, #0d1d20 75%);
+  box-shadow: inset 0 0 0 2px #273e3c, 0 3px 8px #0006;
+}
+body.game-active .card-back-face .card-name { color: #d2c4a8; }
+
+#refinerySelectOverlay .refinery-card-option {
+  border-color: #8b785d;
+  border-radius: 3px;
+  background: #101f21;
+  box-shadow: 0 3px 9px #0008;
+}
+#refinerySelectOverlay .refinery-card-option.refinery-preview-refined {
+  border-color: #b79ac7;
+  box-shadow: 0 0 0 1px #b79ac7, 0 4px 12px #0009;
+}
+#refinerySelectOverlay .refinery-card-option:hover:not(:disabled) {
+  box-shadow: 0 0 0 1px #c29461, 0 5px 12px #0009;
+}
+#refinerySelectOverlay .refinery-card-option:focus-visible,
+#triggerSelectOverlay .trigger-type-option:focus-visible {
+  outline: 2px solid #f0c88a;
+  outline-offset: 2px;
+}
+#refinerySelectOverlay .refinery-card-option:disabled { filter: grayscale(.78) brightness(.72); }
+
+/* Score and hero explanations retain their live text and keyboard access. */
+body.game-active .board-hud .player-score[data-score-detail]::after,
+body.game-active .hand-hero-name[data-description]::after {
+  border: 1px solid transparent;
+  border-image: var(--hud-slate-art) 88 104 88 104 fill / 8px / 0 stretch;
+  border-radius: 0;
+  background: transparent;
+  color: var(--hud-ivory);
+  box-shadow: 0 8px 22px #0009;
+  font-family: var(--ui-sans);
+}
+body.game-active .board-hud .player-panel.p2 .player-score::after {
+  right: 0;
+  left: auto;
+}
+body.game-active .hand-hero-name { color: #ddbb8c; }
+body.game-active #handPanel1 .hand-hero-name::after { right: 0; left: auto; }
+body.game-active .trigger-count {
+  border-color: #ad8158;
+  background: #102325;
+  color: var(--hud-ivory);
+}
+body.game-active .trigger-tool[data-description]::after {
+  content: attr(data-description);
+  position: absolute;
+  z-index: 35;
+  right: 0;
+  bottom: calc(100% + 8px);
+  width: min(250px, 70vw);
+  padding: 9px 11px;
+  border: 1px solid transparent;
+  border-image: var(--hud-slate-art) 88 104 88 104 fill / 8px / 0 stretch;
+  border-radius: 0;
+  background: transparent;
+  color: var(--hud-ivory);
+  font: 12px/1.45 var(--ui-sans);
+  text-align: left;
+  white-space: normal;
+  pointer-events: none;
+}
+body.game-active .trigger-tool[data-description]:focus-visible { z-index: 30; }
+body.game-active .trigger-tool[data-description]:focus-visible::after {
+  display: block;
+}
+
+/* A recessed gauge instead of a bright screen-like gradient. */
+body.game-active .power-track {
+  border-color: #aa784e;
+  background:
+    linear-gradient(90deg, #0b191b 0 15%, transparent 15% 85%, #0b191b 85%),
+    linear-gradient(to top, #285148, #426959 48%, #866245 78%, #ad7750);
+  box-shadow: inset 0 0 0 2px #101d1f, inset 0 0 10px #000b;
+}
+body.game-active .power-track::before {
+  background: repeating-linear-gradient(to top, transparent 0 22px, #d3b88a78 22px 23px);
+}
+body.game-active .power-needle {
+  border-color: #f1d7a9;
+  background: #cf985b;
+  box-shadow: 0 0 0 1px #553b29, 0 0 6px #d89a5b75;
+}
+body.game-active #refinedRepositionPicker {
+  border: 1px solid transparent;
+  border-image: var(--hud-slate-art) 88 104 88 104 fill / 12px / 0 stretch;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: 0 8px 24px #0009;
+}
+body.game-active #refinedRepositionPicker .refined-reposition-options button {
+  border: 1px solid transparent;
+  border-image: var(--hud-plum-art) 84 154 84 154 fill / 7px 9px / 0 stretch;
+  border-radius: 0;
+  background: transparent;
+  color: #f4e9fb;
+}
+body.game-active #refinedRepositionPicker .refined-reposition-options button:hover:not(:disabled) {
+  filter: brightness(1.13);
+}
+body.game-active #refinedRepositionPicker .refined-reposition-options button:disabled {
+  filter: grayscale(.75) brightness(.72);
+}
+
+/* Settings: tactile controls, with the exit action kept distinct. */
+#gameSettingsOverlay .volume-row { color: #d5d3c6; }
+#gameSettingsOverlay .volume-row output { color: var(--hud-ivory); }
+#gameSettingsOverlay input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 18px;
+  accent-color: #bd8b5e;
+  background: transparent;
+  cursor: pointer;
+}
+#gameSettingsOverlay input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  border: 1px solid #8b6748;
+  border-radius: 2px;
+  background: #14292a;
+}
+#gameSettingsOverlay input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -5px;
+  border: 1px solid #e5bf83;
+  border-radius: 2px;
+  background: #ac7950;
+}
+#gameSettingsOverlay input[type="range"]::-moz-range-track {
+  height: 6px;
+  border: 1px solid #8b6748;
+  border-radius: 2px;
+  background: #14292a;
+}
+#gameSettingsOverlay input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: 1px solid #e5bf83;
+  border-radius: 2px;
+  background: #ac7950;
+}
+#gameSettingsOverlay :is(#gameLeaveButton, #gameLeaveConfirmButton, #tutorialSkipButton) {
+  --hud-button-art: var(--hud-plum-art);
+  color: #f4e9e0;
+}
+#gameSettingsOverlay :is(#gameLeaveButton, #gameLeaveConfirmButton, #tutorialSkipButton):hover:not(:disabled) {
+  filter: brightness(1.13);
+}
+
+/* The nickname form sits outside the dialogue's regular button group. */
+body.game-active #tutorialNicknameForm button {
+  border: 1px solid transparent;
+  border-image: var(--hud-button-art) 76 152 76 152 fill / 11px 13px / 0 stretch;
+  border-radius: 0;
+  background: transparent;
+  color: var(--hud-ivory);
+  text-shadow: 0 1px 2px #000d;
+}
+body.game-active #tutorialNicknameForm button:hover:not(:disabled) { filter: brightness(1.14); }
+body.game-active #tutorialNicknameForm button:disabled { filter: grayscale(.78) brightness(.72); }
+body.game-active .tutorial-completion {
+  border: 1px solid transparent;
+  border-image: var(--hud-badge-art) 128 196 128 196 fill / 6px 9px / 0 stretch;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--hud-ivory);
+}
+
+/* Result data and tutorial inputs need readable hierarchy on the shared plates. */
+#resultOverlay .result-title,
+#tutorialRewardOverlay #tutorialRewardTitle {
+  color: var(--hud-ivory);
+  font-family: var(--ui-serif);
+  font-weight: 400;
+  text-shadow: 0 2px 5px #0009;
+}
+#resultOverlay .result-grid span { color: #c8c8bb; }
+#resultOverlay .result-grid strong { color: var(--hud-ivory); font-variant-numeric: tabular-nums; }
+#resultOverlay .match-fame-reward { color: #e8c48d; }
+body.game-active #tutorialNicknameInput,
+body.game-active #tutorialLessonSelect {
+  border-color: #a47a54;
+  background: #102123;
+  color: var(--hud-ivory);
+}
+
+/* Focus must remain visible even where image borders replace CSS borders. */
+body.game-active :is(.ability-card, .trigger-tool, .hand-hero-name, .player-score):focus-visible,
+body.game-active #refinedRepositionPicker button:focus-visible,
+body.game-active #tutorialLessonSelect:focus-visible,
+body.game-active #tutorialNicknameInput:focus-visible,
+body.game-active #tutorialNicknameForm button:focus-visible,
+#gameSettingsOverlay input[type="range"]:focus-visible,
+#gameDeckOverlay #gameDeckBackButton:focus-visible {
+  outline: 2px solid #f0c88a;
+  outline-offset: 2px;
+}
+
+@media (max-width: 700px) {
+  #gameDeckOverlay .deck-dialog { border-image-width: 12px; }
+  body.game-active .board-dock :is(.speed-toggle, #endTurnButton) { border-image-width: 7px 9px; }
+  body.game-active .card-face { border-image-width: 5px; }
+  body.game-active .board-hud .player-score[data-score-detail]::after {
+    max-width: min(230px, calc(100vw - 24px));
+  }
+  body.game-active .hand-hero-name[data-description]::after {
+    width: min(230px, 62vw);
+  }
+}
+
+@media (max-width: 420px) {
+  body.game-active .board-dock :is(.speed-toggle, #endTurnButton) { border-image-width: 5px 7px; }
+  body.game-active .card-face { border-image-width: 4px; }
+  #gameSettingsOverlay .volume-row {
+    grid-template-columns: minmax(0, 68px) minmax(0, 1fr) max-content;
+    gap: 6px;
+  }
+  #gameDeckOverlay .game-deck-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #resultOverlay .result-title,
+  #tutorialRewardOverlay .tutorial-reward.reveal,
+  body.game-active .tutorial-completion.visible,
+  body.game-active .hand-panel.current,
+  body.game-active .card-inspector { animation: none; }
+  body.game-active .hand-hero-name::after { transition: none; }
+  body.game-active .speed-toggle.speed-changed { animation: none; }
+}

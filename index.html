@@ -750,8 +750,6 @@
     .map-deck-copy { min-width: 0; }
     .map-deck-name { display: block; overflow: hidden; color: #f1e4c4; font-family: var(--display-font, Georgia, serif); font-size: 15px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
     .map-deck-meta { display: block; margin-top: 4px; overflow: hidden; color: var(--muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
-    .map-deck-stack { position: absolute; right: 7px; bottom: 6px; display: flex; align-items: flex-end; height: 17px; }
-    .map-deck-stack i { width: 10px; height: 14px; margin-left: -5px; border: 1px solid #c5ae70; border-radius: 2px; background: #243c38; box-shadow: 0 1px 3px #000; }
     .map-loadout-row label.deck-select-sr { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; clip-path: inset(50%); }
     .deck-actions { display: flex; flex-wrap: wrap; gap: 8px; }
     #deckSaveButton:disabled { border-color: #5c6a69; background: #39484a; color: #abb7b5; box-shadow: none; opacity: 1; cursor: not-allowed; }
@@ -999,12 +997,16 @@
   <link rel="stylesheet" href="lobby-motion.css?v=1">
   <link rel="stylesheet" href="game-lobby-screen/preservation-zone/preservation-webcg.css?v=2">
   <link rel="stylesheet" href="tutorial-motion.css?v=1">
-  <link rel="stylesheet" href="game-lobby-screen/lobby-layout.css?v=4">
-  <link rel="stylesheet" href="entry-layout.css?v=3">
-  <link rel="stylesheet" href="collection-layout.css?v=2">
-  <link rel="stylesheet" href="refined-card-detail-modal.css?v=2">
+  <link rel="stylesheet" href="game-lobby-screen/lobby-layout.css?v=5">
+  <link rel="stylesheet" href="entry-layout.css?v=4">
+  <link rel="stylesheet" href="collection-layout.css?v=3">
+  <link rel="stylesheet" href="refined-card-detail-modal.css?v=3">
   <link rel="stylesheet" href="refinery-visuals.css">
-  <link rel="stylesheet" href="deck-flow.css?v=2">
+  <link rel="stylesheet" href="deck-flow.css?v=4">
+  <link rel="stylesheet" href="map-deck-assets.css?v=1">
+  <link rel="stylesheet" href="salvage-hud-v2.css?v=3">
+  <link rel="stylesheet" href="salvage-game-finish.css?v=1">
+  <link rel="stylesheet" href="salvage-selection-finish.css?v=1">
 </head>
 <body>
   <main class="app">
@@ -1224,7 +1226,7 @@
             <div class="start-form">
               <label>플레이어 1 닉네임<input id="localPlayer1NameInput" maxlength="20" value="플레이어 1" autocomplete="off"></label>
               <label>플레이어 2 닉네임<input id="localPlayer2NameInput" maxlength="20" value="플레이어 2" autocomplete="off"></label>
-              <div class="local-deck-choice"><label>플레이어 1 가방<select id="localDeck0"></select></label><label>플레이어 2 가방<select id="localDeck1"></select></label></div>
+              <div class="legacy-deck-selects" hidden><select id="localDeck0" aria-label="플레이어 1 덱"></select><select id="localDeck1" aria-label="플레이어 2 덱"></select></div>
               <button class="primary" id="startButton" type="button">맵 선택</button>
               <div class="start-form-actions"><button class="backToStartMenuButton" type="button">뒤로</button></div>
             </div>
@@ -1241,7 +1243,7 @@
               <aside class="ai-opponent-detail" id="aiOpponentDetail" aria-live="polite"><h4>상대 기록</h4><strong id="aiOpponentDetailName"></strong><p id="aiOpponentDetailDescription"></p></aside>
             </div>
             <div class="start-form">
-              <label>사용할 가방<select id="aiDeckSelect"></select></label>
+              <div class="legacy-deck-selects" hidden><select id="aiDeckSelect" aria-label="AI 대전 덱"></select></div>
               <button class="primary" id="startAiButton" type="button" disabled>게임 시작</button>
               <div class="start-form-actions"><button class="backToStartMenuButton" type="button">뒤로</button></div>
             </div>
@@ -8551,7 +8553,7 @@
           image.alt = `${hero.name} 초상화`;
           portrait.append(image);
         } else {
-          portrait.textContent = '···';
+          portrait.textContent = '?';
           portrait.setAttribute('aria-label', '무작위 영웅');
         }
         const copy = document.createElement('span');
@@ -8563,11 +8565,7 @@
         meta.className = 'map-deck-meta';
         meta.textContent = `${heroName(choice.heroId)} · ${choice.cards.length}장`;
         copy.append(name, meta);
-        const stack = document.createElement('span');
-        stack.className = 'map-deck-stack';
-        stack.setAttribute('aria-hidden', 'true');
-        for (let cardIndex = 0; cardIndex < Math.min(4, choice.cards.length); cardIndex += 1) stack.append(document.createElement('i'));
-        target.append(portrait, copy, stack);
+        target.append(portrait, copy);
         const locked = state.mapSelectionOrigin === 'online' && onlineMapChoiceLocked();
         document.querySelectorAll(`.map-deck-arrow[data-map-deck-owner="${selectIndex}"]`).forEach(button => { button.disabled = locked || mapCarouselTransitioning[selectIndex] || choices.length <= 1; });
       }

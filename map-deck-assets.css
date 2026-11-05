@@ -1,0 +1,156 @@
+/* The old pregame selectors remain as internal selection state; the map carousel is the visible control. */
+.legacy-deck-selects[hidden] { display: none !important; }
+
+#mapLoadoutRow {
+  width: min(920px, calc(100% - 32px));
+  max-width: none;
+  min-height: 120px;
+  margin: 0 auto 18px;
+  padding: 17px 22px 15px;
+  gap: 14px;
+  border: 0;
+  border-radius: 0;
+  /* The generated raster has transparent vertical padding; 160% restores the visible frame to this row. */
+  background: url("shared-ui/deck-redesign/map-deck-tray-v1.png") center / 100% 160% no-repeat;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, .28), inset 0 1px rgba(233, 203, 149, .08);
+}
+#mapLoadoutRow[hidden] { display: none; }
+#mapLoadoutRow[data-player-count="1"] {
+  width: min(520px, calc(100% - 32px));
+  grid-template-columns: minmax(0, 1fr);
+}
+#mapLoadoutRow .map-loadout-lane-title {
+  margin: 0 0 5px;
+  padding-left: 7px;
+  color: #d2c3a5;
+  font-size: 12px;
+  letter-spacing: .01em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .8);
+}
+#mapLoadoutRow .map-deck-carousel {
+  grid-template-columns: 40px minmax(0, 1fr) 40px;
+  gap: 2px;
+  min-height: 84px;
+}
+#mapLoadoutRow .map-deck-arrow {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  min-width: 40px;
+  min-height: 84px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: url("shared-ui/deck-redesign/map-deck-arrow-v1.png") center / 100% 100% no-repeat;
+  box-shadow: none;
+  color: #f5e1b2;
+  font-family: Georgia, serif;
+  font-size: 29px;
+  font-weight: 400;
+  line-height: 1;
+  text-shadow: 0 1px 4px #081012;
+  filter: saturate(.78) brightness(.92);
+  transition: filter .15s ease, transform .15s ease;
+}
+#mapLoadoutRow .map-deck-arrow:hover:not(:disabled),
+#mapLoadoutRow .map-deck-arrow:focus-visible {
+  filter: brightness(1.23);
+  transform: translateY(-1px);
+}
+#mapLoadoutRow .map-deck-arrow:focus-visible { outline: 2px solid #ead29b; outline-offset: 1px; }
+#mapLoadoutRow .map-deck-arrow:disabled { opacity: .43; }
+#mapLoadoutRow .map-deck-arrow:active:not(:disabled) { transform: translateY(1px) scale(.97); }
+#mapLoadoutRow .map-deck-arrow:disabled { filter: grayscale(.42) brightness(.72); }
+
+#mapLoadoutRow .map-deck-package {
+  grid-template-columns: clamp(32px, 4vw, 48px) minmax(0, 1fr);
+  gap: 8px;
+  min-height: 84px;
+  padding: 12px 20px 12px clamp(16px, 2vw, 23px);
+  border: 0;
+  border-radius: 0;
+  background: url("shared-ui/deck-redesign/map-deck-plate-v1.png") center / 100% 160% no-repeat;
+  filter: drop-shadow(0 4px 7px rgba(0, 0, 0, .34));
+  transition: filter .16s ease;
+}
+#mapLoadoutRow .map-deck-package.is-shifting { filter: brightness(.78) drop-shadow(0 4px 7px rgba(0, 0, 0, .34)); }
+#mapLoadoutRow .map-deck-package.is-arriving { filter: brightness(1.06) drop-shadow(0 5px 9px rgba(0, 0, 0, .42)); }
+#mapLoadoutRow .map-deck-portrait {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 54px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #c9b892;
+  font-family: var(--ui-serif, Georgia, serif);
+  font-size: 24px;
+}
+#mapLoadoutRow .map-deck-portrait img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 18%;
+  clip-path: polygon(10% 0, 90% 0, 100% 9%, 100% 91%, 90% 100%, 10% 100%, 0 91%, 0 9%);
+}
+#mapLoadoutRow .map-deck-name {
+  color: #f4e8d3;
+  font-family: var(--ui-serif, Georgia, serif);
+  font-size: clamp(14px, 1.35vw, 18px);
+  font-weight: 400;
+  line-height: 1.25;
+  text-shadow: 0 1px 3px #061012;
+}
+#mapLoadoutRow .map-deck-meta {
+  margin-top: 5px;
+  color: #c1c9bd;
+  font-size: 11px;
+  line-height: 1.3;
+}
+#mapLoadoutRow[data-player-count="1"] .map-deck-package {
+  grid-template-columns: 60px minmax(0, 1fr);
+  padding-left: 28px;
+}
+#mapLoadoutRow[data-player-count="1"] .map-deck-portrait { height: 56px; }
+
+@media (max-width: 760px) {
+  #mapLoadoutRow,
+  #mapLoadoutRow[data-player-count="1"] {
+    width: min(550px, calc(100% - 20px));
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    padding: 0;
+    gap: 8px;
+    background: none;
+    box-shadow: none;
+  }
+  #mapLoadoutRow .map-loadout-lane {
+    min-width: 0;
+    padding: 13px 16px;
+    background: url("shared-ui/deck-redesign/map-deck-tray-v1.png") center / 100% 160% no-repeat;
+    box-shadow: 0 5px 12px rgba(0, 0, 0, .28), inset 0 1px rgba(233, 203, 149, .08);
+  }
+}
+@media (max-width: 430px) {
+  #mapLoadoutRow .map-loadout-lane { padding-inline: 9px; }
+  #mapLoadoutRow .map-deck-carousel { grid-template-columns: 34px minmax(0, 1fr) 34px; }
+  #mapLoadoutRow .map-deck-arrow { width: 34px; min-width: 34px; font-size: 26px; }
+  #mapLoadoutRow .map-deck-package,
+  #mapLoadoutRow[data-player-count="1"] .map-deck-package {
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 6px;
+    padding-inline: 15px 12px;
+  }
+  #mapLoadoutRow .map-deck-portrait,
+  #mapLoadoutRow[data-player-count="1"] .map-deck-portrait { height: 43px; }
+  #mapLoadoutRow .map-deck-name { font-size: 14px; }
+  #mapLoadoutRow .map-deck-meta { font-size: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #mapLoadoutRow .map-deck-arrow { transition: none; }
+  #mapLoadoutRow .map-deck-package.is-shifting,
+  #mapLoadoutRow .map-deck-package.is-arriving { animation: none; transition: none; transform: none; }
+}

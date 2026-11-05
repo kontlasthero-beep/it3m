@@ -294,3 +294,36 @@
     font-size: 13px;
   }
 }
+
+/* Login and guest-confirm controls use the tactile salvaged slot surface.
+   Border-image artwork paints inside the existing hit box, so sizing stays fixed. */
+#startOverlay.is-home-lobby:not(.is-profile-lobby) :is(#accountScreen, #guestWarningScreen) .account-actions button,
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #guestPlayButton {
+  border: 0 solid transparent;
+  border-image-source: var(--sc-hud-button-art);
+  border-image-slice: 18% 8% fill;
+  border-image-width: 10px 14px;
+  border-image-repeat: stretch;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+#startOverlay.is-home-lobby:not(.is-profile-lobby) :is(#accountScreen, #guestWarningScreen) .account-actions button {
+  border-image-source: var(--sc-hud-button-compact-art);
+}
+
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #accountSubmitButton,
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #confirmGuestButton {
+  border-image-source: var(--sc-hud-button-plum-art);
+}
+
+#startOverlay.is-home-lobby:not(.is-profile-lobby) :is(#accountScreen, #guestWarningScreen) .account-actions button:hover,
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #guestPlayButton:hover {
+  filter: brightness(1.13);
+}
+
+#startOverlay.is-home-lobby:not(.is-profile-lobby) :is(#accountScreen, #guestWarningScreen) .account-actions button:active,
+#startOverlay.is-home-lobby:not(.is-profile-lobby) #guestPlayButton:active {
+  filter: brightness(.96);
+}

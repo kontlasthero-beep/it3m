@@ -29,6 +29,16 @@
   border-bottom: 1px solid rgba(198, 163, 103, .46);
 }
 #deckOverlay .deck-header h2 { margin: 0; font-size: clamp(25px, 3vw, 36px); }
+#deckOverlay[data-view="list"] .deck-header { padding: 6px 8px 12px; }
+#deckOverlay[data-view="list"] .deck-header h2 {
+  color: #f0e1c4;
+  font-family: var(--ui-serif, Georgia, serif);
+  font-size: clamp(23px, 2.2vw, 28px);
+  font-weight: 400;
+  letter-spacing: -.025em;
+  line-height: 1.35;
+  text-shadow: 0 1px 2px rgba(0,0,0,.75);
+}
 #deckOverlay .deck-header button { flex: none; }
 #deckOverlay .deck-list-screen,
 #deckOverlay .deck-layout { animation: deck-flow-enter .25s ease-out both; }
@@ -131,12 +141,6 @@
   font-size: clamp(14px, 1.3vw, 17px);
   text-align: center;
 }
-#deckOverlay :is(#deckListBackButton, #deckHeroCancelButton) { background-image: url("shared-ui/expedition-ui-kit-v1/buttons/salvage/back--desktop--idle.svg"); }
-#deckOverlay :is(#deckListBackButton, #deckHeroCancelButton):hover { background-image: url("shared-ui/expedition-ui-kit-v1/buttons/salvage/back--desktop--hover.svg"); }
-#deckOverlay :is(#deckCreateButton, #deckHeroConfirmButton) { background-image: url("shared-ui/expedition-ui-kit-v1/buttons/salvage/home-deck--desktop--idle.svg"); }
-#deckOverlay :is(#deckCreateButton, #deckHeroConfirmButton):hover { background-image: url("shared-ui/expedition-ui-kit-v1/buttons/salvage/home-deck--desktop--hover.svg"); }
-#deckOverlay :is(#deckListBackButton, #deckHeroCancelButton):active { background-image: url("shared-ui/expedition-ui-kit-v1/buttons/salvage/back--desktop--pressed.svg"); }
-#deckOverlay :is(#deckCreateButton, #deckHeroConfirmButton):active { background-image: url("shared-ui/expedition-ui-kit-v1/buttons/salvage/home-deck--desktop--pressed.svg"); }
 #deckOverlay .deck-list-actions button:disabled { opacity: .45; cursor: not-allowed; }
 #deckOverlay .deck-list-screen.is-under-hero,
 #deckOverlay .deck-layout.is-under-hero { filter: brightness(.45); pointer-events: none; }
@@ -315,4 +319,159 @@
 @media (prefers-reduced-motion: reduce) {
   #deckOverlay .deck-list-screen, #deckOverlay .deck-layout, #deckOverlay .deck-hero-screen,
   #deckOverlay .deck-package, #deckOverlay .deck-bag.is-stowing .deck-card { animation: none !important; transition: none !important; }
+}
+
+/* Tactile salvage finish: keep layout geometry and interaction targets unchanged. */
+#deckOverlay > .deck-dialog {
+  background: #0d191a url("shared-ui/deck-redesign/deck-window-v2.png") center / 100% 100% no-repeat;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .62), 0 4px 18px rgba(0, 0, 0, .36);
+}
+
+#deckOverlay .deck-editor-summary,
+#deckOverlay .deck-explorer {
+  border: 1px solid transparent;
+  border-image: url("shared-ui/deck-redesign/deck-slot-v2.png") 18% 7% fill / 9px / 0 stretch;
+  border-radius: 0;
+  background: #102022;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, .27), inset 0 1px rgba(232, 206, 158, .1);
+}
+
+#deckOverlay .deck-pool,
+#deckOverlay .deck-bag {
+  border: 1px solid transparent;
+  border-image: url("shared-ui/deck-redesign/deck-slot-v2.png") 18% 7% fill / 8px / 0 stretch;
+  border-radius: 0;
+  background: #0c191a;
+  box-shadow: inset 0 2px 7px rgba(0, 0, 0, .42), inset 0 1px rgba(226, 204, 160, .07);
+}
+
+#deckOverlay .deck-pool-tools :is(input, select) {
+  border: 1px solid transparent;
+  border-image: url("shared-ui/deck-redesign/deck-slot-v2.png") 18% 7% fill / 6px / 0 stretch;
+  border-radius: 0;
+  background: #0c191a;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, .4), 0 1px rgba(223, 192, 132, .08);
+}
+
+#deckOverlay .deck-pool .deck-card {
+  isolation: isolate;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .32));
+}
+#deckOverlay .deck-pool .deck-card .card-face {
+  position: relative;
+  isolation: isolate;
+}
+#deckOverlay .deck-pool .deck-card .card-face::before {
+  position: absolute;
+  z-index: 5;
+  inset: -1px;
+  border-radius: 0;
+  background: url("shared-ui/deck-redesign/hero-portrait-frame-v2.png") center / 100% 100% no-repeat;
+  content: "";
+  pointer-events: none;
+}
+#deckOverlay .deck-bag .deck-card {
+  border: 1px solid transparent;
+  border-image: url("shared-ui/deck-redesign/deck-slot-v2.png") 18% 7% fill / 2px / 0 stretch;
+  border-radius: 0;
+  background: #0c191a;
+  box-shadow: inset 0 1px rgba(240, 220, 177, .1), 0 2px 5px rgba(0, 0, 0, .28);
+}
+#deckOverlay .deck-card .card-face {
+  border: 1px solid rgba(133, 105, 69, .65);
+  border-radius: 2px;
+  background: #0b1517;
+  box-shadow: inset 0 1px rgba(240, 220, 177, .12), inset 0 -3px 7px rgba(0, 0, 0, .4);
+}
+#deckOverlay .deck-card .card-name {
+  background: #0a1517 url("shared-ui/deck-redesign/deck-slot-v2.png") center / 100% 100% no-repeat;
+  box-shadow: inset 0 1px rgba(216, 185, 126, .2);
+}
+#deckOverlay .deck-card.locked::after,
+#deckOverlay .deck-bag .deck-card.hero-unavailable::after { z-index: 6; }
+
+#deckOverlay .deck-presets button,
+#deckOverlay .deck-actions button,
+#deckOverlay .deck-hero-actions button {
+  border: 1px solid transparent;
+  border-image: url("shared-ui/deck-redesign/deck-slot-v2.png") 18% 7% fill / 6px / 0 stretch;
+  border-radius: 0;
+  background: #0c191a;
+  box-shadow: inset 0 1px rgba(247, 222, 170, .12), 0 3px 7px rgba(0, 0, 0, .28);
+  color: #f0e4cc;
+}
+#deckOverlay .deck-presets button:hover:not(:disabled),
+#deckOverlay .deck-actions button:hover:not(:disabled) { filter: brightness(1.13); }
+#deckOverlay .deck-presets button:focus-visible,
+#deckOverlay .deck-actions button:focus-visible,
+#deckOverlay .deck-hero-actions button:focus-visible { outline: 2px solid #e8cb92; outline-offset: 2px; }
+
+/* Override the legacy SVG backgrounds on the two deck-list actions. */
+#deckOverlay :is(#deckListBackButton, #deckCreateButton) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 50px;
+  min-height: 50px;
+  max-height: 50px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-image: url("shared-ui/deck-redesign/deck-slot-v2.png") 18% 7% fill / 6px / 0 stretch;
+  border-radius: 0;
+  background: #0c191a;
+  background-image: none !important;
+  color: #f0e4cc;
+  font-size: clamp(13px, 1.25vw, 16px);
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
+  box-shadow: inset 0 1px rgba(247, 222, 170, .12), 0 3px 7px rgba(0, 0, 0, .28);
+}
+#deckOverlay :is(#deckListBackButton, #deckCreateButton):hover:not(:disabled) { filter: brightness(1.13); }
+#deckOverlay :is(#deckListBackButton, #deckCreateButton):focus-visible { outline: 2px solid #e8cb92; outline-offset: 2px; }
+#deckOverlay :is(#deckListBackButton, #deckCreateButton):active:not(:disabled) { transform: translateY(1px); }
+
+#deckOverlay :is(#deckHeroCancelButton, #deckHeroConfirmButton) {
+  border: 1px solid transparent;
+  border-image: url("shared-ui/deck-redesign/deck-slot-v2.png") 18% 7% fill / 6px / 0 stretch;
+  border-radius: 0;
+  background: #0c191a;
+  background-image: none !important;
+  box-shadow: inset 0 1px rgba(247, 222, 170, .12), 0 3px 7px rgba(0, 0, 0, .28);
+}
+#deckOverlay :is(#deckHeroCancelButton, #deckHeroConfirmButton):hover:not(:disabled) { filter: brightness(1.13); }
+
+@media (max-width: 680px) {
+  #deckOverlay[data-view="list"] > .deck-dialog,
+  #deckOverlay[data-view="hero"][data-hero-origin="list"] > .deck-dialog {
+    border: 0;
+    border-radius: 0;
+    background: #0d191a url("shared-ui/deck-redesign/deck-window-v2.png") center / 100% 100% no-repeat;
+  }
+}
+
+@media (max-width: 540px) {
+  #deckOverlay :is(#deckListBackButton, #deckCreateButton) {
+    height: 46px;
+    min-height: 46px;
+    max-height: 46px;
+    padding-inline: 5px;
+    font-size: 12px;
+  }
+}
+
+/* The hero picker uses the same physical panel stock as the deck cabinet. */
+#deckOverlay .deck-hero-dialog {
+  border: 1px solid transparent;
+  border-image: url("shared-ui/deck-redesign/deck-window-v2.png") 12% 8% fill / 14px / 0 stretch;
+  border-radius: 0;
+  background: #0d191a;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .62), inset 0 1px rgba(232, 206, 158, .1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #deckOverlay .deck-card,
+  #deckOverlay .deck-presets button,
+  #deckOverlay .deck-actions button { transition-duration: 1ms !important; }
 }

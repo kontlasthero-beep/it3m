@@ -1,0 +1,102 @@
+/* Secondary selection screens share the same salvaged-metal material as the lobby. */
+#catalogOverlay > .catalog-dialog,
+#deckOverlay > .deck-dialog {
+  border: 1px solid transparent;
+  border-image-source: url("shared-ui/deck-redesign/deck-window-v2.png");
+  border-image-slice: 90 100 90 100 fill;
+  border-image-width: 22px;
+  border-image-repeat: stretch;
+  border-radius: 0;
+  background: transparent;
+}
+
+#aiPlayScreen .ai-opponent,
+#heroSelectOverlay .hero-option {
+  border: 1px solid transparent;
+  border-image-source: var(--hud-tile-art);
+  border-image-slice: 136 fill;
+  border-image-width: 11px;
+  border-image-repeat: stretch;
+  border-radius: 0;
+  background: transparent;
+  color: var(--hud-ivory);
+}
+
+#aiPlayScreen .ai-opponent:hover,
+#aiPlayScreen .ai-opponent:focus-visible,
+#heroSelectOverlay .hero-option:hover,
+#heroSelectOverlay .hero-option:focus-visible {
+  filter: brightness(1.12);
+}
+
+#aiPlayScreen .ai-opponent.selected,
+#heroSelectOverlay .hero-option.selected {
+  box-shadow: 0 0 0 1px #d4a66e, 0 0 18px #b779484d;
+}
+
+#aiPlayScreen .ai-portrait-frame,
+#heroSelectOverlay .hero-portrait {
+  border: 1px solid transparent;
+  border-image-source: var(--hud-card-art);
+  border-image-slice: 104 92 104 92;
+  border-image-width: 7px;
+  border-image-repeat: stretch;
+  border-radius: 0;
+  background-color: #172b2b;
+}
+
+#aiPlayScreen .ai-opponent-name,
+#heroSelectOverlay .hero-option-name {
+  color: var(--hud-ivory);
+  font-family: var(--ui-serif, Georgia, serif);
+}
+
+#aiPlayScreen :is(#aiDeckSelect, .ai-opponent-detail),
+#mapSelectOverlay :is(.room-code-view, .online-player-status span, .map-detail),
+#heroSelectOverlay .hero-selection-meta {
+  border: 1px solid transparent;
+  border-image-source: var(--hud-slate-art);
+  border-image-slice: 88 104 88 104 fill;
+  border-image-width: 9px;
+  border-image-repeat: stretch;
+  border-radius: 0;
+  background: transparent;
+  color: var(--hud-ivory);
+}
+
+#aiPlayScreen .ai-opponent-detail,
+#mapSelectOverlay .map-detail { padding: 14px 18px; }
+
+#mapSelectOverlay .map-preview {
+  border: 1px solid transparent;
+  border-image-source: var(--hud-tile-art);
+  border-image-slice: 136;
+  border-image-width: 10px;
+  border-image-repeat: stretch;
+  border-radius: 0;
+  background-color: #0a1516;
+}
+
+#mapSelectOverlay .map-carousel-arrow {
+  border: 1px solid transparent;
+  border-image-source: var(--hud-compact-art);
+  border-image-slice: 106 136 106 136 fill;
+  border-image-width: 8px;
+  border-image-repeat: stretch;
+  border-radius: 0;
+  background: transparent;
+  color: var(--hud-ivory);
+}
+
+#mapSelectOverlay .map-carousel-arrow:hover:not(:disabled) { filter: brightness(1.15); }
+#mapSelectOverlay .map-carousel-arrow:focus-visible,
+#aiPlayScreen .ai-opponent:focus-visible,
+#heroSelectOverlay .hero-option:focus-visible { outline: 2px solid #e5c28d; outline-offset: 2px; }
+
+@media (max-width: 700px) {
+  #catalogOverlay > .catalog-dialog,
+  #deckOverlay > .deck-dialog { border-image-width: 14px; }
+  #mapSelectOverlay .map-detail { margin-inline: 0; }
+  #aiPlayScreen .ai-opponent,
+  #heroSelectOverlay .hero-option { border-image-width: 7px; }
+}
