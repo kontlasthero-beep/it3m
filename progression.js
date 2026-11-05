@@ -201,14 +201,15 @@ function createMemoryStore(now = Date.now, localTestLevel = null) {
       const row = lookup(token);
       if (!row?.username) return null;
       const level = profileView(row).level;
+      const normalizedHeroes = normalizeDeckHeroes(deckHeroes);
       if (!Array.isArray(decks) || decks.length !== DECK_PRESET_COUNT ||
-          decks.some(deck => deck !== null && !validateDeck(deck, level, row.tutorialCompleted === true)) ||
+          decks.some((deck, index) => deck !== null && !validateDeck(deck, level, row.tutorialCompleted === true, normalizedHeroes[index])) ||
           !Number.isInteger(activePreset) || activePreset < 0 || activePreset >= DECK_PRESET_COUNT ||
           (deckHeroes != null && (!Array.isArray(deckHeroes) || deckHeroes.length !== DECK_PRESET_COUNT || deckHeroes.some(hero => hero != null && !HERO_IDS.includes(hero)))))
         throw new Error('가방은 8장으로 구성하고, 한 종류만 두 장 넣을 수 있습니다.');
       row.decks = decks.map(deck => deck ? [...deck] : null);
       row.deckNames = normalizeDeckNames(deckNames);
-      row.deckHeroes = normalizeDeckHeroes(deckHeroes);
+      row.deckHeroes = normalizedHeroes;
       row.activePreset = activePreset;
       return profileView(row);
     },
@@ -411,14 +412,15 @@ function createPostgresStore(connectionString) {
       await ensureReady();
       const member = await this.findByToken(token);
       if (!member?.profile.username) return null;
+      const normalizedHeroes = normalizeDeckHeroes(deckHeroes);
       if (!Array.isArray(decks) || decks.length !== DECK_PRESET_COUNT ||
-          decks.some(deck => deck !== null && !validateDeck(deck, member.profile.level, member.profile.tutorialCompleted)) ||
+          decks.some((deck, index) => deck !== null && !validateDeck(deck, member.profile.level, member.profile.tutorialCompleted, normalizedHeroes[index])) ||
           !Number.isInteger(activePreset) || activePreset < 0 || activePreset >= DECK_PRESET_COUNT ||
           (deckHeroes != null && (!Array.isArray(deckHeroes) || deckHeroes.length !== DECK_PRESET_COUNT || deckHeroes.some(hero => hero != null && !HERO_IDS.includes(hero)))))
         throw new Error('가방은 8장으로 구성하고, 한 종류만 두 장 넣을 수 있습니다.');
       const { rows } = await pool.query(
         'UPDATE ucc_profiles SET decks = $1::jsonb, active_preset = $2, deck_names = $3::jsonb, deck_heroes = $4::jsonb WHERE id = $5 RETURNING *',
-        [JSON.stringify(decks), activePreset, JSON.stringify(normalizeDeckNames(deckNames)), JSON.stringify(normalizeDeckHeroes(deckHeroes)), member.internalId]
+        [JSON.stringify(decks), activePreset, JSON.stringify(normalizeDeckNames(deckNames)), JSON.stringify(normalizedHeroes), member.internalId]
       );
       return rows[0] ? presentProfile(fromRow(rows[0])) : null;
     },

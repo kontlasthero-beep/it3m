@@ -28,6 +28,7 @@ function game() {
     return {
       style: { setProperty(name, value) { this[name] = value; } }, dataset: {}, hidden: false, value: '', checked: false, width: 1200, height: 710,
       classList: { add() {}, remove() {}, toggle() {} }, listeners: {}, children: [],
+      get options() { return this.children; },
       addEventListener(type, callback) { this.listeners[type] = callback; },
       setAttribute(key, value) { attrs[key] = value; }, getAttribute(key) { return attrs[key]; },
       append(...items) { for (let item of items) { if (typeof item !== 'object') item = Object.assign(element(), { textContent: String(item) }); item.remove(); item.parentNode = this; this.children.push(item); } },
@@ -1163,10 +1164,11 @@ test('hunter gets extra ammo as first and last-turn cards without consuming the 
     assert.equal(state.heroCardDraws[0],2);`);
 });
 
-test('bag editor enforces eight cards, one doubled kind, and saved local presets', () => {
+test('bag editor enforces eight cards, one doubled kind, and saved local presets', async () => {
   const g = game();
-  g.run(`openDeckEditor('homeScreen');
-    assert.equal(deckSaveButton.disabled,true);
+  g.run(`openDeckEditor('homeScreen'); createNewDeck();`);
+  await g.run(`confirmDeckHeroChoice()`);
+  g.run(`assert.equal(deckSaveButton.disabled,true);
     for(const id of DEFAULT_DECK_IDS.slice(0,7)) addDeckCard(id);
     addDeckCard('hardening');
     assert.equal(deckDrafts[0].length,8);
@@ -1452,4 +1454,80 @@ test('Neutron and AAB can spend the data barrier on a legal AI turn, but Neo can
       assert.equal(state.bricks.length,${difficulty === 'easy' ? 0 : 1});
       if(state.bricks.length) assert.equal(state.bricks[0].barrier,true);`);
   }
+});
+
+test('Big Boy support cards add repeated neutral shots without using the ordinary stone count', () => {
+  const g = game();
+  g.run(`state.currentMap=MAPS[0]; state.heroChoices=['big-boy','hunter']; turns.reset(0);
+    turns.createCurrentUnit(); state.phase='turn-ready'; turns.currentUnit.hasLaunched=true;
+    turns.currentUnit.status='resting'; turns.currentUnit.x=650; turns.currentUnit.y=355;
+    const card=()=>({...deckCard('reinforcements'),instanceId:'support-'+Math.random()});
+    state.hands[0]=[card(),card()];
+    assert.equal(useBoardCard(state.hands[0][0].instanceId,0,{x:540,y:280}),true);
+    assert.equal(state.phase,'placement'); assert.equal(state.supportUnit.neutral,true);
+    assert.equal(confirmLaunchPlacement(280),true);
+    const first=state.supportUnit;
+    assert.equal(state.phase,'aiming'); assert.equal(canUseCardOnUnit(deckCard('hardening'),0,first),true);
+    assert.equal(isCardAlly(first,1),true); assert.equal(isRuleAlly(first,0),false);
+    state.powerMeter={unitId:first.id,stage:'locked',value:.6,lockedAt:performance.now()};
+    state.aimPoint={x:first.x+90,y:first.y}; launchCurrentUnit();
+    assert.equal(state.supportUnit,null); assert.equal(first.hasLaunched,true);
+    assert.equal(turns.currentUnit.id,'unit-1');
+    first.status='resting'; first.vx=first.vy=0; state.phase='turn-ready';
+    assert.equal(useBoardCard(state.hands[0][0].instanceId,0,{x:540,y:420}),true);
+    assert.equal(confirmLaunchPlacement(420),true);
+    const second=state.supportUnit; second.status='resting';
+    assert.equal(calculateScores()[0].units.some(unit=>unit.id===first.id || unit.id===second.id),false);
+    assert.equal(state.units.filter(unit=>unit.supportStone).length,2);
+    assert.equal(state.units.filter(unit=>unit.owner===0 && !unit.supportStone).length,1);`);
+});
+
+test('refined support stone belongs to its caster and neutral stones collide with caster barriers', () => {
+  const g = game();
+  g.run(`state.currentMap=MAPS[0]; state.heroChoices=['big-boy','hunter']; turns.reset(0);
+    turns.createCurrentUnit(); state.phase='turn-ready'; turns.currentUnit.hasLaunched=true;
+    turns.currentUnit.status='resting'; turns.currentUnit.x=650;
+    state.hands[0]=[{...deckCard('reinforcements'),instanceId:'refined-support',refined:true}];
+    assert.equal(useBoardCard('refined-support',0,{x:540,y:270}),true);
+    assert.equal(confirmLaunchPlacement(270),true);
+    const owned=state.supportUnit; assert.equal(owned.neutral,false);
+    assert.equal(isRuleAlly(owned,0),true);
+    const neutral=new CurlingUnit({id:'neutral',owner:0,turnNumber:1,x:500,y:355});
+    neutral.neutral=true; neutral.status='resting'; state.units=[neutral];
+    const barrier=new BrickUnit({x:500,y:355,owner:0,barrier:true}); state.bricks=[barrier];
+    resolveBrickCollisions(); assert.notEqual(neutral.x,500);
+    neutral.status='fallen'; settleFallenUnit(neutral);
+    assert.equal(state.fallPoints[0],25);`);
+});
+
+test('support placement and neutral identity survive an online snapshot', () => {
+  const {host, guest, send} = onlinePair();
+  host.run(`state.heroChoices=['big-boy','hunter']; state.units=[]; turns.reset(0);
+    turns.createCurrentUnit(); state.phase='turn-ready';
+    turns.currentUnit.hasLaunched=true; turns.currentUnit.status='resting';
+    turns.currentUnit.x=650; state.hands[0]=[{...deckCard('reinforcements'),instanceId:'online-support'}];
+    assert.equal(useBoardCard('online-support',0,{x:540,y:270}),true);`);
+  send(2);
+  guest.run(`assert.equal(state.phase,'placement'); assert.equal(state.supportUnit.neutral,true);
+    assert.equal(state.supportUnit.supportStone,true); assert.equal(turns.currentUnit.id,'unit-1');`);
+  host.run(`assert.equal(confirmLaunchPlacement(270),true);`);
+  send(3);
+  guest.run(`assert.equal(state.supportUnit.neutral,true);
+    assert.equal(state.units.some(unit=>unit.id===state.supportUnit.id),true);
+    assert.equal(state.phase,'aiming');`);
+});
+
+test('either player can spend a card on a neutral stone and refined escape scores for its caster', () => {
+  const g = game();
+  g.run(`state.currentMap=MAPS[0]; state.heroChoices=['big-boy','hunter']; state.playerLevels=[2,2];
+    turns.reset(1); turns.createCurrentUnit(); state.phase='turn-ready';
+    const neutral=new CurlingUnit({id:'neutral',owner:0,turnNumber:1,x:500,y:355});
+    neutral.neutral=true; neutral.status='resting'; state.units.push(neutral);
+    assert.equal(isCardAlly(neutral,0),true); assert.equal(isCardAlly(neutral,1),true);
+    state.hands[1]=[{...deckCard('escape'),instanceId:'neutral-escape',refined:true}];
+    assert.equal(useCard('neutral-escape',1,neutral),true);
+    assert.equal(neutral.ability.escapeScoreOwner,1);
+    neutral.vx=100; markRefinedEscapeMovement(neutral); resolveRefinedEscapes();
+    assert.equal(neutral.status,'fallen'); assert.equal(state.escapePoints[1],10);
+    assert.equal(state.escapePoints[0],0);`);
 });

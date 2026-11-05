@@ -26,11 +26,32 @@
       mechanic: { kind: 'structure-size-multiplier', sizeMultiplier: 1.5 },
       storyPlaceholder: ''
     },
+    'heavy-blow': {
+      id: 'heavy-blow',
+      name: '정제된 묵직한 한방',
+      description: '충격파의 범위가 20% 증가합니다.',
+      mechanic: { kind: 'shockwave-range-multiplier', rangeMultiplier: 1.2 },
+      storyPlaceholder: ''
+    },
+    reinforcements: {
+      id: 'reinforcements',
+      name: '정제된 지원군',
+      description: '기본 스톤을 발사한 뒤, 자신의 스톤 한 개를 추가로 배치하고 발사합니다.',
+      mechanic: { kind: 'extra-stone-launch', neutral: false, consumesNormalLaunch: false },
+      storyPlaceholder: ''
+    },
     reposition: {
       id: 'reposition',
       name: '정제된 재배치',
       description: '재발사 파워를 30%, 50%, 70%, 100% 중 하나로 고른 뒤 발사합니다. 파워 미터는 사용하지 않습니다.',
       mechanic: { kind: 'preset-relaunch-power', powers: [0.3, 0.5, 0.7, 1], skipPowerMeter: true },
+      storyPlaceholder: ''
+    },
+    release: {
+      id: 'release',
+      name: '정제된 해방',
+      description: '충전한 트리거를 발사한 뒤, 발사한 스톤도 해당 트리거의 효과를 얻습니다.',
+      mechanic: { kind: 'charged-trigger-launch', sourceStoneActivatesOnLaunch: true },
       storyPlaceholder: ''
     },
     ammo: {
@@ -105,6 +126,13 @@
       name: '정제된 반발장',
       description: '대상의 크기를 30% 증가시킵니다.',
       mechanic: { kind: 'target-size-multiplier', sizeMultiplier: 1.3 },
+      storyPlaceholder: ''
+    },
+    'dark-charge': {
+      id: 'dark-charge',
+      name: '정제된 암흑 충전',
+      description: '트리거를 두 번 충전합니다.',
+      mechanic: { kind: 'charge-trigger', chargeCount: 2 },
       storyPlaceholder: ''
     }
   };

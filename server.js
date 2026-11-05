@@ -569,7 +569,7 @@ async function handleApi(request, response, url) {
       room.status = room.challenger ? 'choosing' : 'waiting';
     } else {
       if (data.heroId != null && !HERO_IDS.includes(data.heroId)) return fail(response, 400, '올바르지 않은 영웅입니다.');
-      if (data.deck != null && !validateDeck(data.deck, member.player.level, member.player.tutorialCompleted === true)) {
+      if (data.deck != null && !validateDeck(data.deck, member.player.level, member.player.tutorialCompleted === true, data.heroId ?? null)) {
         return fail(response, 400, '선택한 덱 구성이 올바르지 않습니다.');
       }
       member.player.mapId = data.mapId;

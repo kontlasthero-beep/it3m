@@ -3,8 +3,9 @@ const { isTemporarilyGranted } = require('./card-unlocks');
 const CARD_LEVELS = Object.freeze({
   hardening: 1, guard: 1, pulse: 1, reposition: 1, brick: 1,
   blackhole: 1, ammo: 1, bluffing: 1, escape: 2, 'data-barrier': 2,
-  'repulsion-field': 999
+  'repulsion-field': 999, 'dark-charge': 1, release: 1, 'heavy-blow': 1, reinforcements: 1
 });
+const HERO_RESTRICTED_CARDS = Object.freeze({ 'dark-charge': 'trap-master', release: 'trap-master', 'heavy-blow': 'big-boy', reinforcements: 'big-boy' });
 
 const DEFAULT_DECK = Object.freeze([
   'brick', 'hardening', 'ammo', 'guard', 'pulse', 'blackhole', 'bluffing', 'reposition'
@@ -26,11 +27,12 @@ function normalizeDeckHeroes(value) {
     HERO_IDS.includes(heroes[index]) ? heroes[index] : null);
 }
 
-function validateDeck(cards, level, tutorialCompleted = false) {
+function validateDeck(cards, level, tutorialCompleted = false, heroId = null) {
   if (!Array.isArray(cards) || cards.length !== 8) return false;
   const counts = new Map();
   for (const id of cards) {
     if (typeof id !== 'string' || !CARD_LEVELS[id] ||
+        (HERO_RESTRICTED_CARDS[id] && HERO_RESTRICTED_CARDS[id] !== heroId) ||
         (id === 'repulsion-field' && !isTemporarilyGranted(id)) ||
         (!isTemporarilyGranted(id) && CARD_LEVELS[id] > level) ||
         (id === 'reposition' && !tutorialCompleted)) return false;

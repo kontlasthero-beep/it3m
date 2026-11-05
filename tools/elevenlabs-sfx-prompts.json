@@ -288,5 +288,50 @@
     "duration": 0.6,
     "inactive": true,
     "prompt": "A very short low mechanical strain rumble: a compact motor shudders under load with a rough bass vibration and fades quickly. Quiet, controlled, not an explosion, no voice, no music."
+  },
+  {
+    "id": "releaseCharge",
+    "name": "해방 충전",
+    "group": "카드와 트리거",
+    "description": "트랩마스터가 트리거를 스톤에 충전할 때",
+    "file": "release-charge-2s.mp3",
+    "duration": 2,
+    "prompt": "Exactly two seconds. A weighty cosmic energy charge sound for a dark post-apocalyptic fantasy game: dense shadowy force gathers into a small stone, with a low resonant bass swell, layered granular particles drawing inward, and a restrained glassy harmonic at the end. Tactile and mysterious, strong clear volume, subtle short reverb, clean decay, no voice, no music, no UI beep."
+  },
+  {
+    "id": "releaseFire",
+    "name": "해방 발사",
+    "group": "카드와 트리거",
+    "description": "충전된 트리거를 스톤에서 발사할 때",
+    "file": "release-fire-2s.mp3",
+    "duration": 2,
+    "prompt": "Exactly two seconds. A charged cosmic trigger projectile launches from a stone in a post-apocalyptic fantasy game: a compact heavy thump followed by a forceful dark energy rush, gritty particles sweeping forward and a resonant pressure tail. Clearly audible and impactful, slightly mysterious metallic-manapunk texture, subtle reverb, no gunshot, no voice, no music, no alarm."
+  },
+  {
+    "id": "heavyBlowCharge",
+    "name": "묵직한 한방 충전",
+    "group": "카드와 트리거",
+    "description": "빅보이가 스톤에 강한 충격파를 충전할 때",
+    "file": "heavy-blow-charge-2s.mp3",
+    "duration": 2,
+    "prompt": "Exactly two seconds. A massive but controlled impact force being packed into a stone by a mafia boss in a ruined data-center world: deep chesty bass pressure builds under a rough leather-glove thud, dust and tiny grit pull inward, then a taut low resonance locks in. Strong clear volume, grounded and tactile, subtle short reverb, no speech, no music, no machinery alarm."
+  },
+  {
+    "id": "heavyBlowRelease",
+    "name": "묵직한 한방 발산",
+    "group": "카드와 트리거",
+    "description": "빅보이가 충격파를 발산할 때",
+    "file": "heavy-blow-release-2s.mp3",
+    "duration": 2,
+    "prompt": "Exactly two seconds. A powerful directional shockwave from a forceful punch in a post-apocalyptic industrial ruin: a sharp heavy fist impact, broad low-frequency pressure boom, air tearing forward, debris and dust scattering, then a short resonant tail. Strong present loudness but not clipping, grounded tactile impact with restrained coppery energy, subtle reverb, no voice, no music, no gunshot."
+  },
+  {
+    "id": "reinforcementsLand",
+    "name": "지원군 착지",
+    "group": "카드와 트리거",
+    "description": "빅보이의 부하 스톤이 발사선에 배치될 때",
+    "file": "reinforcements-land-2s.mp3",
+    "duration": 2,
+    "prompt": "Exactly two seconds. Alternate version of a heavy curling stone landing on an industrial table in a dark post-apocalyptic fantasy game: a weighty descending air rush, a compact deep stone-on-metal thud, a few subtle grit particles and a short warm resonant tail. Distinct from the regular stone arrival with a restrained boss-underling presence, clear audible volume, slight reverb. No voice, no music, no gunshot, no electronic beep."
   }
 ]

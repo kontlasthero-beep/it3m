@@ -14,7 +14,13 @@ async function main() {
     return;
   }
 
-  const effects = JSON.parse(await fs.readFile(promptPath, 'utf8'));
+  const allEffects = JSON.parse(await fs.readFile(promptPath, 'utf8'));
+  const requestedIds = process.argv.find(argument => argument.startsWith('--ids='))?.slice('--ids='.length)
+    .split(',').map(id => id.trim()).filter(Boolean) || [];
+  const effects = requestedIds.length ? allEffects.filter(effect => requestedIds.includes(effect.id)) : allEffects;
+  if (!effects.length || requestedIds.some(id => !effects.some(effect => effect.id === id))) {
+    throw new Error(`Requested sound id was not found: ${requestedIds.join(', ') || '(empty selection)'}`);
+  }
   await fs.mkdir(draftDirectory, { recursive: true });
 
   const generated = [];
@@ -48,11 +54,16 @@ async function main() {
     });
   }
 
-  const manifest = { provider: 'ElevenLabs', generatedAt: new Date().toISOString(), effects: generated };
+  const previous = requestedIds.length && await fileExists(manifestPath)
+    ? JSON.parse(await fs.readFile(manifestPath, 'utf8')) : { effects: [] };
+  const merged = new Map((previous.effects || []).map(effect => [effect.id, effect]));
+  for (const effect of generated) merged.set(effect.id, effect);
+  const effectsForSite = [...merged.values()];
+  const manifest = { provider: 'ElevenLabs', generatedAt: new Date().toISOString(), effects: effectsForSite };
   await fs.writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
-  const previewBundle = `window.SECOND_CHANCE_ELEVENLABS_EFFECTS = ${JSON.stringify(generated).replace(/</g, '\\u003c')};\n`;
+  const previewBundle = `window.SECOND_CHANCE_ELEVENLABS_EFFECTS = ${JSON.stringify(effectsForSite).replace(/</g, '\\u003c')};\n`;
   await fs.writeFile(path.join(root, 'sound-preview-effects.js'), previewBundle);
-  console.log(`Manifest saved with ${generated.length} effects.`);
+  console.log(`Manifest saved with ${effectsForSite.length} effects (${generated.length} generated or reused this run).`);
 }
 
 async function generateWithRetry(effect) {

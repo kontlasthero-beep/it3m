@@ -652,6 +652,7 @@
     .trigger-type-option { display: grid; grid-template-columns: 48px minmax(0, 1fr); align-items: center; gap: 9px; }
     .trigger-type-option img { width: 48px; height: 48px; object-fit: contain; opacity: .82; }
     .trigger-type-option[aria-checked="true"] { border-color: var(--accent); background: #263331; }
+    .trigger-type-option.trigger-repeat-blocked { filter: grayscale(1); opacity: .48; cursor: not-allowed; }
     .trigger-type-option strong, .trigger-type-option span { display: block; }
     .trigger-type-option span { margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 1.4; white-space: normal; }
 
@@ -1440,7 +1441,7 @@
   <div class="overlay trigger-select-overlay" id="triggerSelectOverlay" hidden>
     <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="triggerSelectTitle">
       <h2 id="triggerSelectTitle">트리거 선택</h2>
-      <p>배치할 트리거 종류를 선택하세요.</p>
+      <p id="triggerSelectDescription">배치할 트리거 종류를 선택하세요.</p>
       <div class="trigger-type-list" id="triggerTypeOptions" role="radiogroup" aria-label="트리거 종류"></div>
       <div class="map-actions">
         <button id="cancelTriggerButton">취소</button>
@@ -1673,7 +1674,9 @@
       const confirmMapButton = document.querySelector('#confirmMapButton');
       const cancelMapButton = document.querySelector('#cancelMapButton');
       const triggerSelectOverlay = document.querySelector('#triggerSelectOverlay');
+      const triggerSelectTitle = document.querySelector('#triggerSelectTitle');
       const triggerTypeOptions = document.querySelector('#triggerTypeOptions');
+      const triggerSelectDescription = document.querySelector('#triggerSelectDescription');
       const confirmTriggerButton = document.querySelector('#confirmTriggerButton');
       const cancelTriggerButton = document.querySelector('#cancelTriggerButton');
       const refinerySelectOverlay = document.querySelector('#refinerySelectOverlay');
@@ -1740,6 +1743,11 @@
         drop: '효과음/ElevenLabs_Drafts/structure-drop-iron-v2.mp3', blackhole: '효과음/ElevenLabs_Drafts/blackhole-release-v3.mp3',
         ammoLoad: '효과음/ElevenLabs_Drafts/ammo-load.mp3', bluffing: '효과음/ElevenLabs_Drafts/bluffing-sand-v2.mp3',
         escape: '효과음/ElevenLabs_Drafts/escape-teleport-v2.mp3', card: '효과음/ElevenLabs_Drafts/card-effect.mp3',
+        releaseCharge: '효과음/ElevenLabs_Drafts/release-charge-2s.mp3',
+        releaseFire: '효과음/ElevenLabs_Drafts/release-fire-2s.mp3',
+        heavyBlowCharge: '효과음/ElevenLabs_Drafts/heavy-blow-charge-2s.mp3',
+        heavyBlowRelease: '효과음/ElevenLabs_Drafts/heavy-blow-release-2s.mp3',
+        reinforcementsLand: '효과음/ElevenLabs_Drafts/reinforcements-land-2s.mp3',
         repulsionField: '효과음/ElevenLabs_Drafts/repulsion-field-v2-mastered.mp3',
         repulsionCollision: '효과음/ElevenLabs_Drafts/repulsion-collision-v1-mastered.mp3',
         triggerPlace: '효과음/ElevenLabs_Drafts/trigger-place-v1.mp3',
@@ -1888,23 +1896,31 @@
         { id: 'bluffing', name: '속임수' }, { id: 'bluffing', name: '속임수' },
         { id: 'escape', name: '탈출', unlockLevel: 2 }, { id: 'escape', name: '탈출', unlockLevel: 2 },
         { id: 'data-barrier', name: '데이터 장벽', unlockLevel: 2 }, { id: 'data-barrier', name: '데이터 장벽', unlockLevel: 2 },
-        { id: 'repulsion-field', name: '반발장', unlockAdventureStage: 2, unlockLevel: 999 }, { id: 'repulsion-field', name: '반발장', unlockAdventureStage: 2, unlockLevel: 999 }
+        { id: 'repulsion-field', name: '반발장', unlockAdventureStage: 2, unlockLevel: 999 }, { id: 'repulsion-field', name: '반발장', unlockAdventureStage: 2, unlockLevel: 999 },
+        { id: 'dark-charge', name: '암흑 충전' }, { id: 'dark-charge', name: '암흑 충전' },
+        { id: 'release', name: '해방' }, { id: 'release', name: '해방' },
+        { id: 'heavy-blow', name: '묵직한 한방' }, { id: 'heavy-blow', name: '묵직한 한방' },
+        { id: 'reinforcements', name: '지원군' }, { id: 'reinforcements', name: '지원군' }
       ];
       const CARD_METADATA = Object.freeze({
         hardening: { category: 'defense', tags: ['스톤 대상', '마찰 증가', '정제 가능'] },
         guard: { category: 'defense', tags: ['스톤 대상', '위성체', '밀치기', '정제 가능'] },
         pulse: { category: 'attack', tags: ['스톤 대상', '충전', '밀치기', '정제 가능'] },
-        reposition: { category: 'mobility', tags: ['스톤 대상', '재발사', '정제 가능'] },
+        reposition: { category: 'launch', tags: ['스톤 대상', '재발사', '정제 가능'] },
         brick: { category: 'installation', tags: ['가벽', '구조물 대상', '충돌', '정제 가능'] },
-        blackhole: { category: 'attack', tags: ['스톤 대상', '끌어당기기', '유체화', '정제 가능'] },
+        blackhole: { category: 'launch', tags: ['스톤 대상', '끌어당기기', '유체화', '정제 가능'] },
         ammo: { category: 'attack', tags: ['투사체', '가벽 파괴', '위성체 파괴', '정제 가능'] },
         bluffing: { category: 'defense', tags: ['스톤 대상', '충돌 회피', '정제 가능'] },
         escape: { category: 'tactic', tags: ['스톤 대상', '확정 점수', '정제 가능'] },
         'data-barrier': { category: 'installation', tags: ['장벽', '구조물 대상', '아군 통과', '정제 가능'] },
-        'repulsion-field': { category: 'defense', tags: ['스톤 대상', '구조물 대상', '탄성', '정제 가능'] }
+        'repulsion-field': { category: 'defense', tags: ['스톤 대상', '구조물 대상', '탄성', '정제 가능'] },
+        'dark-charge': { category: 'tactic', tags: ['트리거 충전', '영웅 전용'], heroIds: ['trap-master'] },
+        release: { category: 'launch', tags: ['트리거 발사', '영웅 전용'], heroIds: ['trap-master'] },
+        'heavy-blow': { category: 'launch', tags: ['충격파', '영웅 전용'], heroIds: ['big-boy'] },
+        reinforcements: { category: 'tactic', tags: ['추가 스톤', '영웅 전용'], heroIds: ['big-boy'] }
       });
       const CARD_CATEGORY_NAMES = Object.freeze({
-        all: '모든 카테고리', attack: '공격', defense: '방어',
+        all: '모든 카테고리', attack: '공격', launch: '발사', defense: '방어',
         mobility: '이동', installation: '설치', tactic: '전술'
       });
       const CARD_DESCRIPTIONS = {
@@ -1918,7 +1934,11 @@
         bluffing: '다음 상대 턴이 종료될 때까지 해당 스톤의 충돌 판정이 사라집니다. 가벽, 총알, 방호벽, 스톤, 맵 구조물을 통과하지만 방출과 블랙홀 방출의 영향은 받습니다.',
         escape: '자신의 스톤을 게임에서 제거하는 대신 10점을 획득합니다.',
         'data-barrier': '내 스톤만 통과 가능한 특수 장벽을 배치합니다. 장벽은 다음 상대 턴까지 유지됩니다.',
-        'repulsion-field': '자신의 스톤, 구조물에 탄성을 부여합니다.'
+        'repulsion-field': '자신의 스톤, 구조물에 탄성을 부여합니다.',
+        'dark-charge': '트리거를 1회 충전합니다.',
+        release: '자신의 스톤에 트리거를 충전합니다. 충전된 트리거를 발사해 다른 스톤에 맞히면 해당 스톤이 트리거를 발동합니다.',
+        'heavy-blow': '자신의 스톤을 충전합니다. 스톤을 당겨 발사하면 충격파가 가벽과 데이터 장벽을 부수며 주변 스톤을 밀쳐냅니다.',
+        reinforcements: '기본 스톤을 발사한 뒤, 점수를 얻지 못하는 중립 스톤을 추가로 배치하고 발사합니다. 양쪽 플레이어 모두 이 스톤에 카드를 사용할 수 있습니다.'
       };
       const TURN_LIMIT_MS = 40_000;
       const CARD_DRAW_HOLD_MS = 1050;
@@ -1934,7 +1954,11 @@
         bluffing: { art: 'Card_illustration/Bluffing.png', refinedArt: 'Card_illustration/refined/bluffing.webp', sound: 'bluffing' },
         escape: { art: 'Card_illustration/Escape.png', refinedArt: 'Card_illustration/refined/escape.webp', sound: 'escape' },
         'data-barrier': { art: 'Card_illustration/Data Barrier-v5.png', refinedArt: 'Card_illustration/refined/data-barrier.webp', sound: 'dataBarrier' },
-        'repulsion-field': { art: 'Card_illustration/Repulsion Field.png', refinedArt: 'Card_illustration/refined/repulsion-field.webp', sound: 'repulsionField' }
+        'repulsion-field': { art: 'Card_illustration/Repulsion Field.png', refinedArt: 'Card_illustration/refined/repulsion-field.webp', sound: 'repulsionField' },
+        'dark-charge': { art: 'Card_illustration/Dark Charge.png', refinedArt: 'Card_illustration/refined/dark-charge.png', sound: 'card' },
+        release: { art: 'Card_illustration/Haebang.png', refinedArt: 'Card_illustration/refined/haebang.png', sound: 'releaseCharge' },
+        'heavy-blow': { art: 'Card_illustration/heavy-blow.png', refinedArt: 'Card_illustration/refined/heavy-blow.png', sound: 'heavyBlowCharge' },
+        reinforcements: { art: 'Card_illustration/reinforcements.png', refinedArt: 'Card_illustration/refined/reinforcements.png', sound: 'card' }
       };
       const UNIT_EFFECTS = Object.freeze({
         hardening: { maxStacks: Infinity, frictionPerStack: AI_BALANCE.hardening.frictionPerStack },
@@ -1982,7 +2006,7 @@
         if (!card || !window.SecondChanceCardDetail) return;
         const unlocked = isCardUnlocked(card, 0) && (!card.unlockTutorial || state.playerTutorialCompleted?.[0] === true);
         const showRecord = options.context === 'catalog';
-        const refined = showRecord && unlocked ? refinedCardDefinition(card) : null;
+        const refined = unlocked ? refinedCardDefinition(card) : null;
         const artSrc = card.refined
           ? CARD_PRESENTATION[card.id]?.refinedArt || CARD_PRESENTATION[card.id]?.art || ''
           : CARD_PRESENTATION[card.id]?.art || '';
@@ -2148,9 +2172,12 @@
         hands: [[], []],
         cardDrag: null,
         repositionUnit: null,
+        supportUnit: null,
         triggerPlacementUsed: [false, false],
         triggerPlacementCount: [0, 0],
+        triggerBonusCharges: [0, 0],
         refineryUses: [0, 0],
+        refineryBonusCharges: [0, 0],
         heroOffers: [[], []],
         heroChoices: [null, null],
         heroDeadline: null,
@@ -2160,8 +2187,11 @@
         heroPendingChoice: null,
         heroCardDraws: [0, 0],
         pendingTriggerPlacement: null,
+        pendingTriggerCharge: null,
+        lastTriggerCast: [null, null],
         selectedTriggerType: null,
         phaseBeforeTriggerSelect: null,
+        phaseBeforeTriggerAim: null,
         turnDeadline: null,
         turnPausedAt: null,
         turnPausedByHost: false,
@@ -2246,6 +2276,13 @@
       function heroRule(owner, rule, fallback) {
         return heroFor(owner)?.[rule] ?? fallback;
       }
+
+      // Neutral stones accept cards from either player, but count as opponents
+      // for scoring and every other team-dependent effect.
+      function isNeutralStone(unit) { return unit?.unitKind === 'stone' && unit.neutral === true; }
+      function isCardAlly(unit, owner) { return isNeutralStone(unit) || unit?.owner === owner; }
+      function isRuleAlly(unit, owner) { return !isNeutralStone(unit) && unit?.owner === owner; }
+      function areRuleAllies(a, b) { return !isNeutralStone(a) && !isNeutralStone(b) && a?.owner === b?.owner; }
 
       function randomHeroOptions() {
         const pool = [...HEROES];
@@ -2423,12 +2460,12 @@
         onlineInterpolation = null;
         onlineLastSnapshotAt = null;
         Object.assign(state, { units: [], bricks: [], bullets: [], triggers: [], particles: [], effects: [],
-          hands: [[], []], decks: [[], []], playerDecks: [[], []], fallPoints: [0, 0], escapePoints: [0, 0], playerLevels: [guestProfile?.level || 1, guestProfile?.level || 1], triggerPlacementUsed: [false, false], triggerPlacementCount: [0, 0], refineryUses: [0, 0],
+          hands: [[], []], decks: [[], []], playerDecks: [[], []], fallPoints: [0, 0], escapePoints: [0, 0], playerLevels: [guestProfile?.level || 1, guestProfile?.level || 1], triggerPlacementUsed: [false, false], triggerPlacementCount: [0, 0], triggerBonusCharges: [0, 0], refineryUses: [0, 0], refineryBonusCharges: [0, 0],
           playerTutorialCompleted: [guestProfile?.tutorialCompleted === true, guestProfile?.tutorialCompleted === true],
           heroOffers: [[], []], heroChoices: [null, null], heroDeadline: null, heroSelectionMode: null,
           heroSelectionOwner: 0, heroTransitionTimer: null, heroPendingChoice: null, heroCardDraws: [0, 0],
-          aiming: false, aimPoint: null, aimTension: 0, powerMeter: null, repositionUnit: null, repositionMode: null,
-          pendingTriggerPlacement: null, selectedTriggerType: null, phaseBeforeTriggerSelect: null,
+          aiming: false, aimPoint: null, aimTension: 0, powerMeter: null, repositionUnit: null, supportUnit: null, repositionMode: null,
+          pendingTriggerPlacement: null, pendingTriggerCharge: null, lastTriggerCast: [null, null], selectedTriggerType: null, phaseBeforeTriggerSelect: null, phaseBeforeTriggerAim: null,
           turnDeadline: null, turnPausedAt: null, turnPausedByHost: false, timerTurn: -1, mapTime: 0 });
         turns.reset();
         for (const overlay of [resultOverlay, adventureUI.adventureOutcomeOverlay, adventureUI.adventureDialogueOverlay, adventureUI.adventureIllustrationOverlay, mapSelectOverlay, heroSelectOverlay, dealOverlay, triggerSelectOverlay, refinerySelectOverlay,
@@ -3207,10 +3244,10 @@
               (4 ** refinedHardeningStacks);
           }
           for (const brick of isCollisionPhased(this) ? [] : state.bricks) {
-            if (!(brick.barrier && brick.owner === this.owner) && Math.abs(this.x - brick.x) <= brick.width / 2 + this.radius &&
+            if (!(brick.barrier && isRuleAlly(this, brick.owner)) && Math.abs(this.x - brick.x) <= brick.width / 2 + this.radius &&
                 Math.abs(this.y - brick.y) <= brick.height / 2 + this.radius) multiplier += brick.frictionMultiplier - 1;
           }
-          return state.currentMap.friction * multiplier * (ignoreAddedFriction ? 1 : heroRule(this.owner, 'frictionScale', 1)) *
+          return state.currentMap.friction * multiplier * (ignoreAddedFriction || isNeutralStone(this) ? 1 : heroRule(this.owner, 'frictionScale', 1)) *
             (ignoreAddedFriction ? 1 : (this.openingFrictionMultiplier || 1)) *
             (ignoreAddedFriction || this.adventureFrictionTimer <= 0 ? 1 : this.adventureFrictionMultiplier) *
             (ignoreAddedFriction || this.adventurePulseFrictionTimer <= 0 ? 1 : this.adventurePulseFrictionMultiplier) *
@@ -3342,10 +3379,15 @@
         state.powerMeter = null;
         state.aiAction = null;
         state.repositionUnit = null;
+        state.supportUnit = null;
         state.repositionMode = null;
         state.triggerPlacementUsed = [false, false];
         state.triggerPlacementCount = [0, 0];
+        state.triggerBonusCharges = [0, 0];
+        state.refineryBonusCharges = [0, 0];
+        state.lastTriggerCast = [null, null];
         state.pendingTriggerPlacement = null;
+        state.pendingTriggerCharge = null;
         state.selectedTriggerType = null;
         state.phaseBeforeTriggerSelect = null;
         state.turnDeadline = null;
@@ -3388,8 +3430,10 @@
         });
       }
 
+      function placementUnit() { return state.supportUnit || turns.currentUnit; }
+
       function canPlaceLaunchStone(y) {
-        const unit = turns.currentUnit;
+        const unit = placementUnit();
         if (!unit || !Number.isFinite(y)) return false;
         const radius = unit.radius;
         if (y < TABLE.top + radius || y > TABLE.bottom - radius) return false;
@@ -3404,8 +3448,8 @@
       }
 
       function confirmLaunchPlacement(y, fromOnlineHost = false) {
-        if (state.phase !== 'placement' || !turns.currentUnit || !canPlaceLaunchStone(y)) return false;
-        const unit = turns.currentUnit;
+        if (state.phase !== 'placement' || !placementUnit() || !canPlaceLaunchStone(y)) return false;
+        const unit = placementUnit();
         unit.x = launchXForOwner(turns.playerIndex);
         unit.y = y;
         unit.previousX = unit.x;
@@ -3414,8 +3458,8 @@
         state.placementAnimation = { unitId: unit.id, owner: unit.owner, age: 0, duration: .34 };
         state.effects.push({ type: 'placement-impact', id: `placement-impact-${unit.id}`,
           x: unit.x, y: unit.y, owner: unit.owner,
-          scale: heroFor(unit.owner)?.id === 'big-boy' ? 1.12 : 1,
-          shake: heroFor(unit.owner)?.id === 'big-boy' ? 2.5 : 2.1,
+          scale: !isNeutralStone(unit) && heroFor(unit.owner)?.id === 'big-boy' ? 1.12 : 1,
+          shake: !isNeutralStone(unit) && heroFor(unit.owner)?.id === 'big-boy' ? 2.5 : 2.1,
           age: 0, duration: .42 });
         for (let index = 0; index < 8; index += 1) {
           const angle = Math.PI * 2 * index / 8 + (Math.random() - .5) * .32;
@@ -3428,16 +3472,17 @@
         if (state.particles.length > 240) state.particles.splice(0, state.particles.length - 240);
         state.placementPreview = null;
         state.phase = 'aiming';
-        playSound('drop', .42, heroFor(unit.owner)?.id === 'big-boy' ? .72 : 1);
+        if (unit.supportStone) playElevenLabsSound('reinforcementsLand', { volume: .8 });
+        else playSound('drop', .42, heroFor(unit.owner)?.id === 'big-boy' ? .72 : 1);
         if (!fromOnlineHost && shouldForwardOnlineAction()) sendOnlineAction({ type: 'place', y });
         updateHud();
         return true;
       }
 
       function updatePlacementPreview(point) {
-        if (state.phase !== 'placement' || !canControlPlayer(turns.playerIndex) || !turns.currentUnit) return;
-        const y = Math.max(TABLE.top + turns.currentUnit.radius,
-          Math.min(TABLE.bottom - turns.currentUnit.radius, point.y));
+        if (state.phase !== 'placement' || !canControlPlayer(turns.playerIndex) || !placementUnit()) return;
+        const y = Math.max(TABLE.top + placementUnit().radius,
+          Math.min(TABLE.bottom - placementUnit().radius, point.y));
         state.placementPreview = { x: launchXForOwner(turns.playerIndex), y, valid: canPlaceLaunchStone(y) };
       }
 
@@ -3523,6 +3568,10 @@
       function expireCurrentTurn() {
         if (turns.isComplete || state.turnDeadline == null) return;
         const unit = turns.currentUnit;
+        if (state.supportUnit && !state.supportUnit.hasLaunched) {
+          state.supportUnit.status = 'fallen';
+          state.supportUnit = null;
+        }
         if (unit && !unit.hasLaunched) {
           if (!state.units.includes(unit)) state.units.push(unit);
           if (unit.status !== 'fallen') playFileSound('unitDeath', { volume: .5 });
@@ -3541,6 +3590,7 @@
         state.powerMeter = null;
         state.repositionUnit = null;
         state.pendingTriggerPlacement = null;
+        state.pendingTriggerCharge = null;
         state.selectedTriggerType = null;
         state.phaseBeforeTriggerSelect = null;
         triggerSelectOverlay.hidden = true;
@@ -3635,7 +3685,22 @@
       }
 
       function remainingTriggerPlacements(owner) {
-        return Math.max(0, heroRule(owner, 'trapLimit', 1) - state.triggerPlacementCount[owner]);
+        return Math.max(0, heroRule(owner, 'trapLimit', 1) + (state.triggerBonusCharges[owner] || 0) - state.triggerPlacementCount[owner]);
+      }
+
+      function remainingRefineryUses(owner) {
+        return Math.max(0, heroRule(owner, 'refineLimit', 3) + (state.refineryBonusCharges[owner] || 0) - (state.refineryUses[owner] || 0));
+      }
+
+      function chargeDarkAbility(owner, amount) {
+        if (heroFor(owner)?.id === 'refiner') {
+          state.refineryBonusCharges[owner] = (state.refineryBonusCharges[owner] || 0) + amount;
+          return;
+        }
+        if (heroFor(owner)?.id === 'trap-master') {
+          state.triggerBonusCharges[owner] = (state.triggerBonusCharges[owner] || 0) + amount;
+          state.triggerPlacementUsed[owner] = remainingTriggerPlacements(owner) === 0;
+        }
       }
 
       function spendTriggerPlacement(owner) {
@@ -3648,7 +3713,7 @@
           const owner = Number(button.dataset.owner);
           const isRefiner = heroFor(owner)?.id === 'refiner';
           const remaining = isRefiner
-            ? Math.max(0, heroRule(owner, 'refineLimit', 3) - (state.refineryUses[owner] || 0))
+            ? remainingRefineryUses(owner)
             : remainingTriggerPlacements(owner);
           const spent = remaining <= 0;
           button.classList.toggle('refinery-mode', isRefiner);
@@ -3669,7 +3734,7 @@
 
       function openRefinerySelection(owner) {
         if (owner !== turns.playerIndex || heroFor(owner)?.id !== 'refiner' || !canControlPlayer(owner) || !turns.currentUnit) return;
-        const remaining = Math.max(0, heroRule(owner, 'refineLimit', 3) - (state.refineryUses[owner] || 0));
+        const remaining = remainingRefineryUses(owner);
         if (!remaining || !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase)) return;
         const cards = state.hands[owner].filter(card => refinedCardDefinition(card) && !card.refined);
         if (!cards.length) return;
@@ -3705,7 +3770,7 @@
       function refineHandCard(instanceId, owner, { authoritative = false } = {}) {
         if (heroFor(owner)?.id !== 'refiner' || owner !== turns.playerIndex || (!authoritative && !canControlPlayer(owner)) || !turns.currentUnit ||
             !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase)) return false;
-        if ((state.refineryUses[owner] || 0) >= heroRule(owner, 'refineLimit', 3)) return false;
+        if (remainingRefineryUses(owner) <= 0) return false;
         const card = state.hands[owner].find(item => item.instanceId === instanceId);
         if (!card || card.refined || !refinedCardDefinition(card)) return false;
         card.refined = true;
@@ -3776,7 +3841,7 @@
           heroBadges[index].textContent = hero ? `영웅 · ${hero.name}` : '';
           heroBadges[index].title = hero?.description || '';
           panels[index].classList.toggle('current', !turns.isComplete && index === turns.playerIndex);
-          const used = state.units.filter(unit => unit.owner === index).length;
+          const used = state.units.filter(unit => unit.owner === index && !unit.supportStone).length;
           const remaining = Math.max(0, CONFIG.maxTurnsPerPlayer - used);
           remainingEls[index].hidden = false;
           remainingEls[index].setAttribute('aria-label', `${PLAYER[index].name} 남은 스톤 ${remaining}개`);
@@ -3785,7 +3850,7 @@
         });
         endTurnButton.disabled = Boolean(state.adventure) || state.phase !== 'turn-ready' || state.bullets.length > 0 || !canControlPlayer(turns.playerIndex);
         speedToggle.disabled = !canChangeSpeed();
-        actionHint.textContent = state.phase === 'placement' ? '발사할 높이를 골라 테이블을 클릭하세요' : state.phase === 'sliding' ? '스톤이 움직이는 중' : state.phase === 'turn-ready' ? '턴을 마치거나 카드를 사용하세요' : state.phase === 'reposition' && state.repositionMode === 'ammo' ? '총알 장전: 당겨서 발사' : state.phase === 'trigger-select' ? '트리거 종류를 선택하세요' : needsPowerMeter() && state.powerMeter?.stage === 'locked' ? '스톤을 드래그해 방향을 지정하세요' : needsPowerMeter() && state.powerMeter?.stage === 'spinning' ? '미터를 보고 파워를 결정하세요' : '스톤 아래 발사 버튼을 누르세요';
+        actionHint.textContent = state.phase === 'placement' ? '발사할 높이를 골라 테이블을 클릭하세요' : state.phase === 'sliding' ? '스톤이 움직이는 중' : state.phase === 'turn-ready' ? '턴을 마치거나 카드를 사용하세요' : state.phase === 'reposition' && state.repositionMode === 'ammo' ? '총알 장전: 당겨서 발사' : state.phase === 'reposition' && state.repositionMode === 'heavy-blow' ? '묵직한 한방: 스톤을 당겨 충격파를 발산하세요' : state.phase === 'trigger-select' ? '트리거 종류를 선택하세요' : needsPowerMeter() && state.powerMeter?.stage === 'locked' ? '스톤을 드래그해 방향을 지정하세요' : needsPowerMeter() && state.powerMeter?.stage === 'spinning' ? '미터를 보고 파워를 결정하세요' : '스톤 아래 발사 버튼을 누르세요';
         if (state.aiMode && turns.playerIndex === state.aiOwner && !turns.isComplete)
           actionHint.textContent = `${aiLevel().name} · 수를 계산하는 중`;
         handPanels.forEach((panel, index) => panel.classList.toggle('current', !turns.isComplete && index === turns.playerIndex));
@@ -3847,7 +3912,7 @@
 
       function calculateScores() {
         return PLAYER.map((player, index) => {
-          const units = state.units.filter(unit => unit.owner === index && unit.isOnTable && unit.status !== 'ready');
+          const units = state.units.filter(unit => unit.owner === index && !isNeutralStone(unit) && unit.isOnTable && unit.status !== 'ready');
           let distance = 0;
           let score = 0;
           units.forEach(unit => {
@@ -3865,13 +3930,13 @@
       function settleFallenUnit(victim) {
         if (victim.fallResolved) return;
         victim.fallResolved = true;
-        state.fallPoints[victim.owner] -= heroRule(victim.owner, 'fallPenalty', 0);
+        if (!isNeutralStone(victim)) state.fallPoints[victim.owner] -= heroRule(victim.owner, 'fallPenalty', 0);
         awardKnockoutPoints(victim);
         updateHud();
       }
 
       function awardKnockoutPoints(victim) {
-        if (victim.fallRewarded || victim.owner === turns.playerIndex || state.phase === 'finished' || state.phase === 'intro') return;
+        if (victim.fallRewarded || isRuleAlly(victim, turns.playerIndex) || state.phase === 'finished' || state.phase === 'intro') return;
         const scorer = turns.playerIndex;
         victim.fallRewarded = true;
         const points = heroRule(scorer, 'knockoutPoints', 25);
@@ -3883,13 +3948,13 @@
       }
 
       function activeLaunchUnit() {
-        return state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit;
+        return state.phase === 'reposition' ? state.repositionUnit : state.supportUnit || turns.currentUnit;
       }
 
       function needsPowerMeter() {
         const unit = activeLaunchUnit();
         const refinedPresetShot = state.phase === 'reposition' && state.repositionMode === 'reposition' && unit?.refinedReposition;
-        return ['aiming', 'reposition'].includes(state.phase) && !['ammo', 'blackhole'].includes(state.repositionMode) && !refinedPresetShot;
+        return ['aiming', 'reposition'].includes(state.phase) && !['ammo', 'blackhole', 'trigger', 'heavy-blow'].includes(state.repositionMode) && !refinedPresetShot;
       }
 
       function startPowerMeter() {
@@ -3942,13 +4007,13 @@
         if (!visible) { powerControl.classList.remove('viewport-meter'); return; }
         const canChoose = canControlPlayer(unit.owner);
         powerControl.classList.toggle('refined-reposition-control', showRefinedPicker);
-        powerControl.classList.toggle('big-boy', heroRule(unit.owner, 'powerScale', 1) > 1);
+        powerControl.classList.toggle('big-boy', !isNeutralStone(unit) && heroRule(unit.owner, 'powerScale', 1) > 1);
         powerLaunchButton.hidden = Boolean(meter) || showRefinedPicker;
         powerLaunchButton.disabled = !canChoose;
         powerPanel.hidden = !meter || showRefinedPicker;
         powerPanel.classList.toggle('power-dismissing', dismissing);
         if (meter) {
-          const limit = Math.round(heroRule(unit.owner, 'powerScale', 1) * 100);
+          const limit = Math.round((isNeutralStone(unit) ? 1 : heroRule(unit.owner, 'powerScale', 1)) * 100);
           const amount = Math.round(meter.value * limit);
           powerTrack.setAttribute('aria-valuemax', String(limit));
           powerTrack.setAttribute('aria-valuenow', String(amount));
@@ -3983,33 +4048,91 @@
       }
 
       function launchCurrentUnit() {
-        const unit = state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit;
+        const unit = activeLaunchUnit();
         if (!unit || !state.aimPoint || !['aiming', 'reposition'].includes(state.phase)) return;
-        const launchedFromReposition = state.phase === 'reposition';
-        const firingAmmo = state.repositionMode === 'ammo';
-        const channelingRefinedBlackHole = state.repositionMode === 'blackhole';
-        const refinedPresetShot = launchedFromReposition && state.repositionMode === 'reposition' && unit.refinedReposition;
-        if (refinedPresetShot && ![.3, .5, .7, 1].includes(unit.refinedRepositionPower)) return;
-        if (!firingAmmo && !channelingRefinedBlackHole && !refinedPresetShot &&
-            (state.powerMeter?.unitId !== unit.id || state.powerMeter.stage !== 'locked')) return;
-        if (launchedFromReposition && !unit.relaunchAvailable) {
-          state.aiming = false;
-          state.aimPoint = null;
-          state.aimTension = 0;
-          aimOverlay.style.display = 'none';
-          return;
-        }
         const dx = unit.x - state.aimPoint.x;
         const dy = unit.y - state.aimPoint.y;
         const directionLength = Math.hypot(dx, dy);
-        if (directionLength < (firingAmmo || channelingRefinedBlackHole ? 35 / CONFIG.launchScale : 8)) {
+        const launchedFromReposition = state.phase === 'reposition';
+        const firingAmmo = state.repositionMode === 'ammo';
+        const firingHeavyBlow = state.repositionMode === 'heavy-blow' && unit.heavyBlowCharged;
+        const channelingRefinedBlackHole = state.repositionMode === 'blackhole';
+        const firingTrigger = state.repositionMode === 'trigger' && unit.chargedTrigger;
+        const refinedPresetShot = launchedFromReposition && state.repositionMode === 'reposition' && unit.refinedReposition;
+        if (refinedPresetShot && ![.3, .5, .7, 1].includes(unit.refinedRepositionPower)) return;
+        if (firingHeavyBlow) {
+          if (directionLength < 35 / CONFIG.launchScale) {
+            state.aiming = false;
+            state.aimPoint = null;
+            state.aimTension = 0;
+            aimOverlay.style.display = 'none';
+            return;
+          }
+          const resumePhase = unit.heavyBlowResumePhase || 'aiming';
+          triggerHeavyBlow(unit, dx, dy, unit.heavyBlowRefined);
+          unit.heavyBlowCharged = false;
+          unit.heavyBlowRefined = false;
+          unit.heavyBlowResumePhase = null;
+          unit.launchCardPending = false;
+          unit.activeSpecial = null;
+          state.repositionUnit = null;
+          state.repositionMode = null;
+          state.aiming = false;
+          state.aimPoint = null;
+          state.aimTension = 0;
+          aimOverlay.style.display = 'none';
+          state.powerMeter = null;
+          state.phase = resumePhase;
+          updateHud();
+          return;
+        }
+        if (firingTrigger) {
+          const charged = { ...unit.chargedTrigger };
+          const speed = CONFIG.maxLaunchSpeed * .5;
+          state.bullets.push({
+            entityKind: ENTITY_KIND.UNIT, unitKind: 'bullet', id: `trigger-shot-${Date.now()}-${state.bullets.length}`,
+            projectileKind: 'charged-trigger', owner: unit.cardEffectOwner ?? unit.owner, sourceUnitId: unit.id, launcherUnitId: unit.id,
+            triggerTypeId: charged.typeId, triggerRefined: Boolean(charged.refined),
+            x: unit.x, y: unit.y, vx: dx / directionLength * speed, vy: dy / directionLength * speed,
+            radius: Math.max(5, unit.radius * .24), mass: 1, outsideTime: 0
+          });
+          unit.chargedTrigger = null;
+          unit.launchCardPending = false;
+          unit.activeSpecial = null;
+          unit.relaunchAvailable = false;
+          state.effects.push({ type: 'item', x: unit.x, y: unit.y, age: 0, duration: .5,
+            color: ITEM_TRIGGERS.find(item => item.id === charged.typeId)?.color || '#b78aff' });
+          if (charged.refined) activateTriggerOnUnit(unit, ITEM_TRIGGERS.find(item => item.id === charged.typeId));
+          emitGameFeedback('releaseFire', unit, '트리거 발사', ITEM_TRIGGERS.find(item => item.id === charged.typeId)?.color || '#b78aff');
+          state.repositionUnit = null;
+          state.repositionMode = null;
+          state.aiming = false;
+          state.aimPoint = null;
+          state.aimTension = 0;
+          aimOverlay.style.display = 'none';
+          state.powerMeter = null;
+          state.phase = state.phaseBeforeTriggerAim || 'turn-ready';
+          state.phaseBeforeTriggerAim = null;
+          updateHud();
+          return;
+        }
+        if (!firingAmmo && !firingHeavyBlow && !channelingRefinedBlackHole && !firingTrigger && !refinedPresetShot &&
+            (state.powerMeter?.unitId !== unit.id || state.powerMeter.stage !== 'locked')) return;
+        if (launchedFromReposition && !firingHeavyBlow && !unit.relaunchAvailable) {
           state.aiming = false;
           state.aimPoint = null;
           state.aimTension = 0;
           aimOverlay.style.display = 'none';
           return;
         }
-        const powerScale = heroRule(unit.owner, 'powerScale', 1);
+        if (directionLength < (firingAmmo || firingHeavyBlow || channelingRefinedBlackHole || firingTrigger ? 35 / CONFIG.launchScale : 8)) {
+          state.aiming = false;
+          state.aimPoint = null;
+          state.aimTension = 0;
+          aimOverlay.style.display = 'none';
+          return;
+        }
+        const powerScale = isNeutralStone(unit) ? 1 : heroRule(unit.owner, 'powerScale', 1);
         const launchPower = refinedPresetShot ? unit.refinedRepositionPower : state.powerMeter?.value ?? 1;
         let vx = (firingAmmo || channelingRefinedBlackHole) ? dx : dx / directionLength *
           Math.max(35, Math.min(CONFIG.maxLaunchSpeed, CONFIG.maxPullDistance * launchPower * CONFIG.launchScale) * powerScale);
@@ -4019,6 +4142,7 @@
         if (channelingRefinedBlackHole) {
           triggerDirectionalBlackHole(unit, state.aimPoint.x - unit.x, state.aimPoint.y - unit.y, REFINED_BLACKHOLE_RANGE);
           unit.activeSpecial = null;
+          unit.launchCardPending = false;
           unit.blackholeCharged = false;
           unit.relaunchAvailable = false;
           state.repositionUnit = null;
@@ -4040,7 +4164,7 @@
           for (const spread of fanAngles) {
             state.bullets.push({
               entityKind: ENTITY_KIND.UNIT, unitKind: 'bullet', id: `bullet-${Date.now()}-${state.bullets.length}`,
-              owner: unit.owner, sourceUnitId: unit.id, launcherUnitId: unit.id, x: unit.x, y: unit.y,
+              owner: unit.cardEffectOwner ?? unit.owner, sourceUnitId: unit.id, launcherUnitId: unit.id, x: unit.x, y: unit.y,
               vx: Math.cos(baseAngle + spread) * bulletSpeed, vy: Math.sin(baseAngle + spread) * bulletSpeed,
               radius: unit.radius * AI_BALANCE.bullet.radiusScale, mass: AI_BALANCE.bullet.mass,
               impactMultiplier: unit.refinedAmmo ? .5 : 1, outsideTime: 0
@@ -4059,6 +4183,7 @@
           unit.launch(vx, vy);
           playLaunchSound(state.powerMeter?.value ?? 1);
           if (launchedFromReposition) {
+            unit.launchCardPending = false;
             unit.relaunchUsed = true;
             unit.activeSpecial = 'reposition';
             unit.specialFired = true;
@@ -4067,6 +4192,7 @@
           }
         }
         if (launchedFromReposition) state.repositionUnit = null;
+        if (unit === state.supportUnit) state.supportUnit = null;
         state.aiming = false;
         state.aimPoint = null;
         state.aimTension = 0;
@@ -4082,7 +4208,7 @@
         const dx = point.x - unit.x;
         const dy = point.y - unit.y;
         const rawDistance = Math.hypot(dx, dy);
-        const maxDistance = state.repositionMode === 'ammo' ? CONFIG.maxPullDistance : CONFIG.directionPullDistance;
+        const maxDistance = ['ammo', 'trigger', 'heavy-blow'].includes(state.repositionMode) ? CONFIG.maxPullDistance : CONFIG.directionPullDistance;
         const distance = Math.min(rawDistance, maxDistance);
         const scale = rawDistance > 0 ? distance / rawDistance : 0;
         state.aimPoint = { x: unit.x + dx * scale, y: unit.y + dy * scale };
@@ -5148,7 +5274,15 @@
 
             const relativeVelocity = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
             if (relativeVelocity < 0) {
-              const impulse = -(1 + CONFIG.restitution) * relativeVelocity / 2;
+              let impulse = -(1 + CONFIG.restitution) * relativeVelocity / 2;
+              const boostedChain = a.heavyBlowChainPending || b.heavyBlowChainPending;
+              if (boostedChain) {
+                impulse *= 2;
+                if (a.heavyBlowChainPending) a.heavyBlowChainPending = false;
+                if (b.heavyBlowChainPending) b.heavyBlowChainPending = false;
+                state.effects.push({ type: 'heavy-blow-chain-hit', x: (a.x + b.x) / 2, y: (a.y + b.y) / 2,
+                  age: 0, duration: .36, shake: 3.2 });
+              }
               if (a.owner !== b.owner) recordTutorialEvent('collision');
               playUnitImpactSound(impulse, [a, b]);
               if (hasRepulsionField(a) || hasRepulsionField(b)) {
@@ -5180,7 +5314,7 @@
         for (const unit of state.units) {
           if ((unit.status !== 'sliding' && unit.status !== 'resting') || isCollisionPhased(unit)) continue;
           for (const brick of state.bricks) {
-            if (brick.barrier && brick.owner === unit.owner) continue;
+            if (brick.barrier && isRuleAlly(unit, brick.owner)) continue;
             const halfW = brick.width / 2;
             const halfH = brick.height / 2;
             const closestX = Math.max(brick.x - halfW, Math.min(unit.x, brick.x + halfW));
@@ -5423,14 +5557,34 @@
         const cardIndex = hand.findIndex(card => card.instanceId === cardId);
         if (cardIndex < 0) return false;
         const card = hand[cardIndex];
-        if (!canUseCardOnUnit(card, owner, unit)) return false;
-        if (UNIT_EFFECTS[card.id] && !applyUnitEffectStack(unit, card.id, Boolean(card.refined))) return false;
+        const effectiveUnit = unit || turns.currentUnit;
+        const allowedHeroes = cardDefinitions().find(definition => definition.id === card.id)?.heroIds;
+        if (Array.isArray(allowedHeroes) && allowedHeroes.length && !allowedHeroes.includes(heroFor(owner)?.id)) return false;
+        if (!canUseCardOnUnit(card, owner, effectiveUnit)) return false;
+        unit = effectiveUnit;
+        if (card.id === 'release') {
+          openTriggerChargeSelection(card, owner, unit);
+          return true;
+        }
+        if (card.id === 'heavy-blow') {
+          state.powerMeter = null;
+          unit.heavyBlowCharged = true;
+          unit.heavyBlowRefined = Boolean(card.refined);
+          unit.heavyBlowResumePhase = state.phase;
+          unit.launchCardPending = true;
+          unit.activeSpecial = 'heavy-blow';
+          state.repositionUnit = unit;
+          state.repositionMode = 'heavy-blow';
+          state.phase = 'reposition';
+        }
+        if (UNIT_EFFECTS[card.id] && !applyUnitEffectStack(unit, card.id, Boolean(card.refined), 'card')) return false;
         if (card.id === 'blackhole' && !card.refined) triggerBlackHole(unit, BLACK_HOLE.range, false);
         if (card.id === 'blackhole' && card.refined) {
           state.powerMeter = null;
           unit.relaunchAvailable = true;
           unit.activeSpecial = 'blackhole';
           unit.blackholeCharged = true;
+          unit.launchCardPending = true;
           state.repositionUnit = unit;
           state.repositionMode = 'blackhole';
           state.phase = 'reposition';
@@ -5455,16 +5609,19 @@
               unit.refinedRepulsionSize = true;
             }
           }
+          recordDefenseCardStack(unit, card);
         }
         if (card.id === 'bluffing') {
           const ability = ensureUnitAbility(unit);
           ability.bluffingUntilTurn = turns.globalTurn + 1;
           if (card.refined) ability.refinedEffectImmunity = ['pulse', 'blackhole'];
+          recordDefenseCardStack(unit, card);
         }
         if (card.id === 'escape' && card.refined) {
           const ability = ensureUnitAbility(unit);
           ability.escapePending = true;
           ability.escapeTriggered = false;
+          ability.escapeScoreOwner = owner;
         } else if (card.id === 'escape') {
           unit.status = 'fallen';
           unit.vx = 0;
@@ -5490,12 +5647,14 @@
           unit.relaunchAvailable = true;
           state.repositionUnit = unit;
           unit.activeSpecial = 'reposition';
+          unit.launchCardPending = true;
           unit.refinedReposition = Boolean(card.refined);
           unit.refinedRepositionPower = null;
           state.repositionMode = 'reposition';
           state.phase = 'reposition';
         }
         if (card.id === 'ammo') {
+          if (isNeutralStone(unit)) unit.cardEffectOwner = owner;
           state.powerMeter = null;
           unit.relaunchAvailable = true;
           state.repositionUnit = unit;
@@ -5514,24 +5673,65 @@
         return true;
       }
 
+      function useBoardCard(cardId, owner, point) {
+        const hand = state.hands[owner];
+        const cardIndex = hand.findIndex(card => card.instanceId === cardId);
+        if (cardIndex < 0 || !point || owner !== turns.playerIndex ||
+            !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase)) return false;
+        const card = hand[cardIndex];
+        const allowedHeroes = CARD_METADATA[card.id]?.heroIds;
+        if (!['dark-charge', 'reinforcements'].includes(card.id) ||
+            (allowedHeroes?.length && !allowedHeroes.includes(heroFor(owner)?.id)) || !isCardUnlocked(card, owner)) return false;
+        if (card.id === 'reinforcements') {
+          if (state.phase !== 'turn-ready' || !turns.currentUnit?.hasLaunched || state.supportUnit ||
+              point.x < TABLE.left || point.x > TABLE.right || point.y < TABLE.top || point.y > TABLE.bottom) return false;
+          const unit = new CurlingUnit({ id: `support-${Date.now()}-${state.nextCardId++}`,
+            owner, turnNumber: turns.playerTurn, x: launchXForOwner(owner), y: (TABLE.top + TABLE.bottom) / 2 });
+          unit.supportStone = true;
+          unit.neutral = !card.refined;
+          unit.radius = CONFIG.unitRadius;
+          state.supportUnit = unit;
+          state.phase = 'placement';
+          state.placementPreview = { x: unit.x, y: Math.max(TABLE.top + unit.radius,
+            Math.min(TABLE.bottom - unit.radius, point.y)), valid: false };
+          state.placementPreview.valid = canPlaceLaunchStone(state.placementPreview.y);
+          state.powerMeter = null;
+        } else {
+          chargeDarkAbility(owner, card.refined ? 2 : 1);
+          state.effects.push({ type: 'item', x: point.x, y: point.y, age: 0, duration: .52, color: '#8e61c7' });
+        }
+        emitGameFeedback(CARD_PRESENTATION[card.id]?.sound || 'card', point, cardDisplayName(card), PLAYER[owner].color);
+        recordTutorialEvent('card', card.id);
+        if (state.adventure && owner === 0) emitAdventureEvent({ type: 'card-used', cardId: card.id });
+        hand.splice(cardIndex, 1);
+        renderHands();
+        updateHud();
+        return true;
+      }
+
       function canUseCardOnUnit(card, owner, unit) {
-        if (!card || !unit || unit.owner !== owner || unit.status === 'fallen' || owner !== turns.playerIndex ||
+        if (!card || !unit || !isCardAlly(unit, owner) || unit.status === 'fallen' || owner !== turns.playerIndex ||
             !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase) ||
             (['brick', 'data-barrier'].includes(card.id)) ||
             (unit.unitKind === 'brick' && card.id !== 'repulsion-field')) return false;
-        if (card.id === 'ammo' && (state.repositionMode === 'blackhole' ||
+        const allowedHeroes = cardDefinitions().find(definition => definition.id === card.id)?.heroIds;
+        if (Array.isArray(allowedHeroes) && allowedHeroes.length && !allowedHeroes.includes(heroFor(owner)?.id)) return false;
+        if (card.id === 'ammo' && (state.repositionMode === 'blackhole' || state.repositionMode === 'trigger' ||
             state.effects.some(effect => effect.type === 'blackhole-fan' && effect.age < effect.duration))) return false;
         if (!isCardUnlocked(card, owner)) return false;
-        if (unit.status === 'ready' && unit !== turns.currentUnit) return false;
+        if (unit.status === 'ready' && unit !== turns.currentUnit && unit !== state.supportUnit) return false;
         if (UNIT_EFFECTS[card.id] && getUnitEffectStacks(unit, card.id) >= UNIT_EFFECTS[card.id].maxStacks) return false;
         if (card.id === 'repulsion-field' && hasRepulsionField(unit)) return false;
         if (card.id === 'pulse' && unit.ability?.pulse) return false;
         if (card.id === 'bluffing' && isCollisionPhased(unit)) return false;
+        const launchCard = card.id === 'reposition' || card.id === 'release' || card.id === 'heavy-blow' || (card.id === 'blackhole' && card.refined);
+        if ((launchCard || card.id === 'ammo') && (unit.launchCardPending || unit.chargedTrigger)) return false;
         if (['reposition', 'ammo'].includes(card.id)) {
-          if (unit.status === 'ready' || unit.activeSpecial || state.units.some(item => item.activeSpecial)) return false;
+          if ((card.id === 'reposition' && unit.status === 'ready') || (unit.activeSpecial && !unit.specialFired)) return false;
           if (card.id === 'reposition' && !['aiming', 'turn-ready'].includes(state.phase)) return false;
           if (card.id === 'ammo' && !['aiming', 'sliding', 'turn-ready'].includes(state.phase)) return false;
         }
+        if (card.id === 'heavy-blow' && unit.activeSpecial && !unit.specialFired) return false;
         return true;
       }
 
@@ -5553,7 +5753,7 @@
         return unit.ability?.stacks?.[effectId] ?? (unit.ability?.[effectId] ? 1 : 0);
       }
 
-      function applyUnitEffectStack(unit, effectId, refined = false) {
+      function applyUnitEffectStack(unit, effectId, refined = false, source = 'trigger') {
         const definition = UNIT_EFFECTS[effectId];
         if (!definition) return false;
         const ability = ensureUnitAbility(unit);
@@ -5561,8 +5761,17 @@
         if (currentStacks >= definition.maxStacks) return false;
         ability.stacks[effectId] = currentStacks + 1;
         ability[effectId] = true;
+        ability.effectStackHistory ||= {};
+        ability.effectStackHistory[effectId] ||= [];
+        const stackRecord = { token: `${effectId}:${Date.now()}:${Math.random()}`, source, refined: Boolean(refined) };
+        ability.effectStackHistory[effectId].push(stackRecord);
+        if (source === 'card') {
+          unit.defenseCardStack ||= [];
+          unit.defenseCardStack.push({ id: effectId, refined: Boolean(refined), stackToken: stackRecord.token });
+        }
         if (effectId === 'hardening' && refined) ability.refinedHardeningStacks = (ability.refinedHardeningStacks || 0) + 1;
         if (effectId === 'guard' && refined) {
+          ability.refinedGuardStacks = (ability.refinedGuardStacks || 0) + 1;
           ability.refinedGuardOrbit = true;
           if (!Number.isFinite(ability.guardOrbitPhase)) ability.guardOrbitPhase = 0;
         }
@@ -5570,6 +5779,22 @@
           state.effects.push({ type: 'hardening-gather', x: unit.x, y: unit.y, radius: unit.radius,
             stack: currentStacks + 1, age: 0, duration: .72 });
         }
+        return true;
+      }
+
+      function activateTriggerOnUnit(unit, type, { audio = true } = {}) {
+        if (!unit || !type || unit.status === 'fallen') return false;
+        state.lastTriggerCast[unit.owner] = type.id;
+        if (type.id === 'blackhole') triggerBlackHole(unit, type.range, audio);
+        else if (type.id === 'pulse') {
+          unit.pendingPulseTriggers ||= [];
+          unit.pendingPulseTriggers.push({ remaining: AI_BALANCE.pulse.chargeDelay,
+            range: type.range, impulse: type.impulse });
+        } else if (UNIT_EFFECTS[type.id]) {
+          if (!applyUnitEffectStack(unit, type.id)) return false;
+          if (audio) playSound(type.id === 'hardening' ? 'hardening' : 'card');
+        }
+        state.effects.push({ type: 'item', x: unit.x, y: unit.y, age: 0, duration: .45, color: type.color });
         return true;
       }
 
@@ -5596,8 +5821,8 @@
 
       function findCardTarget(point, owner, cardId = null) {
         const targets = state.units
-          .filter(unit => unit.owner === owner && unit.status !== 'fallen' &&
-            (unit.status !== 'ready' || unit === turns.currentUnit))
+          .filter(unit => isCardAlly(unit, owner) && unit.status !== 'fallen' &&
+            (unit.status !== 'ready' || unit === turns.currentUnit || unit === state.supportUnit))
           .map(unit => ({ unit, distance: Math.hypot(point.x - unit.x, point.y - unit.y), radius: unit.radius }));
         if (cardId === 'repulsion-field') {
           targets.push(...state.bricks.filter(brick => brick.owner === owner && !hasRepulsionField(brick))
@@ -5732,7 +5957,12 @@
         } else {
           const card = state.hands[drag.owner].find(item => item.instanceId === drag.id);
           const target = drag.point && findCardTarget(drag.point, drag.owner, drag.type);
-          drag.ghost.classList.toggle('valid-target', Boolean(target && canUseCardOnUnit(card, drag.owner, target)));
+          const validDrop = drag.type === 'dark-charge'
+            ? Boolean(drag.point)
+            : drag.type === 'reinforcements'
+              ? Boolean(drag.point && state.phase === 'turn-ready' && turns.currentUnit?.hasLaunched && !state.supportUnit)
+            : Boolean(target && canUseCardOnUnit(card, drag.owner, target));
+          drag.ghost.classList.toggle('valid-target', validDrop);
         }
       }
 
@@ -5745,7 +5975,11 @@
         const rect = canvas.getBoundingClientRect();
         const insideCanvas = event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
         let triggerDrop = null;
-        if ((drag.type === 'trigger-placement' || moved) && insideCanvas && drag.owner === turns.playerIndex && turns.currentUnit) {
+        if (moved && ['dark-charge', 'reinforcements'].includes(drag.type) && insideCanvas && drag.owner === turns.playerIndex) {
+          const point = eventPoint(event);
+          if (shouldForwardOnlineAction()) sendOnlineAction({ type: 'board-card', cardId: drag.id, point });
+          else useBoardCard(drag.id, drag.owner, point);
+        } else if ((drag.type === 'trigger-placement' || moved) && insideCanvas && drag.owner === turns.playerIndex && turns.currentUnit) {
           const point = eventPoint(event);
           if (drag.type === 'trigger-placement') {
             if (remainingTriggerPlacements(drag.owner) > 0 && canPlaceItemTrigger(point)) triggerDrop = point;
@@ -5820,7 +6054,7 @@
           unit.fallResolved = true;
           unit.fallRewarded = true;
           unit.removedByEscape = true;
-          state.escapePoints[unit.owner] += 10;
+          state.escapePoints[unit.ability.escapeScoreOwner ?? unit.owner] += 10;
           state.effects.push({ type: 'refined-card-use', x: unit.x, y: unit.y, age: 0, duration: .68 });
           if (state.repositionUnit === unit) {
             state.repositionUnit = null;
@@ -5850,10 +6084,10 @@
           const distance = Math.hypot(dx, dy);
           if (distance > range) continue;
           const angle = distance > 0.001 ? Math.atan2(dy, dx) : Math.random() * Math.PI * 2;
-          const teamScale = chargedCard && target.owner === source.owner && target.unitKind !== 'brick' ? .5 : 1;
+          const teamScale = chargedCard && target.unitKind !== 'brick' && areRuleAllies(target, source) ? .5 : 1;
           target.vx += Math.cos(angle) * impulse * teamScale;
           target.vy += Math.sin(angle) * impulse * teamScale;
-          if (refinedPulse && target.unitKind === 'stone' && target.owner !== source.owner) target.refinedPulseFrictionTimer = 3.5;
+          if (refinedPulse && target.unitKind === 'stone' && !areRuleAllies(target, source)) target.refinedPulseFrictionTimer = 3.5;
           markRefinedEscapeMovement(target);
           if (target.unitKind !== 'brick') target.status = 'sliding';
         }
@@ -5970,6 +6204,131 @@
         }
       }
 
+      function recordDefenseCardStack(unit, card) {
+        if (!unit || !card) return;
+        unit.defenseCardStack ||= [];
+        unit.defenseCardStack.push({ id: card.id, refined: Boolean(card.refined) });
+      }
+
+      function removeLatestDefenseCardStack(unit) {
+        const history = unit?.defenseCardStack;
+        if (!history?.length) return null;
+        let removed = null;
+        while (history.length && !removed) {
+          const candidate = history.pop();
+          if (candidate.id === 'bluffing' && unit.ability?.bluffingUntilTurn < turns.globalTurn) continue;
+          removed = candidate;
+        }
+        if (!removed) return null;
+        const ability = ensureUnitAbility(unit);
+        if (removed.id === 'hardening') {
+          const stackHistory = ability.effectStackHistory?.hardening || [];
+          const stackIndex = removed.stackToken ? stackHistory.findIndex(entry => entry.token === removed.stackToken) : stackHistory.length - 1;
+          if (stackIndex >= 0) stackHistory.splice(stackIndex, 1);
+          const remaining = stackHistory.length || Math.max(0, getUnitEffectStacks(unit, 'hardening') - 1);
+          ability.stacks.hardening = remaining;
+          ability.hardening = remaining > 0;
+          ability.refinedHardeningStacks = stackHistory.filter(entry => entry.refined).length;
+        } else if (removed.id === 'guard') {
+          const stackHistory = ability.effectStackHistory?.guard || [];
+          const stackIndex = removed.stackToken ? stackHistory.findIndex(entry => entry.token === removed.stackToken) : stackHistory.length - 1;
+          if (stackIndex >= 0) stackHistory.splice(stackIndex, 1);
+          const remaining = stackHistory.length || Math.max(0, getUnitEffectStacks(unit, 'guard') - 1);
+          ability.stacks.guard = remaining;
+          ability.guard = remaining > 0;
+          if (remaining && Array.isArray(ability.destroyedGuardSatellites)) {
+            ability.destroyedGuardSatellites = ability.destroyedGuardSatellites.filter(index => index < remaining);
+          }
+          ability.refinedGuardStacks = stackHistory.filter(entry => entry.refined).length;
+          ability.refinedGuardOrbit = ability.refinedGuardStacks > 0;
+        } else if (removed.id === 'bluffing') {
+          ability.bluffingUntilTurn = -1;
+          ability.refinedEffectImmunity = [];
+        } else if (removed.id === 'repulsion-field') {
+          if (unit.unitKind === 'brick') unit.repulsionField = false;
+          else ability.repulsionField = false;
+          if (unit.refinedRepulsionSize) {
+            if (unit.unitKind === 'brick') { unit.width /= 1.3; unit.height /= 1.3; }
+            else unit.radius /= 1.3;
+            unit.refinedRepulsionSize = false;
+          }
+        }
+        return removed;
+      }
+
+      function triggerHeavyBlow(source, directionX, directionY, refined = false) {
+        const directionLength = Math.hypot(directionX, directionY) || 1;
+        const dirX = directionX / directionLength;
+        const dirY = directionY / directionLength;
+        const range = (TABLE.right - TABLE.left) * .35 * (refined ? 1.2 : 1);
+        const halfAngle = .39;
+        const angle = Math.atan2(dirY, dirX);
+        const insideFan = target => {
+          const dx = target.x - source.x;
+          const dy = target.y - source.y;
+          const distance = Math.hypot(dx, dy);
+          const difference = Math.atan2(Math.sin(Math.atan2(dy, dx) - angle), Math.cos(Math.atan2(dy, dx) - angle));
+          const radius = target.unitKind === 'brick'
+            ? Math.hypot((target.width || 0) / 2, (target.height || 0) / 2)
+            : target.radius || 0;
+          const angularAllowance = distance > radius && distance > 0 ? Math.asin(Math.min(.98, radius / distance)) : Math.PI;
+          const edgeDistance = Math.max(0, distance - radius);
+          return edgeDistance <= range && Math.abs(difference) <= halfAngle + angularAllowance && { distance, difference };
+        };
+
+        for (let index = state.bricks.length - 1; index >= 0; index -= 1) {
+          const brick = state.bricks[index];
+          const hit = insideFan(brick);
+          if (!hit) continue;
+          state.bricks.splice(index, 1);
+          state.effects.push({ type: 'heavy-blow-fracture', x: brick.x, y: brick.y, age: 0, duration: .42, shake: 1.4 });
+          for (let piece = 0; piece < 8; piece += 1) {
+            const spread = (Math.random() - .5) * .74;
+            const speed = 75 + Math.random() * 210;
+            state.particles.push({ x: brick.x, y: brick.y, vx: (dirX * Math.cos(spread) - dirY * Math.sin(spread)) * speed,
+              vy: (dirY * Math.cos(spread) + dirX * Math.sin(spread)) * speed - 35,
+              life: .22 + Math.random() * .26, size: 2 + Math.random() * 4, shape: 'shard',
+              angle: Math.random() * Math.PI * 2, spin: (Math.random() - .5) * 10,
+              color: piece % 2 ? '#b3a58d' : '#716d63' });
+          }
+        }
+
+        for (const target of state.units) {
+          if (target === source || target.status === 'fallen') continue;
+          const hit = insideFan(target);
+          if (!hit) continue;
+          const falloff = 1 - hit.distance / range;
+          const impulse = 520 * (.34 + .66 * falloff);
+          target.vx += dirX * impulse;
+          target.vy += dirY * impulse;
+          target.heavyBlowChainPending = true;
+          markRefinedEscapeMovement(target);
+          if (target.status === 'resting' || target.status === 'ready') target.status = 'sliding';
+          const removedDefense = target.unitKind === 'brick' ? null : removeLatestDefenseCardStack(target);
+          state.effects.push({ type: 'heavy-blow-hit', x: target.x, y: target.y, age: 0, duration: .42,
+            defensePeeled: Boolean(removedDefense), shake: 2.2 });
+          if (target.unitKind !== 'brick') {
+            detonatePendingPulseTriggers(target);
+            detonateChargedPulse(target);
+          }
+        }
+
+        state.effects.push({ type: 'heavy-blow-wave', x: source.x, y: source.y, angle, range, halfAngle,
+          refined, age: 0, duration: .62, shake: 8.2 });
+        for (let particle = 0; particle < 30; particle += 1) {
+          const spread = (Math.random() - .5) * halfAngle * 1.7;
+          const speed = 90 + Math.random() * 260;
+          const vx = dirX * Math.cos(spread) - dirY * Math.sin(spread);
+          const vy = dirY * Math.cos(spread) + dirX * Math.sin(spread);
+          state.particles.push({ x: source.x + dirX * source.radius * .8, y: source.y + dirY * source.radius * .8,
+            vx: vx * speed, vy: vy * speed, life: .3 + Math.random() * .36, size: 2 + Math.random() * 4,
+            shape: particle % 3 === 0 ? 'shard' : 'dust', angle: Math.atan2(vy, vx), spin: (Math.random() - .5) * 8,
+            color: ['#d9c8a5', '#f4e3c2', '#b77b46'][particle % 3] });
+        }
+        emitGameFeedback('heavyBlowRelease', source, '충격파', '#d9ad70');
+        updateHud();
+      }
+
       function updateEffects(dt) {
         const active = [];
         for (const effect of state.effects) {
@@ -6064,12 +6423,22 @@
       }
 
       function renderTriggerTypeOptions() {
+        const charging = Boolean(state.pendingTriggerCharge);
+        const triggerOwner = state.pendingTriggerCharge?.owner ?? state.pendingTriggerPlacement?.owner ?? turns.playerIndex;
+        triggerSelectTitle.textContent = charging ? '트리거 충전' : '트리거 선택';
+        triggerSelectDescription.textContent = charging
+          ? '스톤에 충전할 트리거를 고르세요. 직전에 시전한 종류는 선택할 수 없습니다.'
+          : '배치할 트리거를 고르세요. 직전에 시전한 종류는 다시 선택할 수 없습니다.';
+        confirmTriggerButton.textContent = charging ? '충전하기' : '이 위치에 배치';
         triggerTypeOptions.replaceChildren(...ITEM_TRIGGERS.map(type => {
           const option = document.createElement('button');
           option.type = 'button';
           option.className = 'trigger-type-option';
           option.setAttribute('role', 'radio');
           option.setAttribute('aria-checked', String(state.selectedTriggerType === type.id));
+          const blockedByRepeatRule = state.lastTriggerCast?.[triggerOwner] === type.id;
+          option.disabled = blockedByRepeatRule;
+          option.classList.toggle('trigger-repeat-blocked', blockedByRepeatRule);
           const art = document.createElement('img');
           art.src = TRIGGER_ART[type.id];
           art.alt = '';
@@ -6078,10 +6447,11 @@
           const name = document.createElement('strong');
           name.textContent = type.name;
           const description = document.createElement('span');
-          description.textContent = type.description;
+          description.textContent = blockedByRepeatRule ? '직전에 시전한 트리거는 다시 시전할 수 없습니다.' : type.description;
           copy.append(name, description);
           option.append(art, copy);
           option.addEventListener('click', () => {
+            if (option.disabled) return;
             state.selectedTriggerType = type.id;
             triggerTypeOptions.querySelectorAll('[role="radio"]').forEach(item => {
               item.setAttribute('aria-checked', String(item.dataset.triggerId === type.id));
@@ -6094,9 +6464,24 @@
       }
 
       function openTriggerTypeSelection(point, owner) {
+        state.pendingTriggerCharge = null;
         state.pendingTriggerPlacement = { ...point, owner, radius: CONFIG.unitRadius * .5 };
         state.selectedTriggerType = null;
         state.phaseBeforeTriggerSelect = state.phase;
+        state.phase = 'trigger-select';
+        confirmTriggerButton.disabled = true;
+        renderTriggerTypeOptions();
+        triggerSelectOverlay.hidden = false;
+        updateHud();
+        triggerTypeOptions.querySelector('[role="radio"]')?.focus();
+      }
+
+      function openTriggerChargeSelection(card, owner, unit) {
+        state.pendingTriggerPlacement = null;
+        state.pendingTriggerCharge = { owner, unitId: unit.id, cardInstanceId: card.instanceId, refined: Boolean(card.refined) };
+        state.selectedTriggerType = null;
+        state.phaseBeforeTriggerSelect = state.phase;
+        state.phaseBeforeTriggerAim = state.phase;
         state.phase = 'trigger-select';
         confirmTriggerButton.disabled = true;
         renderTriggerTypeOptions();
@@ -6109,16 +6494,36 @@
         triggerSelectOverlay.hidden = true;
         if (restoreTurn && state.phaseBeforeTriggerSelect) state.phase = state.phaseBeforeTriggerSelect;
         state.pendingTriggerPlacement = null;
+        state.pendingTriggerCharge = null;
         state.selectedTriggerType = null;
         state.phaseBeforeTriggerSelect = null;
+        if (state.repositionMode !== 'trigger') state.phaseBeforeTriggerAim = null;
+        triggerSelectTitle.textContent = '트리거 선택';
+        triggerSelectDescription.textContent = '배치할 트리거를 고르세요. 직전에 시전한 종류는 다시 선택할 수 없습니다.';
+        confirmTriggerButton.textContent = '이 위치에 배치';
         updateHud();
       }
 
       function confirmItemTriggerPlacement() {
+        if (state.pendingTriggerCharge) {
+          const pendingCharge = state.pendingTriggerCharge;
+          const type = ITEM_TRIGGERS.find(item => item.id === state.selectedTriggerType);
+          if (!type || pendingCharge.owner !== turns.playerIndex || state.lastTriggerCast?.[pendingCharge.owner] === type.id) return;
+          if (shouldForwardOnlineAction()) {
+            confirmTriggerButton.disabled = true;
+            sendOnlineAction({ type: 'trigger-charge', typeId: type.id, unitId: pendingCharge.unitId,
+              cardInstanceId: pendingCharge.cardInstanceId, refined: pendingCharge.refined });
+            return;
+          }
+          if (!completeTriggerCharge(pendingCharge, type)) return;
+          closeTriggerTypeSelection(false);
+          updateHud();
+          return;
+        }
         const pending = state.pendingTriggerPlacement;
         const type = ITEM_TRIGGERS.find(item => item.id === state.selectedTriggerType);
         if (state.phase !== 'trigger-select' || !pending || !type || pending.owner !== turns.playerIndex ||
-            remainingTriggerPlacements(pending.owner) <= 0 || !canPlaceItemTrigger(pending)) return;
+            state.lastTriggerCast?.[pending.owner] === type.id || remainingTriggerPlacements(pending.owner) <= 0 || !canPlaceItemTrigger(pending)) return;
         if (shouldForwardOnlineAction()) {
           sendOnlineAction({ type: 'trigger', typeId: type.id, point: { x: pending.x, y: pending.y } });
           closeTriggerTypeSelection(true);
@@ -6129,6 +6534,7 @@
           id: `placed-trigger-${turns.globalTurn}-${Date.now()}`,
           type, owner: pending.owner, x: pending.x, y: pending.y, radius: pending.radius
         });
+        state.lastTriggerCast[pending.owner] = type.id;
         spendTriggerPlacement(pending.owner);
         closeTriggerTypeSelection(true);
         emitGameFeedback('triggerPlace', pending, '트리거 배치', PLAYER[pending.owner].color);
@@ -6138,6 +6544,32 @@
 
       function cancelItemTriggerPlacement() {
         closeTriggerTypeSelection(true);
+      }
+
+      function completeTriggerCharge(pending, type) {
+        const unit = state.units.find(item => item.id === pending.unitId);
+        const hand = state.hands[pending.owner];
+        const cardIndex = hand.findIndex(card => card.instanceId === pending.cardInstanceId);
+        if (state.phase !== 'trigger-select' || !unit || !isCardAlly(unit, pending.owner) || unit.status === 'fallen' ||
+            cardIndex < 0 || unit.launchCardPending || unit.chargedTrigger || state.lastTriggerCast?.[pending.owner] === type.id) return false;
+        unit.chargedTrigger = { typeId: type.id, refined: Boolean(pending.refined) };
+        if (isNeutralStone(unit)) unit.cardEffectOwner = pending.owner;
+        unit.launchCardPending = true;
+        unit.relaunchAvailable = true;
+        unit.activeSpecial = 'release';
+        state.lastTriggerCast[pending.owner] = type.id;
+        state.repositionUnit = unit;
+        state.repositionMode = 'trigger';
+        state.phaseBeforeTriggerAim = state.phaseBeforeTriggerSelect || 'turn-ready';
+        state.phase = 'reposition';
+        state.powerMeter = null;
+        hand.splice(cardIndex, 1);
+        emitGameFeedback('releaseCharge', unit, pending.refined ? '정제된 해방' : '해방', type.color);
+        if (pending.refined) state.effects.push({ type: 'refined-card-use', x: unit.x, y: unit.y, age: 0, duration: .58 });
+        recordTutorialEvent('card', 'release');
+        if (state.adventure && pending.owner === 0) emitAdventureEvent({ type: 'card-used', cardId: 'release' });
+        renderHands();
+        return true;
       }
 
       function segmentDistanceSquared(point, start, end) {
@@ -6173,12 +6605,7 @@
             state.adventure.collectedTriggerIds.add(trigger.id);
             emitAdventureEvent({ type: 'trigger-collected', objectId: trigger.id });
           }
-          if (trigger.type.id === 'blackhole') triggerBlackHole(unit, trigger.type.range);
-          if (trigger.type.id === 'pulse') unit.pendingPulseTriggers.push({ remaining: AI_BALANCE.pulse.chargeDelay,
-            range: trigger.type.range, impulse: trigger.type.impulse });
-          if (UNIT_EFFECTS[trigger.type.id] && applyUnitEffectStack(unit, trigger.type.id))
-            playSound(trigger.type.id === 'hardening' ? 'hardening' : 'card');
-          state.effects.push({ type: 'item', x: trigger.x, y: trigger.y, age: 0, duration: .45, color: trigger.type.color });
+          activateTriggerOnUnit(unit, trigger.type);
         }
       }
 
@@ -6207,6 +6634,20 @@
       function updateBullets(dt) {
         if (!state.bullets.length) return;
         const walls = state.currentMap.walls ? wallSegments() : [];
+        const reflectTriggerProjectile = (bullet, nx, ny, surfaceX, surfaceY) => {
+          const length = Math.hypot(nx, ny) || 1;
+          nx /= length; ny /= length;
+          const normalSpeed = bullet.vx * nx + bullet.vy * ny;
+          if (normalSpeed < 0) {
+            bullet.vx = (bullet.vx - 2 * normalSpeed * nx) * .84;
+            bullet.vy = (bullet.vy - 2 * normalSpeed * ny) * .84;
+          }
+          bullet.x = surfaceX + nx * (bullet.radius + 1);
+          bullet.y = surfaceY + ny * (bullet.radius + 1);
+          bullet.outsideTime = 0;
+          state.effects.push({ type: 'item', x: surfaceX, y: surfaceY, age: 0, duration: .35,
+            color: ITEM_TRIGGERS.find(item => item.id === bullet.triggerTypeId)?.color || '#b78aff' });
+        };
         const reflectBulletFrom = (bullet, target, normalX, normalY, surfaceX, surfaceY) => {
           const normalLength = Math.hypot(normalX, normalY) || 1;
           const nx = normalX / normalLength;
@@ -6283,6 +6724,8 @@
             }
 
             for (const source of state.units) {
+              if (bullet.projectileKind === 'charged-trigger') break;
+              if (source.id === bullet.launcherUnitId) continue;
               if (!source.ability?.guard || source.status === 'fallen') continue;
               const satellite = guardSatellites(source).find(item => Math.hypot(bullet.x - item.x, bullet.y - item.y) < bullet.radius + item.radius);
               if (!satellite) continue;
@@ -6298,6 +6741,14 @@
               const closestX = Math.max(brick.x - brick.width / 2, Math.min(bullet.x, brick.x + brick.width / 2));
               const closestY = Math.max(brick.y - brick.height / 2, Math.min(bullet.y, brick.y + brick.height / 2));
               if (Math.hypot(bullet.x - closestX, bullet.y - closestY) >= bullet.radius) continue;
+              if (bullet.projectileKind === 'charged-trigger') {
+                let nx = bullet.x - closestX;
+                let ny = bullet.y - closestY;
+                if (Math.hypot(nx, ny) < .001) { nx = -bullet.vx; ny = -bullet.vy; }
+                reflectTriggerProjectile(bullet, nx, ny, closestX, closestY);
+                reflected = true;
+                break;
+              }
               if (hasRepulsionField(brick)) {
                 let normalX = bullet.x - closestX;
                 let normalY = bullet.y - closestY;
@@ -6328,11 +6779,19 @@
             if (reflected) break;
             if (consumed) break;
             for (const target of state.units) {
-              if (target.id === bullet.sourceUnitId || target.status === 'fallen' || target.fluidTimer > 0 || isCollisionPhased(target)) continue;
+              if (target.id === bullet.sourceUnitId || target.status === 'fallen') continue;
+              if (bullet.projectileKind !== 'charged-trigger' && (target.fluidTimer > 0 || isCollisionPhased(target))) continue;
+              if (bullet.projectileKind === 'charged-trigger' && target.unitKind !== 'stone') continue;
               const dx = target.x - bullet.x;
               const dy = target.y - bullet.y;
               const distance = Math.hypot(dx, dy);
               if (distance >= bullet.radius + target.radius) continue;
+              if (bullet.projectileKind === 'charged-trigger') {
+                activateTriggerOnUnit(target, ITEM_TRIGGERS.find(item => item.id === bullet.triggerTypeId));
+                removeBullet(bullet, index);
+                consumed = true;
+                break;
+              }
               const nx = distance > .001 ? dx / distance : 1;
               const ny = distance > .001 ? dy / distance : 0;
               if (hasRepulsionField(target)) {
@@ -7916,8 +8375,12 @@
           playerTutorialCompleted: [...state.playerTutorialCompleted],
           particles: state.particles.map(particle => ({ ...particle })),
           effects: state.effects.map(effect => ({ ...effect })),
-          phase: state.phase === 'trigger-select' ? (state.phaseBeforeTriggerSelect || 'turn-ready') : state.phase,
+          phase: state.pendingTriggerCharge ? 'trigger-select' : state.phase === 'trigger-select' ? (state.phaseBeforeTriggerSelect || 'turn-ready') : state.phase,
+          pendingTriggerCharge: state.pendingTriggerCharge ? { ...state.pendingTriggerCharge,
+            phaseBeforeAim: state.phaseBeforeTriggerAim } : null,
+          lastTriggerCast: [...state.lastTriggerCast],
           pendingUnit: state.phase === 'placement' && turns.currentUnit ? { ...turns.currentUnit } : null,
+          supportUnit: state.supportUnit ? { ...state.supportUnit } : null,
           placementPreview: state.placementPreview ? { ...state.placementPreview } : null,
           placementAnimation: state.placementAnimation ? { ...state.placementAnimation } : null,
           aiming: state.aiming,
@@ -7926,7 +8389,9 @@
           mapTime: state.mapTime,
           triggerPlacementUsed: [...state.triggerPlacementUsed],
           triggerPlacementCount: [...state.triggerPlacementCount],
+          triggerBonusCharges: [...state.triggerBonusCharges],
           refineryUses: [...state.refineryUses],
+          refineryBonusCharges: [...state.refineryBonusCharges],
           hero: {
             offers: state.heroOffers.map(options => [...options]),
             choices: [...state.heroChoices],
@@ -7982,24 +8447,29 @@
         const previousHeroOffers = state.heroOffers[onlineSession.playerIndex]?.join(',');
         const sameRound = snapshot.series?.roundIndex === onlineSession.roundIndex && snapshot.currentMapId === state.currentMap.id;
         const sameTurn = sameRound && snapshot.globalTurn === turns.globalTurn;
-        const inputAllowed = sameTurn && ['placement', 'aiming', 'sliding', 'turn-ready', 'reposition'].includes(snapshot.phase) &&
+        const inputAllowed = sameTurn && (['placement', 'aiming', 'sliding', 'turn-ready', 'reposition'].includes(snapshot.phase) ||
+          (snapshot.phase === 'trigger-select' && snapshot.pendingTriggerCharge?.owner === onlineSession.playerIndex)) &&
           ((snapshot.startingPlayer || 0) + snapshot.globalTurn) % PLAYER.length === onlineSession.playerIndex;
-        const localAimUnit = state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit;
-        const remoteAimId = snapshot.phase === 'reposition' ? snapshot.repositionUnitId : snapshot.currentUnitId;
+        const localAimUnit = activeLaunchUnit();
+        const remoteAimId = snapshot.phase === 'reposition' ? snapshot.repositionUnitId : snapshot.supportUnit?.id || snapshot.currentUnitId;
         const preserveAim = inputAllowed && localAimPointerId !== null && state.aiming &&
           ['aiming', 'reposition'].includes(snapshot.phase) && localAimUnit?.id === remoteAimId &&
           snapshot.units.some(unit => unit.id === remoteAimId && unit.status !== 'fallen');
         const localAim = preserveAim ? { aimPoint: state.aimPoint, aimTension: state.aimTension } : null;
         const localPower = inputAllowed && ['aiming', 'reposition'].includes(snapshot.phase) &&
           state.powerMeter?.unitId === remoteAimId ? state.powerMeter : null;
-        const preserveTriggerSelection = inputAllowed && state.phase === 'trigger-select' &&
-          state.pendingTriggerPlacement && snapshot.triggerPlacementCount[onlineSession.playerIndex] <
-            (HEROES.find(hero => hero.id === snapshot.hero?.choices[onlineSession.playerIndex])?.trapLimit ?? 1);
+        const preserveChargeSelection = inputAllowed && snapshot.pendingTriggerCharge?.owner === onlineSession.playerIndex;
+        const preservePlacementSelection = inputAllowed && state.phase === 'trigger-select' && state.pendingTriggerPlacement &&
+          snapshot.triggerPlacementCount[onlineSession.playerIndex] <
+            ((HEROES.find(hero => hero.id === snapshot.hero?.choices[onlineSession.playerIndex])?.trapLimit ?? 1) +
+             (snapshot.triggerBonusCharges?.[onlineSession.playerIndex] || 0));
+        const preserveTriggerSelection = preserveChargeSelection || preservePlacementSelection;
         if (!preserveAim) localAimPointerId = null;
         if (!inputAllowed) cancelCardDrag();
         if (!preserveTriggerSelection) {
           triggerSelectOverlay.hidden = true;
           state.pendingTriggerPlacement = null;
+          state.pendingTriggerCharge = null;
           state.selectedTriggerType = null;
           state.phaseBeforeTriggerSelect = null;
         }
@@ -8059,18 +8529,26 @@
         if (confirmedPlacement && onlineSession.role === 'challenger') {
           const owner = snapshot.placementAnimation?.owner ?? onlineSession.playerIndex;
           const heroId = snapshot.hero?.choices?.[owner];
-          playSound('drop', .42, heroId === 'big-boy' ? .72 : 1);
+          if (snapshot.placementAnimation?.unitId === snapshot.supportUnit?.id) playElevenLabsSound('reinforcementsLand', { volume: .8 });
+          else playSound('drop', .42, heroId === 'big-boy' ? .72 : 1);
         }
         state.placementPreview = snapshot.phase === 'placement' && state.placementPreview &&
           onlineSession.playerIndex === turns.playerIndex ? state.placementPreview : snapshot.placementPreview;
         state.placementAnimation = snapshot.placementAnimation || null;
-        if (preserveTriggerSelection) state.phaseBeforeTriggerSelect = snapshot.phase;
+        if (preserveChargeSelection) {
+          state.pendingTriggerCharge = { ...snapshot.pendingTriggerCharge };
+          state.phaseBeforeTriggerSelect = snapshot.pendingTriggerCharge.phaseBeforeAim || 'turn-ready';
+          state.phaseBeforeTriggerAim = snapshot.pendingTriggerCharge.phaseBeforeAim || 'turn-ready';
+          triggerSelectOverlay.hidden = false;
+          renderTriggerTypeOptions();
+        } else if (preservePlacementSelection) state.phaseBeforeTriggerSelect = snapshot.phase;
         // A remote aiming indicator is display-only; only a local pointer owns local input.
         state.aiming = preserveAim || (snapshot.aiming && !inputAllowed);
         state.aimPoint = localAim ? localAim.aimPoint : snapshot.aimPoint;
         state.aimTension = localAim ? localAim.aimTension : snapshot.aimTension;
         state.mapTime = onlineInterpolation.fromMapTime;
         state.repositionMode = snapshot.repositionMode || null;
+        state.phaseBeforeTriggerAim = snapshot.pendingTriggerCharge?.phaseBeforeAim || snapshot.phaseBeforeTriggerAim || state.phaseBeforeTriggerAim;
         const incomingPower = snapshot.powerMeter ? { ...snapshot.powerMeter, lastAt: snapshotTime } : null;
         if (incomingPower?.stage === 'locked') {
           incomingPower.lockedAt = state.powerMeter?.unitId === incomingPower.unitId && state.powerMeter.stage === 'locked'
@@ -8079,8 +8557,11 @@
         }
         state.powerMeter = localPower || incomingPower;
         state.triggerPlacementUsed = snapshot.triggerPlacementUsed;
+        state.lastTriggerCast = snapshot.lastTriggerCast || [null, null];
         state.triggerPlacementCount = snapshot.triggerPlacementCount;
+        state.triggerBonusCharges = snapshot.triggerBonusCharges || [0, 0];
         state.refineryUses = snapshot.refineryUses || [0, 0];
+        state.refineryBonusCharges = snapshot.refineryBonusCharges || [0, 0];
         if (snapshot.hero) {
           state.heroOffers = snapshot.hero.offers;
           state.heroChoices = snapshot.hero.choices;
@@ -8110,6 +8591,9 @@
           (snapshot.pendingUnit ? Object.assign(new CurlingUnit({ id: snapshot.pendingUnit.id,
             owner: snapshot.pendingUnit.owner, turnNumber: snapshot.pendingUnit.turnNumber,
             x: snapshot.pendingUnit.x, y: snapshot.pendingUnit.y }), snapshot.pendingUnit) : null);
+        state.supportUnit = snapshot.supportUnit ? state.units.find(unit => unit.id === snapshot.supportUnit.id) ||
+          Object.assign(new CurlingUnit({ id: snapshot.supportUnit.id, owner: snapshot.supportUnit.owner,
+            turnNumber: snapshot.supportUnit.turnNumber, x: snapshot.supportUnit.x, y: snapshot.supportUnit.y }), snapshot.supportUnit) : null;
         state.repositionUnit = state.units.find(unit => unit.id === snapshot.repositionUnitId) || null;
         mapIndicator.textContent = currentMap.name;
         dealPlayer.textContent = snapshot.dealPlayer;
@@ -8157,8 +8641,24 @@
           return;
         }
         if (!onlineSession?.started || onlineSession.role !== 'host' || packet.playerIndex !== 1 || turns.playerIndex !== 1 ||
-            !['placement', 'aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase)) return;
+            !['placement', 'aiming', 'sliding', 'turn-ready', 'reposition', 'trigger-select'].includes(state.phase)) return;
         const action = packet.action;
+        if (state.phase === 'trigger-select' && action.type === 'trigger-charge' &&
+            state.pendingTriggerCharge?.owner === packet.playerIndex &&
+            action.unitId === state.pendingTriggerCharge.unitId && action.cardInstanceId === state.pendingTriggerCharge.cardInstanceId) {
+          const type = ITEM_TRIGGERS.find(item => item.id === action.typeId);
+          if (type && completeTriggerCharge(state.pendingTriggerCharge, type)) {
+            closeTriggerTypeSelection(false);
+            publishOnlineSnapshot(performance.now());
+          }
+          return;
+        }
+        if (action.type === 'board-card') {
+          useBoardCard(action.cardId, 1, action.point);
+          publishOnlineSnapshot(performance.now());
+          return;
+        }
+        if (state.phase === 'trigger-select') return;
         if (action.type === 'refine-card' && heroFor(1)?.id === 'refiner') {
           if (refineHandCard(action.cardInstanceId, 1, { authoritative: true })) publishOnlineSnapshot(performance.now());
           return;
@@ -8173,14 +8673,14 @@
         } else if (action.type === 'power-lock' && needsPowerMeter() && activeLaunchUnit()?.id === action.unitId) {
           lockPowerMeter(action.value);
         } else if (action.type === 'launch' && ['aiming', 'reposition'].includes(state.phase) && action.aimPoint) {
-          const launchUnit = state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit;
+          const launchUnit = activeLaunchUnit();
           if (state.phase === 'reposition' && state.repositionMode === 'reposition' && launchUnit?.refinedReposition) {
             if (![.3, .5, .7, 1].includes(action.power)) return;
             launchUnit.refinedRepositionPower = action.power;
           }
           const dx = action.aimPoint.x - launchUnit?.x;
           const dy = action.aimPoint.y - launchUnit?.y;
-          const maxDistance = state.repositionMode === 'ammo' ? CONFIG.maxPullDistance : CONFIG.directionPullDistance;
+        const maxDistance = ['ammo', 'trigger', 'heavy-blow'].includes(state.repositionMode) ? CONFIG.maxPullDistance : CONFIG.directionPullDistance;
           if (!Number.isFinite(dx) || !Number.isFinite(dy) || Math.hypot(dx, dy) > maxDistance + 1) return;
           state.aiming = true;
           state.aimPoint = action.aimPoint;
@@ -8192,8 +8692,9 @@
           endTurn();
         } else if (action.type === 'trigger' && remainingTriggerPlacements(1) > 0 && canPlaceItemTrigger(action.point)) {
           const type = ITEM_TRIGGERS.find(item => item.id === action.typeId);
-          if (type) {
+          if (type && state.lastTriggerCast?.[1] !== type.id) {
             state.triggers.push({ entityKind: ENTITY_KIND.TRIGGER, id: `online-trigger-${Date.now()}`, type, owner: 1, x: action.point.x, y: action.point.y, radius: CONFIG.unitRadius * .5 });
+            state.lastTriggerCast[1] = type.id;
             spendTriggerPlacement(1);
             emitGameFeedback('triggerPlace', action.point, '트리거 배치', PLAYER[1].color);
             updateHud();
@@ -8232,6 +8733,9 @@
         onlineSession.roundIndex = roundIndex;
         onlineSession.result = null;
         state.refineryUses = [0, 0];
+        state.refineryBonusCharges = [0, 0];
+        state.triggerBonusCharges = [0, 0];
+        state.lastTriggerCast = [null, null];
         const map = MAPS.find(item => item.id === onlineSession.maps[roundIndex]) || MAPS[0];
         state.selectedMap = map;
         state.currentMap = map;
@@ -8345,6 +8849,8 @@
         state.currentMap = state.selectedMap;
         state.mapTime = 0;
         state.refineryUses = [0, 0];
+        state.refineryBonusCharges = [0, 0];
+        state.triggerBonusCharges = [0, 0];
         mapIndicator.textContent = state.currentMap.name;
         mapSelectOverlay.hidden = true;
         dealOverlay.hidden = true;
@@ -8420,6 +8926,7 @@
 
       function dealCards() {
         state.phase = 'dealing';
+        state.lastTriggerCast = [null, null];
         if (state.aiMode && guestProfile?.username && guestToken && !state.aiMatchPromise) {
           const token = guestToken;
           state.aiMatchToken = token;
@@ -9083,6 +9590,10 @@
             element.setAttribute('role', 'button');
             element.tabIndex = concealed ? -1 : 0;
             element.setAttribute('aria-label', concealed ? '상대 비공개 카드' : `${cardDisplayName(card)} 카드`);
+            if (!concealed && ['dark-charge', 'reinforcements'].includes(card.id)) {
+              element.title = card.id === 'reinforcements' ? '기본 스톤 발사 후 게임판에 끌어다 놓아 지원군을 배치합니다.' : '게임판에 끌어다 놓아 트리거를 충전합니다.';
+              element.setAttribute('aria-label', `${cardDisplayName(card)} 카드. 게임판에 끌어다 놓아 사용`);
+            }
             element.classList.toggle('refined-card', Boolean(card.refined));
             if (!concealed) {
               element.addEventListener('pointerdown', beginCardDrag);
@@ -9531,11 +10042,12 @@
           ctx.beginPath();
           ctx.arc(0, 0, unit.radius, 0, Math.PI * 2);
           ctx.clip();
+          if (isNeutralStone(unit)) ctx.filter = 'grayscale(1) contrast(1.15)';
           ctx.drawImage(image, -unit.radius, -unit.radius, unit.radius * 2, unit.radius * 2);
           ctx.restore();
           ctx.beginPath();
           ctx.arc(0, 0, unit.radius - .75, 0, Math.PI * 2);
-          ctx.strokeStyle = 'rgba(220, 232, 230, .28)';
+          ctx.strokeStyle = isNeutralStone(unit) ? 'rgba(241, 233, 203, .85)' : 'rgba(220, 232, 230, .28)';
           ctx.lineWidth = 1.5;
           ctx.stroke();
         } else {
@@ -9665,6 +10177,33 @@
             ctx.shadowBlur = aimingBlackHole || emittingBlackHole ? 8 : 5;
             ctx.beginPath();
             ctx.arc(Math.cos(angle) * orbit, Math.sin(angle) * orbit, particle % 4 === 0 ? 2.5 : 1.7, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+        if (unit.heavyBlowCharged) {
+          const time = performance.now() / 1000;
+          const pulse = .5 + .5 * Math.sin(time * 3.1);
+          ctx.save();
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.strokeStyle = `rgba(220, 187, 132, ${.3 + pulse * .22})`;
+          ctx.lineWidth = 1.2;
+          ctx.shadowColor = '#e0b878';
+          ctx.shadowBlur = 5 + pulse * 5;
+          for (let ring = 0; ring < 2; ring += 1) {
+            const radius = unit.radius + 5 + ring * 4 + Math.sin(time * 2 + ring * 1.7) * 1.5;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, radius, radius * (.72 + ring * .08), time * (ring ? -.24 : .18),
+              time * 1.4 + ring * 1.9, time * 1.4 + ring * 1.9 + Math.PI * (1.18 + ring * .12));
+            ctx.stroke();
+          }
+          for (let mote = 0; mote < 5; mote += 1) {
+            const angle = time * (mote % 2 ? -.55 : .72) + mote * Math.PI * 2 / 5;
+            const orbit = unit.radius + 4 + Math.sin(time * 2.4 + mote) * 2;
+            ctx.globalAlpha = .38 + pulse * .32;
+            ctx.fillStyle = mote % 2 ? '#f4e2c3' : '#c58a54';
+            ctx.beginPath();
+            ctx.arc(Math.cos(angle) * orbit, Math.sin(angle) * orbit, 1.2 + (mote % 3) * .35, 0, Math.PI * 2);
             ctx.fill();
           }
           ctx.restore();
@@ -9831,14 +10370,16 @@
         ctx.save();
         ctx.translate(bullet.x, bullet.y);
         ctx.rotate(Math.atan2(bullet.vy, bullet.vx));
-        ctx.shadowColor = '#ffe58a';
-        ctx.shadowBlur = 12;
-        ctx.fillStyle = '#fff3b0';
+        const triggerColor = bullet.projectileKind === 'charged-trigger'
+          ? ITEM_TRIGGERS.find(item => item.id === bullet.triggerTypeId)?.color || '#b78aff' : '#ffe58a';
+        ctx.shadowColor = triggerColor;
+        ctx.shadowBlur = bullet.projectileKind === 'charged-trigger' ? 16 : 12;
+        ctx.fillStyle = bullet.projectileKind === 'charged-trigger' ? '#f0ddff' : '#fff3b0';
         ctx.beginPath();
         ctx.ellipse(0, 0, bullet.radius * 1.8, bullet.radius, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.shadowBlur = 0;
-        ctx.strokeStyle = '#d18d2c';
+        ctx.strokeStyle = triggerColor;
         ctx.lineWidth = 1.5;
         ctx.stroke();
         ctx.restore();
@@ -9848,7 +10389,92 @@
         for (const effect of state.effects) {
           const progress = effect.age / effect.duration;
           ctx.save();
-          if (effect.type === 'brick-drop') {
+          if (effect.type === 'heavy-blow-wave') {
+            const t = Math.max(0, Math.min(1, progress));
+            const travel = 1 - (1 - t) ** 2.15;
+            const front = Math.max(2, effect.range * travel);
+            const fade = (1 - t) ** 1.35;
+            const half = effect.halfAngle || .39;
+            ctx.translate(effect.x, effect.y);
+            ctx.rotate(effect.angle);
+            ctx.globalCompositeOperation = 'lighter';
+            const field = ctx.createLinearGradient(0, 0, front, 0);
+            field.addColorStop(0, `rgba(202,160,106,${.02 * fade})`);
+            field.addColorStop(.48, `rgba(229,205,165,${(effect.refined ? .16 : .12) * fade})`);
+            field.addColorStop(1, `rgba(255,241,207,${.03 * fade})`);
+            ctx.fillStyle = field;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            for (let i = 0; i <= 28; i += 1) {
+              const angle = -half + i / 28 * half * 2;
+              const roughness = 1 + Math.sin(i * 2.31 + effect.age * 26) * .012 + Math.sin(i * .77) * .009;
+              const r = front * roughness;
+              ctx.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
+            }
+            ctx.closePath(); ctx.fill();
+
+            // Hand-drawn pressure creases and a broken, dusty leading edge.
+            for (let band = 0; band < (effect.refined ? 5 : 3); band += 1) {
+              const phase = (t * .82 + band * .19) % 1;
+              const radius = effect.range * phase;
+              if (radius < 5 || radius > front + 3) continue;
+              ctx.globalAlpha = fade * (.2 + .12 * (1 - phase));
+              ctx.strokeStyle = band % 2 ? '#c18b54' : '#efe0c2';
+              ctx.lineWidth = band === 0 ? (effect.refined ? 3.2 : 2.4) : 1.1;
+              ctx.beginPath();
+              for (let i = 0; i <= 24; i += 1) {
+                const angle = -half + i / 24 * half * 2;
+                const wobble = Math.sin(i * 2.67 + effect.age * 21 + band) * (2.2 + band * .55);
+                const r = radius + wobble;
+                const x = Math.cos(angle) * r;
+                const y = Math.sin(angle) * r;
+                if (!i) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+              }
+              ctx.stroke();
+            }
+            const flecks = effect.refined ? 48 : 32;
+            for (let i = 0; i < flecks; i += 1) {
+              const phase = (i * .61803398875 + t * (effect.refined ? 1.26 : 1.05)) % 1;
+              const angle = -half + ((i * .754877666) % 1) * half * 2;
+              const radius = front * phase;
+              const flutter = Math.sin(effect.age * 31 + i * 5.3) * 2.5;
+              ctx.globalAlpha = fade * (.18 + .3 * (1 - phase));
+              ctx.fillStyle = i % 4 === 0 ? '#c18b54' : '#eee0c5';
+              ctx.beginPath();
+              ctx.ellipse(Math.cos(angle) * radius, Math.sin(angle) * radius + flutter,
+                i % 5 === 0 ? 2.8 : 1.25, i % 5 === 0 ? 1.25 : .7, angle, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          } else if (effect.type === 'heavy-blow-hit' || effect.type === 'heavy-blow-chain-hit' || effect.type === 'heavy-blow-fracture') {
+            const t = Math.max(0, Math.min(1, progress));
+            const fade = (1 - t) ** 1.55;
+            const radius = 8 + 42 * (1 - (1 - t) ** 2);
+            ctx.translate(effect.x, effect.y);
+            ctx.globalCompositeOperation = 'lighter';
+            for (let ring = 0; ring < (effect.defensePeeled ? 3 : 2); ring += 1) {
+              ctx.globalAlpha = fade * (.42 - ring * .09);
+              ctx.strokeStyle = ring === 1 ? '#bd8955' : '#e9ddc4';
+              ctx.lineWidth = ring === 0 ? 2.2 : 1.1;
+              ctx.beginPath();
+              ctx.ellipse(0, 0, radius * (1 + ring * .18), radius * (.42 + ring * .13),
+                t * (ring % 2 ? -1 : 1) * .3, -.22 + ring * .7, Math.PI * 1.62 + ring * .5);
+              ctx.stroke();
+            }
+            if (effect.defensePeeled || effect.type === 'heavy-blow-fracture') {
+              for (let shard = 0; shard < 8; shard += 1) {
+                const angle = shard * Math.PI / 4 + t * 1.5;
+                const distance = radius * (.35 + t * .42);
+                ctx.globalAlpha = fade * .7;
+                ctx.strokeStyle = shard % 2 ? '#c18b54' : '#efe0c2';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(Math.cos(angle) * distance, Math.sin(angle) * distance);
+                ctx.lineTo(Math.cos(angle + .16) * (distance + 8), Math.sin(angle + .16) * (distance + 8));
+                ctx.lineTo(Math.cos(angle - .09) * (distance + 4), Math.sin(angle - .09) * (distance + 4));
+                ctx.closePath(); ctx.stroke();
+              }
+            }
+          } else if (effect.type === 'brick-drop') {
             const t = Math.max(0, Math.min(1, progress));
             const descend = t * t;
             const scale = 2.35 - 1.35 * descend;
@@ -10145,7 +10771,7 @@
       }
 
       function drawAim() {
-        const unit = state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit;
+        const unit = activeLaunchUnit();
         if (!state.aiming || !unit || !state.aimPoint) {
           aimOverlay.style.display = 'none';
           bulletAimPaths.forEach(path => path?.setAttribute('d', ''));
@@ -10161,7 +10787,7 @@
         const end = screenPoint(state.aimPoint);
         const scale = rect.width / canvas.width;
         const aimingBlackHole = state.repositionMode === 'blackhole';
-        const aimingAmmo = state.repositionMode === 'ammo';
+        const aimingAmmo = ['ammo', 'trigger'].includes(state.repositionMode);
         if (aimingBlackHole) {
           aimPath.setAttribute('d', '');
           aimTip.setAttribute('display', 'none');
@@ -10242,7 +10868,9 @@
           'placement-impact': 2.1,
           pulse: 5.5,
           blackhole: 6.5,
-          'repulsion-wave': 2.4
+          'repulsion-wave': 2.4,
+          'heavy-blow-wave': 8.2,
+          'heavy-blow-chain-hit': 3.2
         };
         const shakeEffect = [...state.effects].reverse().find(effect => shakeStrength[effect.type]);
         if (shakeEffect) {
@@ -10275,7 +10903,7 @@
 
       function drawPlacementPreview() {
         const preview = state.placementPreview;
-        const unit = turns.currentUnit;
+        const unit = placementUnit();
         if (state.phase !== 'placement' || !preview || !unit) return;
         const image = images[unit.owner];
         ctx.save();
@@ -10291,6 +10919,7 @@
         ctx.setLineDash([]);
         if (image.complete && image.naturalWidth) {
           ctx.beginPath(); ctx.arc(preview.x, preview.y, unit.radius, 0, Math.PI * 2); ctx.clip();
+          if (isNeutralStone(unit)) ctx.filter = 'grayscale(1) contrast(1.15)';
           ctx.drawImage(image, preview.x - unit.radius, preview.y - unit.radius, unit.radius * 2, unit.radius * 2);
         }
         ctx.restore();
@@ -10431,7 +11060,7 @@
         const unit = activeLaunchUnit();
         const meter = state.powerMeter;
         if (!unit || meter?.stage !== 'locked' || meter.unitId !== unit.id || !needsPowerMeter()) return;
-        const amount = Math.round(meter.value * heroRule(unit.owner, 'powerScale', 1) * 100);
+        const amount = Math.round(meter.value * (isNeutralStone(unit) ? 1 : heroRule(unit.owner, 'powerScale', 1)) * 100);
         ctx.save();
         ctx.globalAlpha = .68;
         ctx.fillStyle = '#fff2d3';
@@ -10503,7 +11132,7 @@
         if (unit.ability?.refinedEffectImmunity?.length) effects.push('정제된 속임수 · 방출 및 블랙홀 방출 면역');
         if (unit.relaunchAvailable && !unit.relaunchUsed) effects.push('재배치 가능');
         return {
-          title: `${PLAYER[unit.owner].name} · ${unit.turnNumber}번째 스톤`,
+          title: isNeutralStone(unit) ? '중립 스톤 · 지원군' : `${PLAYER[unit.owner].name} · ${unit.turnNumber}번째 스톤`,
           detail: effects.length ? `적용 효과: ${effects.join(', ')}` : unit.status === 'ready' ? '아직 발사 전 · 적용 효과 없음' : '적용 효과 없음'
         };
       }
@@ -10743,7 +11372,7 @@
         }
         if (!['aiming', 'reposition'].includes(state.phase) || !canControlPlayer(turns.playerIndex)) return;
         const point = eventPoint(event);
-        const unit = state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit;
+        const unit = activeLaunchUnit();
         if (!unit) return;
         if (needsPowerMeter() && (state.powerMeter?.unitId !== unit.id || state.powerMeter.stage !== 'locked')) return;
         if (state.phase === 'reposition' && state.repositionMode === 'reposition' && unit.refinedReposition &&
@@ -10757,7 +11386,7 @@
 
       canvas.addEventListener('pointermove', event => {
         if (state.phase === 'placement') updatePlacementPreview(eventPoint(event));
-        const unit = state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit;
+        const unit = activeLaunchUnit();
         if (state.aiming && localAimPointerId === event.pointerId && unit) {
           updateAimFromInput(unit, eventPoint(event));
         }
@@ -10769,7 +11398,7 @@
       canvas.addEventListener('pointerup', event => {
         if (!state.aiming || localAimPointerId !== event.pointerId) return;
         localAimPointerId = null;
-        const unit = state.phase === 'reposition' ? state.repositionUnit : turns.currentUnit;
+        const unit = activeLaunchUnit();
         if (unit) updateAimFromInput(unit, eventPoint(event));
         if (shouldForwardOnlineAction()) {
           sendOnlineAction({ type: 'launch', aimPoint: state.aimPoint, power: unit?.refinedRepositionPower });
@@ -11278,6 +11907,8 @@
           resultOverlay.hidden = true;
           startOverlay.hidden = false;
           state.refineryUses = [0, 0];
+          state.refineryBonusCharges = [0, 0];
+          state.triggerBonusCharges = [0, 0];
           state.phase = 'intro';
         } else openMapSelection('result');
       });

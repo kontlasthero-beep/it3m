@@ -1,4 +1,4 @@
-const CACHE_NAME = 'second-chance-v121';
+const CACHE_NAME = 'second-chance-v127';
 const APP_FILES = [
   './',
   './index.html',
@@ -127,6 +127,19 @@ const APP_FILES = [
   './Card_illustration/Escape.png',
   './Card_illustration/Data Barrier-v5.png',
   './Card_illustration/Repulsion Field.png',
+  './Card_illustration/Dark Charge.png',
+  './Card_illustration/refined/dark-charge.png',
+  './Card_illustration/Haebang.png',
+  './Card_illustration/refined/haebang.png',
+  './Card_illustration/heavy-blow.png',
+  './Card_illustration/refined/heavy-blow.png',
+  './Card_illustration/reinforcements.png',
+  './Card_illustration/refined/reinforcements.png',
+  './효과음/ElevenLabs_Drafts/release-charge-2s.mp3',
+  './효과음/ElevenLabs_Drafts/release-fire-2s.mp3',
+  './효과음/ElevenLabs_Drafts/heavy-blow-charge-2s.mp3',
+  './효과음/ElevenLabs_Drafts/heavy-blow-release-2s.mp3',
+  './효과음/ElevenLabs_Drafts/reinforcements-land-2s.mp3',
   './영웅 초상화/trap master.png',
   './영웅 초상화/hunter.png',
   './영웅 초상화/big boy.png',
