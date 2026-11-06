@@ -1,0 +1,37 @@
+{
+  "empty": {
+    "rim_max_delta": 0.0,
+    "median_step_delta": 0.639,
+    "seam_to_median_step": 1.35
+  },
+  "pulse": {
+    "rim_max_delta": 0.0,
+    "median_step_delta": 1.851,
+    "seam_to_median_step": 1.72
+  },
+  "blackhole": {
+    "rim_max_delta": 0.0,
+    "median_step_delta": 7.072,
+    "seam_to_median_step": 1.09
+  },
+  "guard": {
+    "rim_max_delta": 0.0,
+    "median_step_delta": 1.519,
+    "seam_to_median_step": 1.0
+  },
+  "hardening": {
+    "rim_max_delta": 0.0,
+    "median_step_delta": 1.261,
+    "seam_to_median_step": 1.42
+  },
+  "reposition": {
+    "rim_max_delta": 0.0,
+    "median_step_delta": 1.202,
+    "seam_to_median_step": 0.38
+  },
+  "repulsion": {
+    "rim_max_delta": 0.0,
+    "median_step_delta": 2.02,
+    "seam_to_median_step": 1.66
+  }
+}

@@ -295,27 +295,28 @@
   }
 }
 
-/* Login and guest-confirm controls use the tactile salvaged slot surface.
-   Border-image artwork paints inside the existing hit box, so sizing stays fixed. */
+/* Entry buttons use the same nine-slice raster artwork as the lobby.
+   These URLs resolve from this root-level stylesheet. */
 #startOverlay.is-home-lobby:not(.is-profile-lobby) :is(#accountScreen, #guestWarningScreen) .account-actions button,
 #startOverlay.is-home-lobby:not(.is-profile-lobby) #guestPlayButton {
-  border: 0 solid transparent;
-  border-image-source: var(--sc-hud-button-art);
+  border: 1px solid transparent;
+  border-radius: 0;
+  background-color: transparent;
+  background-image: none;
+  border-image-source: url("shared-ui/salvage-hud-v2/button.png");
   border-image-slice: 18% 8% fill;
   border-image-width: 10px 14px;
   border-image-repeat: stretch;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
+  box-shadow: 0 4px 12px #0008;
 }
 
 #startOverlay.is-home-lobby:not(.is-profile-lobby) :is(#accountScreen, #guestWarningScreen) .account-actions button {
-  border-image-source: var(--sc-hud-button-compact-art);
+  border-image-source: url("shared-ui/salvage-hud-v2/button-compact.png");
 }
 
 #startOverlay.is-home-lobby:not(.is-profile-lobby) #accountSubmitButton,
 #startOverlay.is-home-lobby:not(.is-profile-lobby) #confirmGuestButton {
-  border-image-source: var(--sc-hud-button-plum-art);
+  border-image-source: url("shared-ui/salvage-hud-v2/button-plum.png");
 }
 
 #startOverlay.is-home-lobby:not(.is-profile-lobby) :is(#accountScreen, #guestWarningScreen) .account-actions button:hover,

@@ -47,7 +47,7 @@ function presentProfile(row) {
     draws: row.draws || 0,
     tutorialCompleted: row.tutorialCompleted === true,
     adventureUnlocked: row.tutorialCompleted === true,
-    decks: normalizeDecks(row.decks, level, row.tutorialCompleted === true),
+    decks: normalizeDecks(row.decks, level, row.tutorialCompleted === true, row.deckHeroes),
     deckNames: normalizeDeckNames(row.deckNames),
     deckHeroes: normalizeDeckHeroes(row.deckHeroes),
     activePreset: Number.isInteger(row.activePreset) && row.activePreset >= 0 && row.activePreset < DECK_PRESET_COUNT ? row.activePreset : 0

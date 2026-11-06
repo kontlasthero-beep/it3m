@@ -333,5 +333,32 @@
     "file": "reinforcements-land-2s.mp3",
     "duration": 2,
     "prompt": "Exactly two seconds. Alternate version of a heavy curling stone landing on an industrial table in a dark post-apocalyptic fantasy game: a weighty descending air rush, a compact deep stone-on-metal thud, a few subtle grit particles and a short warm resonant tail. Distinct from the regular stone arrival with a restrained boss-underling presence, clear audible volume, slight reverb. No voice, no music, no gunshot, no electronic beep."
+  },
+  {
+    "id": "trackingLock",
+    "name": "추적 표적 지정",
+    "group": "카드와 트리거",
+    "description": "헌터가 상대 스톤을 추적 대상으로 지정할 때",
+    "file": "tracking-lock-2s.mp3",
+    "duration": 2,
+    "prompt": "Exactly two seconds. A hunter's mechanical optical scope rapidly narrows onto a moving target in a dark post-apocalyptic fantasy world: soft copper lens rotation, a restrained rushing focus sweep, one crisp tactile lock click, and a short tense resonant tail. Clear audible volume, subtle natural reverb. No voice, no music, no gunshot, no digital beeps."
+  },
+  {
+    "id": "neutralizeArm",
+    "name": "무력화 시전",
+    "group": "카드와 트리거",
+    "description": "상대 스톤에 무력화가 충전될 때",
+    "file": "neutralize-arm-v2-2s.mp3",
+    "duration": 2,
+    "prompt": "Exactly two seconds. Loud and present in a busy game mix. Hunter marks an enemy stone: two deep, tight heartbeat thumps, a gritty shadow-energy sweep, then a firm low metallic lock with a short dark reverb tail. Post-apocalyptic dark fantasy, tactile and ominous. Strong midrange attack, controlled bass, no silence at the start. No voice, music, gunshot or electronic beeps."
+  },
+  {
+    "id": "fixedLock",
+    "name": "고정 자물쇠",
+    "group": "카드와 트리거",
+    "description": "스톤이 고정될 때",
+    "file": "fixed-lock-2s.mp3",
+    "duration": 2,
+    "prompt": "Exactly two seconds. A heavy salvaged metal padlock closes around a game stone: solid shackle snap, dense internal locking bolts click into place, and a short weighty resonant metallic tail. Industrial post-apocalyptic fantasy, clear present volume, slight reverb. No voice, no music, no gunshot, no electronic beep."
   }
 ]

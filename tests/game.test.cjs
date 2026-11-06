@@ -1497,7 +1497,7 @@ test('refined support stone belongs to its caster and neutral stones collide wit
     const barrier=new BrickUnit({x:500,y:355,owner:0,barrier:true}); state.bricks=[barrier];
     resolveBrickCollisions(); assert.notEqual(neutral.x,500);
     neutral.status='fallen'; settleFallenUnit(neutral);
-    assert.equal(state.fallPoints[0],25);`);
+    assert.equal(state.fallPoints[0],0);`);
 });
 
 test('support placement and neutral identity survive an online snapshot', () => {
@@ -1530,4 +1530,116 @@ test('either player can spend a card on a neutral stone and refined escape score
     neutral.vx=100; markRefinedEscapeMovement(neutral); resolveRefinedEscapes();
     assert.equal(neutral.status,'fallen'); assert.equal(state.escapePoints[1],10);
     assert.equal(state.escapePoints[0],0);`);
+});
+
+test('Hunter tracking targets only opponent stones, reduces final friction and draws on removal', () => {
+  const g = game();
+  g.run(`state.currentMap=MAPS[0]; state.heroChoices=['hunter','big-boy']; turns.reset(0);
+    const ally=turns.createCurrentUnit(); ally.status='resting'; state.phase='turn-ready';
+    const enemy=new CurlingUnit({id:'tracked-enemy',owner:1,turnNumber:1,x:ally.x-70,y:ally.y});
+    enemy.status='resting'; state.units.push(enemy);
+    const neutral=new CurlingUnit({id:'tracked-neutral',owner:1,turnNumber:1,x:ally.x-120,y:ally.y});
+    neutral.neutral=true; neutral.status='resting'; state.units.push(neutral);
+    state.decks[0]=[{...deckCard('guard')},{...deckCard('pulse')}];
+    state.hands[0]=[{...deckCard('tracking'),instanceId:'track-one'}];
+    assert.equal(canUseCardOnUnit(state.hands[0][0],0,ally),false);
+    assert.equal(canUseCardOnUnit(state.hands[0][0],0,neutral),false);
+    assert.equal(findCardTarget({x:enemy.x,y:enemy.y},0,'tracking'),enemy);
+    const base=enemy.frictionAtPosition();
+    assert.equal(useCard('track-one',0,enemy),true);
+    assert.equal(enemy.frictionAtPosition(),base*.5);
+    assert.equal(canUseCardOnUnit(deckCard('tracking'),0,enemy),false);
+    enemy.ability={hardening:true,stacks:{hardening:1}};
+    assert.ok(Math.abs(enemy.frictionAtPosition()-base*1.5)<1e-10);
+    enemy.status='fallen'; settleFallenUnit(enemy);
+    assert.equal(state.hands[0].length,1);
+    assert.equal(state.decks[0].length,1);
+    settleFallenUnit(enemy); assert.equal(state.hands[0].length,1);
+    const second=new CurlingUnit({id:'refined-target',owner:1,turnNumber:1,x:500,y:310});
+    second.status='resting'; state.units.push(second);
+    state.hands[0].push({...deckCard('tracking'),instanceId:'track-refined',refined:true});
+    assert.equal(useCard('track-refined',0,second),true);
+    second.status='fallen'; settleFallenUnit(second);
+    assert.equal(state.hands[0].length,2);
+    assert.equal(state.decks[0].length,0);
+    const empty=new CurlingUnit({id:'empty-bag-target',owner:1,turnNumber:1,x:510,y:320});
+    empty.status='resting'; state.units.push(empty);
+    state.hands[0].push({...deckCard('tracking'),instanceId:'empty-track'});
+    assert.equal(useCard('empty-track',0,empty),true);
+    empty.status='fallen'; settleFallenUnit(empty);
+    assert.equal(state.hands[0].length,2);
+    assert.equal(state.decks[0].length,0);
+    const escaped=new CurlingUnit({id:'escape-target',owner:1,turnNumber:1,x:520,y:330});
+    escaped.status='resting'; state.units.push(escaped);
+    escaped.tracking={owner:0,drawCount:1};
+    state.decks[0]=[{...deckCard('hardening')}];
+    state.playerLevels=[2,2]; turns.globalTurn=1; state.phase='turn-ready';
+    state.hands[1]=[{...deckCard('escape'),instanceId:'enemy-escape'}];
+    assert.equal(useCard('enemy-escape',1,escaped),true);
+    assert.equal(escaped.status,'fallen'); assert.equal(state.hands[0].length,3);
+    assert.equal(state.decks[0].length,0);`);
+});
+
+test('Hunter tracking mark and card reward replicate to the online guest', () => {
+  const {host, guest, send} = onlinePair();
+  host.run(`state.heroChoices=['big-boy','hunter'];
+    const target=new CurlingUnit({id:'online-tracked',owner:0,turnNumber:1,x:510,y:320});
+    target.status='resting'; state.units.push(target);
+    state.hands[1]=[{...deckCard('tracking'),instanceId:'online-track'}];
+    state.decks[1]=[{...deckCard('guard')}];
+    assert.equal(useCard('online-track',1,target),true);`);
+  send(2);
+  guest.run(`assert.equal(state.units.find(unit=>unit.id==='online-tracked').tracking.owner,1);`);
+  host.run(`const target=state.units.find(unit=>unit.id==='online-tracked');
+    target.status='fallen'; settleFallenUnit(target);`);
+  send(3);
+  guest.run(`assert.equal(state.hands[1].length,1);
+    assert.equal(state.decks[1].length,0);
+    assert.equal(state.units.find(unit=>unit.id==='online-tracked').tracking,null);`);
+});
+
+test('Hunter neutralization arms only an enemy, changes it on impact, and gives no neutral knockout points', () => {
+  const g = game();
+  g.run(`state.currentMap=MAPS[0]; state.heroChoices=['hunter','big-boy']; turns.reset(0);
+    const ally=turns.createCurrentUnit(); ally.status='sliding'; ally.x=550; ally.y=355; ally.vx=-120;
+    const enemy=new CurlingUnit({id:'target',owner:1,turnNumber:1,x:500,y:355});
+    enemy.status='resting'; state.units=[enemy,ally]; state.phase='turn-ready';
+    state.hands[0]=[{...deckCard('neutralize'),instanceId:'neutralize-one'}];
+    assert.equal(canUseCardOnUnit(state.hands[0][0],0,ally),false);
+    assert.equal(useCard('neutralize-one',0,enemy),true);
+    assert.equal(Boolean(enemy.neutral),false); assert.ok(enemy.neutralization);
+    resolveCollisions();
+    assert.equal(enemy.neutral,true); assert.equal(enemy.neutralization,null);
+    enemy.status='fallen'; settleFallenUnit(enemy);
+    assert.equal(state.fallPoints[0],0); assert.equal(state.fallPoints[1],0);`);
+});
+
+test('refined neutralization locks the target at its location and survives online snapshots', () => {
+  const {host, guest, send} = onlinePair();
+  host.run(`state.currentMap=MAPS[0]; state.heroChoices=['hunter','big-boy']; turns.reset(0);
+    const ally=turns.createCurrentUnit(); ally.status='sliding'; ally.x=550; ally.y=355; ally.vx=-120;
+    const target=new CurlingUnit({id:'fixed-target',owner:1,turnNumber:1,x:500,y:355});
+    target.status='resting'; state.units=[target,ally]; state.phase='turn-ready';
+    state.hands[0]=[{...deckCard('neutralize'),instanceId:'refined-neutralize',refined:true}];
+    assert.equal(useCard('refined-neutralize',0,target),true);
+    assert.equal(target.fixed,true); assert.equal(target.x,500);
+    assert.equal(canUseCardOnUnit(deckCard('reposition'),0,target),false);
+    resolveCollisions();
+    assert.equal(target.neutral,true); assert.equal(target.x,500);
+    target.vx=400; target.vy=200; target.update(.1);
+    assert.equal(target.x,500); assert.equal(target.y,355);`);
+  send(2);
+  guest.run(`const target=state.units.find(unit=>unit.id==='fixed-target');
+    assert.equal(target.fixed,true); assert.equal(target.neutral,true);
+    assert.equal(target.fixedX,500); assert.equal(target.fixedY,355);`);
+});
+
+test('opponent trigger activation records the caster rather than the struck stone owner', () => {
+  const g = game();
+  g.run(`state.heroChoices=['trap-master','hunter']; state.lastTriggerCast=[null,null];
+    const target=new CurlingUnit({id:'opponent',owner:1,turnNumber:1,x:500,y:355});
+    target.status='resting'; state.units=[target];
+    activateTriggerOnUnit(target,ITEM_TRIGGERS.find(item=>item.id==='hardening'),{casterOwner:0});
+    assert.equal(state.lastTriggerCast[0],'hardening');
+    assert.equal(state.lastTriggerCast[1],null);`);
 });

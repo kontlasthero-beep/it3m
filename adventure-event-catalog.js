@@ -36,6 +36,10 @@
   // The editor reads these controls from the same catalogue as gameplay event types.
   // Add a field here whenever a runtime mechanic becomes configurable in the game.
   const mechanics = [
+    { category: 'stone', label: '스톤 · 충돌 상태', fields: [
+      { key: 'fixed', label: '고정 · 충격으로 움직이지 않음', type: 'boolean', default: false },
+      { key: 'neutralizeOnCollision', label: '다음 충돌 시 중립화', type: 'boolean', default: false }
+    ] },
     { category: 'beacon', label: '압력 비콘 · 전력 조건', fields: [
       { key: 'powerInitialActive', label: '조건이 없을 때 활성', type: 'boolean', default: false },
       { key: 'powerLogic', label: '조건 결합', type: 'select', options: [

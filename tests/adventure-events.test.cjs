@@ -77,3 +77,23 @@ test('object mechanic settings survive editor export and feed gameplay runtime',
   assert.equal(playable.props[0].collidable, false);
   assert.ok(catalog.mechanics.find(entry => entry.assetId === 'builtin:dummy-stone'));
 });
+
+test('placed stone fixed and neutralization settings round trip into the stage runtime', () => {
+  const stage = editor.createStage('fixed-stone');
+  stage.backgroundAssetId = 'map';
+  stage.assets = [{ id: 'map', dataUrl: 'data:image/png;base64,AA==', category: 'map' }];
+  stage.objective = { type: 'reach-zone', turnLimit: 1 };
+  stage.objects = [
+    { id: 'start', assetId: 'builtin:note', kind: 'note', owner: 'player', x: 100, y: 300, width: 10, height: 10, rotation: 0 },
+    { id: 'goal', assetId: 'builtin:zone', kind: 'zone', owner: 'neutral', x: 600, y: 300, width: 100, height: 100, rotation: 0 },
+    { id: 'target', assetId: 'builtin:stone-red', kind: 'stone', owner: 'opponent', x: 400, y: 300,
+      width: 58, height: 58, rotation: 0, runtime: { fixed: true, neutralizeOnCollision: true } }
+  ];
+  const saved = editor.normalizeStage(JSON.parse(JSON.stringify(stage)));
+  assert.deepEqual(saved.objects[2].runtime, { fixed: true, neutralizeOnCollision: true });
+  assert.deepEqual(runtime.prepareStage(saved).stones[0], {
+    id: 'target', x: 400, y: 300, radius: 29, owner: 1, fixed: true, neutralizeOnCollision: true
+  });
+  assert.ok(catalog.mechanics.some(entry => entry.category === 'stone' &&
+    entry.fields.some(field => field.key === 'fixed')));
+});

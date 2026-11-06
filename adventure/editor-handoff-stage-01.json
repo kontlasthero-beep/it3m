@@ -1,0 +1,72 @@
+{
+  "format": "second-chance-editor-handoff",
+  "version": 1,
+  "commandName": "에디터 이식 패키지",
+  "stageId": "stage-bc934cef-c173-4cc9-8e1b-f2985b6aa6de",
+  "stageSource": "adventure/stage-01.json",
+  "originalEditorExport": "C:/Users/kontl/Desktop/stage-bc934cef-c173-4cc9-8e1b-f2985b6aa6de.json",
+  "runtimeFiles": ["adventure-runtime.js", "index.html"],
+  "assets": [
+    { "id": "upload:2faeafb2-d4d3-4503-8653-d0802233428e", "category": "map", "path": "in-game-screen/curling-table-maps/data-center/background-concept.png" },
+    { "id": "upload:e6a30ac3-34c5-470a-bd9d-8f187cef2a90", "category": "structure", "path": "in-game-screen/game-objects/data-center-ruins/broken-cooling-manifold.png" },
+    { "id": "upload:22415aad-93d6-4370-b08c-fca478b71d2f", "category": "structure", "path": "in-game-screen/game-objects/data-center-ruins/collapsed-server-racks.png" },
+    { "id": "upload:3a12ce08-ff3d-479c-b568-7d98b3a70ce5", "category": "structure", "path": "in-game-screen/game-objects/data-center-ruins/server-debris-and-cables.png" },
+    { "id": "upload:fc661495-47a3-463e-b229-65b87893df7f", "category": "structure", "path": "in-game-screen/game-objects/data-center-ruins/shattered-ventilation-turbine.png" }
+  ],
+  "editorFeatures": [
+    {
+      "id": "reposition-trigger",
+      "sourceAssetId": "builtin:dummy-trigger",
+      "suggestedAssetId": "builtin:reposition-trigger",
+      "kind": "trigger",
+      "behavior": { "onCollect": "grant-card", "cardId": "reposition", "count": 1, "consumed": true, "frictionMultiplier": 2, "frictionSeconds": 1.5, "hiddenFromTooltip": ["frictionMultiplier", "frictionSeconds"], "eventDialogueWhen": "stone-rests" },
+      "stageBindings": [
+        { "objectId": "0bd68448-b7dc-4749-a417-c8f7cee4a829", "dialogueIds": ["7734cf91-08a7-420b-b2bc-e190457cb0a7"] },
+        { "objectId": "a1afb2c7-fdd8-42a9-b74b-b3052f6d4564", "dialogueIds": ["bfa26b88-023a-4f2a-a296-0127ee69a5c6", "79c752ad-bdd0-40e7-8f0b-776e8d265260"], "alsoDisables": "stage-fog", "disableWhen": "collect" }
+      ]
+    },
+    {
+      "id": "charged-dummy-stone",
+      "sourceAssetId": "builtin:dummy-stone",
+      "suggestedAssetId": "builtin:charged-dummy-stone",
+      "kind": "stone",
+      "behavior": { "fixed": true, "solid": true, "chargedAtStart": true, "pulseRadius": 118, "pulseImpulseMultiplier": 1.5, "pulseImpulseBase": 274.21875, "ricochetRestitution": 1, "rechargeSeconds": 1.5, "playerVelocityMultiplierOnHit": 0.5, "playerFrictionMultiplierOnHit": 0.5, "pulseEffectSeconds": 0.48 },
+      "stageObjectIds": ["8c7758b0-bf6e-4bd4-aa01-ec6fa4b31495", "88da9e67-f484-4218-914f-b0dc445c393f", "62c44a77-53df-4761-9788-d5115c7e1988"]
+    },
+    {
+      "id": "stage-fog",
+      "sourceAssetId": "builtin:dummy-structure",
+      "suggestedAssetId": "builtin:stage-fog",
+      "kind": "decoration",
+      "behavior": { "solid": false, "gradient": "dark-left-to-transparent-right", "goalVisible": true, "removeOnTriggerId": "a1afb2c7-fdd8-42a9-b74b-b3052f6d4564" },
+      "stageObjectIds": ["90ea72ab-61af-41df-9ca6-d3a0c08e3de3"]
+    },
+    {
+      "id": "player-spawn-note",
+      "sourceAssetId": "builtin:note",
+      "suggestedAssetId": "builtin:player-spawn",
+      "kind": "note",
+      "behavior": { "spawnPlayerStone": true, "visibleDuringPlay": false },
+      "stageObjectIds": ["f2c554f2-ce44-4e7b-8988-37af72983e17"]
+    },
+    {
+      "id": "rotated-static-prop",
+      "sourceAssetIds": ["upload:e6a30ac3-34c5-470a-bd9d-8f187cef2a90", "upload:22415aad-93d6-4370-b08c-fca478b71d2f", "upload:3a12ce08-ff3d-479c-b568-7d98b3a70ce5", "upload:fc661495-47a3-463e-b229-65b87893df7f"],
+      "kind": "structure",
+      "behavior": { "fixed": true, "solid": true, "collisionShape": "rotated-rectangle", "collisionWidthFactor": 0.72, "collisionHeightFactor": 0.72 }
+    }
+  ],
+  "stageRules": {
+    "objective": "reach-zone",
+    "goalObjectId": "a4af6aa2-ea0d-403a-9baf-6ec84c48d23f",
+    "fallBounds": { "left": 62, "right": 1132, "top": 73, "bottom": 662 },
+    "turnLimit": 1,
+    "startingHand": [],
+    "deck": [],
+    "noEndTurnButton": true,
+    "failureOnFall": true,
+    "failureAfterRestSeconds": 3,
+    "failureSuppressedWhileHoldingRepositionOrReaiming": true,
+    "dialogueCues": ["intro", "event", "failure", "success"]
+  }
+}

@@ -1,0 +1,19 @@
+# Beacon and floor-wire generation prompts
+
+Generated with the built-in `image_gen` tool, using transparent backgrounds. The data-center map served as the style reference for the beacon OFF image; beacon ON was edited from beacon OFF. The revised flat wire OFF image was generated separately, and wire ON was edited from it.
+
+## Pressure beacon, OFF
+
+> Use case: stylized-concept. Asset type: game-ready top-down PNG sprite for Second Chance adventure mode, POWER BEACON / PRESSURE PLATE, OFF state. Use the referenced map solely as visual style and scale context; DO NOT include the map or a background. Create one isolated, compact circular or softly hexagonal floor inset pressure beacon seen directly from overhead, a very thin flush plate embedded at floor level so a rolling stone can sit on top and activate it. Broad central landing area clearly inviting overlap by the stone, and a minimal segmented metal perimeter suggesting a pressure sensor; no raised bolts or guard rail that imply collision. Weathered gunmetal and copper with 15 years of decay, very restrained industrial/futuristic AAB technology, a few dark dormant circuit traces. Silhouette readable when scaled to about 80x80 board pixels. Actual fully transparent background and no cast shadow extending far outside the shape. OFF state: NO glowing lights, no particles. Perfectly centered, orthographic top-down camera, no perspective angle, no text, no letters, no stone, no people, no wall, no extra objects.
+
+## Pressure beacon, ON edit
+
+> Use case: precise-object-edit. Input image is the approved OFF pressure beacon sprite. Produce its ACTIVE state by changing ONLY lighting: illuminate the existing thin recessed slits in the exact same positions with a restrained cyan-blue energy glow; add a very soft close halo and at most a few tiny motes near the existing ring. Pixel-identical outer silhouette, ring segment geometry, central plate texture, dents, worn orange paint, scale, framing, orientation and transparent background. Do not redraw, redesign, add/remove plates or seams, change the center, or alter any non-lighting feature. This must be a frame-compatible alternate state for a single game object; toggling must not cause any shape shift. Keep the same 1:1 composition and fully transparent alpha outside the object.
+
+## Flat floor circuit, OFF
+
+> Use case: stylized-concept. Produce a transparent-background TOP-DOWN game sprite of a NON-COLLIDING floor conductor for a dark industrial data-center board. This is NOT a rail, cable, bar, threshold, platform, or separate object on top of the floor. Show ONLY ultra-flat engraved circuit lines and thin worn copper inlay: three narrow parallel traces with a few small etched nodes, running left-to-right across the FULL width and touching both image edges for seamless modular connection. Overall trace height less than 10% of the image height; absolutely no volume, raised edges, bolt heads, outer metal casing, shadow, or rim. Its dark OFF state has NO light. Appropriate to sit beneath a rolling stone. Perfectly overhead orthographic view, minimal readable design, transparent everywhere other than the etched traces; do not include floor texture, board, text, arrows, scene or props. 3:1 wide composition.
+
+## Flat floor circuit, ON edit
+
+> Use case: precise-object-edit. Input image is the approved OFF, flush floor circuit sprite. Create the ACTIVE version of EXACT SAME SPRITE. Change ONLY the illumination inside existing thin circuit traces: cool cyan-blue current travelling through those traces, faint local glow, subtle tiny luminous specks near a few nodes. Preserve pixel-identical geometry, number and positions of three lines and nodes, color and wear of copper edge, transparency, crop, horizontal 3:1 composition. Absolutely do not redesign, move, thicken, shorten or reshape anything; no floor, no rail, no text or new structure. It must be frame-compatible when switching OFF/ON in a game.

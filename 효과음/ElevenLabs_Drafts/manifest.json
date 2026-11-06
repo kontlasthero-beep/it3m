@@ -1,6 +1,6 @@
 {
   "provider": "ElevenLabs",
-  "generatedAt": "2026-11-05T14:17:46.481Z",
+  "generatedAt": "2026-11-06T07:04:47.219Z",
   "effects": [
     {
       "id": "start",
@@ -371,6 +371,36 @@
       "inactive": false,
       "duration": 2,
       "src": "효과음/ElevenLabs_Drafts/reinforcements-land-2s.mp3"
+    },
+    {
+      "id": "trackingLock",
+      "name": "추적 표적 지정",
+      "group": "카드와 트리거",
+      "description": "헌터가 상대 스톤을 추적 대상으로 지정할 때",
+      "prompt": "Exactly two seconds. A hunter's mechanical optical scope rapidly narrows onto a moving target in a dark post-apocalyptic fantasy world: soft copper lens rotation, a restrained rushing focus sweep, one crisp tactile lock click, and a short tense resonant tail. Clear audible volume, subtle natural reverb. No voice, no music, no gunshot, no digital beeps.",
+      "inactive": false,
+      "duration": 2,
+      "src": "효과음/ElevenLabs_Drafts/tracking-lock-2s.mp3"
+    },
+    {
+      "id": "neutralizeArm",
+      "name": "무력화 시전",
+      "group": "카드와 트리거",
+      "description": "상대 스톤에 무력화가 충전될 때",
+      "prompt": "Exactly two seconds. Loud and present in a busy game mix. Hunter marks an enemy stone: two deep, tight heartbeat thumps, a gritty shadow-energy sweep, then a firm low metallic lock with a short dark reverb tail. Post-apocalyptic dark fantasy, tactile and ominous. Strong midrange attack, controlled bass, no silence at the start. No voice, music, gunshot or electronic beeps.",
+      "inactive": false,
+      "duration": 2,
+      "src": "효과음/ElevenLabs_Drafts/neutralize-arm-v2-2s.mp3"
+    },
+    {
+      "id": "fixedLock",
+      "name": "고정 자물쇠",
+      "group": "카드와 트리거",
+      "description": "스톤이 고정될 때",
+      "prompt": "Exactly two seconds. A heavy salvaged metal padlock closes around a game stone: solid shackle snap, dense internal locking bolts click into place, and a short weighty resonant metallic tail. Industrial post-apocalyptic fantasy, clear present volume, slight reverb. No voice, no music, no gunshot, no electronic beep.",
+      "inactive": false,
+      "duration": 2,
+      "src": "효과음/ElevenLabs_Drafts/fixed-lock-2s.mp3"
     }
   ]
 }

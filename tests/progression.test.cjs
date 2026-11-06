@@ -36,6 +36,14 @@ test('eight-card bags allow one duplicate and respect unlock levels', async () =
   assert.equal(saved.activePreset, 1);
   assert.deepEqual((await store.login('deck_owner', 'long-password')).profile.decks[1], doubleHardening);
   assert.equal((await store.login('deck_owner', 'long-password')).profile.tutorialCompleted, true);
+  const hunterDeck = [...DEFAULT_DECK.slice(0, 7), 'tracking'];
+  const hunterHeroes = ['hunter', ...emptyDeckSlots().slice(1)];
+  assert.equal(validateDeck(hunterDeck, 1, true, 'hunter'), true);
+  assert.equal(validateDeck(hunterDeck, 1, true, 'big-boy'), false);
+  const hunterSaved = await store.saveDecks(account.token, [hunterDeck, ...emptyDeckSlots().slice(1)], 0, null, hunterHeroes);
+  assert.deepEqual(hunterSaved.decks[0], hunterDeck);
+  assert.deepEqual((await store.login('deck_owner', 'long-password')).profile.decks[0], hunterDeck);
+  assert.deepEqual(deckForPreset(hunterSaved.decks, 0, 1, true, hunterHeroes), hunterDeck);
 });
 
 test('local level 100 is a view-only override for memory profiles and deck validation', async () => {

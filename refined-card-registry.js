@@ -12,6 +12,20 @@
   }
 
   const definitions = {
+    neutralize: {
+      id: 'neutralize',
+      name: '정제된 무력화',
+      description: '상대 스톤을 즉시 고정합니다. 다른 스톤, 총알 또는 구조물이 충돌하면 중립 스톤으로 변합니다.',
+      mechanic: { kind: 'fixed-neutralization', fixedImmediately: true, neutralOnCollision: true },
+      storyPlaceholder: ''
+    },
+    tracking: {
+      id: 'tracking',
+      name: '정제된 추적',
+      description: '상대 스톤을 목표로 지정합니다. 마찰력이 50% 감소하고, 목표가 제거되면 카드를 두 장 뽑습니다.',
+      mechanic: { kind: 'tracked-removal-draw', frictionMultiplier: 0.5, drawCount: 2 },
+      storyPlaceholder: ''
+    },
     hardening: {
       id: 'hardening',
       name: '정제된 경질화',

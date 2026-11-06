@@ -275,10 +275,13 @@ function attachRoomSocket(socket, room, member) {
     if (room.sockets.get(member.role) !== socket) return;
     room.sockets.delete(member.role);
     if (member.role === 'host') {
-      for (const pending of room.pendingActions.values()) pending.delivered = false;
+      sendToRoomRole(room, 'challenger', { type: 'room-closed', message: '방장이 방을 나가 방이 종료되었습니다.' });
+      if (rooms.get(room.code) === room) rooms.delete(room.code);
+      for (const peer of room.sockets.values()) peer.close(1000, 'Room closed');
+      return;
     }
     recordForfeit(room, member.role);
-    sendToRoomRole(room, member.role === 'host' ? 'challenger' : 'host', { type: 'peer-connection', role: member.role, connected: false });
+    sendToRoomRole(room, 'host', { type: 'peer-connection', role: member.role, connected: false });
   });
   socket.on('error', error => console.warn(`WebSocket ${room.code} ${member.role}: ${error.message}`));
 
@@ -490,7 +493,7 @@ async function handleApi(request, response, url) {
     const room = {
       code,
       host: { name: profile.profile.name, level: profile.profile.level, tutorialCompleted: profile.profile.tutorialCompleted,
-        deck: deckForPreset(profile.profile.decks, profile.profile.activePreset, profile.profile.level, profile.profile.tutorialCompleted),
+        deck: deckForPreset(profile.profile.decks, profile.profile.activePreset, profile.profile.level, profile.profile.tutorialCompleted, profile.profile.deckHeroes),
         deckName: profile.profile.deckNames?.[profile.profile.activePreset] || `덱 ${profile.profile.activePreset + 1}`,
         heroId: profile.profile.deckHeroes?.[profile.profile.activePreset] || null,
         token, mapId: null, profileId: profile.internalId },
@@ -536,7 +539,7 @@ async function handleApi(request, response, url) {
     if (room.status !== 'waiting' || room.challenger) return fail(response, 409, '이미 다른 도전자가 참가한 방입니다.');
     const token = crypto.randomBytes(24).toString('base64url');
     room.challenger = { name: profile.profile.name, level: profile.profile.level, tutorialCompleted: profile.profile.tutorialCompleted,
-      deck: deckForPreset(profile.profile.decks, profile.profile.activePreset, profile.profile.level, profile.profile.tutorialCompleted),
+      deck: deckForPreset(profile.profile.decks, profile.profile.activePreset, profile.profile.level, profile.profile.tutorialCompleted, profile.profile.deckHeroes),
       deckName: profile.profile.deckNames?.[profile.profile.activePreset] || `덱 ${profile.profile.activePreset + 1}`,
       heroId: profile.profile.deckHeroes?.[profile.profile.activePreset] || null,
       token, mapId: null, profileId: profile.internalId };

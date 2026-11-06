@@ -32,6 +32,7 @@
     const props = [];
     const triggers = [];
     const dummies = [];
+    const stones = [];
     const zones = [];
     const beacons = [];
     const wires = [];
@@ -89,6 +90,11 @@
           eventDialogueIds: object.runtime?.eventDialogueIds || [],
           dialogueWhen: object.runtime?.dialogueWhen || 'collect',
           revealFog: Boolean(object.runtime?.revealFog) });
+      } else if (object.kind === 'stone' && ['builtin:stone-blue', 'builtin:stone-red'].includes(object.assetId)) {
+        stones.push({ id: object.id, x, y, radius: Math.min(width, height) / 2,
+          owner: object.owner === 'opponent' ? 1 : 0,
+          fixed: object.runtime?.fixed === true,
+          neutralizeOnCollision: object.runtime?.neutralizeOnCollision === true });
       } else if (object.kind === 'stone' && object.assetId === 'builtin:dummy-stone') {
         dummies.push({ id: object.id, x, y, radius: Math.min(width, height) / 2,
           rechargeSeconds: object.runtime?.rechargeSeconds ?? 1.5,
@@ -115,7 +121,7 @@
       fallBounds.left >= fallBounds.right || fallBounds.top >= fallBounds.bottom)
       throw new Error('스테이지 추락 범위가 올바르지 않습니다.');
     return { id: stage.id, title: stage.title, briefing: stage.briefing, mapId: stage.mapId, stoneScale,
-      backgroundSrc, fallBounds, start, barriers, props, triggers, dummies, beacons, wires, powerDevices, fog, goal: zones[0],
+      backgroundSrc, fallBounds, start, barriers, props, triggers, dummies, stones, beacons, wires, powerDevices, fog, goal: zones[0],
       dialogue: stage.dialogue.map(line => ({ ...line, presentation: dialoguePresentation.normalize(line.presentation) })),
       objects: stage.objects, assets: stage.assets, variables: stage.variables || [], events: stage.events || [],
       explorationMarks: marksModel.normalizeConfig(stage.explorationMarks),

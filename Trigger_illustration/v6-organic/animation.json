@@ -1,0 +1,19 @@
+{
+  "art_source": "existing",
+  "source": [
+    "approved-concept.png",
+    "guard-source.png"
+  ],
+  "frame_count": 36,
+  "frame_ms": 66,
+  "size": 256,
+  "motions": {
+    "empty": "breathing reservoir",
+    "pulse": "growing and fading charge ring",
+    "blackhole": "spiralling internal nebula",
+    "guard": "two orbiting satellites",
+    "hardening": "crystal contraction and frost growth",
+    "reposition": "two energies exchanging along a route",
+    "repulsion": "expanding and recovering energy waves"
+  }
+}
