@@ -6,7 +6,7 @@
   const MOTION = BALANCE?.motion || { unitRadius: 29, launchScale: 5.566, maxPullDistance: 275,
     maxLaunchSpeed: 1392, stopSpeed: 12, restitution: .84, separation: .52 };
   const RESTITUTION = MOTION.restitution;
-  const IMPACT_SCALE = MOTION.impactScale ?? .65;
+  const IMPACT_SCALE = MOTION.impactScale ?? .75;
   const STOP_SPEED = MOTION.stopSpeed;
   const STEP = 1 / 120;
   const BLACK_HOLE = BALANCE?.blackhole || { range: 136.5 * 1.25, duration: .85, impulse: 650,
@@ -237,17 +237,20 @@
       b.x += nx * overlap * MOTION.separation; b.y += ny * overlap * MOTION.separation;
       const relative = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
       if (relative < 0) {
-        const impulse = -(1 + RESTITUTION) * relative / 2 * IMPACT_SCALE;
+        const impulse = -(1 + RESTITUTION) * relative / 2;
         const aRepulsion = Boolean(a.repulsionField || a.ability?.repulsionField);
         const bRepulsion = Boolean(b.repulsionField || b.ability?.repulsionField);
         const aResponse = aRepulsion ? REPULSION.responseMultiplier : 1;
         const bResponse = bRepulsion ? REPULSION.responseMultiplier : 1;
         const aImpact = bRepulsion ? REPULSION.impactMultiplier : 1;
         const bImpact = aRepulsion ? REPULSION.impactMultiplier : 1;
-        a.vx -= impulse * nx * aResponse * aImpact;
-        a.vy -= impulse * ny * aResponse * aImpact;
-        b.vx += impulse * nx * bResponse * bImpact;
-        b.vy += impulse * ny * bResponse * bImpact;
+        const aIsStriker = Math.max(0, a.vx * nx + a.vy * ny) >=
+          Math.max(0, -(b.vx * nx + b.vy * ny));
+        // Match the live game's target-only knockback reduction.
+        a.vx -= impulse * nx * aResponse * aImpact * (aIsStriker ? 1 : IMPACT_SCALE);
+        a.vy -= impulse * ny * aResponse * aImpact * (aIsStriker ? 1 : IMPACT_SCALE);
+        b.vx += impulse * nx * bResponse * bImpact * (aIsStriker ? IMPACT_SCALE : 1);
+        b.vy += impulse * ny * bResponse * bImpact * (aIsStriker ? IMPACT_SCALE : 1);
         if (a.status === 'resting') a.status = 'sliding';
         if (b.status === 'resting') b.status = 'sliding';
         for (const unit of [a, b]) {
@@ -280,16 +283,19 @@
     const toward = (unit.vx - rect.vx) * nx + (unit.vy - rect.vy) * ny;
     if (toward < 0) {
       const impulse = -(1 + (brick ? rect.restitution || STRUCTURE.restitution : RESTITUTION)) * toward /
-        (brick && !rect.barrier ? 1 + 1 / (rect.mass || 2) : 1) * IMPACT_SCALE;
+        (brick && !rect.barrier ? 1 + 1 / (rect.mass || 2) : 1);
       const unitResponse = unit.repulsionField || unit.ability?.repulsionField ? REPULSION.responseMultiplier : 1;
       const brickResponse = rect.repulsionField ? REPULSION.responseMultiplier : 1;
       const unitImpact = unit.repulsionField || unit.ability?.repulsionField ? REPULSION.impactMultiplier : 1;
       const brickImpact = rect.repulsionField ? REPULSION.impactMultiplier : 1;
-      unit.vx += impulse * nx * unitResponse * brickImpact;
-      unit.vy += impulse * ny * unitResponse * brickImpact;
+      const unitIsStriker = Math.max(0, -(unit.vx * nx + unit.vy * ny)) >=
+        Math.max(0, rect.vx * nx + rect.vy * ny);
+      const unitTransfer = !brick || unitIsStriker ? 1 : IMPACT_SCALE;
+      unit.vx += impulse * nx * unitResponse * brickImpact * unitTransfer;
+      unit.vy += impulse * ny * unitResponse * brickImpact * unitTransfer;
       if (brick && !rect.barrier) {
-        rect.vx -= impulse * nx * brickResponse * unitImpact / (rect.mass || 2);
-        rect.vy -= impulse * ny * brickResponse * unitImpact / (rect.mass || 2);
+        rect.vx -= impulse * nx * brickResponse * unitImpact / (rect.mass || 2) * (unitIsStriker ? IMPACT_SCALE : 1);
+        rect.vy -= impulse * ny * brickResponse * unitImpact / (rect.mass || 2) * (unitIsStriker ? IMPACT_SCALE : 1);
       }
       for (const pending of unit.pendingPulseTriggers || []) pulse(world, unit, pending.range, pending.impulse);
       unit.pendingPulseTriggers = [];
@@ -319,15 +325,17 @@
       const relative = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
       if (relative >= 0) continue;
       const impulse = -(1 + Math.min(a.restitution || STRUCTURE.restitution,
-        b.restitution || STRUCTURE.restitution)) * relative / invTotal * IMPACT_SCALE;
+        b.restitution || STRUCTURE.restitution)) * relative / invTotal;
       const aResponse = a.repulsionField ? REPULSION.responseMultiplier : 1;
       const bResponse = b.repulsionField ? REPULSION.responseMultiplier : 1;
       const aImpact = b.repulsionField ? REPULSION.impactMultiplier : 1;
       const bImpact = a.repulsionField ? REPULSION.impactMultiplier : 1;
-      a.vx -= impulse * nx * invA * aResponse * aImpact;
-      a.vy -= impulse * ny * invA * aResponse * aImpact;
-      b.vx += impulse * nx * invB * bResponse * bImpact;
-      b.vy += impulse * ny * invB * bResponse * bImpact;
+      const aIsStriker = Math.max(0, a.vx * nx + a.vy * ny) >=
+        Math.max(0, -(b.vx * nx + b.vy * ny));
+      a.vx -= impulse * nx * invA * aResponse * aImpact * (aIsStriker ? 1 : IMPACT_SCALE);
+      a.vy -= impulse * ny * invA * aResponse * aImpact * (aIsStriker ? 1 : IMPACT_SCALE);
+      b.vx += impulse * nx * invB * bResponse * bImpact * (aIsStriker ? IMPACT_SCALE : 1);
+      b.vy += impulse * ny * invB * bResponse * bImpact * (aIsStriker ? IMPACT_SCALE : 1);
     }
   }
 
@@ -352,8 +360,8 @@
         const relativeNormal = (unit.vx - wall.vx) * nx + (unit.vy - wall.vy) * ny;
         if (relativeNormal < 0) {
           const response = unit.repulsionField || unit.ability?.repulsionField ? REPULSION.responseMultiplier : 1;
-          unit.vx -= (1 + RESTITUTION) * relativeNormal * nx * response * IMPACT_SCALE;
-          unit.vy -= (1 + RESTITUTION) * relativeNormal * ny * response * IMPACT_SCALE;
+          unit.vx -= (1 + RESTITUTION) * relativeNormal * nx * response;
+          unit.vy -= (1 + RESTITUTION) * relativeNormal * ny * response;
         }
         if (unit.status === 'resting' && Math.hypot(unit.vx, unit.vy) > STOP_SPEED) unit.status = 'sliding';
       }
@@ -371,8 +379,8 @@
         const relativeNormal = (brick.vx - wall.vx) * nx + (brick.vy - wall.vy) * ny;
         if (relativeNormal < 0) {
           const response = brick.repulsionField ? REPULSION.responseMultiplier : 1;
-          brick.vx -= (1 + (brick.restitution || STRUCTURE.restitution)) * relativeNormal * nx * response * IMPACT_SCALE;
-          brick.vy -= (1 + (brick.restitution || STRUCTURE.restitution)) * relativeNormal * ny * response * IMPACT_SCALE;
+          brick.vx -= (1 + (brick.restitution || STRUCTURE.restitution)) * relativeNormal * nx * response;
+          brick.vy -= (1 + (brick.restitution || STRUCTURE.restitution)) * relativeNormal * ny * response;
         }
       }
     }

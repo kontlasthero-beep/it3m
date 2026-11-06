@@ -86,6 +86,55 @@ function onlinePair() {
   return {host, guest, send};
 }
 
+test('collision transfer reduces target knockback by 25 percent without leaving the striker to scatter a cluster', () => {
+  const g = game();
+  g.run(`
+    assert.equal(CONFIG.impactScale, .75);
+    state.units = [0, 1, 2].map(i => new CurlingUnit({
+      id: 'chain-' + i, owner: i ? 1 : 0, turnNumber: 0, x: 100 + i * 57, y: 300
+    }));
+    state.units.forEach((unit, i) => { unit.status = i ? 'resting' : 'sliding'; });
+    state.units[0].vx = 1000;
+    resolveCollisions();
+    assert.ok(Math.abs(state.units[0].vx - 80) < .001);
+    assert.ok(Math.abs(state.units[1].vx - 55.2) < .001);
+    assert.ok(Math.abs(state.units[2].vx - 476.1) < .001);
+
+    state.units = [0, 1].map(i => new CurlingUnit({
+      id: 'reverse-' + i, owner: i, turnNumber: 0, x: 100 + i * 57, y: 300
+    }));
+    state.units.forEach(unit => { unit.status = 'sliding'; });
+    state.units[1].vx = -1000;
+    resolveCollisions();
+    assert.ok(Math.abs(state.units[0].vx + 690) < .001);
+    assert.ok(Math.abs(state.units[1].vx + 80) < .001);
+
+    state.units[0].x = 100; state.units[1].x = 157;
+    state.units[0].vx = 1000; state.units[1].vx = 0;
+    state.units.forEach(unit => { unit.ability = {repulsionField: true}; });
+    resolveCollisions();
+    assert.ok(state.units[1].vx > state.units[0].vx);
+  `);
+});
+
+test('structure knockback is reduced while the colliding stone still bounces from the barrier', () => {
+  const g = game();
+  g.run(`
+    const stone = new CurlingUnit({id: 'brick-hit', owner: 0, turnNumber: 0, x: 120, y: 300});
+    stone.status = 'sliding'; stone.vx = 1000; state.units = [stone];
+    const brick = new BrickUnit({x: 157, y: 300, owner: 1});
+    state.bricks = [brick];
+    resolveBrickCollisions();
+    assert.ok(Math.abs(stone.vx + 53.3333333333) < .001);
+    assert.ok(Math.abs(brick.vx - 395) < .001);
+
+    stone.x = 120; stone.vx = 1000;
+    state.bricks = [new BrickUnit({x: 157, y: 300, owner: 1, barrier: true})];
+    resolveBrickCollisions();
+    assert.ok(Math.abs(stone.vx + 580) < .001);
+  `);
+});
+
 test('independent clock advances hidden-host physics and snapshots without animation frames', () => {
   const {host, guest} = onlinePair();
   host.run(`document.hidden = true; globalThis.sent = [];

@@ -9,7 +9,7 @@
     motion: {
       unitRadius: 29, launchScale: 5.566, maxPullDistance: 275, directionPullDistance: 96,
       maxLaunchSpeed: 1392, stopSpeed: 12, restitution: .84, separation: .52,
-      impactScale: .65
+      impactScale: .75
     },
     maps: {
       classic: { friction: .020625, walls: false, duel: false },

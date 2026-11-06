@@ -5354,7 +5354,7 @@
 
             const relativeVelocity = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
             if (relativeVelocity < 0) {
-              let impulse = -(1 + CONFIG.restitution) * relativeVelocity / invTotal * CONFIG.impactScale;
+              let impulse = -(1 + CONFIG.restitution) * relativeVelocity / invTotal;
               resolveNeutralizationCollision(a);
               resolveNeutralizationCollision(b);
               const boostedChain = a.heavyBlowChainPending || b.heavyBlowChainPending;
@@ -5366,7 +5366,7 @@
                   age: 0, duration: .36, shake: 3.2 });
               }
               if (a.owner !== b.owner) recordTutorialEvent('collision');
-              playUnitImpactSound(impulse, [a, b]);
+              playUnitImpactSound(impulse * CONFIG.impactScale, [a, b]);
               if (hasRepulsionField(a) || hasRepulsionField(b)) {
                 emitRepulsionCollisionWave((a.x + b.x) / 2, (a.y + b.y) / 2,
                   hasRepulsionField(a) ? a.owner : b.owner);
@@ -5375,10 +5375,15 @@
               const bResponse = hasRepulsionField(b) ? AI_BALANCE.repulsion.responseMultiplier : 1;
               const aImpact = hasRepulsionField(b) ? AI_BALANCE.repulsion.impactMultiplier : 1;
               const bImpact = hasRepulsionField(a) ? AI_BALANCE.repulsion.impactMultiplier : 1;
-              a.vx -= impulse * nx * aResponse * aImpact * invA;
-              a.vy -= impulse * ny * aResponse * aImpact * invA;
-              b.vx += impulse * nx * bResponse * bImpact * invB;
-              b.vy += impulse * ny * bResponse * bImpact * invB;
+              const aIsStriker = Math.max(0, a.vx * nx + a.vy * ny) >=
+                Math.max(0, -(b.vx * nx + b.vy * ny));
+              // Dampen the target's knockback without letting the striker retain extra speed.
+              const aTransfer = aIsStriker ? 1 : CONFIG.impactScale;
+              const bTransfer = aIsStriker ? CONFIG.impactScale : 1;
+              a.vx -= impulse * nx * aResponse * aImpact * invA * aTransfer;
+              a.vy -= impulse * ny * aResponse * aImpact * invA * aTransfer;
+              b.vx += impulse * nx * bResponse * bImpact * invB * bTransfer;
+              b.vy += impulse * ny * bResponse * bImpact * invB * bTransfer;
               markRefinedEscapeMovement(a);
               markRefinedEscapeMovement(b);
               if (a.status === 'resting' && !isFixedStone(a)) a.status = 'sliding';
@@ -5425,25 +5430,27 @@
             const toward = (unit.vx - brick.vx) * nx + (unit.vy - brick.vy) * ny;
             if (toward < 0) {
               resolveNeutralizationCollision(unit);
-              const impulse = -(1 + brick.restitution) * toward / (1 + (brick.barrier ? 0 : 1 / brick.mass)) * CONFIG.impactScale;
+              const impulse = -(1 + brick.restitution) * toward / (1 + (brick.barrier ? 0 : 1 / brick.mass));
               if (state.adventure && brick.id) emitAdventureEvent({ type: 'object-collision', objectId: brick.id });
-              playUnitImpactSound(impulse, [unit, brick]);
+              playUnitImpactSound(impulse * CONFIG.impactScale, [unit, brick]);
               if (hasRepulsionField(unit) || hasRepulsionField(brick)) {
                 emitRepulsionCollisionWave((unit.x + brick.x) / 2, (unit.y + brick.y) / 2,
                   hasRepulsionField(unit) ? unit.owner : brick.owner);
               }
               const unitResponse = hasRepulsionField(unit) ? AI_BALANCE.repulsion.responseMultiplier : 1;
               const brickImpact = hasRepulsionField(brick) ? AI_BALANCE.repulsion.impactMultiplier : 1;
+              const unitIsStriker = Math.max(0, -(unit.vx * nx + unit.vy * ny)) >=
+                Math.max(0, brick.vx * nx + brick.vy * ny);
               if (!isFixedStone(unit)) {
-                unit.vx += impulse * nx * unitResponse * brickImpact;
-                unit.vy += impulse * ny * unitResponse * brickImpact;
+                unit.vx += impulse * nx * unitResponse * brickImpact * (unitIsStriker ? 1 : CONFIG.impactScale);
+                unit.vy += impulse * ny * unitResponse * brickImpact * (unitIsStriker ? 1 : CONFIG.impactScale);
               }
               markRefinedEscapeMovement(unit);
               if (!brick.barrier) {
                 const brickResponse = hasRepulsionField(brick) ? AI_BALANCE.repulsion.responseMultiplier : 1;
                 const unitImpact = hasRepulsionField(unit) ? AI_BALANCE.repulsion.impactMultiplier : 1;
-                brick.vx -= impulse * nx / brick.mass * brickResponse * unitImpact;
-                brick.vy -= impulse * ny / brick.mass * brickResponse * unitImpact;
+                brick.vx -= impulse * nx / brick.mass * brickResponse * unitImpact * (unitIsStriker ? CONFIG.impactScale : 1);
+                brick.vy -= impulse * ny / brick.mass * brickResponse * unitImpact * (unitIsStriker ? CONFIG.impactScale : 1);
               }
               detonatePendingPulseTriggers(unit);
             }
@@ -5472,16 +5479,18 @@
             b.y += ny * overlap * invB / invTotal;
             const relative = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
             if (relative >= 0) continue;
-            const impulse = -(1 + Math.min(a.restitution, b.restitution)) * relative / invTotal * CONFIG.impactScale;
+            const impulse = -(1 + Math.min(a.restitution, b.restitution)) * relative / invTotal;
             const aResponse = hasRepulsionField(a) ? AI_BALANCE.repulsion.responseMultiplier : 1;
             const bResponse = hasRepulsionField(b) ? AI_BALANCE.repulsion.responseMultiplier : 1;
             const aImpact = hasRepulsionField(b) ? AI_BALANCE.repulsion.impactMultiplier : 1;
             const bImpact = hasRepulsionField(a) ? AI_BALANCE.repulsion.impactMultiplier : 1;
-            a.vx -= impulse * nx * invA * aResponse * aImpact;
-            a.vy -= impulse * ny * invA * aResponse * aImpact;
-            b.vx += impulse * nx * invB * bResponse * bImpact;
-            b.vy += impulse * ny * invB * bResponse * bImpact;
-            playUnitImpactSound(impulse, [a, b]);
+            const aIsStriker = Math.max(0, a.vx * nx + a.vy * ny) >=
+              Math.max(0, -(b.vx * nx + b.vy * ny));
+            a.vx -= impulse * nx * invA * aResponse * aImpact * (aIsStriker ? 1 : CONFIG.impactScale);
+            a.vy -= impulse * ny * invA * aResponse * aImpact * (aIsStriker ? 1 : CONFIG.impactScale);
+            b.vx += impulse * nx * invB * bResponse * bImpact * (aIsStriker ? CONFIG.impactScale : 1);
+            b.vy += impulse * ny * invB * bResponse * bImpact * (aIsStriker ? CONFIG.impactScale : 1);
+            playUnitImpactSound(impulse * CONFIG.impactScale, [a, b]);
           }
         }
       }
@@ -6976,8 +6985,8 @@
                 if (hasRepulsionField(target)) playElevenLabsSound('repulsionCollision', { volume: 1.25 });
                 else playSound('guardHit', Math.min(1.4, -toward / 250));
                 if (!isFixedStone(target)) {
-                  target.vx -= (1 + CONFIG.restitution) * toward * nx * CONFIG.impactScale;
-                  target.vy -= (1 + CONFIG.restitution) * toward * ny * CONFIG.impactScale;
+                  target.vx -= (1 + CONFIG.restitution) * toward * nx;
+                  target.vy -= (1 + CONFIG.restitution) * toward * ny;
                 }
                 markRefinedEscapeMovement(target);
               }
@@ -7056,8 +7065,8 @@
               if (hasRepulsionField(unit)) playElevenLabsSound('repulsionCollision', { volume: 1.25 });
               else playSound('wallHit', Math.min(1.4, Math.abs(relativeNormal) / 550));
               const response = hasRepulsionField(unit) ? AI_BALANCE.repulsion.responseMultiplier : 1;
-              unit.vx -= (1 + CONFIG.restitution) * relativeNormal * nx * response * CONFIG.impactScale;
-              unit.vy -= (1 + CONFIG.restitution) * relativeNormal * ny * response * CONFIG.impactScale;
+              unit.vx -= (1 + CONFIG.restitution) * relativeNormal * nx * response;
+              unit.vy -= (1 + CONFIG.restitution) * relativeNormal * ny * response;
             }
             if (unit.status === 'resting' && Math.hypot(unit.vx, unit.vy) > CONFIG.stopSpeed) unit.status = 'sliding';
           }
@@ -7076,8 +7085,8 @@
               if (hasRepulsionField(brick)) playElevenLabsSound('repulsionCollision', { volume: 1.25 });
               else playSound('wallHit', Math.min(1.4, Math.abs(relativeNormal) / 550));
               const response = hasRepulsionField(brick) ? AI_BALANCE.repulsion.responseMultiplier : 1;
-              brick.vx -= (1 + brick.restitution) * relativeNormal * nx * response * CONFIG.impactScale;
-              brick.vy -= (1 + brick.restitution) * relativeNormal * ny * response * CONFIG.impactScale;
+              brick.vx -= (1 + brick.restitution) * relativeNormal * nx * response;
+              brick.vy -= (1 + brick.restitution) * relativeNormal * ny * response;
             }
           }
         }

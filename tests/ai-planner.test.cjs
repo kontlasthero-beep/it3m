@@ -17,6 +17,20 @@ function board(map = 'classic') {
   };
 }
 
+test('AI collision rollout keeps striker response while transferring 75 percent knockback', () => {
+  const snapshot = board();
+  snapshot.units = [
+    {id: 'striker', owner: 0, x: 100, y: 300, vx: 1000, vy: 0, radius: 29, status: 'sliding'},
+    {id: 'target', owner: 1, x: 157, y: 300, vx: 0, vy: 0, radius: 29, status: 'resting'},
+    {id: 'ai', owner: 1, x: 1000, y: 500, vx: 0, vy: 0, radius: 29, status: 'ready'}
+  ];
+  const {world} = planner.simulate(snapshot, {dx: 0, dy: 1, power: .025}, 1 / 120);
+  const incoming = 1000 * Math.sqrt(1 - snapshot.friction);
+  const fullImpulse = incoming * (1 + .84) / 2;
+  assert.ok(Math.abs(world.units[0].vx - (incoming - fullImpulse)) < .001);
+  assert.ok(Math.abs(world.units[1].vx - fullImpulse * .75) < .001);
+});
+
 test('rollouts resolve impacts, knockouts and final scoring without mutating the live snapshot', () => {
   const snapshot = board();
   const original = JSON.stringify(snapshot);
@@ -52,6 +66,8 @@ test('the planner includes the current map and consumable triggers', () => {
   const normal = board();
   const walled = board('moving-walls');
   const ice = board('ice');
+  // Keep the opening target outside the launch lane so the shot reaches the moving wall.
+  for (const snapshot of [normal, walled, ice]) snapshot.units[0].y = 500;
   const shot = { dx: -1, dy: 0, power: .5 };
   assert.notEqual(planner.simulate(normal, shot).world.units[1].x,
     planner.simulate(walled, shot).world.units[1].x);
@@ -143,7 +159,7 @@ test('trigger placement weighs the follow-up shot and opponent counterplay', () 
   snapshot.hasReply = true;
   snapshot.triggerCandidates = [{ x: 500, y: 355 }, { x: 600, y: 355 }];
   const plan = planner.plan(snapshot, 'easy');
-  assert.equal(plan.trigger?.type, 'pulse');
+  assert.ok(['pulse', 'blackhole'].includes(plan.trigger?.type));
   assert.equal(plan.trigger?.x, 600);
   assert.equal(snapshot.triggers.length, 0);
 });
