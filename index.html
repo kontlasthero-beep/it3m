@@ -1785,9 +1785,8 @@
       AUDIO_FILES.generalSelection.preload = 'auto';
       AUDIO_FILES.importantSelection.preload = 'auto';
       const fileSoundLastPlayed = new Map();
-      const STRONG_HIT_THRESHOLD = 500;
-
       const AI_BALANCE = UCCAiBalance;
+      const STRONG_HIT_THRESHOLD = 500 * AI_BALANCE.motion.impactScale;
       const TABLE = AI_BALANCE.table;
       function isDuelMap() { return state.currentMap?.id === 'duel'; }
       function launchXForOwner(owner) {
@@ -1817,6 +1816,7 @@
         bulletSpeedMultiplier: AI_BALANCE.bullet.speedMultiplier,
         stopSpeed: AI_BALANCE.motion.stopSpeed,
         restitution: AI_BALANCE.motion.restitution,
+        impactScale: AI_BALANCE.motion.impactScale,
         separation: AI_BALANCE.motion.separation
       };
       const BLACK_HOLE = AI_BALANCE.blackhole;
@@ -1827,7 +1827,7 @@
       const ITEM_TRIGGERS = [
         { id: 'blackhole', name: '블랙홀 방출', description: '범위 내 유닛을 끌어당깁니다.', color: '#bd75f5', range: BLACK_HOLE.range * BLACK_HOLE.triggerRangeMultiplier },
         { id: 'pulse', name: '방출', description: '획득 후 유닛에 부딪히거나 0.5초가 지나면 넓은 범위의 유닛을 강하게 밀쳐냅니다.', color: '#00d9ff', range: PULSE_RANGE * AI_BALANCE.pulse.triggerRangeMultiplier, impulse: PULSE_IMPULSE * AI_BALANCE.pulse.triggerImpulseMultiplier },
-        { id: 'hardening', name: '경질화', description: '중첩할 때마다 마찰력이 3배씩 곱해집니다.', color: '#aeb8bc' },
+        { id: 'hardening', name: '경질화', description: '중첩할 때마다 마찰력이 2배씩 곱해집니다.', color: '#aeb8bc' },
         { id: 'guard', name: '방호벽', description: '중첩하면 위성체가 최대 네 개까지 늘어납니다.', color: '#f1b66e' }
       ];
       const TRIGGER_ART = Object.freeze({
@@ -1941,7 +1941,7 @@
         mobility: '이동', installation: '설치', tactic: '전술'
       });
       const CARD_DESCRIPTIONS = {
-        hardening: '스톤의 마찰력이 3배가 됩니다. 같은 카드 효과는 중첩되어 마찰력과 회색 코팅이 더 강해집니다.',
+        hardening: '스톤의 마찰력이 2배가 됩니다. 같은 카드 효과는 중첩되어 마찰력과 회색 코팅이 더 강해집니다.',
         guard: '스톤 주위를 도는 위성 방호벽 2개를 추가합니다. 최대 4개까지 중첩되며 충돌로 유닛을 밀어냅니다. 위성체가 지나가는 위치와 타이밍을 확인하세요. 1번 더 중첩해서 사용하면 위성체가 두 방향을 방어합니다.',
         pulse: '스톤을 충전 상태로 만듭니다. 충전된 스톤이 다른 유닛이나 구조물과 충돌하면 주변 스톤과 유닛을 밀쳐내는 강한 파동을 발산합니다. 아군 스톤은 밀려나는 힘이 절반으로 줄어듭니다.',
         reposition: '필드에 있는 자신의 스톤을 한 번 더 발사할 수 있게 됩니다. 파워를 정한 뒤 방향을 지정하세요.',
@@ -3292,7 +3292,7 @@
           let multiplier = ignoreAddedFriction ? 1 : (this.frictionMultiplier ?? 1);
           if (!ignoreAddedFriction) {
             multiplier *= (UNIT_EFFECTS.hardening.frictionPerStack ** standardHardeningStacks) *
-              (4 ** refinedHardeningStacks);
+              (3 ** refinedHardeningStacks);
           }
           for (const brick of isCollisionPhased(this) ? [] : state.bricks) {
             if (!(brick.barrier && isRuleAlly(this, brick.owner)) && Math.abs(this.x - brick.x) <= brick.width / 2 + this.radius &&
@@ -5354,7 +5354,7 @@
 
             const relativeVelocity = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
             if (relativeVelocity < 0) {
-              let impulse = -(1 + CONFIG.restitution) * relativeVelocity / invTotal;
+              let impulse = -(1 + CONFIG.restitution) * relativeVelocity / invTotal * CONFIG.impactScale;
               resolveNeutralizationCollision(a);
               resolveNeutralizationCollision(b);
               const boostedChain = a.heavyBlowChainPending || b.heavyBlowChainPending;
@@ -5425,7 +5425,7 @@
             const toward = (unit.vx - brick.vx) * nx + (unit.vy - brick.vy) * ny;
             if (toward < 0) {
               resolveNeutralizationCollision(unit);
-              const impulse = -(1 + brick.restitution) * toward / (1 + (brick.barrier ? 0 : 1 / brick.mass));
+              const impulse = -(1 + brick.restitution) * toward / (1 + (brick.barrier ? 0 : 1 / brick.mass)) * CONFIG.impactScale;
               if (state.adventure && brick.id) emitAdventureEvent({ type: 'object-collision', objectId: brick.id });
               playUnitImpactSound(impulse, [unit, brick]);
               if (hasRepulsionField(unit) || hasRepulsionField(brick)) {
@@ -5472,7 +5472,7 @@
             b.y += ny * overlap * invB / invTotal;
             const relative = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
             if (relative >= 0) continue;
-            const impulse = -(1 + Math.min(a.restitution, b.restitution)) * relative / invTotal;
+            const impulse = -(1 + Math.min(a.restitution, b.restitution)) * relative / invTotal * CONFIG.impactScale;
             const aResponse = hasRepulsionField(a) ? AI_BALANCE.repulsion.responseMultiplier : 1;
             const bResponse = hasRepulsionField(b) ? AI_BALANCE.repulsion.responseMultiplier : 1;
             const aImpact = hasRepulsionField(b) ? AI_BALANCE.repulsion.impactMultiplier : 1;
@@ -5541,7 +5541,7 @@
                 const targetDistance = Math.hypot(targetDx, targetDy);
                 if (targetDistance > dummy.pulseRadius + target.radius) continue;
                 const force = PULSE_IMPULSE * dummy.pulseImpulseMultiplier *
-                  Math.max(.45, 1 - targetDistance / (dummy.pulseRadius + target.radius) * .35);
+                  Math.max(.45, 1 - targetDistance / (dummy.pulseRadius + target.radius) * .35) * CONFIG.impactScale;
                 if (target.owner === 0) {
                   target.vx *= dummy.velocityMultiplierOnHit;
                   target.vy *= dummy.velocityMultiplierOnHit;
@@ -5551,8 +5551,8 @@
                 if (target === unit) {
                   const toward = target.vx * nx + target.vy * ny;
                   if (toward < 0) {
-                    target.vx -= (1 + dummy.ricochetRestitution) * toward * nx;
-                    target.vy -= (1 + dummy.ricochetRestitution) * toward * ny;
+                    target.vx -= (1 + dummy.ricochetRestitution) * toward * nx * CONFIG.impactScale;
+                    target.vy -= (1 + dummy.ricochetRestitution) * toward * ny * CONFIG.impactScale;
                   }
                   const outgoingSpeed = Math.hypot(target.vx, target.vy);
                   target.vx += (outgoingSpeed > .001 ? target.vx / outgoingSpeed : nx) * force;
@@ -6199,8 +6199,8 @@
           if (distance > range) continue;
           const angle = distance > 0.001 ? Math.atan2(dy, dx) : Math.random() * Math.PI * 2;
           const teamScale = chargedCard && target.unitKind !== 'brick' && areRuleAllies(target, source) ? .5 : 1;
-          target.vx += Math.cos(angle) * impulse * teamScale;
-          target.vy += Math.sin(angle) * impulse * teamScale;
+          target.vx += Math.cos(angle) * impulse * teamScale * CONFIG.impactScale;
+          target.vy += Math.sin(angle) * impulse * teamScale * CONFIG.impactScale;
           if (refinedPulse && target.unitKind === 'stone' && !areRuleAllies(target, source)) target.refinedPulseFrictionTimer = 3.5;
           markRefinedEscapeMovement(target);
           if (target.unitKind !== 'brick') target.status = 'sliding';
@@ -6261,7 +6261,7 @@
           target.blackholeFrictionTimer = BLACK_HOLE.duration;
           const friction = target.frictionAtPosition();
           const falloff = .72 + .28 * (1 - distance / range);
-          const pull = BLACK_HOLE.impulse * falloff / (1 + friction * 18);
+          const pull = BLACK_HOLE.impulse * falloff / (1 + friction * 18) * CONFIG.impactScale;
           target.vx += dx / distance * pull;
           target.vy += dy / distance * pull;
           markRefinedEscapeMovement(target);
@@ -6302,7 +6302,7 @@
           const friction = target.frictionAtPosition();
           const falloff = .72 + .28 * (1 - distance / range);
           const coneFalloff = .78 + .22 * (1 - Math.abs(angleDifference) / halfAngle);
-          const pull = BLACK_HOLE.impulse * falloff * coneFalloff / (1 + friction * 18);
+          const pull = BLACK_HOLE.impulse * falloff * coneFalloff / (1 + friction * 18) * CONFIG.impactScale;
           target.vx += dx / distance * pull;
           target.vy += dy / distance * pull;
           markRefinedEscapeMovement(target);
@@ -6412,7 +6412,7 @@
           const hit = insideFan(target);
           if (!hit) continue;
           const falloff = 1 - hit.distance / range;
-          const impulse = 520 * (.34 + .66 * falloff);
+          const impulse = 520 * (.34 + .66 * falloff) * CONFIG.impactScale;
           if (!isFixedStone(target)) {
             target.vx += dirX * impulse;
             target.vy += dirY * impulse;
@@ -6779,7 +6779,7 @@
           bullet.sourceUnitId = target.id;
           bullet.outsideTime = 0;
           if (closingSpeed > 0) {
-            const impulse = AI_BALANCE.bullet.targetImpulseScale * closingSpeed / (1 + 1 / bullet.mass) * (bullet.impactMultiplier || 1);
+            const impulse = AI_BALANCE.bullet.targetImpulseScale * closingSpeed / (1 + 1 / bullet.mass) * (bullet.impactMultiplier || 1) * CONFIG.impactScale;
             const response = hasRepulsionField(target) ? AI_BALANCE.repulsion.responseMultiplier : 1;
             resolveNeutralizationCollision(target);
             if (!isFixedStone(target)) {
@@ -6927,7 +6927,7 @@
               const pulseOnly = target.ability?.pulse;
               if (pulseOnly) detonateChargedPulse(target);
               else if (relative < 0) {
-                const impulse = -AI_BALANCE.bullet.targetImpulseScale * relative / (1 + 1 / bullet.mass) * (bullet.impactMultiplier || 1);
+                const impulse = -AI_BALANCE.bullet.targetImpulseScale * relative / (1 + 1 / bullet.mass) * (bullet.impactMultiplier || 1) * CONFIG.impactScale;
                 if (!isFixedStone(target)) {
                   target.vx += impulse * nx;
                   target.vy += impulse * ny;
@@ -6976,8 +6976,8 @@
                 if (hasRepulsionField(target)) playElevenLabsSound('repulsionCollision', { volume: 1.25 });
                 else playSound('guardHit', Math.min(1.4, -toward / 250));
                 if (!isFixedStone(target)) {
-                  target.vx -= (1 + CONFIG.restitution) * toward * nx;
-                  target.vy -= (1 + CONFIG.restitution) * toward * ny;
+                  target.vx -= (1 + CONFIG.restitution) * toward * nx * CONFIG.impactScale;
+                  target.vy -= (1 + CONFIG.restitution) * toward * ny * CONFIG.impactScale;
                 }
                 markRefinedEscapeMovement(target);
               }
@@ -7056,8 +7056,8 @@
               if (hasRepulsionField(unit)) playElevenLabsSound('repulsionCollision', { volume: 1.25 });
               else playSound('wallHit', Math.min(1.4, Math.abs(relativeNormal) / 550));
               const response = hasRepulsionField(unit) ? AI_BALANCE.repulsion.responseMultiplier : 1;
-              unit.vx -= (1 + CONFIG.restitution) * relativeNormal * nx * response;
-              unit.vy -= (1 + CONFIG.restitution) * relativeNormal * ny * response;
+              unit.vx -= (1 + CONFIG.restitution) * relativeNormal * nx * response * CONFIG.impactScale;
+              unit.vy -= (1 + CONFIG.restitution) * relativeNormal * ny * response * CONFIG.impactScale;
             }
             if (unit.status === 'resting' && Math.hypot(unit.vx, unit.vy) > CONFIG.stopSpeed) unit.status = 'sliding';
           }
@@ -7076,8 +7076,8 @@
               if (hasRepulsionField(brick)) playElevenLabsSound('repulsionCollision', { volume: 1.25 });
               else playSound('wallHit', Math.min(1.4, Math.abs(relativeNormal) / 550));
               const response = hasRepulsionField(brick) ? AI_BALANCE.repulsion.responseMultiplier : 1;
-              brick.vx -= (1 + brick.restitution) * relativeNormal * nx * response;
-              brick.vy -= (1 + brick.restitution) * relativeNormal * ny * response;
+              brick.vx -= (1 + brick.restitution) * relativeNormal * nx * response * CONFIG.impactScale;
+              brick.vy -= (1 + brick.restitution) * relativeNormal * ny * response * CONFIG.impactScale;
             }
           }
         }
@@ -11394,7 +11394,7 @@
         const guardStacks = getUnitEffectStacks(unit, 'guard');
         if (unit.openingFrictionMultiplier > 1) effects.push('선공 첫 스톤 · 추가 마찰력 25%');
         if (hardeningStacks) {
-          const frictionMultiplier = UNIT_EFFECTS.hardening.frictionPerStack ** standardHardeningStacks * 4 ** refinedHardeningStacks;
+          const frictionMultiplier = UNIT_EFFECTS.hardening.frictionPerStack ** standardHardeningStacks * 3 ** refinedHardeningStacks;
           const frictionLabel = Number.isInteger(frictionMultiplier) ? frictionMultiplier : Number(frictionMultiplier.toFixed(2));
           const refinementLabel = refinedHardeningStacks ? ` · 정제 ${refinedHardeningStacks}중첩` : '';
           effects.push(`경질화 ${hardeningStacks}중첩${refinementLabel} · 마찰력 ${frictionLabel}배`);
@@ -11430,7 +11430,7 @@
           'adventure-reposition': '닿은 플레이어가 재배치 카드 한 장을 얻습니다.',
           blackhole: `블랙홀 방출 · 범위 ${Math.round(trigger.type.range)} 안의 스톤과 가벽을 끌어당깁니다.`,
           pulse: `방출 · 획득 후 유닛과 충돌하거나 0.5초가 지나면 범위 ${Math.round(trigger.type.range)} 안의 스톤과 가벽을 강하게 밀쳐냅니다.`,
-          hardening: '경질화 · 중첩할 때마다 마찰력이 3배씩 곱해집니다.',
+          hardening: '경질화 · 중첩할 때마다 마찰력이 2배씩 곱해집니다.',
           guard: '방호벽 · 중첩하면 위성체가 최대 네 개까지 늘어납니다.'
         };
         return { title: `${trigger.type.name} 트리거`, detail: `트리거는 스톤에 닿으면 소모되어 효과를 부여하는 아이템입니다. ${descriptions[trigger.type.id]}` };

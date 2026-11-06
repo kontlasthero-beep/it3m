@@ -8,7 +8,8 @@
     table: { left: 88, right: 1112, top: 68, bottom: 662, goalX: 108, launchX: 1060 },
     motion: {
       unitRadius: 29, launchScale: 5.566, maxPullDistance: 275, directionPullDistance: 96,
-      maxLaunchSpeed: 1392, stopSpeed: 12, restitution: .84, separation: .52
+      maxLaunchSpeed: 1392, stopSpeed: 12, restitution: .84, separation: .52,
+      impactScale: .65
     },
     maps: {
       classic: { friction: .020625, walls: false, duel: false },
@@ -26,7 +27,7 @@
       triggerRangeMultiplier: 1.15 * 1.35, triggerImpulseMultiplier: 1.35,
       chargeDelay: .5, friendlyForceMultiplier: .5
     },
-    hardening: { frictionPerStack: 3 },
+    hardening: { frictionPerStack: 2 },
     repulsion: { responseMultiplier: .5, impactMultiplier: 1.5 },
     bullet: { speedMultiplier: 3, radiusScale: .25, mass: .12,
       targetImpulseScale: 1.72, ricochetSpeedScale: .5 },

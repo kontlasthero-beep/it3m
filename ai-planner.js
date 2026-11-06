@@ -6,6 +6,7 @@
   const MOTION = BALANCE?.motion || { unitRadius: 29, launchScale: 5.566, maxPullDistance: 275,
     maxLaunchSpeed: 1392, stopSpeed: 12, restitution: .84, separation: .52 };
   const RESTITUTION = MOTION.restitution;
+  const IMPACT_SCALE = MOTION.impactScale ?? .65;
   const STOP_SPEED = MOTION.stopSpeed;
   const STEP = 1 / 120;
   const BLACK_HOLE = BALANCE?.blackhole || { range: 136.5 * 1.25, duration: .85, impulse: 650,
@@ -13,7 +14,7 @@
   const PULSE = BALANCE?.pulse || { range: 150.9375, impulse: 274.21875,
     triggerRangeMultiplier: 1.15 * 1.35, triggerImpulseMultiplier: 1.35,
     chargeDelay: .5, friendlyForceMultiplier: .5 };
-  const HARDENING = BALANCE?.hardening || { frictionPerStack: 3 };
+  const HARDENING = BALANCE?.hardening || { frictionPerStack: 2 };
   const REPULSION = BALANCE?.repulsion || { responseMultiplier: .5, impactMultiplier: 1.5 };
   const BULLET = BALANCE?.bullet || { speedMultiplier: 3, radiusScale: .25, mass: .12,
     targetImpulseScale: 1.72, ricochetSpeedScale: .5 };
@@ -79,9 +80,14 @@
     };
   }
 
-  function friction(world, unit) {
+  function hardeningMultiplier(unit) {
     const stacks = unit.ability?.stacks?.hardening ?? (unit.ability?.hardening ? 1 : 0);
-    let multiplier = unit.frictionMultiplier ?? HARDENING.frictionPerStack ** stacks;
+    const refined = Math.min(stacks, unit.ability?.refinedHardeningStacks || 0);
+    return HARDENING.frictionPerStack ** (stacks - refined) * 3 ** refined;
+  }
+
+  function friction(world, unit) {
+    let multiplier = (unit.frictionMultiplier ?? 1) * hardeningMultiplier(unit);
     if (!phased(unit, world.turn)) for (const brick of world.bricks) {
       if (!(brick.barrier && brick.owner === unit.owner) && Math.abs(unit.x - brick.x) <= brick.width / 2 + unit.radius &&
           Math.abs(unit.y - brick.y) <= brick.height / 2 + unit.radius) multiplier +=
@@ -141,8 +147,8 @@
       const ny = distance > .001 ? dy / distance : 0;
       const teamScale = chargedCard && target.owner === source.owner && !target.width
         ? PULSE.friendlyForceMultiplier : 1;
-      target.vx += nx * impulse * teamScale;
-      target.vy += ny * impulse * teamScale;
+      target.vx += nx * impulse * teamScale * IMPACT_SCALE;
+      target.vy += ny * impulse * teamScale * IMPACT_SCALE;
       if (!target.width) target.status = 'sliding';
     }
     if (chargedCard) world.bricks = world.bricks.filter(brick => Math.hypot(brick.x - source.x, brick.y - source.y) > range);
@@ -169,7 +175,7 @@
           (world.blackholeFrictionMultiplier || BLACK_HOLE.affectedFrictionMultiplier)
         : friction(world, target);
       const force = (world.blackholeImpulse || BLACK_HOLE.impulse) *
-        (.72 + .28 * (1 - distance / range)) / (1 + targetFriction * 18);
+        (.72 + .28 * (1 - distance / range)) / (1 + targetFriction * 18) * IMPACT_SCALE;
       target.vx += dx / distance * force;
       target.vy += dy / distance * force;
       if (target.status === 'resting') target.status = 'sliding';
@@ -231,7 +237,7 @@
       b.x += nx * overlap * MOTION.separation; b.y += ny * overlap * MOTION.separation;
       const relative = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
       if (relative < 0) {
-        const impulse = -(1 + RESTITUTION) * relative / 2;
+        const impulse = -(1 + RESTITUTION) * relative / 2 * IMPACT_SCALE;
         const aRepulsion = Boolean(a.repulsionField || a.ability?.repulsionField);
         const bRepulsion = Boolean(b.repulsionField || b.ability?.repulsionField);
         const aResponse = aRepulsion ? REPULSION.responseMultiplier : 1;
@@ -274,7 +280,7 @@
     const toward = (unit.vx - rect.vx) * nx + (unit.vy - rect.vy) * ny;
     if (toward < 0) {
       const impulse = -(1 + (brick ? rect.restitution || STRUCTURE.restitution : RESTITUTION)) * toward /
-        (brick && !rect.barrier ? 1 + 1 / (rect.mass || 2) : 1);
+        (brick && !rect.barrier ? 1 + 1 / (rect.mass || 2) : 1) * IMPACT_SCALE;
       const unitResponse = unit.repulsionField || unit.ability?.repulsionField ? REPULSION.responseMultiplier : 1;
       const brickResponse = rect.repulsionField ? REPULSION.responseMultiplier : 1;
       const unitImpact = unit.repulsionField || unit.ability?.repulsionField ? REPULSION.impactMultiplier : 1;
@@ -313,7 +319,7 @@
       const relative = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
       if (relative >= 0) continue;
       const impulse = -(1 + Math.min(a.restitution || STRUCTURE.restitution,
-        b.restitution || STRUCTURE.restitution)) * relative / invTotal;
+        b.restitution || STRUCTURE.restitution)) * relative / invTotal * IMPACT_SCALE;
       const aResponse = a.repulsionField ? REPULSION.responseMultiplier : 1;
       const bResponse = b.repulsionField ? REPULSION.responseMultiplier : 1;
       const aImpact = b.repulsionField ? REPULSION.impactMultiplier : 1;
@@ -346,8 +352,8 @@
         const relativeNormal = (unit.vx - wall.vx) * nx + (unit.vy - wall.vy) * ny;
         if (relativeNormal < 0) {
           const response = unit.repulsionField || unit.ability?.repulsionField ? REPULSION.responseMultiplier : 1;
-          unit.vx -= (1 + RESTITUTION) * relativeNormal * nx * response;
-          unit.vy -= (1 + RESTITUTION) * relativeNormal * ny * response;
+          unit.vx -= (1 + RESTITUTION) * relativeNormal * nx * response * IMPACT_SCALE;
+          unit.vy -= (1 + RESTITUTION) * relativeNormal * ny * response * IMPACT_SCALE;
         }
         if (unit.status === 'resting' && Math.hypot(unit.vx, unit.vy) > STOP_SPEED) unit.status = 'sliding';
       }
@@ -365,8 +371,8 @@
         const relativeNormal = (brick.vx - wall.vx) * nx + (brick.vy - wall.vy) * ny;
         if (relativeNormal < 0) {
           const response = brick.repulsionField ? REPULSION.responseMultiplier : 1;
-          brick.vx -= (1 + (brick.restitution || STRUCTURE.restitution)) * relativeNormal * nx * response;
-          brick.vy -= (1 + (brick.restitution || STRUCTURE.restitution)) * relativeNormal * ny * response;
+          brick.vx -= (1 + (brick.restitution || STRUCTURE.restitution)) * relativeNormal * nx * response * IMPACT_SCALE;
+          brick.vy -= (1 + (brick.restitution || STRUCTURE.restitution)) * relativeNormal * ny * response * IMPACT_SCALE;
         }
       }
     }
@@ -645,7 +651,7 @@
       bullet.sourceUnitId = target.id;
       bullet.outsideTime = 0;
       if (closing > 0) {
-        const impulse = BULLET.targetImpulseScale * closing / (1 + 1 / bullet.mass);
+        const impulse = BULLET.targetImpulseScale * closing / (1 + 1 / bullet.mass) * IMPACT_SCALE;
         const protectedTarget = Boolean(target.repulsionField || target.ability?.repulsionField);
         const response = protectedTarget ? REPULSION.responseMultiplier : 1;
         target.vx = (target.vx || 0) - contact.nx * impulse * response;
@@ -739,7 +745,7 @@
             const relative = (target.vx - bullet.vx) * nx + (target.vy - bullet.vy) * ny;
             if (target.ability?.pulse) detonateChargedPulse(world, target);
             else if (relative < 0) {
-              const impulse = BULLET.targetImpulseScale * -relative / (1 + 1 / bullet.mass);
+              const impulse = BULLET.targetImpulseScale * -relative / (1 + 1 / bullet.mass) * IMPACT_SCALE;
               target.vx += impulse * nx;
               target.vy += impulse * ny;
               if (Math.hypot(target.vx, target.vy) > STOP_SPEED) target.status = 'sliding';
@@ -938,8 +944,7 @@
       const dx = target.x - unit.x, dy = target.y - unit.y;
       const distance = Math.hypot(dx, dy) || 1;
       const travel = distance * -60 * Math.log(clamp(1 - snapshot.friction * (unit.heroFriction || 1) *
-        (unit.openingFrictionMultiplier || 1) * (unit.frictionMultiplier || HARDENING.frictionPerStack **
-        (unit.ability?.stacks?.hardening || 0)), .001, .999));
+        (unit.openingFrictionMultiplier || 1) * (unit.frictionMultiplier ?? 1) * hardeningMultiplier(unit), .001, .999));
       const basePower = travel / (MOTION.maxPullDistance * MOTION.launchScale * (unit.powerScale || 1));
       for (const offset of offsets) shots.push({ dx: dx / distance, dy: dy / distance,
         power: clamp(basePower * offset, .06, 1), bankShot: Boolean(target.bankShot) });

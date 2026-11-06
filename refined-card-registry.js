@@ -29,8 +29,8 @@
     hardening: {
       id: 'hardening',
       name: '정제된 경질화',
-      description: '스톤의 마찰력을 4배로 높입니다.',
-      mechanic: { kind: 'friction-multiplier', frictionMultiplier: 4 },
+      description: '스톤의 마찰력을 3배로 높입니다.',
+      mechanic: { kind: 'friction-multiplier', frictionMultiplier: 3 },
       storyPlaceholder: ''
     },
     brick: {
