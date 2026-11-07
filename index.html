@@ -2300,6 +2300,7 @@
       let onlineStartPending = false;
       let onlineInterpolation = null;
       let onlineLastSnapshotAt = null;
+      let onlineMapClock = null;
       let localAimPointerId = null;
       let selectedPublicRoom = null;
       let publicRoomRefreshTimer = null;
@@ -2529,6 +2530,7 @@
         localAimPointerId = null;
         onlineInterpolation = null;
         onlineLastSnapshotAt = null;
+        onlineMapClock = null;
         Object.assign(state, { units: [], bricks: [], bullets: [], triggers: [], particles: [], effects: [], mimicPlacement: null,
           hands: [[], []], decks: [[], []], playerDecks: [[], []], fallPoints: [0, 0], escapePoints: [0, 0], playerLevels: [guestProfile?.level || 1, guestProfile?.level || 1], triggerPlacementUsed: [false, false], triggerPlacementCount: [0, 0], triggerBonusCharges: [0, 0], refineryUses: [0, 0], refineryBonusCharges: [0, 0],
           playerTutorialCompleted: [guestProfile?.tutorialCompleted === true, guestProfile?.tutorialCompleted === true],
@@ -3212,17 +3214,68 @@
       }
 
       function updateOnlineInterpolation(timestamp) {
-        if (!onlineInterpolation) return;
-        const amount = Math.min(1, (timestamp - onlineInterpolation.startedAt) / onlineInterpolation.duration);
-        for (const item of onlineInterpolation.units) {
-          item.unit.x = item.fromX + (item.toX - item.fromX) * amount;
-          item.unit.y = item.fromY + (item.toY - item.fromY) * amount;
-          if (item.unit.ability?.guard && item.fromAngle != null) {
-            item.unit.ability.guardAngle = item.fromAngle + (item.toAngle - item.fromAngle) * amount;
+        if (onlineInterpolation) {
+          const amount = Math.min(1, (timestamp - onlineInterpolation.startedAt) / onlineInterpolation.duration);
+          for (const item of onlineInterpolation.units) {
+            item.unit.x = item.fromX + (item.toX - item.fromX) * amount;
+            item.unit.y = item.fromY + (item.toY - item.fromY) * amount;
+            if (item.unit.ability?.guard && item.fromAngle != null) {
+              item.unit.ability.guardAngle = item.fromAngle + (item.toAngle - item.fromAngle) * amount;
+            }
           }
+          if (amount >= 1) onlineInterpolation = null;
         }
-        state.mapTime = onlineInterpolation.fromMapTime + (onlineInterpolation.toMapTime - onlineInterpolation.fromMapTime) * amount;
-        if (amount >= 1) onlineInterpolation = null;
+        updateOnlineMapClock(timestamp);
+      }
+
+      function updateOnlineMapClock(timestamp) {
+        const clock = onlineMapClock;
+        if (!clock || onlineSession?.role !== 'challenger') return;
+        const elapsed = Math.max(0, Math.min(.1, (timestamp - clock.lastFrameAt) / 1000));
+        clock.lastFrameAt = timestamp;
+        if (!clock.running) {
+          state.mapTime = clock.sampleTime;
+          clock.displayTime = clock.sampleTime;
+          return;
+        }
+        const rate = clock.speed || 1;
+        const expectedTime = clock.sampleTime + Math.max(0, timestamp - clock.sampleAt) / 1000 * rate;
+        const naturalAdvance = elapsed * rate;
+        const phaseError = expectedTime - clock.displayTime;
+        // Keep the deterministic wall motion continuous between snapshots, then
+        // correct packet jitter gradually instead of restarting a short lerp.
+        const correction = Math.max(-naturalAdvance * .75,
+          Math.min(naturalAdvance * .75, phaseError * elapsed * 4));
+        clock.displayTime += naturalAdvance + correction;
+        state.mapTime = clock.displayTime;
+      }
+
+      function receiveOnlineMapClock(snapshot, receivedAt, sameRound) {
+        if (onlineSession?.role !== 'challenger' || snapshot.currentMapId !== 'moving-walls' ||
+            !Number.isFinite(snapshot.mapTime)) {
+          onlineMapClock = null;
+          return;
+        }
+        const roundKey = `${snapshot.series?.roundIndex ?? 0}:${snapshot.currentMapId}`;
+        const speed = [1, .65, .4][snapshot.speedLevel] ?? 1;
+        const running = !['intro', 'map-select', 'hero-select', 'dealing', 'trigger-select', 'finished'].includes(snapshot.phase);
+        const latencyCompensation = running ? Math.min(.12, Math.max(0, (onlineSession.connectionRtt || 0) / 2000)) * speed : 0;
+        const sampleTime = snapshot.mapTime + latencyCompensation;
+        if (!onlineMapClock || !sameRound || onlineMapClock.roundKey !== roundKey) {
+          onlineMapClock = { roundKey, sampleTime, sampleAt: receivedAt, displayTime: sampleTime,
+            lastFrameAt: receivedAt, speed, running };
+          state.mapTime = sampleTime;
+          return;
+        }
+        onlineMapClock.sampleTime = sampleTime;
+        onlineMapClock.sampleAt = receivedAt;
+        onlineMapClock.speed = speed;
+        onlineMapClock.running = running;
+        if (!running) {
+          onlineMapClock.displayTime = sampleTime;
+          onlineMapClock.lastFrameAt = receivedAt;
+          state.mapTime = sampleTime;
+        }
       }
 
       // Units are intentionally self-contained so future abilities can hook into turns or collisions.
@@ -4095,6 +4148,19 @@
         return state.phase === 'reposition' ? state.repositionUnit : state.supportUnit || turns.currentUnit;
       }
 
+      function activeLaunchControllerOwner(unit = activeLaunchUnit()) {
+        if (!unit) return null;
+        // Neutral stones retain their creator's owner for bookkeeping, but the
+        // player who just used a relaunch card controls this launch action.
+        if (state.phase === 'reposition' && unit === state.repositionUnit) return turns.playerIndex;
+        return unit.owner;
+      }
+
+      function canControlActiveLaunch(unit = activeLaunchUnit()) {
+        const owner = activeLaunchControllerOwner(unit);
+        return Number.isInteger(owner) && canControlPlayer(owner);
+      }
+
       function needsPowerMeter() {
         const unit = activeLaunchUnit();
         const refinedPresetShot = state.phase === 'reposition' && state.repositionMode === 'reposition' && unit?.refinedReposition;
@@ -4141,15 +4207,15 @@
         const unit = activeLaunchUnit();
         const meter = state.powerMeter?.unitId === unit?.id ? state.powerMeter : null;
         const refinedPresetShot = state.phase === 'reposition' && state.repositionMode === 'reposition' && Boolean(unit?.refinedReposition);
-        const showRefinedPicker = refinedPresetShot && unit.refinedRepositionPower == null && canControlPlayer(unit.owner);
+        const showRefinedPicker = refinedPresetShot && unit.refinedRepositionPower == null && canControlActiveLaunch(unit);
         refinedRepositionPicker.hidden = !showRefinedPicker;
         const dismissing = meter?.stage === 'locked';
         const visible = (needsPowerMeter() || showRefinedPicker) && unit && unit.status !== 'fallen' &&
           !['intro', 'dealing', 'finished'].includes(state.phase) &&
-          (meter || canControlPlayer(unit.owner)) && (!dismissing || performance.now() - meter.lockedAt < 300);
+          (meter || canControlActiveLaunch(unit)) && (!dismissing || performance.now() - meter.lockedAt < 300);
         powerControl.hidden = !visible;
         if (!visible) { powerControl.classList.remove('viewport-meter'); return; }
-        const canChoose = canControlPlayer(unit.owner);
+        const canChoose = canControlActiveLaunch(unit);
         powerControl.classList.toggle('refined-reposition-control', showRefinedPicker);
         powerControl.classList.toggle('big-boy', !isNeutralStone(unit) && heroRule(unit.owner, 'powerScale', 1) > 1);
         powerLaunchButton.hidden = Boolean(meter) || showRefinedPicker;
@@ -5994,9 +6060,9 @@
         ability.effectStackHistory[effectId] ||= [];
         const stackRecord = { token: `${effectId}:${Date.now()}:${Math.random()}`, source, refined: Boolean(refined) };
         ability.effectStackHistory[effectId].push(stackRecord);
-        if (source === 'card') {
+        if (['hardening', 'guard'].includes(effectId)) {
           unit.defenseCardStack ||= [];
-          unit.defenseCardStack.push({ id: effectId, refined: Boolean(refined), stackToken: stackRecord.token });
+          unit.defenseCardStack.push({ id: effectId, refined: Boolean(refined), source, stackToken: stackRecord.token });
         }
         if (effectId === 'hardening' && refined) ability.refinedHardeningStacks = (ability.refinedHardeningStacks || 0) + 1;
         if (effectId === 'guard' && refined) {
@@ -6576,39 +6642,53 @@
       function recordDefenseCardStack(unit, card) {
         if (!unit || !card) return;
         unit.defenseCardStack ||= [];
-        unit.defenseCardStack.push({ id: card.id, refined: Boolean(card.refined) });
+        unit.defenseCardStack.push({ id: card.id, refined: Boolean(card.refined), source: 'card' });
       }
 
       function removeLatestDefenseCardStack(unit) {
-        const history = unit?.defenseCardStack;
-        if (!history?.length) return null;
+        if (!unit) return null;
+        const history = unit.defenseCardStack ||= [];
         let removed = null;
         while (history.length && !removed) {
           const candidate = history.pop();
           if (candidate.id === 'bluffing' && unit.ability?.bluffingUntilTurn < turns.globalTurn) continue;
           removed = candidate;
         }
+        if (!removed) {
+          // Recover gracefully for stones restored from an older snapshot that
+          // had an effect stack but no matching defense-history entry.
+          for (const effectId of ['hardening', 'guard']) {
+            if (getUnitEffectStacks(unit, effectId) <= 0) continue;
+            const stack = unit.ability?.effectStackHistory?.[effectId]?.at(-1);
+            removed = { id: effectId, refined: Boolean(stack?.refined), stackToken: stack?.token };
+            break;
+          }
+        }
         if (!removed) return null;
         const ability = ensureUnitAbility(unit);
         if (removed.id === 'hardening') {
           const stackHistory = ability.effectStackHistory?.hardening || [];
           const stackIndex = removed.stackToken ? stackHistory.findIndex(entry => entry.token === removed.stackToken) : stackHistory.length - 1;
-          if (stackIndex >= 0) stackHistory.splice(stackIndex, 1);
-          const remaining = stackHistory.length || Math.max(0, getUnitEffectStacks(unit, 'hardening') - 1);
+          const removedStack = stackIndex >= 0 ? stackHistory.splice(stackIndex, 1)[0] : null;
+          const remaining = Math.max(0, getUnitEffectStacks(unit, 'hardening') - 1);
           ability.stacks.hardening = remaining;
           ability.hardening = remaining > 0;
-          ability.refinedHardeningStacks = stackHistory.filter(entry => entry.refined).length;
+          let refinedStacks = stackHistory.filter(entry => entry.refined).length;
+          if (!removedStack && removed.refined) refinedStacks = Math.max(0, refinedStacks - 1);
+          ability.refinedHardeningStacks = Math.min(remaining, refinedStacks);
         } else if (removed.id === 'guard') {
           const stackHistory = ability.effectStackHistory?.guard || [];
           const stackIndex = removed.stackToken ? stackHistory.findIndex(entry => entry.token === removed.stackToken) : stackHistory.length - 1;
-          if (stackIndex >= 0) stackHistory.splice(stackIndex, 1);
-          const remaining = stackHistory.length || Math.max(0, getUnitEffectStacks(unit, 'guard') - 1);
+          const removedStack = stackIndex >= 0 ? stackHistory.splice(stackIndex, 1)[0] : null;
+          const remaining = Math.max(0, getUnitEffectStacks(unit, 'guard') - 1);
           ability.stacks.guard = remaining;
           ability.guard = remaining > 0;
           if (remaining && Array.isArray(ability.destroyedGuardSatellites)) {
             ability.destroyedGuardSatellites = ability.destroyedGuardSatellites.filter(index => index < remaining);
           }
-          ability.refinedGuardStacks = stackHistory.filter(entry => entry.refined).length;
+          let refinedStacks = stackHistory.filter(entry => entry.refined).length;
+          if (!removedStack && removed.refined) refinedStacks = Math.max(0, refinedStacks - 1);
+          ability.refinedGuardStacks = Math.min(remaining, refinedStacks);
           ability.refinedGuardOrbit = ability.refinedGuardStacks > 0;
         } else if (removed.id === 'bluffing') {
           ability.bluffingUntilTurn = -1;
@@ -8918,8 +8998,7 @@
           unit.y = previous.y;
         }
         const interpolationDuration = onlineLastSnapshotAt == null ? 50 : Math.max(16, Math.min(100, snapshotTime - onlineLastSnapshotAt));
-        onlineInterpolation = { startedAt: snapshotTime, duration: interpolationDuration, units: interpolationUnits,
-          fromMapTime: sameRound ? state.mapTime : snapshot.mapTime, toMapTime: snapshot.mapTime };
+        onlineInterpolation = { startedAt: snapshotTime, duration: interpolationDuration, units: interpolationUnits };
         onlineLastSnapshotAt = snapshotTime;
         state.bricks = snapshot.bricks.map(data => Object.assign(new BrickUnit({ x: data.x, y: data.y, owner: data.owner }), data));
         state.bullets = (snapshot.bullets || []).map(data => ({ ...data }));
@@ -8980,7 +9059,6 @@
         state.aiming = preserveAim || (snapshot.aiming && !inputAllowed);
         state.aimPoint = localAim ? localAim.aimPoint : snapshot.aimPoint;
         state.aimTension = localAim ? localAim.aimTension : snapshot.aimTension;
-        state.mapTime = onlineInterpolation.fromMapTime;
         state.repositionMode = snapshot.repositionMode || null;
         state.phaseBeforeTriggerAim = snapshot.pendingTriggerCharge?.phaseBeforeAim || snapshot.phaseBeforeTriggerAim || state.phaseBeforeTriggerAim;
         const incomingPower = snapshot.powerMeter ? { ...snapshot.powerMeter, lastAt: snapshotTime } : null;
@@ -9015,6 +9093,7 @@
           if (pending != null && snapshot.speedLevel === pending) onlineSession.pendingSpeedLevel = null;
           setSpeedLevel(nextSpeed, nextSpeed !== state.speedLevel && pending !== nextSpeed);
         }
+        receiveOnlineMapClock(snapshot, snapshotTime, sameRound);
         turns.globalTurn = snapshot.globalTurn;
         turns.startingPlayer = snapshot.startingPlayer || 0;
         state.turnDeadline = Number.isFinite(snapshot.turnRemaining) ? Date.now() + snapshot.turnRemaining : null;
@@ -9184,6 +9263,7 @@
         state.selectedMap = map;
         state.currentMap = map;
         state.mapTime = 0;
+        onlineMapClock = null;
         state.playerDecks = [onlineSession.room?.host?.deck, onlineSession.room?.challenger?.deck]
           .map((ids, owner) => Array.isArray(ids) && ids.length === 8 ? [...ids] : defaultPlayerDeck(state.playerTutorialCompleted[owner]));
         mapIndicator.textContent = `${map.name} · ${roundIndex + 1}라운드`;
@@ -12172,7 +12252,7 @@
 
       powerLaunchButton.addEventListener('click', () => {
         const unit = activeLaunchUnit();
-        if (!unit || !canControlPlayer(unit.owner) || !startPowerMeter()) return;
+        if (!unit || !canControlActiveLaunch(unit) || !startPowerMeter()) return;
         const panelBounds = powerControl.getBoundingClientRect();
         if (panelBounds.top < 8 || panelBounds.bottom > window.innerHeight - 8) {
           powerControl.scrollIntoView({ block: 'center', behavior: 'smooth' });
@@ -12182,13 +12262,13 @@
       powerConfirmButton.addEventListener('click', () => {
         const unit = activeLaunchUnit();
         const value = state.powerMeter?.value;
-        if (!unit || !canControlPlayer(unit.owner) || !lockPowerMeter(value)) return;
+        if (!unit || !canControlActiveLaunch(unit) || !lockPowerMeter(value)) return;
         if (shouldForwardOnlineAction()) sendOnlineAction({ type: 'power-lock', unitId: unit.id, value });
       });
       refinedRepositionPicker.querySelectorAll('[data-refined-power]').forEach(button => button.addEventListener('click', () => {
         const unit = activeLaunchUnit();
         const value = Number(button.dataset.refinedPower);
-        if (!unit?.refinedReposition || ![.3, .5, .7, 1].includes(value) || !canControlPlayer(unit.owner)) return;
+        if (!unit?.refinedReposition || ![.3, .5, .7, 1].includes(value) || !canControlActiveLaunch(unit)) return;
         unit.refinedRepositionPower = value;
         playSound('importantSelection');
         updateHud();
