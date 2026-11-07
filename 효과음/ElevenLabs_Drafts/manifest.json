@@ -1,6 +1,6 @@
 {
   "provider": "ElevenLabs",
-  "generatedAt": "2026-11-06T07:04:47.219Z",
+  "generatedAt": "2026-11-07T12:28:32.861Z",
   "effects": [
     {
       "id": "start",
@@ -401,6 +401,36 @@
       "inactive": false,
       "duration": 2,
       "src": "효과음/ElevenLabs_Drafts/fixed-lock-2s.mp3"
+    },
+    {
+      "id": "mimicCast",
+      "name": "묘기 시전",
+      "group": "카드와 트리거",
+      "description": "조커가 어둠의 연막 속에서 분신을 만들어낼 때",
+      "prompt": "Exactly two seconds. An upfront, clearly audible smoky emergence as an uncanny duplicate forms in a post-apocalyptic dark fantasy game. Immediate low-mid pressure pop, followed by dense swirling smoke rushing outward and a short dusty reverb tail. Strong present volume, no quiet lead-in, clear on small speakers. Tactile, mysterious. No speech, laughter, music, metal machinery, electronic beeps, or explosive boom.",
+      "inactive": false,
+      "duration": 2,
+      "src": "효과음/ElevenLabs_Drafts/mimic-cast-v2-2s.mp3"
+    },
+    {
+      "id": "mimicWhoosh",
+      "name": "묘기 발동 잔향",
+      "group": "카드와 트리거",
+      "description": "묘기 연결이 충격을 받아 발동할 때의 에너지 이동음",
+      "prompt": "Exactly two seconds. An uncanny spectral energy whoosh as a linked stone instantly swaps position in a dark post-apocalyptic fantasy world: a fast airy suction, a weighty low-mid rush that sweeps from one side to the other, and a soft reverberant vapor trail. Strong clear audible presence without clipping, organic and supernatural, no words, no laughter, no music, no gunshot, no electronic beeps.",
+      "inactive": false,
+      "duration": 2,
+      "src": "효과음/ElevenLabs_Drafts/mimic-whoosh-2s.mp3"
+    },
+    {
+      "id": "mimicLaugh",
+      "name": "조커의 묘기 웃음",
+      "group": "카드와 트리거",
+      "description": "묘기 발동과 동시에 들리는 짧고 기묘한 조커 웃음",
+      "prompt": "Exactly two seconds. A short eccentric Joker-like human laugh for a dark post-apocalyptic fantasy game, playful but slightly unsettling, a close breathy chuckle that breaks into a few quick amused pulses and fades with mild reverb. Clear audible volume, not a scream, not sinister horror, no intelligible words, no music, no other sound effects.",
+      "inactive": false,
+      "duration": 2,
+      "src": "효과음/ElevenLabs_Drafts/mimic-laugh-2s.mp3"
     }
   ]
 }

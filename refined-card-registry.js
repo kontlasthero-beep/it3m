@@ -12,6 +12,20 @@
   }
 
   const definitions = {
+    fate: {
+      id: 'fate',
+      name: '정제된 운명',
+      description: '운명은 스스로 개척하는 것',
+      mechanic: { kind: 'discard-without-effect', target: 'board' },
+      storyPlaceholder: ''
+    },
+    trick: {
+      id: 'trick',
+      name: '정제된 묘기',
+      description: '원본 스톤과 분신 스톤이 연결됩니다. 둘 중 하나가 충격을 받으면 피격된 스톤만 중립 스톤으로 변하고, 연결은 해제됩니다.',
+      mechanic: { kind: 'mimic-neutral-on-impact', struckUnitOnly: true, clearLink: true },
+      storyPlaceholder: ''
+    },
     neutralize: {
       id: 'neutralize',
       name: '정제된 무력화',

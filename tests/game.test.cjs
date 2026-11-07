@@ -1647,6 +1647,60 @@ test('Hunter tracking mark and card reward replicate to the online guest', () =>
     assert.equal(state.units.find(unit=>unit.id==='online-tracked').tracking,null);`);
 });
 
+test('Joker Fate transfers once on draw, blocks other cards, and neutralizes the holder’s stone', () => {
+  const g = game();
+  g.run(`state.heroChoices=['joker','hunter']; turns.reset(0);
+    state.decks[0]=[{...deckCard('fate')}];
+    drawCardForPlayer(0,()=>{});
+    completeCardDraw(pendingCardDraw);
+    assert.equal(state.hands[0].length,0);
+    assert.equal(state.hands[1].length,1);
+    assert.equal(state.hands[1][0].fateTransferred,true);
+    const fate=state.hands[1][0];
+    assert.equal(fate.id,'fate');
+    turns.reset(1);
+    const own=turns.createCurrentUnit(); own.status='resting'; own.x=600; own.y=350;
+    state.units=[own]; state.phase='turn-ready';
+    const guard={...deckCard('guard'),instanceId:'blocked-guard'};
+    state.hands[1].push(guard);
+    assert.equal(canUseCardOnUnit(guard,1,own),false);
+    assert.equal(useCard(guard.instanceId,1,own),false);
+    assert.equal(canUseCardOnUnit(fate,1,own),true);
+    assert.equal(useCard(fate.instanceId,1,own),true);
+    assert.equal(own.neutral,true);
+    assert.equal(state.hands[1].length,1);
+    assert.equal(canUseCardOnUnit(guard,1,own),true);`);
+});
+
+test('refined Fate is discarded on the board without transfer, lock, or neutralization', () => {
+  const g = game();
+  g.run(`state.heroChoices=['joker','hunter']; turns.reset(0);
+    state.decks[0]=[{...deckCard('fate'),refined:true}];
+    drawCardForPlayer(0,()=>{});
+    completeCardDraw(pendingCardDraw);
+    assert.equal(state.hands[0].length,1);
+    assert.equal(state.hands[1].length,0);
+    const own=turns.createCurrentUnit(); own.status='resting'; own.x=600; own.y=350;
+    state.units=[own]; state.phase='turn-ready';
+    const fate=state.hands[0][0];
+    assert.equal(useCard(fate.instanceId,0,own),false);
+    assert.equal(useBoardCard(fate.instanceId,0,{x:650,y:350}),true);
+    assert.equal(state.hands[0].length,0);
+    assert.equal(Boolean(own.neutral),false);`);
+});
+
+test('Fate hand transfer is reflected in online snapshots', () => {
+  const { host, guest, send } = onlinePair();
+  host.run(`state.heroChoices=['joker','hunter'];
+    state.decks[0]=[{...deckCard('fate')}];
+    drawCardForPlayer(0,()=>{});
+    completeCardDraw(pendingCardDraw);`);
+  send(2);
+  guest.run(`assert.equal(state.hands[0].length,0);
+    assert.equal(state.hands[1][0].id,'fate');
+    assert.equal(state.hands[1][0].fateTransferred,true);`);
+});
+
 test('Hunter neutralization arms only an enemy, changes it on impact, and gives no neutral knockout points', () => {
   const g = game();
   g.run(`state.currentMap=MAPS[0]; state.heroChoices=['hunter','big-boy']; turns.reset(0);

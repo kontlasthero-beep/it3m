@@ -168,6 +168,10 @@
     .board-dock #endTurnButton { min-height: 30px; padding: 4px 9px; border-color: #c29a55; background: #755321; color: #fff1d4; font-size: 11px; white-space: nowrap; }
     .board-dock #endTurnButton:disabled { opacity: .48; }
     .power-control { position: absolute; z-index: 18; width: 112px; transform: translateX(-50%); pointer-events: none; text-align: center; }
+    .mimic-placement-bar { position: absolute; z-index: 23; top: 58px; left: 50%; display: flex; align-items: center; gap: 12px; max-width: calc(100% - 24px); padding: 7px 10px 7px 14px; transform: translateX(-50%); border: 1px solid rgba(198, 160, 99, .82); border-radius: 4px; background: rgba(11, 20, 22, .94); color: #eee5d3; box-shadow: 0 8px 26px rgba(0,0,0,.48), 0 0 20px rgba(144, 111, 188, .16); font-size: 13px; pointer-events: auto; }
+    .mimic-placement-bar[hidden] { display: none; }
+    .mimic-placement-bar button { flex: 0 0 auto; min-height: 30px; padding: 4px 10px; border-color: #947350; font-size: 12px; }
+    @media (max-width: 700px) { .mimic-placement-bar { top: 48px; gap: 6px; padding: 5px 6px 5px 9px; font-size: 11px; } .mimic-placement-bar button { min-height: 27px; padding: 3px 7px; font-size: 11px; } }
     .power-control button { pointer-events: auto; min-height: 38px; width: 100%; font-weight: 800; }
     .power-control .power-launch { width: 58px; min-height: 28px; padding: 4px 6px; border-color: rgba(240, 200, 116, .65); background: rgba(180, 117, 34, .55); color: #fff0d6; font-size: 12px; }
     .power-control .power-launch:hover { background: rgba(180, 117, 34, .78); }
@@ -539,6 +543,7 @@
     .card-art[data-card-id="repulsion-field"] { object-position: center 20%; transform: scale(1.22); transform-origin: center 22%; }
     .card-art[data-card-id="reinforcements"] { object-position: center top; }
     .card-art[data-card-id="tracking"] { object-position: center 8%; }
+    .card-art[data-card-id="trick"] { object-position: center top; }
     .card-name { display: block; flex: 0 0 auto; padding: 8px 10px; font-size: 16px; line-height: 1.25; border-top: 1px solid #65736d; }
     .card-rules { display: block; padding: 0 10px 10px; font-size: 12px; font-weight: 400; line-height: 1.45; overflow-y: auto; overflow-wrap: anywhere; }
     .card-face .card-name { position: relative; z-index: 1; background: #152226; }
@@ -634,6 +639,7 @@
     .ability-card.usable:active { cursor: grabbing; }
     .ability-card.card-back { border-style: dashed; background: #1b2925; color: #a3b0ab; cursor: default; touch-action: auto; }
     .ability-card.spent { opacity: .45; }
+    .ability-card.fate-locked { filter: grayscale(1); opacity: .48; cursor: not-allowed; }
     .card-ghost { position: fixed; z-index: 75; pointer-events: none; transform: translate(-50%, -80%); }
     .card-ghost.full-card { width: 210px; height: min(310px, 80dvh); opacity: .9; }
     .card-ghost.drag-card { width: 112px; height: 148px; opacity: .93; transition: width .12s ease, height .12s ease, transform .12s ease, filter .12s ease; }
@@ -813,6 +819,7 @@
     .catalog-entry .catalog-card-art[data-card-id="repulsion-field"] { object-position: center 20%; transform: scale(1.22); transform-origin: center 22%; }
     .catalog-entry .catalog-card-art[data-card-id="reinforcements"] { object-position: center top; }
     .catalog-entry .catalog-card-art[data-card-id="tracking"] { object-position: center 8%; }
+    .catalog-entry .catalog-card-art[data-card-id="trick"] { object-position: center top; }
     .catalog-entry.locked-card header { position: relative; }
     .catalog-entry.locked-card .catalog-card-art { filter: grayscale(1) blur(4px) brightness(.48); }
     .catalog-lock {
@@ -1043,6 +1050,10 @@
         </div>
       </div>
       <canvas id="game" width="1200" height="772" aria-label="Second Chance 게임"></canvas>
+      <div class="mimic-placement-bar" id="mimicPlacementBar" role="status" aria-live="polite" hidden>
+        <span>원본 스톤 주변에 분신을 배치하세요</span>
+        <button id="mimicPlacementCancel" type="button">배치 취소 · Esc</button>
+      </div>
       <div class="power-control" id="powerControl" hidden>
         <button class="power-launch" id="powerLaunchButton" type="button">발사</button>
         <div class="power-panel" id="powerPanel" hidden>
@@ -1506,6 +1517,8 @@
     (() => {
       const canvas = document.querySelector('#game');
       const ctx = canvas.getContext('2d');
+      const mimicPlacementBar = document.querySelector('#mimicPlacementBar');
+      const mimicPlacementCancel = document.querySelector('#mimicPlacementCancel');
       const powerControl = document.querySelector('#powerControl');
       const powerLaunchButton = document.querySelector('#powerLaunchButton');
       const powerPanel = document.querySelector('#powerPanel');
@@ -1761,10 +1774,14 @@
         dataBarrier: '효과음/ElevenLabs_Drafts/data-barrier-form-v1.mp3',
         strongHit: '효과음/ElevenLabs_Drafts/strong-impact-v3.mp3',
         wallHit: '효과음/ElevenLabs_Drafts/wall-impact.mp3', guardHit: '효과음/ElevenLabs_Drafts/guard-impact.mp3',
-        timerWarning: '효과음/ElevenLabs_Drafts/timer-warning.mp3', timerTick: '효과음/ElevenLabs_Drafts/timer-tick.mp3'
+        timerWarning: '효과음/ElevenLabs_Drafts/timer-warning.mp3', timerTick: '효과음/ElevenLabs_Drafts/timer-tick.mp3',
+        mimicCast: '효과음/ElevenLabs_Drafts/mimic-cast-v2-2s.mp3',
+        mimicWhoosh: '효과음/ElevenLabs_Drafts/mimic-whoosh-2s.mp3',
+        mimicLaugh: '효과음/ElevenLabs_Drafts/mimic-laugh-2s.mp3'
       };
       const generatedSoundLastPlayed = new Map();
       const playedOnlineOutcomeKeys = new Set();
+      const playedMimicSoundIds = new Set();
       const generatedSoundCooldowns = { wallHit: 80, guardHit: 90, strongHit: 65, repulsionCollision: 110 };
       const AUDIO_FILES = {
         weakHit: new Audio('효과음/충돌과 타이머/Midhit_1.wav'),
@@ -1898,6 +1915,10 @@
         [77, 47], [89, 97], [97, 80], [140, 80]];
       const fixedPadlockImage = new Image();
       fixedPadlockImage.src = 'in-game-screen/game-objects/fixed-padlock.svg';
+      const mimicAuraImage = new Image();
+      mimicAuraImage.src = 'in-game-screen/game-objects/mimic/mimic-charge-aura.png';
+      const mimicSoulLinkImage = new Image();
+      mimicSoulLinkImage.src = 'in-game-screen/game-objects/mimic/mimic-soul-link.png';
       const CARDS = [
         { id: 'hardening', name: '경질화' }, { id: 'hardening', name: '경질화' },
         { id: 'guard', name: '방호벽' }, { id: 'guard', name: '방호벽' },
@@ -1915,7 +1936,9 @@
         { id: 'heavy-blow', name: '묵직한 한방' }, { id: 'heavy-blow', name: '묵직한 한방' },
         { id: 'reinforcements', name: '지원군' }, { id: 'reinforcements', name: '지원군' },
         { id: 'tracking', name: '추적' }, { id: 'tracking', name: '추적' },
-        { id: 'neutralize', name: '무력화' }, { id: 'neutralize', name: '무력화' }
+        { id: 'neutralize', name: '무력화' }, { id: 'neutralize', name: '무력화' },
+        { id: 'fate', name: '운명' }, { id: 'fate', name: '운명' },
+        { id: 'trick', name: '묘기' }, { id: 'trick', name: '묘기' }
       ];
       const CARD_METADATA = Object.freeze({
         hardening: { category: 'defense', tags: ['스톤 대상', '마찰 증가', '정제 가능'] },
@@ -1934,7 +1957,9 @@
         'heavy-blow': { category: 'launch', tags: ['충격파', '영웅 전용'], heroIds: ['big-boy'] },
         reinforcements: { category: 'tactic', tags: ['추가 스톤', '영웅 전용'], heroIds: ['big-boy'] },
         tracking: { category: 'tactic', tags: ['상대 스톤 대상', '마찰 감소', '카드 뽑기', '영웅 전용'], heroIds: ['hunter'] },
-        neutralize: { category: 'tactic', tags: ['상대 스톤 대상', '중립화', '고정', '영웅 전용'], heroIds: ['hunter'] }
+        neutralize: { category: 'tactic', tags: ['상대 스톤 대상', '중립화', '고정', '영웅 전용'], heroIds: ['hunter'] },
+        fate: { category: 'tactic', tags: ['손패 이동', '중립화', '영웅 전용', '정제 가능'], heroIds: ['joker'] },
+        trick: { category: 'tactic', tags: ['분신', '충돌 반응', '영웅 전용', '정제 가능'], heroIds: ['joker'] }
       });
       const CARD_CATEGORY_NAMES = Object.freeze({
         all: '모든 카테고리', attack: '공격', launch: '발사', defense: '방어',
@@ -1957,7 +1982,9 @@
         'heavy-blow': '자신의 스톤을 충전합니다. 스톤을 당겨 발사하면 충격파가 가벽과 데이터 장벽을 부수며 주변 스톤을 밀쳐냅니다.',
         reinforcements: '기본 스톤을 발사한 뒤, 점수를 얻지 못하는 중립 스톤을 추가로 배치하고 발사합니다. 양쪽 플레이어 모두 이 스톤에 카드를 사용할 수 있습니다.',
         tracking: '상대 스톤을 목표로 지정합니다. 목표의 마찰력이 50% 감소하고, 제거되면 카드를 한 장 뽑습니다.',
-        neutralize: '상대의 스톤을 지정합니다. 지정된 스톤이 충돌하면 대상을 중립 스톤으로 만듭니다.'
+        neutralize: '상대의 스톤을 지정합니다. 지정된 스톤이 충돌하면 대상을 중립 스톤으로 만듭니다.',
+        fate: '손패에 들어오면 상대에게 넘어갑니다. 이 카드를 가진 동안 다른 카드를 사용할 수 없습니다. 자신의 스톤에 사용하면 중립 스톤이 됩니다.',
+        trick: '이미 발사된 자신의 스톤에 사용합니다.\n해당 스톤의 중간 범위 안에 점수를 얻지 않는 분신 스톤 하나를 배치합니다. 원래 스톤과 분신 스톤은 연결되어,\n연결된 원본 스톤이 충격을 받으면 그 대신 분신 스톤 자리로 이동합니다. 분신 스톤은 충격을 받으면 즉시 사라집니다.'
       };
       const TURN_LIMIT_MS = 40_000;
       const CARD_DRAW_HOLD_MS = 1050;
@@ -1979,7 +2006,9 @@
         'heavy-blow': { art: 'Card_illustration/heavy-blow.png', refinedArt: 'Card_illustration/refined/heavy-blow.png', sound: 'heavyBlowCharge' },
         reinforcements: { art: 'Card_illustration/reinforcements.png', refinedArt: 'Card_illustration/refined/reinforcements.png', sound: 'card' },
         tracking: { art: 'Card_illustration/tracking.png', refinedArt: 'Card_illustration/refined/tracking.png', sound: 'trackingLock' },
-        neutralize: { art: 'Card_illustration/neutralize.png', refinedArt: 'Card_illustration/refined/neutralize.png', sound: 'neutralizeArm' }
+        neutralize: { art: 'Card_illustration/neutralize.png', refinedArt: 'Card_illustration/refined/neutralize.png', sound: 'neutralizeArm' },
+        fate: { art: 'Card_illustration/fate.png', refinedArt: 'Card_illustration/refined/fate.png', sound: 'card' },
+        trick: { art: 'Card_illustration/trick.png', refinedArt: 'Card_illustration/refined/trick.png', sound: 'mimicCast' }
       };
       const UNIT_EFFECTS = Object.freeze({
         hardening: { maxStacks: Infinity, frictionPerStack: AI_BALANCE.hardening.frictionPerStack },
@@ -2170,6 +2199,7 @@
         particles: [],
         effects: [],
         placementPreview: null,
+        mimicPlacement: null,
         placementAnimation: null,
         aiming: false,
         aimPoint: null,
@@ -2499,7 +2529,7 @@
         localAimPointerId = null;
         onlineInterpolation = null;
         onlineLastSnapshotAt = null;
-        Object.assign(state, { units: [], bricks: [], bullets: [], triggers: [], particles: [], effects: [],
+        Object.assign(state, { units: [], bricks: [], bullets: [], triggers: [], particles: [], effects: [], mimicPlacement: null,
           hands: [[], []], decks: [[], []], playerDecks: [[], []], fallPoints: [0, 0], escapePoints: [0, 0], playerLevels: [guestProfile?.level || 1, guestProfile?.level || 1], triggerPlacementUsed: [false, false], triggerPlacementCount: [0, 0], triggerBonusCharges: [0, 0], refineryUses: [0, 0], refineryBonusCharges: [0, 0],
           playerTutorialCompleted: [guestProfile?.tutorialCompleted === true, guestProfile?.tutorialCompleted === true],
           heroOffers: [[], []], heroChoices: [null, null], heroDeadline: null, heroSelectionMode: null,
@@ -3092,6 +3122,17 @@
         if (playback?.catch) playback.catch(() => {});
       }
 
+      function playMimicSoundEvent(effect) {
+        if (!effect?.id || playedMimicSoundIds.has(effect.id)) return;
+        playedMimicSoundIds.add(effect.id);
+        if (playedMimicSoundIds.size > 256) playedMimicSoundIds.delete(playedMimicSoundIds.values().next().value);
+        if (effect.soundEvent === 'mimic-cast') playElevenLabsSound('mimicCast', { volume: 1.2 });
+        else if (effect.soundEvent === 'mimic-activation') {
+          playElevenLabsSound('mimicWhoosh', { volume: 1.25 });
+          playElevenLabsSound('mimicLaugh', { volume: 1.05 });
+        }
+      }
+
       function playOutcomeMusic(name) {
         if (!audio.musicVolume || !ELEVENLABS_SFX[name]) return;
         const backgroundTrack = currentMusic;
@@ -3219,6 +3260,9 @@
           this.neutralization = null;
           this.fixed = false;
           this.pendingPulseTriggers = [];
+        this.mimicCharge = null;
+        this.mimicClone = false;
+        this.scoreless = false;
           this.previousX = x;
           this.previousY = y;
         }
@@ -3619,6 +3663,7 @@
 
       function expireCurrentTurn() {
         if (turns.isComplete || state.turnDeadline == null) return;
+        if (state.mimicPlacement) cancelMimicPlacement(false);
         const unit = turns.currentUnit;
         if (state.supportUnit && !state.supportUnit.hasLaunched) {
           state.supportUnit.status = 'fallen';
@@ -3686,6 +3731,22 @@
         state.cardDrawTimer = setTimeout(() => completeCardDraw(draw), CARD_DRAW_DURATION_MS);
       }
 
+      function addDrawnCardToHand(owner, card) {
+        // Fate changes hands once when acquired; receipt by the opponent is not another draw.
+        const recipient = card.id === 'fate' && !card.refined && !card.fateTransferred ? 1 - owner : owner;
+        if (recipient !== owner) card.fateTransferred = true;
+        state.hands[recipient].push(card);
+        return recipient;
+      }
+
+      function hasUnrefinedFate(owner) {
+        return state.hands[owner]?.some(card => card.id === 'fate' && !card.refined) || false;
+      }
+
+      function fateAllowsCard(card, owner) {
+        return card?.id === 'fate' || !hasUnrefinedFate(owner);
+      }
+
       function completeCardDraw(draw) {
         if (pendingCardDraw !== draw) return;
         pendingCardDraw = null;
@@ -3694,7 +3755,7 @@
         cardDrawVisual = null;
         dealOverlay.hidden = true;
         if (state.phase !== 'dealing') return;
-        state.hands[draw.owner].push(draw.card);
+        addDrawnCardToHand(draw.owner, draw.card);
         renderHands();
         draw.onComplete();
       }
@@ -3702,7 +3763,9 @@
       function showCardDraw(draw) {
         if (cardDrawVisual?.id !== draw.id) {
           hideCardInspector();
-          dealPlayer.textContent = `${PLAYER[draw.owner].name} · 카드 뽑기`;
+          dealPlayer.textContent = draw.card.id === 'fate' && !draw.card.refined
+            ? `${PLAYER[draw.owner].name}의 운명 → ${PLAYER[1 - draw.owner].name}`
+            : `${PLAYER[draw.owner].name} · 카드 뽑기`;
           dealCard.replaceChildren(createCardFace(draw.card));
           playSound('deal', .8);
         }
@@ -3717,11 +3780,13 @@
         const enter = Math.max(0, Math.min(1, elapsed / 280));
         const exit = Math.max(0, Math.min(1, (elapsed - CARD_DRAW_HOLD_MS) / (CARD_DRAW_DURATION_MS - CARD_DRAW_HOLD_MS)));
         const ease = value => value * value * (3 - 2 * value);
-        const target = handEls[cardDrawVisual.owner].getBoundingClientRect();
+        const recipient = cardDrawVisual.card.id === 'fate' && !cardDrawVisual.card.refined
+          ? 1 - cardDrawVisual.owner : cardDrawVisual.owner;
+        const target = handEls[recipient].getBoundingClientRect();
         const source = gameDeckButtons[cardDrawVisual.owner]?.getBoundingClientRect() || target;
         const width = window.innerWidth || 1200;
         const height = window.innerHeight || 710;
-        const x = Math.min(width - 42, Math.max(42, target.left + Math.min(target.width / 2, 42 + state.hands[cardDrawVisual.owner].length * 90)));
+        const x = Math.min(width - 42, Math.max(42, target.left + Math.min(target.width / 2, 42 + state.hands[recipient].length * 90)));
         const y = Math.min(height - 54, Math.max(54, target.top + target.height / 2));
         const sourceX = Math.min(width - 30, Math.max(30, source.left + source.width / 2));
         const sourceY = Math.min(height - 35, Math.max(35, source.top + source.height / 2));
@@ -3778,14 +3843,14 @@
           button.title = button.dataset.description;
           button.setAttribute('aria-label', isRefiner ? `가공기, 남은 정제 횟수 ${remaining}` : `트리거 배치, 남은 횟수 ${remaining}`);
           const hasRefinableCard = isRefiner && state.hands[owner]?.some(card => refinedCardDefinition(card) && !card.refined);
-          button.disabled = (Boolean(state.adventure) && !isRefiner) || spent || (isRefiner && !hasRefinableCard) || owner !== turns.playerIndex || !canControlPlayer(owner) || !turns.currentUnit ||
+          button.disabled = Boolean(state.mimicPlacement) || (Boolean(state.adventure) && !isRefiner) || spent || (isRefiner && !hasRefinableCard) || owner !== turns.playerIndex || !canControlPlayer(owner) || !turns.currentUnit ||
             !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase);
           button.querySelector('.trigger-count').textContent = String(remaining);
         });
       }
 
       function openRefinerySelection(owner) {
-        if (owner !== turns.playerIndex || heroFor(owner)?.id !== 'refiner' || !canControlPlayer(owner) || !turns.currentUnit) return;
+        if (state.mimicPlacement || owner !== turns.playerIndex || heroFor(owner)?.id !== 'refiner' || !canControlPlayer(owner) || !turns.currentUnit) return;
         const remaining = remainingRefineryUses(owner);
         if (!remaining || !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase)) return;
         const cards = state.hands[owner].filter(card => refinedCardDefinition(card) && !card.refined);
@@ -3893,22 +3958,25 @@
           heroBadges[index].textContent = hero ? `영웅 · ${hero.name}` : '';
           heroBadges[index].title = hero?.description || '';
           panels[index].classList.toggle('current', !turns.isComplete && index === turns.playerIndex);
-          const used = state.units.filter(unit => unit.owner === index && !unit.supportStone).length;
+          const used = state.units.filter(unit => unit.owner === index && !unit.supportStone && !unit.mimicClone).length;
           const remaining = Math.max(0, CONFIG.maxTurnsPerPlayer - used);
           remainingEls[index].hidden = false;
           remainingEls[index].setAttribute('aria-label', `${PLAYER[index].name} 남은 스톤 ${remaining}개`);
           remainingEls[index].querySelectorAll('img').forEach((image, stoneIndex) => { image.hidden = stoneIndex >= remaining; });
           practiceRemainingEls[index].hidden = true;
         });
-        endTurnButton.disabled = Boolean(state.adventure) || state.phase !== 'turn-ready' || state.bullets.length > 0 || !canControlPlayer(turns.playerIndex);
+        endTurnButton.disabled = Boolean(state.adventure) || Boolean(state.mimicPlacement) || state.phase !== 'turn-ready' ||
+          state.bullets.length > 0 || !canControlPlayer(turns.playerIndex);
         speedToggle.disabled = !canChangeSpeed();
         actionHint.textContent = state.phase === 'placement' ? '발사할 높이를 골라 테이블을 클릭하세요' : state.phase === 'sliding' ? '스톤이 움직이는 중' : state.phase === 'turn-ready' ? '턴을 마치거나 카드를 사용하세요' : state.phase === 'reposition' && state.repositionMode === 'ammo' ? '총알 장전: 당겨서 발사' : state.phase === 'reposition' && state.repositionMode === 'heavy-blow' ? '묵직한 한방: 스톤을 당겨 충격파를 발산하세요' : state.phase === 'trigger-select' ? '트리거 종류를 선택하세요' : needsPowerMeter() && state.powerMeter?.stage === 'locked' ? '스톤을 드래그해 방향을 지정하세요' : needsPowerMeter() && state.powerMeter?.stage === 'spinning' ? '미터를 보고 파워를 결정하세요' : '스톤 아래 발사 버튼을 누르세요';
         if (state.aiMode && turns.playerIndex === state.aiOwner && !turns.isComplete)
           actionHint.textContent = `${aiLevel().name} · 수를 계산하는 중`;
+        if (state.mimicPlacement) actionHint.textContent = '분신을 배치하거나 Esc를 눌러 취소하세요';
         handPanels.forEach((panel, index) => panel.classList.toggle('current', !turns.isComplete && index === turns.playerIndex));
         handsElement.classList.toggle('active-p1', !turns.isComplete && turns.playerIndex === 0);
         handsElement.classList.toggle('active-p2', !turns.isComplete && turns.playerIndex === 1);
         updateTriggerTools();
+        renderMimicPlacementUI();
         updateGameDeckButtons();
         updateMatchHud();
         renderPowerControl();
@@ -3964,7 +4032,8 @@
 
       function calculateScores() {
         return PLAYER.map((player, index) => {
-          const units = state.units.filter(unit => unit.owner === index && !isNeutralStone(unit) && unit.isOnTable && unit.status !== 'ready');
+          const units = state.units.filter(unit => unit.owner === index && !unit.scoreless && unit.status !== 'mimic-removed' &&
+            !isNeutralStone(unit) && unit.isOnTable && unit.status !== 'ready');
           let distance = 0;
           let score = 0;
           units.forEach(unit => {
@@ -3983,7 +4052,7 @@
         if (victim.fallResolved) return;
         victim.fallResolved = true;
         resolveTrackedRemoval(victim);
-        if (!isNeutralStone(victim)) state.fallPoints[victim.owner] -= heroRule(victim.owner, 'fallPenalty', 0);
+        if (!isNeutralStone(victim) && !victim.scoreless) state.fallPoints[victim.owner] -= heroRule(victim.owner, 'fallPenalty', 0);
         awardKnockoutPoints(victim);
         updateHud();
       }
@@ -4000,7 +4069,7 @@
           const index = deck.findLastIndex(card => isCardUnlocked(card, mark.owner));
           if (index < 0) break;
           const card = deck.splice(index, 1)[0];
-          hand.push({ ...card, instanceId: `card-${++state.nextCardId}` });
+          addDrawnCardToHand(mark.owner, { ...card, instanceId: `card-${++state.nextCardId}` });
           drawn += 1;
         }
         if (drawn) {
@@ -4011,7 +4080,7 @@
       }
 
       function awardKnockoutPoints(victim) {
-        if (victim.fallRewarded || isNeutralStone(victim) || isRuleAlly(victim, turns.playerIndex) || state.phase === 'finished' || state.phase === 'intro') return;
+        if (victim.fallRewarded || victim.scoreless || isNeutralStone(victim) || isRuleAlly(victim, turns.playerIndex) || state.phase === 'finished' || state.phase === 'intro') return;
         const scorer = turns.playerIndex;
         victim.fallRewarded = true;
         const points = heroRule(scorer, 'knockoutPoints', 25);
@@ -4996,6 +5065,23 @@
         }
         const action = state.aiAction;
         if (timestamp < action.deadline) return;
+        if (['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase)) {
+          const fate = state.hands[state.aiOwner].find(card => card.id === 'fate' && !card.refined);
+          const target = state.units.find(unit => unit.owner === state.aiOwner && !isNeutralStone(unit) &&
+            unit.status !== 'fallen' && (unit.status !== 'ready' || unit === turns.currentUnit || unit === state.supportUnit));
+          if (fate && target && useCard(fate.instanceId, state.aiOwner, target)) {
+            action.deadline = timestamp + 180;
+            return;
+          }
+          if (!fate) {
+            const refinedFate = state.hands[state.aiOwner].find(card => card.id === 'fate' && card.refined);
+            if (refinedFate && useBoardCard(refinedFate.instanceId, state.aiOwner,
+                { x: (TABLE.left + TABLE.right) / 2, y: (TABLE.top + TABLE.bottom) / 2 })) {
+              action.deadline = timestamp + 180;
+              return;
+            }
+          }
+        }
         const unit = activeLaunchUnit();
         if (!action.refinementConsidered && heroFor(state.aiOwner)?.id === 'refiner' &&
             ['aiming', 'reposition', 'sliding', 'turn-ready'].includes(state.phase)) {
@@ -5333,6 +5419,7 @@
           for (let j = i + 1; j < active.length; j += 1) {
             const a = active[i];
             const b = active[j];
+            if (a.status === 'mimic-removed' || b.status === 'mimic-removed') continue;
             if (a.fluidTimer > 0 || b.fluidTimer > 0 || isCollisionPhased(a) || isCollisionPhased(b)) continue;
             const dx = b.x - a.x;
             const dy = b.y - a.y;
@@ -5390,7 +5477,10 @@
               if (b.status === 'resting' && !isFixedStone(b)) b.status = 'sliding';
               detonatePendingPulseTriggers(a);
               detonatePendingPulseTriggers(b);
+              resolveMimicImpact(a);
+              resolveMimicImpact(b);
             }
+            if (a.status === 'mimic-removed' || b.status === 'mimic-removed') continue;
             detonateChargedPulse(a);
             detonateChargedPulse(b);
           }
@@ -5399,7 +5489,7 @@
 
       function resolveBrickCollisions() {
         for (const unit of state.units) {
-          if ((unit.status !== 'sliding' && unit.status !== 'resting') || isCollisionPhased(unit)) continue;
+          if (unit.status === 'mimic-removed' || (unit.status !== 'sliding' && unit.status !== 'resting') || isCollisionPhased(unit)) continue;
           for (const brick of state.bricks) {
             if (brick.barrier && isRuleAlly(unit, brick.owner)) continue;
             const halfW = brick.width / 2;
@@ -5453,7 +5543,9 @@
                 brick.vy -= impulse * ny / brick.mass * brickResponse * unitImpact * (unitIsStriker ? CONFIG.impactScale : 1);
               }
               detonatePendingPulseTriggers(unit);
+              resolveMimicImpact(unit);
             }
+            if (unit.status === 'mimic-removed') break;
             if (detonateChargedPulse(unit)) break;
             if (unit.status === 'resting' && !isFixedStone(unit) && Math.hypot(unit.vx, unit.vy) > CONFIG.stopSpeed) unit.status = 'sliding';
           }
@@ -5502,6 +5594,7 @@
         for (const unit of state.units) {
           if (unit.status !== 'sliding') continue;
           for (const prop of adventure.props) {
+            if (unit.status === 'mimic-removed') break;
             if (!prop.collidable) continue;
             if (adventure.eventState.visibleObjects.get(prop.id) === false) continue;
             const angle = -prop.rotation * Math.PI / 180;
@@ -5530,9 +5623,11 @@
               playUnitImpactSound(-toward, [unit]);
               unit.vx -= toward * 1.58 * worldX;
               unit.vy -= toward * 1.58 * worldY;
+              resolveMimicImpact(unit);
             }
           }
           for (const dummy of adventure.dummies) {
+            if (unit.status === 'mimic-removed') break;
             const dx = unit.x - dummy.x, dy = unit.y - dummy.y;
             const distance = Math.hypot(dx, dy);
             if (distance >= unit.radius + dummy.radius) continue;
@@ -5540,12 +5635,14 @@
             const ny = distance > .001 ? dy / distance : 0;
             unit.x += nx * (unit.radius + dummy.radius - distance);
             unit.y += ny * (unit.radius + dummy.radius - distance);
+            resolveMimicImpact(unit);
+            if (unit.status === 'mimic-removed') break;
             if (dummy.recharge === 0) {
               emitAdventureEvent({ type: 'object-collision', objectId: dummy.id });
               dummy.recharge = dummy.rechargeSeconds;
               latchAdventurePulseHits(dummy.x, dummy.y, dummy.pulseRadius);
               for (const target of state.units) {
-                if (target.status === 'fallen' || target.status === 'ready') continue;
+                if (target.status === 'fallen' || target.status === 'mimic-removed' || target.status === 'ready') continue;
                 const targetDx = target.x - dummy.x, targetDy = target.y - dummy.y;
                 const targetDistance = Math.hypot(targetDx, targetDy);
                 if (targetDistance > dummy.pulseRadius + target.radius) continue;
@@ -5584,6 +5681,7 @@
       }
 
       function update(dt, timestamp, refreshHud = true) {
+        state.units = state.units.filter(unit => unit.status !== 'mimic-removed');
         if (state.placementAnimation) {
           state.placementAnimation.age += dt;
           if (state.placementAnimation.age >= state.placementAnimation.duration) state.placementAnimation = null;
@@ -5648,15 +5746,22 @@
       }
 
       function useCard(cardId, owner, unit) {
+        if (state.mimicPlacement) return false;
         const hand = state.hands[owner];
         const cardIndex = hand.findIndex(card => card.instanceId === cardId);
         if (cardIndex < 0) return false;
         const card = hand[cardIndex];
+        if (!fateAllowsCard(card, owner) || (card.id === 'fate' && card.refined)) return false;
         const effectiveUnit = ['tracking', 'neutralize'].includes(card.id) ? unit : unit || turns.currentUnit;
         const allowedHeroes = cardDefinitions().find(definition => definition.id === card.id)?.heroIds;
-        if (Array.isArray(allowedHeroes) && allowedHeroes.length && !allowedHeroes.includes(heroFor(owner)?.id)) return false;
+        if (card.id !== 'fate' && Array.isArray(allowedHeroes) && allowedHeroes.length && !allowedHeroes.includes(heroFor(owner)?.id)) return false;
         if (!canUseCardOnUnit(card, owner, effectiveUnit)) return false;
         unit = effectiveUnit;
+        if (card.id === 'trick') return beginMimicPlacement(card, owner, unit);
+        if (card.id === 'fate') {
+          unit.neutral = true;
+          state.effects.push({ type: 'item', x: unit.x, y: unit.y, age: 0, duration: .55, color: '#b4a1c4' });
+        }
         if (card.id === 'tracking') {
           unit.tracking = { owner, drawCount: card.refined ? 2 : 1, refined: Boolean(card.refined) };
           state.effects.push({ type: 'tracking-lock', unitId: unit.id, x: unit.x, y: unit.y,
@@ -5788,14 +5893,16 @@
       }
 
       function useBoardCard(cardId, owner, point) {
+        if (state.mimicPlacement) return false;
         const hand = state.hands[owner];
         const cardIndex = hand.findIndex(card => card.instanceId === cardId);
         if (cardIndex < 0 || !point || owner !== turns.playerIndex ||
             !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase)) return false;
         const card = hand[cardIndex];
+        if (!fateAllowsCard(card, owner)) return false;
         const allowedHeroes = CARD_METADATA[card.id]?.heroIds;
-        if (!['dark-charge', 'reinforcements'].includes(card.id) ||
-            (allowedHeroes?.length && !allowedHeroes.includes(heroFor(owner)?.id)) || !isCardUnlocked(card, owner)) return false;
+        if (!(['dark-charge', 'reinforcements'].includes(card.id) || (card.id === 'fate' && card.refined)) ||
+            (card.id !== 'fate' && allowedHeroes?.length && !allowedHeroes.includes(heroFor(owner)?.id)) || !isCardUnlocked(card, owner)) return false;
         if (card.id === 'reinforcements') {
           if (state.phase !== 'turn-ready' || !turns.currentUnit?.hasLaunched || state.supportUnit ||
               point.x < TABLE.left || point.x > TABLE.right || point.y < TABLE.top || point.y > TABLE.bottom) return false;
@@ -5810,7 +5917,7 @@
             Math.min(TABLE.bottom - unit.radius, point.y)), valid: false };
           state.placementPreview.valid = canPlaceLaunchStone(state.placementPreview.y);
           state.powerMeter = null;
-        } else {
+        } else if (card.id === 'dark-charge') {
           chargeDarkAbility(owner, card.refined ? 2 : 1);
           state.effects.push({ type: 'item', x: point.x, y: point.y, age: 0, duration: .52, color: '#8e61c7' });
         }
@@ -5824,6 +5931,7 @@
       }
 
       function canUseCardOnUnit(card, owner, unit) {
+        if (!fateAllowsCard(card, owner) || (card?.id === 'fate' && (card.refined || unit?.unitKind !== 'stone' || isNeutralStone(unit) || unit?.owner !== owner))) return false;
         if (!card || !unit || (['tracking', 'neutralize'].includes(card.id)
             ? unit.unitKind !== 'stone' || isNeutralStone(unit) || unit.owner === owner ||
               (card.id === 'tracking' ? Boolean(unit.tracking) : Boolean(unit.neutralization))
@@ -5832,10 +5940,13 @@
             (['brick', 'data-barrier'].includes(card.id)) ||
             (unit.unitKind === 'brick' && card.id !== 'repulsion-field')) return false;
         const allowedHeroes = cardDefinitions().find(definition => definition.id === card.id)?.heroIds;
-        if (Array.isArray(allowedHeroes) && allowedHeroes.length && !allowedHeroes.includes(heroFor(owner)?.id)) return false;
+        if (card.id !== 'fate' && Array.isArray(allowedHeroes) && allowedHeroes.length && !allowedHeroes.includes(heroFor(owner)?.id)) return false;
         if (card.id === 'ammo' && (state.repositionMode === 'blackhole' || state.repositionMode === 'trigger' ||
             state.effects.some(effect => effect.type === 'blackhole-fan' && effect.age < effect.duration))) return false;
         if (!isCardUnlocked(card, owner)) return false;
+        if (card.id === 'trick' && (unit.unitKind !== 'stone' || unit.owner !== owner || isNeutralStone(unit) ||
+            !unit.hasLaunched || !['sliding', 'resting'].includes(unit.status) || unit.mimicCharge || unit.mimicClone ||
+            state.mimicPlacement || card.refined && !['joker'].includes(heroFor(owner)?.id))) return false;
         if (unit.status === 'ready' && unit !== turns.currentUnit && unit !== state.supportUnit) return false;
         if (UNIT_EFFECTS[card.id] && getUnitEffectStacks(unit, card.id) >= UNIT_EFFECTS[card.id].maxStacks) return false;
         if (card.id === 'repulsion-field' && hasRepulsionField(unit)) return false;
@@ -5940,7 +6051,13 @@
 
       function findCardTarget(point, owner, cardId = null) {
         const targets = state.units
-          .filter(unit => (['tracking', 'neutralize'].includes(cardId)
+          .filter(unit => (cardId === 'trick'
+            ? unit.unitKind === 'stone' && unit.owner === owner && !isNeutralStone(unit) &&
+              unit.hasLaunched && ['sliding', 'resting'].includes(unit.status) &&
+              !unit.mimicCharge && !unit.mimicClone
+            : cardId === 'fate'
+            ? unit.unitKind === 'stone' && !isNeutralStone(unit) && unit.owner === owner
+            : ['tracking', 'neutralize'].includes(cardId)
             ? unit.unitKind === 'stone' && !isNeutralStone(unit) && unit.owner !== owner &&
               (cardId === 'tracking' ? !unit.tracking : !unit.neutralization)
             : isCardAlly(unit, owner)) && unit.status !== 'fallen' &&
@@ -5952,6 +6069,132 @@
         }
         return targets.filter(candidate => candidate.distance <= candidate.radius + 14)
           .sort((a, b) => a.distance - b.distance)[0]?.unit ?? null;
+      }
+
+      function mimicPlacementRange(unit) {
+        return (unit?.radius || CONFIG.unitRadius) * 4;
+      }
+
+      function canPlaceMimicClone(point, pending = state.mimicPlacement) {
+        if (!pending || !point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return false;
+        const source = state.units.find(unit => unit.id === pending.sourceId);
+        if (!source || source.status === 'fallen' || source.status === 'mimic-removed' ||
+            !source.hasLaunched || source.mimicCharge || source.mimicClone || isNeutralStone(source)) return false;
+        const radius = CONFIG.unitRadius * heroRule(pending.owner, 'capScale', 1);
+        if (Math.hypot(point.x - source.x, point.y - source.y) > mimicPlacementRange(source) ||
+            point.x < TABLE.left + radius || point.x > TABLE.right - radius ||
+            point.y < TABLE.top + radius || point.y > TABLE.bottom - radius) return false;
+        if (Math.hypot(point.x - source.x, point.y - source.y) < radius + source.radius + 3) return false;
+        if (state.units.some(unit => unit !== source && unit.status !== 'fallen' && unit.status !== 'mimic-removed' &&
+            Math.hypot(point.x - unit.x, point.y - unit.y) < radius + unit.radius + 3)) return false;
+        if (state.bricks.some(brick => Math.abs(point.x - brick.x) < radius + brick.width / 2 + 2 &&
+            Math.abs(point.y - brick.y) < radius + brick.height / 2 + 2)) return false;
+        if (wallSegments().some(wall => {
+          const x = Math.max(wall.x, Math.min(point.x, wall.x + wall.width));
+          const y = Math.max(wall.y, Math.min(point.y, wall.y + wall.height));
+          return Math.hypot(point.x - x, point.y - y) < radius;
+        })) return false;
+        return true;
+      }
+
+      function renderMimicPlacementUI() {
+        const pending = state.mimicPlacement;
+        mimicPlacementBar.hidden = !pending || Boolean(pending.cancelRequested);
+        if (pending && canControlPlayer(pending.owner)) {
+          mimicPlacementBar.querySelector('span').textContent = pending.refined
+            ? '정제된 묘기 · 분신을 배치할 위치를 고르세요'
+            : '원본 스톤 주변에 분신을 배치하세요';
+        }
+      }
+
+      function beginMimicPlacement(card, owner, source) {
+        if (state.mimicPlacement || !card || !source || !canUseCardOnUnit(card, owner, source)) return false;
+        state.mimicPlacement = { owner, cardInstanceId: card.instanceId, sourceId: source.id,
+          refined: Boolean(card.refined), cursor: { x: source.x, y: source.y, valid: false } };
+        updateHud();
+        return true;
+      }
+
+      function cancelMimicPlacement(forward = true) {
+        const pending = state.mimicPlacement;
+        if (!pending) return false;
+        if (forward && shouldForwardOnlineAction()) {
+          pending.cancelRequested = true;
+          sendOnlineAction({ type: 'mimic-cancel' });
+          renderMimicPlacementUI();
+          return true;
+        }
+        state.mimicPlacement = null;
+        updateHud();
+        return true;
+      }
+
+      function completeMimicPlacement(point) {
+        const pending = state.mimicPlacement;
+        if (!pending || !canPlaceMimicClone(point, pending)) return false;
+        const hand = state.hands[pending.owner];
+        const cardIndex = hand.findIndex(card => card.instanceId === pending.cardInstanceId &&
+          card.id === 'trick' && Boolean(card.refined) === pending.refined);
+        if (cardIndex < 0) return false;
+        const source = state.units.find(unit => unit.id === pending.sourceId);
+        if (!source) return false;
+        const card = hand[cardIndex];
+        const clone = new CurlingUnit({ id: `mimic-clone-${Date.now()}-${state.nextCardId++}`,
+          owner: pending.owner, turnNumber: source.turnNumber, x: point.x, y: point.y });
+        clone.status = 'resting';
+        clone.hasLaunched = true;
+        clone.scoreless = true;
+        clone.mimicClone = true;
+        const linkId = `mimic-link-${clone.id}`;
+        source.mimicCharge = { linkId, partnerId: clone.id, role: 'original', refined: pending.refined };
+        clone.mimicCharge = { linkId, partnerId: source.id, role: 'clone', refined: pending.refined };
+        state.units.push(clone);
+        const castEffect = { type: 'mimic-cast', id: `mimic-cast-${clone.id}`,
+          soundEvent: 'mimic-cast', x: clone.x, y: clone.y, age: 0, duration: 1.8, visualDuration: .82 };
+        state.effects.push(castEffect);
+        playMimicSoundEvent(castEffect);
+        hand.splice(cardIndex, 1);
+        state.mimicPlacement = null;
+        state.effects.push({ type: 'mimic-place', id: `mimic-place-${clone.id}`, x: clone.x, y: clone.y,
+          refined: pending.refined, age: 0, duration: .76, shake: 1.6 });
+        if (pending.refined) state.effects.push({ type: 'refined-card-use', x: source.x, y: source.y, age: 0, duration: .58 });
+        recordTutorialEvent('card', card.id);
+        if (state.adventure && pending.owner === 0) emitAdventureEvent({ type: 'card-used', cardId: card.id });
+        renderHands();
+        updateHud();
+        return true;
+      }
+
+      function resolveMimicImpact(unit) {
+        const charge = unit?.mimicCharge;
+        if (!charge || unit.status === 'fallen' || unit.status === 'mimic-removed') return false;
+        const partner = state.units.find(item => item.id === charge.partnerId && item.status !== 'fallen' && item.status !== 'mimic-removed');
+        unit.mimicCharge = null;
+        if (partner) partner.mimicCharge = null;
+        const effect = { type: 'mimic-activation', id: `mimic-activation-${Date.now()}-${state.nextCardId++}`,
+          soundEvent: 'mimic-activation', x: unit.x, y: unit.y, refined: Boolean(charge.refined), age: 0, duration: 1.25 };
+        state.effects.push(effect);
+        playMimicSoundEvent(effect);
+        if (charge.refined) {
+          unit.neutral = true;
+          unit.neutralization = null;
+          unit.cardEffectOwner = null;
+        } else if (charge.role === 'original') {
+          if (partner) {
+            unit.x = partner.x;
+            unit.y = partner.y;
+            unit.previousX = unit.x;
+            unit.previousY = unit.y;
+            unit.status = 'resting';
+            unit.vx = unit.vy = 0;
+            partner.status = 'mimic-removed';
+            partner.vx = partner.vy = 0;
+          }
+        } else {
+          unit.status = 'mimic-removed';
+          unit.vx = unit.vy = 0;
+        }
+        return true;
       }
 
       function brickDropLimitX() {
@@ -5982,11 +6225,12 @@
       }
 
       function placeStructureCard(cardId, owner, point) {
+        if (state.mimicPlacement) return false;
         const hand = state.hands[owner];
         const index = hand.findIndex(card => card.instanceId === cardId &&
           ['brick', 'data-barrier'].includes(card.id) && isCardUnlocked(card, owner));
         const card = hand[index];
-        if (index < 0 || owner !== turns.playerIndex || !turns.currentUnit ||
+        if (index < 0 || !fateAllowsCard(card, owner) || owner !== turns.playerIndex || !turns.currentUnit ||
             !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase) ||
             !canPlaceBrick(point, card?.id === 'brick' && Boolean(card?.refined))) return false;
         hand.splice(index, 1);
@@ -6008,7 +6252,7 @@
       }
 
       function beginCardDrag(event) {
-        if (state.cardDrag) return;
+        if (state.cardDrag || state.mimicPlacement) return;
         const cardElement = event.currentTarget;
         const owner = Number(cardElement.dataset.owner);
         if (owner !== turns.playerIndex || !canControlPlayer(owner) || !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase)) return;
@@ -6016,7 +6260,7 @@
         event.preventDefault();
         entityTooltip.hidden = true;
         const card = state.hands[owner].find(item => item.instanceId === cardElement.dataset.cardId);
-        if (!card) return;
+        if (!card || !fateAllowsCard(card, owner)) return;
         const source = cardElement === cardInspector ? inspectedCardElement : cardElement;
         hideCardInspector();
         const ghost = document.createElement('div');
@@ -6031,7 +6275,7 @@
       }
 
       function beginTriggerPlacementDrag(event) {
-        if (state.cardDrag) return;
+        if (state.cardDrag || state.mimicPlacement) return;
         const button = event.currentTarget;
         const owner = Number(button.dataset.owner);
         if (heroFor(owner)?.id === 'refiner') return;
@@ -6079,7 +6323,7 @@
         } else {
           const card = state.hands[drag.owner].find(item => item.instanceId === drag.id);
           const target = drag.point && findCardTarget(drag.point, drag.owner, drag.type);
-          const validDrop = drag.type === 'dark-charge'
+          const validDrop = drag.type === 'dark-charge' || (drag.type === 'fate' && card?.refined)
             ? Boolean(drag.point)
             : drag.type === 'reinforcements'
               ? Boolean(drag.point && state.phase === 'turn-ready' && turns.currentUnit?.hasLaunched && !state.supportUnit)
@@ -6097,7 +6341,9 @@
         const rect = canvas.getBoundingClientRect();
         const insideCanvas = event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
         let triggerDrop = null;
-        if (moved && ['dark-charge', 'reinforcements'].includes(drag.type) && insideCanvas && drag.owner === turns.playerIndex) {
+        const draggedCard = state.hands[drag.owner]?.find(card => card.instanceId === drag.id);
+        if (moved && (['dark-charge', 'reinforcements'].includes(drag.type) ||
+            (drag.type === 'fate' && draggedCard?.refined)) && insideCanvas && drag.owner === turns.playerIndex) {
           const point = eventPoint(event);
           if (shouldForwardOnlineAction()) sendOnlineAction({ type: 'board-card', cardId: drag.id, point });
           else useBoardCard(drag.id, drag.owner, point);
@@ -6916,6 +7162,8 @@
               if (distance >= bullet.radius + target.radius) continue;
               resolveNeutralizationCollision(target);
               if (bullet.projectileKind === 'charged-trigger') {
+                resolveMimicImpact(target);
+                if (target.status !== 'mimic-removed')
                 activateTriggerOnUnit(target, ITEM_TRIGGERS.find(item => item.id === bullet.triggerTypeId), { casterOwner: bullet.owner });
                 removeBullet(bullet, index);
                 consumed = true;
@@ -6929,6 +7177,7 @@
                 const surfaceX = target.x + normalX * target.radius;
                 const surfaceY = target.y + normalY * target.radius;
                 reflectBulletFrom(bullet, target, normalX, normalY, surfaceX, surfaceY);
+                resolveMimicImpact(target);
                 reflected = true;
                 break;
               }
@@ -6945,6 +7194,7 @@
                 if (!isFixedStone(target) && Math.hypot(target.vx, target.vy) > CONFIG.stopSpeed) target.status = 'sliding';
                 playUnitImpactSound(impulse);
               }
+              resolveMimicImpact(target);
               removeBullet(bullet, index);
               consumed = true;
               break;
@@ -6989,6 +7239,7 @@
                   target.vy -= (1 + CONFIG.restitution) * toward * ny;
                 }
                 markRefinedEscapeMovement(target);
+                resolveMimicImpact(target);
               }
               if (target.status === 'resting' && !isFixedStone(target) && Math.hypot(target.vx, target.vy) > CONFIG.stopSpeed) target.status = 'sliding';
             }
@@ -7056,7 +7307,10 @@
             }
             const relativeNormal = (unit.vx - wall.vx) * nx + (unit.vy - wall.vy) * ny;
             if (isFixedStone(unit)) {
-              if (relativeNormal < 0) resolveNeutralizationCollision(unit);
+              if (relativeNormal < 0) {
+                resolveNeutralizationCollision(unit);
+                resolveMimicImpact(unit);
+              }
               continue;
             }
             unit.x += nx * (minimum - distance);
@@ -7067,6 +7321,7 @@
               const response = hasRepulsionField(unit) ? AI_BALANCE.repulsion.responseMultiplier : 1;
               unit.vx -= (1 + CONFIG.restitution) * relativeNormal * nx * response;
               unit.vy -= (1 + CONFIG.restitution) * relativeNormal * ny * response;
+              resolveMimicImpact(unit);
             }
             if (unit.status === 'resting' && Math.hypot(unit.vx, unit.vy) > CONFIG.stopSpeed) unit.status = 'sliding';
           }
@@ -7093,7 +7348,7 @@
       }
 
       function endTurn() {
-        if (state.adventure || state.phase !== 'turn-ready' || state.bullets.length > 0) return;
+        if (state.adventure || state.mimicPlacement || state.phase !== 'turn-ready' || state.bullets.length > 0) return;
         if (state.tutorial) {
           if (!turns.currentUnit?.hasLaunched || turns.currentUnit.status !== 'resting') return;
           recordTutorialEvent('end-turn');
@@ -7596,7 +7851,10 @@
         state.playerDecks = [[...loadout.deck], []];
         state.decks = [loadout.deck.map(id => ({ ...deckCard(id) })).reverse(), []];
         state.nextCardId = 0;
-        state.hands = [loadout.startingHand.map(id => ({ ...deckCard(id), instanceId: `adventure-card-${++state.nextCardId}` })), []];
+        state.hands = [[], []];
+        for (const id of loadout.startingHand) {
+          addDrawnCardToHand(0, { ...deckCard(id), instanceId: `adventure-card-${++state.nextCardId}` });
+        }
         state.heroChoices = [null, null];
         turns.reset(0);
         turns.createCurrentUnit();
@@ -8547,6 +8805,9 @@
           pendingUnit: state.phase === 'placement' && turns.currentUnit ? { ...turns.currentUnit } : null,
           supportUnit: state.supportUnit ? { ...state.supportUnit } : null,
           placementPreview: state.placementPreview ? { ...state.placementPreview } : null,
+          mimicPlacement: state.mimicPlacement ? { owner: state.mimicPlacement.owner,
+            cardInstanceId: state.mimicPlacement.cardInstanceId, sourceId: state.mimicPlacement.sourceId,
+            refined: Boolean(state.mimicPlacement.refined) } : null,
           placementAnimation: state.placementAnimation ? { ...state.placementAnimation } : null,
           aiming: state.aiming,
           aimPoint: state.aimPoint ? { ...state.aimPoint } : null,
@@ -8621,6 +8882,10 @@
           ['aiming', 'reposition'].includes(snapshot.phase) && localAimUnit?.id === remoteAimId &&
           snapshot.units.some(unit => unit.id === remoteAimId && unit.status !== 'fallen');
         const localAim = preserveAim ? { aimPoint: state.aimPoint, aimTension: state.aimTension } : null;
+        const localMimicCursor = state.mimicPlacement?.cursor || null;
+        const preserveMimicCursor = inputAllowed && snapshot.mimicPlacement?.owner === onlineSession.playerIndex &&
+          state.mimicPlacement?.cardInstanceId === snapshot.mimicPlacement.cardInstanceId &&
+          state.mimicPlacement?.sourceId === snapshot.mimicPlacement.sourceId;
         const localPower = inputAllowed && ['aiming', 'reposition'].includes(snapshot.phase) &&
           state.powerMeter?.unitId === remoteAimId ? state.powerMeter : null;
         const preserveChargeSelection = inputAllowed && snapshot.pendingTriggerCharge?.owner === onlineSession.playerIndex;
@@ -8668,6 +8933,9 @@
         state.playerTutorialCompleted = snapshot.playerTutorialCompleted || [false, false];
         state.particles = snapshot.particles;
         state.effects = snapshot.effects;
+        state.mimicPlacement = snapshot.mimicPlacement
+          ? { ...snapshot.mimicPlacement, cursor: preserveMimicCursor ? localMimicCursor : null }
+          : null;
         onlineSession.playedFeedbackIds ||= new Set();
         for (const effect of state.effects) {
           if (effect.type !== 'feedback' || onlineSession.playedFeedbackIds.has(effect.id)) continue;
@@ -8689,6 +8957,7 @@
           playSound(effect.sound || 'drop', 1.05);
         }
         while (onlineSession.playedBrickImpactIds.size > 128) onlineSession.playedBrickImpactIds.delete(onlineSession.playedBrickImpactIds.values().next().value);
+        for (const effect of state.effects) if (effect.soundEvent?.startsWith('mimic-')) playMimicSoundEvent(effect);
         const confirmedPlacement = state.phase === 'placement' && snapshot.phase === 'aiming';
         state.phase = preserveTriggerSelection ? 'trigger-select' : snapshot.phase;
         if (confirmedPlacement && onlineSession.role === 'challenger') {
@@ -8808,6 +9077,15 @@
         if (!onlineSession?.started || onlineSession.role !== 'host' || packet.playerIndex !== 1 || turns.playerIndex !== 1 ||
             !['placement', 'aiming', 'sliding', 'turn-ready', 'reposition', 'trigger-select'].includes(state.phase)) return;
         const action = packet.action;
+        if (state.mimicPlacement?.owner === packet.playerIndex && action.type === 'mimic-place') {
+          if (completeMimicPlacement(action.point)) publishOnlineSnapshot(performance.now());
+          return;
+        }
+        if (state.mimicPlacement?.owner === packet.playerIndex && action.type === 'mimic-cancel') {
+          cancelMimicPlacement(false);
+          publishOnlineSnapshot(performance.now());
+          return;
+        }
         if (state.phase === 'trigger-select' && action.type === 'trigger-charge' &&
             state.pendingTriggerCharge?.owner === packet.playerIndex &&
             action.unitId === state.pendingTriggerCharge.unitId && action.cardInstanceId === state.pendingTriggerCharge.cardInstanceId) {
@@ -8853,6 +9131,7 @@
         } else if (action.type === 'card') {
           const unit = state.units.find(item => item.id === action.unitId) || state.bricks.find(item => item.id === action.unitId);
           if (unit) useCard(action.cardId, 1, unit);
+          publishOnlineSnapshot(performance.now());
         } else if (action.type === 'end-turn') {
           endTurn();
         } else if (action.type === 'trigger' && remainingTriggerPlacements(1) > 0 && canPlaceItemTrigger(action.point)) {
@@ -9712,7 +9991,7 @@
         cardInspector.style.top = `${Math.max(8, Math.min(viewportHeight - height - 8, rect.top + rect.height - height))}px`;
         cardInspector.dataset.owner = String(owner);
         cardInspector.dataset.cardId = card.instanceId;
-        cardInspector.setAttribute('aria-label', `${card.name}: ${CARD_DESCRIPTIONS[card.id]}`);
+        cardInspector.setAttribute('aria-label', `${cardDisplayName(card)}: ${cardDisplayDescription(card)}`);
         cardInspector.replaceChildren(createCardFace(card));
         cardInspector.hidden = false;
       }
@@ -9755,8 +10034,9 @@
             element.setAttribute('role', 'button');
             element.tabIndex = concealed ? -1 : 0;
             element.setAttribute('aria-label', concealed ? '상대 비공개 카드' : `${cardDisplayName(card)} 카드`);
-            if (!concealed && ['dark-charge', 'reinforcements'].includes(card.id)) {
-              element.title = card.id === 'reinforcements' ? '기본 스톤 발사 후 게임판에 끌어다 놓아 지원군을 배치합니다.' : '게임판에 끌어다 놓아 트리거를 충전합니다.';
+            if (!concealed && (['dark-charge', 'reinforcements'].includes(card.id) || (card.id === 'fate' && card.refined))) {
+              element.title = card.id === 'reinforcements' ? '기본 스톤 발사 후 게임판에 끌어다 놓아 지원군을 배치합니다.'
+                : card.id === 'fate' ? '게임판에 끌어다 놓아 이 카드를 소모합니다.' : '게임판에 끌어다 놓아 트리거를 충전합니다.';
               element.setAttribute('aria-label', `${cardDisplayName(card)} 카드. 게임판에 끌어다 놓아 사용`);
             }
             element.classList.toggle('refined-card', Boolean(card.refined));
@@ -9770,6 +10050,12 @@
               });
             }
             hand.append(element);
+          }
+          for (const element of hand.children) {
+            const card = state.hands[owner].find(item => item.instanceId === element.dataset.cardId);
+            const locked = card && !fateAllowsCard(card, owner);
+            element.classList.toggle('fate-locked', Boolean(locked));
+            element.setAttribute('aria-disabled', String(Boolean(locked)));
           }
         });
         updateTriggerTools();
@@ -10160,7 +10446,7 @@
       }
 
       function drawUnit(unit) {
-        if (unit.status === 'fallen') return;
+        if (unit.status === 'fallen' || unit.status === 'mimic-removed') return;
         const image = images[unit.owner];
         ctx.save();
         let visualY = unit.y;
@@ -10188,6 +10474,27 @@
         ctx.translate(unit.x, visualY);
         ctx.scale(placementScale, placementScale);
         ctx.globalAlpha = introAlpha;
+        if (unit.mimicCharge) {
+          const pulse = .82 + .12 * Math.sin(performance.now() / 310 + unit.x * .02);
+          const auraSize = unit.radius * 3.35 * pulse;
+          ctx.save();
+          ctx.globalCompositeOperation = 'screen';
+          ctx.globalAlpha = introAlpha * (unit.mimicCharge.refined ? .7 : .52);
+          if (mimicAuraImage.complete && mimicAuraImage.naturalWidth) {
+            ctx.drawImage(mimicAuraImage, -auraSize / 2, -auraSize / 2, auraSize, auraSize);
+          } else {
+            ctx.beginPath(); ctx.arc(0, 0, unit.radius + 7, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(190, 145, 230, .7)'; ctx.lineWidth = 3; ctx.stroke();
+          }
+          for (let mote = 0; mote < 3; mote += 1) {
+            const angle = performance.now() / (1250 + mote * 170) + mote * Math.PI * 2 / 3;
+            ctx.globalAlpha = introAlpha * (.36 + .18 * Math.sin(performance.now() / 220 + mote));
+            ctx.fillStyle = unit.mimicCharge.refined ? '#d4b9ff' : '#bda5d3';
+            ctx.beginPath(); ctx.arc(Math.cos(angle) * unit.radius * 1.2, Math.sin(angle) * unit.radius * 1.2,
+              1.5 + mote * .35, 0, Math.PI * 2); ctx.fill();
+          }
+          ctx.restore();
+        }
         if (unit.fluidTimer > 0) {
           ctx.beginPath();
           ctx.arc(0, 0, unit.radius + 8, 0, Math.PI * 2);
@@ -10225,6 +10532,12 @@
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillText(unit.owner + 1, 0, 1);
+        }
+        if (unit.mimicClone) {
+          ctx.beginPath();
+          ctx.arc(0, 0, unit.radius - .5, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(158, 164, 168, .43)';
+          ctx.fill();
         }
         const hardeningStacks = getUnitEffectStacks(unit, 'hardening');
         const refinedHardeningStacks = Math.min(hardeningStacks, unit.ability?.refinedHardeningStacks || 0);
@@ -10655,7 +10968,40 @@
         for (const effect of state.effects) {
           const progress = effect.age / effect.duration;
           ctx.save();
-          if (effect.type === 'neutralization-arm' || effect.type === 'neutralization-hit' || effect.type === 'fixed-lock') {
+          if (effect.type === 'mimic-cast') {
+            const t = Math.max(0, Math.min(1, effect.age / (effect.visualDuration || .82)));
+            const ease = 1 - (1 - t) ** 3;
+            const radius = CONFIG.unitRadius * (.55 + ease * 1.85);
+            const haze = ctx.createRadialGradient(effect.x, effect.y, radius * .08, effect.x, effect.y, radius);
+            haze.addColorStop(0, `rgba(36, 27, 48, ${.3 * (1 - t)})`);
+            haze.addColorStop(.48, `rgba(98, 77, 116, ${.21 * (1 - t)})`);
+            haze.addColorStop(1, 'rgba(98, 77, 116, 0)');
+            ctx.globalCompositeOperation = 'screen';
+            ctx.fillStyle = haze;
+            ctx.beginPath(); ctx.arc(effect.x, effect.y, radius, 0, Math.PI * 2); ctx.fill();
+            if (mimicAuraImage.complete && mimicAuraImage.naturalWidth) {
+              ctx.globalAlpha = .45 * (1 - t);
+              ctx.filter = `blur(${(9 * (1 - t)).toFixed(1)}px)`;
+              ctx.drawImage(mimicAuraImage, effect.x - radius, effect.y - radius, radius * 2, radius * 2);
+              ctx.filter = 'none';
+            }
+          } else if (effect.type === 'mimic-place' || effect.type === 'mimic-activation') {
+            const t = Math.max(0, Math.min(1, progress));
+            const ease = 1 - (1 - t) ** 2.2;
+            const fade = (1 - t) ** 1.3;
+            const color = effect.refined ? '210, 184, 255' : '187, 158, 207';
+            ctx.globalCompositeOperation = 'screen';
+            ctx.globalAlpha = fade * (effect.type === 'mimic-activation' ? .55 : .34);
+            ctx.strokeStyle = `rgba(${color}, .9)`;
+            ctx.lineWidth = effect.type === 'mimic-activation' ? 2.5 : 1.5;
+            for (let ring = 0; ring < (effect.type === 'mimic-activation' ? 3 : 2); ring += 1) {
+              const radius = CONFIG.unitRadius * (.55 + ease * (1.35 + ring * .42));
+              ctx.beginPath();
+              ctx.ellipse(effect.x, effect.y, radius, radius * (.88 + ring * .035),
+                Math.sin(effect.age * 2.1 + ring) * .08, .12 + ring * .35, Math.PI * 1.92 + ring * .3);
+              ctx.stroke();
+            }
+          } else if (effect.type === 'neutralization-arm' || effect.type === 'neutralization-hit' || effect.type === 'fixed-lock') {
             const image = effect.type === 'fixed-lock' ? fixedPadlockImage : neutralizationHeartbeatImage;
             if (image.complete && image.naturalWidth) {
               const scale = effect.type === 'neutralization-hit' ? 1 + progress * .55 : 2.1 - progress * 1.1;
@@ -11030,6 +11376,19 @@
         const drag = state.cardDrag;
         if (!drag?.point) return;
         if (drag.type === 'trigger-placement') return;
+        if (drag.type === 'trick') {
+          const source = findCardTarget(drag.point, drag.owner, 'trick');
+          if (!source) return;
+          ctx.save();
+          ctx.globalAlpha = .13;
+          ctx.fillStyle = '#bda5d3';
+          ctx.beginPath(); ctx.arc(source.x, source.y, mimicPlacementRange(source), 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = .75;
+          ctx.strokeStyle = '#c8a9dc'; ctx.lineWidth = 2; ctx.setLineDash([7, 6]);
+          ctx.beginPath(); ctx.arc(source.x, source.y, mimicPlacementRange(source), 0, Math.PI * 2); ctx.stroke();
+          ctx.restore();
+          return;
+        }
         if (['brick', 'data-barrier'].includes(drag.type)) {
           const refined = Boolean(state.hands[drag.owner].find(card => card.instanceId === drag.id)?.refined);
           const legal = canPlaceBrick(drag.point, refined && drag.type === 'brick');
@@ -11061,6 +11420,75 @@
         ctx.lineWidth = 3;
         ctx.strokeStyle = drag.type === 'pulse' ? '#00f5ff' : drag.type === 'blackhole' ? '#e879f9' : '#d8ff9b';
         ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawMimicLinks() {
+        const now = performance.now();
+        for (const source of state.units) {
+          if (source.status === 'fallen' || source.status === 'mimic-removed' || source.mimicCharge?.role !== 'original') continue;
+          const partner = state.units.find(unit => unit.id === source.mimicCharge.partnerId &&
+            unit.status !== 'fallen' && unit.status !== 'mimic-removed');
+          if (!partner) continue;
+          const dx = partner.x - source.x;
+          const dy = partner.y - source.y;
+          const distance = Math.hypot(dx, dy);
+          if (distance < 1) continue;
+          const middleX = (source.x + partner.x) / 2;
+          const middleY = (source.y + partner.y) / 2;
+          ctx.save();
+          ctx.translate(middleX, middleY);
+          ctx.rotate(Math.atan2(dy, dx));
+          ctx.globalCompositeOperation = 'screen';
+          ctx.globalAlpha = .38 + .12 * Math.sin(now / 270);
+          const height = Math.max(8, CONFIG.unitRadius * .54);
+          if (mimicSoulLinkImage.complete && mimicSoulLinkImage.naturalWidth) {
+            ctx.drawImage(mimicSoulLinkImage, -distance / 2, -height / 2, distance, height);
+          } else {
+            const filament = ctx.createLinearGradient(-distance / 2, 0, distance / 2, 0);
+            filament.addColorStop(0, 'rgba(183,154,208,0)');
+            filament.addColorStop(.5, 'rgba(201,176,220,.7)');
+            filament.addColorStop(1, 'rgba(183,154,208,0)');
+            ctx.strokeStyle = filament;
+            ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.moveTo(-distance / 2, 0);
+            ctx.quadraticCurveTo(0, Math.sin(now / 240) * 5, distance / 2, 0); ctx.stroke();
+          }
+          ctx.restore();
+        }
+      }
+
+      function drawMimicPlacementPreview() {
+        const pending = state.mimicPlacement;
+        if (!pending || !pending.cursor) return;
+        const source = state.units.find(unit => unit.id === pending.sourceId);
+        if (!source) return;
+        ctx.save();
+        ctx.globalAlpha = .16;
+        ctx.fillStyle = pending.refined ? '#bda5e9' : '#aa91bd';
+        ctx.beginPath(); ctx.arc(source.x, source.y, mimicPlacementRange(source), 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = .62;
+        ctx.strokeStyle = pending.refined ? '#d0b6ff' : '#c3a6d8';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([7, 6]);
+        ctx.beginPath(); ctx.arc(source.x, source.y, mimicPlacementRange(source), 0, Math.PI * 2); ctx.stroke();
+        ctx.setLineDash([]);
+        const point = pending.cursor;
+        const valid = canPlaceMimicClone(point, pending);
+        const radius = CONFIG.unitRadius * heroRule(pending.owner, 'capScale', 1);
+        ctx.globalAlpha = valid ? .58 : .25;
+        ctx.filter = pending.refined ? 'hue-rotate(25deg) saturate(1.2)' : 'none';
+        const image = images[pending.owner];
+        if (image?.complete && image.naturalWidth) ctx.drawImage(image, point.x - radius, point.y - radius, radius * 2, radius * 2);
+        else {
+          ctx.beginPath(); ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
+          ctx.fillStyle = PLAYER[pending.owner].color; ctx.fill();
+        }
+        ctx.filter = 'none';
+        ctx.globalAlpha = .88;
+        ctx.strokeStyle = valid ? '#d3b7e8' : '#c7746d';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(point.x, point.y, radius + 3, 0, Math.PI * 2); ctx.stroke();
         ctx.restore();
       }
 
@@ -11179,6 +11607,7 @@
         drawAdventureBeacons();
         drawAdventureDummies();
         drawItemTriggers();
+        drawMimicLinks();
         state.units.forEach(drawUnit);
         drawPlacementPreview();
         drawLockedPower();
@@ -11187,6 +11616,7 @@
         drawEffects();
         drawAim();
         drawCardPreview();
+        drawMimicPlacementPreview();
         drawParticles();
         drawAdventureFog();
         drawAdventureGoal();
@@ -11657,6 +12087,17 @@
       }
 
       canvas.addEventListener('pointerdown', event => {
+        if (state.mimicPlacement) {
+          if (canControlPlayer(state.mimicPlacement.owner)) {
+            const point = eventPoint(event);
+            if (canPlaceMimicClone(point)) {
+              if (shouldForwardOnlineAction()) sendOnlineAction({ type: 'mimic-place', point });
+              else completeMimicPlacement(point);
+            }
+          }
+          event.preventDefault();
+          return;
+        }
         if (state.phase === 'placement' && canControlPlayer(turns.playerIndex)) {
           const point = eventPoint(event);
           updatePlacementPreview(point);
@@ -11682,6 +12123,14 @@
       });
 
       canvas.addEventListener('pointermove', event => {
+        if (state.mimicPlacement) {
+          if (canControlPlayer(state.mimicPlacement.owner)) {
+            const point = eventPoint(event);
+            state.mimicPlacement.cursor = { ...point, valid: canPlaceMimicClone(point) };
+          }
+          updateEntityTooltip(event);
+          return;
+        }
         if (state.phase === 'placement') updatePlacementPreview(eventPoint(event));
         const unit = activeLaunchUnit();
         if (state.aiming && localAimPointerId === event.pointerId && unit) {
@@ -11691,6 +12140,12 @@
       });
 
       canvas.addEventListener('pointerleave', () => { entityTooltip.hidden = true; });
+      canvas.addEventListener('contextmenu', event => {
+        if (!state.mimicPlacement || !canControlPlayer(state.mimicPlacement.owner)) return;
+        event.preventDefault();
+        cancelMimicPlacement();
+      });
+      mimicPlacementCancel.addEventListener('click', () => cancelMimicPlacement());
 
       canvas.addEventListener('pointerup', event => {
         if (!state.aiming || localAimPointerId !== event.pointerId) return;
@@ -12118,6 +12573,11 @@
       });
       document.addEventListener('keydown', event => {
         if (event.key !== 'Escape') return;
+        if (state.mimicPlacement) {
+          event.preventDefault();
+          cancelMimicPlacement();
+          return;
+        }
         if (!learningUI.catalogOverlay.hidden) returnToHome();
         else if (!gameSettingsOverlay.hidden) {
           gameSettingsOverlay.hidden = true;
