@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" fill="none">
+  <defs>
+    <radialGradient id="field" cx="50%" cy="50%" r="52%">
+      <stop offset="0" stop-color="#a8f3dc" stop-opacity=".04"/>
+      <stop offset=".72" stop-color="#6bd2ba" stop-opacity=".03"/>
+      <stop offset="1" stop-color="#72d9c3" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="beam" x1="0" y1="1" x2="1" y2="0">
+      <stop stop-color="#a8ffe9" stop-opacity="0"/>
+      <stop offset=".48" stop-color="#83e8d1" stop-opacity=".2"/>
+      <stop offset="1" stop-color="#e4edc4" stop-opacity=".68"/>
+    </linearGradient>
+    <filter id="soft" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+    <clipPath id="sweepClip"><circle cx="600" cy="360" r="300"/></clipPath>
+  </defs>
+  <rect width="1200" height="720" fill="url(#field)"/>
+  <g opacity=".34" stroke="#8bdcc9">
+    <ellipse cx="600" cy="360" rx="145" ry="92" stroke-opacity=".24"/>
+    <ellipse cx="600" cy="360" rx="225" ry="143" stroke-opacity=".2"/>
+    <ellipse cx="600" cy="360" rx="300" ry="190" stroke-opacity=".16"/>
+    <path d="M300 360h600M600 170v380" stroke-opacity=".15" stroke-dasharray="3 13"/>
+  </g>
+  <g clip-path="url(#sweepClip)">
+    <path d="M600 360L600 60A300 300 0 0 1 852 197Z" fill="url(#beam)" opacity=".55">
+      <animateTransform attributeName="transform" type="rotate" from="0 600 360" to="360 600 360" dur="2.2s" repeatCount="1"/>
+    </path>
+    <path d="M600 360L600 60" stroke="#b8ffe9" stroke-opacity=".76" stroke-width="2">
+      <animateTransform attributeName="transform" type="rotate" from="0 600 360" to="360 600 360" dur="2.2s" repeatCount="1"/>
+    </path>
+  </g>
+  <circle cx="600" cy="360" r="300" stroke="#b8ffe9" stroke-opacity=".35" stroke-width="2"/>
+  <circle cx="600" cy="360" r="5" fill="#d8f8dc" opacity=".7" filter="url(#soft)"/>
+  <circle cx="600" cy="360" r="2.5" fill="#d8f8dc" opacity=".8"/>
+  <g fill="#c2ffe7" opacity=".52">
+    <circle cx="422" cy="287" r="2"><animate attributeName="opacity" values=".08;.7;.08" dur="1.4s" repeatCount="1"/></circle>
+    <circle cx="750" cy="422" r="2.5"><animate attributeName="opacity" values=".06;.6;.06" dur="1.8s" repeatCount="1"/></circle>
+    <circle cx="687" cy="230" r="1.8"><animate attributeName="opacity" values=".1;.75;.1" dur="1.2s" repeatCount="1"/></circle>
+  </g>
+</svg>

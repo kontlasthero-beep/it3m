@@ -1,7 +1,17 @@
-const CACHE_NAME = 'second-chance-v131';
+const CACHE_NAME = 'second-chance-v132';
 const APP_FILES = [
   './',
   './index.html',
+  './analysis-card-modal.css?v=1',
+  './tool-swap-card-modal.css?v=1',
+  './Card_illustration/analysis-closeup.png',
+  './Card_illustration/refined/analysis-closeup.png',
+  './Card_illustration/tool-swap.png',
+  './Card_illustration/refined/tool-swap.png',
+  './in-game-screen/game-objects/analysis-radar-scan.svg',
+  './효과음/ElevenLabs_Drafts/analysis-radar-scan-v1.mp3',
+  './효과음/ElevenLabs_Drafts/tool-swap-rummage-2s.mp3',
+  './효과음/ElevenLabs_Drafts/tool-swap-forge-draw-2s.mp3',
   './fonts/font-families.css?v=1',
   './fonts/gowunbatang/GowunBatang-Regular.ttf',
   './game-ui-kit.css?v=1',

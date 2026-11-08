@@ -18,6 +18,92 @@ test('Second Chance branding is consistent between the game and web poster', () 
   assert.equal(manifest.short_name, 'Second Chance');
 });
 
+for (const [effectName, applyEffect] of [
+  ['release pulse', 'triggerPulse(source, 120, 350, true)'],
+  ['black-hole pull', 'triggerBlackHole(source, 120, false)'],
+  ['refined black-hole cone', 'triggerDirectionalBlackHole(source, -1, 0, 120)'],
+  ['heavy-blow wave', 'triggerHeavyBlow(source, 1, 0)']
+]) {
+  test(`${effectName} activates a linked mimic before its force can carry the original away`, () => {
+    const g = game();
+    g.run(`
+      const source = new CurlingUnit({id:'force-source',owner:1,turnNumber:1,x:360,y:350});
+      const original = new CurlingUnit({id:'mimic-original',owner:0,turnNumber:1,x:430,y:350});
+      const clone = new CurlingUnit({id:'mimic-clone',owner:0,turnNumber:1,x:760,y:350});
+      for (const unit of [source,original,clone]) unit.status='resting';
+      original.mimicCharge={linkId:'test-link',partnerId:clone.id,role:'original',refined:false};
+      clone.mimicCharge={linkId:'test-link',partnerId:original.id,role:'clone',refined:false};
+      clone.mimicClone=true; clone.scoreless=true;
+      state.units=[source,original,clone];
+      ${applyEffect};
+      assert.equal(original.x,760);
+      assert.equal(original.y,350);
+      assert.equal(original.status,'resting');
+      assert.equal(original.vx,0);
+      assert.equal(original.vy,0);
+      assert.equal(Boolean(original.heavyBlowChainPending),false);
+      assert.equal(original.mimicCharge,null);
+      assert.equal(clone.status,'mimic-removed');
+    `);
+  });
+}
+
+test('refined mimic neutralizes only the stone hit by a direct card force', () => {
+  const g = game();
+  g.run(`
+    const source = new CurlingUnit({id:'force-source',owner:1,turnNumber:1,x:360,y:350});
+    const original = new CurlingUnit({id:'mimic-original',owner:0,turnNumber:1,x:430,y:350});
+    const clone = new CurlingUnit({id:'mimic-clone',owner:0,turnNumber:1,x:760,y:350});
+    for (const unit of [source,original,clone]) unit.status='resting';
+    original.mimicCharge={linkId:'test-link',partnerId:clone.id,role:'original',refined:true};
+    clone.mimicCharge={linkId:'test-link',partnerId:original.id,role:'clone',refined:true};
+    clone.mimicClone=true; clone.scoreless=true;
+    state.units=[source,original,clone];
+    triggerHeavyBlow(source,1,0);
+    assert.equal(original.x,430);
+    assert.equal(original.neutral,true);
+    assert.equal(original.mimicCharge,null);
+    assert.equal(Boolean(clone.neutral),false);
+    assert.equal(clone.mimicCharge,null);
+  `);
+});
+
+test('a direct pulse removes a hit mimic clone and leaves its original in place', () => {
+  const g = game();
+  g.run(`
+    const source = new CurlingUnit({id:'force-source',owner:1,turnNumber:1,x:700,y:350});
+    const original = new CurlingUnit({id:'mimic-original',owner:0,turnNumber:1,x:430,y:350});
+    const clone = new CurlingUnit({id:'mimic-clone',owner:0,turnNumber:1,x:760,y:350});
+    for (const unit of [source,original,clone]) unit.status='resting';
+    original.mimicCharge={linkId:'test-link',partnerId:clone.id,role:'original',refined:false};
+    clone.mimicCharge={linkId:'test-link',partnerId:original.id,role:'clone',refined:false};
+    clone.mimicClone=true; clone.scoreless=true;
+    state.units=[source,original,clone];
+    triggerPulse(source,120,350,true);
+    assert.equal(clone.status,'mimic-removed');
+    assert.equal(original.x,430);
+    assert.equal(original.mimicCharge,null);
+  `);
+});
+
+test('movement without a hit and forces outside their range do not activate mimic', () => {
+  const g = game();
+  g.run(`
+    const source = new CurlingUnit({id:'force-source',owner:1,turnNumber:1,x:360,y:350});
+    const original = new CurlingUnit({id:'mimic-original',owner:0,turnNumber:1,x:520,y:350});
+    const clone = new CurlingUnit({id:'mimic-clone',owner:0,turnNumber:1,x:760,y:350});
+    for (const unit of [source,original,clone]) unit.status='resting';
+    original.mimicCharge={linkId:'test-link',partnerId:clone.id,role:'original',refined:false};
+    clone.mimicCharge={linkId:'test-link',partnerId:original.id,role:'clone',refined:false};
+    state.units=[source,original,clone];
+    original.launch(90,0);
+    original.update(.01);
+    triggerPulse(source,80,350,true);
+    assert.equal(original.mimicCharge.partnerId,clone.id);
+    assert.equal(clone.status,'resting');
+  `);
+});
+
 function game() {
   const elements = new Map();
   const timeouts = [];
@@ -85,6 +171,51 @@ function onlinePair() {
   send();
   return {host, guest, send};
 }
+
+test('analysis history is cleared at game end, replay start, and every online round', () => {
+  const g = game();
+  g.run(`recordCardPlayed({id:'hardening'},0); assert.equal(state.usedCardHistory.length,1);
+    finishGame(); assert.equal(state.usedCardHistory.length,0);
+    recordCardPlayed({id:'guard'},1); dealCards(); assert.equal(state.usedCardHistory.length,0);`);
+  const {host,guest,send} = onlinePair();
+  host.run(`recordCardPlayed({id:'guard'},1); startOnlineRound(1);
+    assert.equal(state.usedCardHistory.length,0);`);
+  send(2);
+  guest.run(`assert.equal(state.usedCardHistory.length,0);`);
+});
+
+test('turn expiry closes both card choice windows and returns an unfinished tool swap', () => {
+  const g = game();
+  g.run(`state.phase='turn-ready'; turns.createCurrentUnit(); turns.currentUnit.hasLaunched=true;
+    turns.currentUnit.status='resting'; startTurnTimer();
+    state.analysisSelection={owner:0,turn:0,round:0};
+    state.toolSwapSelection={owner:0,turn:0,round:0,cardInstanceId:'swap-test',
+      sourceCard:{id:'tool-swap',name:'도구 교체',instanceId:'swap-test'}};
+    recordCardPlayed({id:'tool-swap'},0);
+    analysisSelectOverlay.hidden=false; toolSwapSelectOverlay.hidden=false;
+    expireCurrentTurn();
+    assert.equal(turns.globalTurn,1);
+    assert.equal(state.analysisSelection,null); assert.equal(state.toolSwapSelection,null);
+    assert.equal(analysisSelectOverlay.hidden,true); assert.equal(toolSwapSelectOverlay.hidden,true);
+    assert.equal(state.hands[0].filter(card=>card.instanceId==='swap-test').length,1);
+    assert.equal(state.usedCardHistory.some(card=>card.id==='tool-swap'),false);`);
+});
+
+test('online snapshots cannot reopen card choices from a previous turn or round', () => {
+  const {host,guest,send} = onlinePair();
+  host.run(`state.analysisSelection={owner:1,turn:0,round:0,cardInstanceId:'analysis-test',point:{x:500,y:350}};`);
+  send(2);
+  guest.run(`assert.equal(analysisSelectOverlay.hidden,false);`);
+  host.run(`turns.finishCurrentTurn(); state.phase='aiming';
+    state.analysisSelection={owner:1,turn:0,round:0,cardInstanceId:'analysis-test',point:{x:500,y:350}};
+    state.toolSwapSelection={owner:1,turn:0,round:0,cardInstanceId:'swap-test',point:{x:500,y:350}};`);
+  send(3);
+  guest.run(`assert.equal(state.analysisSelection,null); assert.equal(state.toolSwapSelection,null);
+    assert.equal(analysisSelectOverlay.hidden,true); assert.equal(toolSwapSelectOverlay.hidden,true);`);
+  host.run(`onlineSession.roundIndex=1; turns.reset(1); state.phase='aiming';`);
+  send(4);
+  guest.run(`assert.equal(state.analysisSelection,null); assert.equal(state.toolSwapSelection,null);`);
+});
 
 test('collision transfer reduces target knockback by 25 percent without leaving the striker to scatter a cluster', () => {
   const g = game();

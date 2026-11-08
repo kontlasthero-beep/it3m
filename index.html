@@ -11,6 +11,8 @@
   <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="stylesheet" href="fonts/font-families.css?v=1">
+  <link rel="stylesheet" href="analysis-card-modal.css?v=1">
+  <link rel="stylesheet" href="tool-swap-card-modal.css?v=1">
   <title>Second Chance</title>
   <style>
     :root {
@@ -1473,6 +1475,41 @@
     </div>
   </div>
 
+  <div class="overlay analysis-select-overlay" id="analysisSelectOverlay" hidden>
+    <div class="analysis-scan-vfx" id="analysisScanVfx" aria-hidden="true" hidden>
+      <img src="in-game-screen/game-objects/analysis-radar-scan.svg" alt="">
+    </div>
+    <div class="dialog analysis-select-dialog" role="dialog" aria-modal="true" aria-labelledby="analysisSelectTitle">
+      <div class="analysis-select-header">
+        <div><span class="analysis-eyebrow">FIELD ARCHIVE · SCAN</span><h2 id="analysisSelectTitle">분석 대상 선택</h2></div>
+        <button id="analysisCancelButton" type="button">취소</button>
+      </div>
+      <p class="analysis-select-hint" id="analysisSelectHint">이번 게임에서 시전된 카드 기록을 스캔합니다. 가져올 카드 하나를 선택하세요.</p>
+      <div class="analysis-card-list" id="analysisCardOptions" role="listbox" aria-label="시전된 카드 목록"></div>
+      <div class="analysis-select-footer"><span id="analysisSelectionCount" aria-live="polite"></span><button id="analysisConfirmButton" class="primary" type="button" disabled>결정</button></div>
+    </div>
+  </div>
+
+  <div class="overlay analysis-select-overlay tool-swap-select-overlay" id="toolSwapSelectOverlay" hidden>
+    <div class="dialog analysis-select-dialog tool-swap-select-dialog" role="dialog" aria-modal="true" aria-labelledby="toolSwapSelectTitle">
+      <div class="analysis-select-header">
+        <div><span class="analysis-eyebrow">REFINER · TOOL EXCHANGE</span><h2 id="toolSwapSelectTitle">도구 교체</h2></div>
+      </div>
+      <p class="analysis-select-hint" id="toolSwapSelectHint">손패와 가방에서 카드 한 장씩 선택하세요.</p>
+      <div class="tool-swap-columns">
+        <section class="tool-swap-column" aria-labelledby="toolSwapHandLabel">
+          <h3 id="toolSwapHandLabel">손패 카드 <span id="toolSwapHandCount"></span></h3>
+          <div class="analysis-card-list tool-swap-card-list" id="toolSwapHandOptions" role="listbox" aria-label="손패 카드"></div>
+        </section>
+        <section class="tool-swap-column" aria-labelledby="toolSwapBagLabel">
+          <h3 id="toolSwapBagLabel">가방 카드 <span id="toolSwapBagCount"></span></h3>
+          <div class="analysis-card-list tool-swap-card-list" id="toolSwapBagOptions" role="listbox" aria-label="가방 카드"></div>
+        </section>
+      </div>
+      <div class="analysis-select-footer"><span id="toolSwapSelectionStatus" aria-live="polite"></span><button id="toolSwapConfirmButton" class="primary" type="button" disabled>결정</button></div>
+    </div>
+  </div>
+
   <svg id="aimOverlay" aria-hidden="true">
     <defs>
       <radialGradient id="blackholeAimGradient">
@@ -1700,6 +1737,21 @@
       const refinerySelectStatus = document.querySelector('#refinerySelectStatus');
       const refineryCardOptions = document.querySelector('#refineryCardOptions');
       const refineryCancelButton = document.querySelector('#refineryCancelButton');
+      const analysisSelectOverlay = document.querySelector('#analysisSelectOverlay');
+      const analysisScanVfx = document.querySelector('#analysisScanVfx');
+      const analysisCardOptions = document.querySelector('#analysisCardOptions');
+      const analysisSelectHint = document.querySelector('#analysisSelectHint');
+      const analysisSelectionCount = document.querySelector('#analysisSelectionCount');
+      const analysisConfirmButton = document.querySelector('#analysisConfirmButton');
+      const analysisCancelButton = document.querySelector('#analysisCancelButton');
+      const toolSwapSelectOverlay = document.querySelector('#toolSwapSelectOverlay');
+      const toolSwapSelectHint = document.querySelector('#toolSwapSelectHint');
+      const toolSwapHandOptions = document.querySelector('#toolSwapHandOptions');
+      const toolSwapBagOptions = document.querySelector('#toolSwapBagOptions');
+      const toolSwapHandCount = document.querySelector('#toolSwapHandCount');
+      const toolSwapBagCount = document.querySelector('#toolSwapBagCount');
+      const toolSwapSelectionStatus = document.querySelector('#toolSwapSelectionStatus');
+      const toolSwapConfirmButton = document.querySelector('#toolSwapConfirmButton');
       const mapIndicator = document.querySelector('#mapIndicator');
       const remainingEls = [document.querySelector('#remaining0'), document.querySelector('#remaining1')];
       const endTurnButton = document.querySelector('#endTurnButton');
@@ -1777,7 +1829,10 @@
         timerWarning: '효과음/ElevenLabs_Drafts/timer-warning.mp3', timerTick: '효과음/ElevenLabs_Drafts/timer-tick.mp3',
         mimicCast: '효과음/ElevenLabs_Drafts/mimic-cast-v2-2s.mp3',
         mimicWhoosh: '효과음/ElevenLabs_Drafts/mimic-whoosh-2s.mp3',
-        mimicLaugh: '효과음/ElevenLabs_Drafts/mimic-laugh-2s.mp3'
+        mimicLaugh: '효과음/ElevenLabs_Drafts/mimic-laugh-2s.mp3',
+        analysisScan: '효과음/ElevenLabs_Drafts/analysis-radar-scan-v1.mp3',
+        toolSwapCast: '효과음/ElevenLabs_Drafts/tool-swap-rummage-2s.mp3',
+        toolSwapForge: '효과음/ElevenLabs_Drafts/tool-swap-forge-draw-2s.mp3'
       };
       const generatedSoundLastPlayed = new Map();
       const playedOnlineOutcomeKeys = new Set();
@@ -1938,7 +1993,9 @@
         { id: 'tracking', name: '추적' }, { id: 'tracking', name: '추적' },
         { id: 'neutralize', name: '무력화' }, { id: 'neutralize', name: '무력화' },
         { id: 'fate', name: '운명' }, { id: 'fate', name: '운명' },
-        { id: 'trick', name: '묘기' }, { id: 'trick', name: '묘기' }
+        { id: 'trick', name: '묘기' }, { id: 'trick', name: '묘기' },
+        { id: 'analysis', name: '분석' }, { id: 'analysis', name: '분석' },
+        { id: 'tool-swap', name: '도구 교체' }, { id: 'tool-swap', name: '도구 교체' }
       ];
       const CARD_METADATA = Object.freeze({
         hardening: { category: 'defense', tags: ['스톤 대상', '마찰 증가', '정제 가능'] },
@@ -1959,7 +2016,9 @@
         tracking: { category: 'tactic', tags: ['상대 스톤 대상', '마찰 감소', '카드 뽑기', '영웅 전용'], heroIds: ['hunter'] },
         neutralize: { category: 'tactic', tags: ['상대 스톤 대상', '중립화', '고정', '영웅 전용'], heroIds: ['hunter'] },
         fate: { category: 'tactic', tags: ['손패 이동', '중립화', '영웅 전용', '정제 가능'], heroIds: ['joker'] },
-        trick: { category: 'tactic', tags: ['분신', '충돌 반응', '영웅 전용', '정제 가능'], heroIds: ['joker'] }
+        trick: { category: 'tactic', tags: ['분신', '충돌 반응', '영웅 전용', '정제 가능'], heroIds: ['joker'] },
+        analysis: { category: 'tactic', tags: ['카드 회수', '영웅 전용', '정제 가능'], heroIds: ['refiner'] },
+        'tool-swap': { category: 'tactic', tags: ['가방 교체', '카드 정제', '영웅 전용', '정제 가능'], heroIds: ['refiner'] }
       });
       const CARD_CATEGORY_NAMES = Object.freeze({
         all: '모든 카테고리', attack: '공격', launch: '발사', defense: '방어',
@@ -1984,7 +2043,9 @@
         tracking: '상대 스톤을 목표로 지정합니다. 목표의 마찰력이 50% 감소하고, 제거되면 카드를 한 장 뽑습니다.',
         neutralize: '상대의 스톤을 지정합니다. 지정된 스톤이 충돌하면 대상을 중립 스톤으로 만듭니다.',
         fate: '손패에 들어오면 상대에게 넘어갑니다. 이 카드를 가진 동안 다른 카드를 사용할 수 없습니다. 자신의 스톤에 사용하면 중립 스톤이 됩니다.',
-        trick: '이미 발사된 자신의 스톤에 사용합니다.\n해당 스톤의 중간 범위 안에 점수를 얻지 않는 분신 스톤 하나를 배치합니다. 원래 스톤과 분신 스톤은 연결되어,\n연결된 원본 스톤이 충격을 받으면 그 대신 분신 스톤 자리로 이동합니다. 분신 스톤은 충격을 받으면 즉시 사라집니다.'
+        trick: '이미 발사된 자신의 스톤에 사용합니다.\n해당 스톤의 중간 범위 안에 점수를 얻지 않는 분신 스톤 하나를 배치합니다. 원래 스톤과 분신 스톤은 연결되어,\n연결된 원본 스톤이 충격을 받으면 그 대신 분신 스톤 자리로 이동합니다. 분신 스톤은 충격을 받으면 즉시 사라집니다.',
+        analysis: "이 게임에서 시전 되었던 카드 하나를 선택해 '정제된' 상태로 가져옵니다.",
+        'tool-swap': '손패의 카드와 가방의 카드를 한 장씩 선택해 교체합니다. 둘을 모두 정제합니다.'
       };
       const TURN_LIMIT_MS = 40_000;
       const CARD_DRAW_HOLD_MS = 1050;
@@ -2008,7 +2069,9 @@
         tracking: { art: 'Card_illustration/tracking.png', refinedArt: 'Card_illustration/refined/tracking.png', sound: 'trackingLock' },
         neutralize: { art: 'Card_illustration/neutralize.png', refinedArt: 'Card_illustration/refined/neutralize.png', sound: 'neutralizeArm' },
         fate: { art: 'Card_illustration/fate.png', refinedArt: 'Card_illustration/refined/fate.png', sound: 'card' },
-        trick: { art: 'Card_illustration/trick.png', refinedArt: 'Card_illustration/refined/trick.png', sound: 'mimicCast' }
+        trick: { art: 'Card_illustration/trick.png', refinedArt: 'Card_illustration/refined/trick.png', sound: 'mimicCast' },
+        analysis: { art: 'Card_illustration/analysis-closeup.png', refinedArt: 'Card_illustration/refined/analysis-closeup.png', sound: 'analysisScan' },
+        'tool-swap': { art: 'Card_illustration/tool-swap.png', refinedArt: 'Card_illustration/refined/tool-swap.png', sound: 'toolSwapCast' }
       };
       const UNIT_EFFECTS = Object.freeze({
         hardening: { maxStacks: Infinity, frictionPerStack: AI_BALANCE.hardening.frictionPerStack },
@@ -2257,7 +2320,10 @@
         aiMatchId: null,
         aiMatchPromise: null,
         aiMatchToken: null,
-        aiAction: null
+        aiAction: null,
+        usedCardHistory: [],
+        analysisSelection: null,
+        toolSwapSelection: null
       };
 
       let onlineSession = null;
@@ -2533,6 +2599,7 @@
         onlineMapClock = null;
         Object.assign(state, { units: [], bricks: [], bullets: [], triggers: [], particles: [], effects: [], mimicPlacement: null,
           hands: [[], []], decks: [[], []], playerDecks: [[], []], fallPoints: [0, 0], escapePoints: [0, 0], playerLevels: [guestProfile?.level || 1, guestProfile?.level || 1], triggerPlacementUsed: [false, false], triggerPlacementCount: [0, 0], triggerBonusCharges: [0, 0], refineryUses: [0, 0], refineryBonusCharges: [0, 0],
+          usedCardHistory: [], analysisSelection: null, toolSwapSelection: null,
           playerTutorialCompleted: [guestProfile?.tutorialCompleted === true, guestProfile?.tutorialCompleted === true],
           heroOffers: [[], []], heroChoices: [null, null], heroDeadline: null, heroSelectionMode: null,
           heroSelectionOwner: 0, heroTransitionTimer: null, heroPendingChoice: null, heroCardDraws: [0, 0],
@@ -2540,6 +2607,9 @@
           pendingTriggerPlacement: null, pendingTriggerCharge: null, lastTriggerCast: [null, null], selectedTriggerType: null, phaseBeforeTriggerSelect: null, phaseBeforeTriggerAim: null,
           turnDeadline: null, turnPausedAt: null, turnPausedByHost: false, timerTurn: -1, mapTime: 0 });
         turns.reset();
+        analysisSelectOverlay.hidden = true;
+        toolSwapSelectOverlay.hidden = true;
+        analysisScanVfx.hidden = true;
         for (const overlay of [resultOverlay, adventureUI.adventureOutcomeOverlay, adventureUI.adventureDialogueOverlay, adventureUI.adventureIllustrationOverlay, mapSelectOverlay, heroSelectOverlay, dealOverlay, triggerSelectOverlay, refinerySelectOverlay,
           publicRoomPasswordOverlay, learningUI.catalogOverlay, gameSettingsOverlay]) overlay.hidden = true;
         entityTooltip.hidden = true;
@@ -3488,6 +3558,7 @@
         }
 
         finishCurrentTurn() {
+          closeCardSelectionsForOwner(this.playerIndex, { restoreToolSwap: true });
           if (this.globalTurn === 0 && this.currentUnit) this.currentUnit.openingFrictionMultiplier = 1.25;
           this.currentUnit = null;
           this.globalTurn += 1;
@@ -3502,6 +3573,45 @@
       }
 
       const turns = new TurnManager();
+
+      function closeCardSelectionsForOwner(owner, { restoreToolSwap = false } = {}) {
+        const analysis = state.analysisSelection;
+        if (analysis && analysis.owner === owner) {
+          state.analysisSelection = null;
+          analysisSelectOverlay.hidden = true;
+          analysisScanVfx.hidden = true;
+          clearTimeout(startAnalysisScan.timer);
+        }
+        const swap = state.toolSwapSelection;
+        if (swap && swap.owner === owner) {
+          if (restoreToolSwap && swap.sourceCard && swap.cardInstanceId != null) {
+            const hand = state.hands[owner] ||= [];
+            if (!hand.some(card => card.instanceId === swap.cardInstanceId)) {
+              hand.push({ ...swap.sourceCard, instanceId: swap.cardInstanceId });
+              const history = state.usedCardHistory || [];
+              for (let index = history.length - 1; index >= 0; index -= 1) {
+                const entry = history[index];
+                if (entry.id === 'tool-swap' && entry.owner === owner && entry.turn === swap.turn) {
+                  history.splice(index, 1);
+                  break;
+                }
+              }
+              renderHands();
+            }
+          }
+          state.toolSwapSelection = null;
+          toolSwapSelectOverlay.hidden = true;
+        }
+      }
+
+      function resetGameCardHistory() {
+        closeCardSelectionsForOwner(0);
+        closeCardSelectionsForOwner(1);
+        state.usedCardHistory = [];
+        analysisSelectOverlay.hidden = true;
+        analysisScanVfx.hidden = true;
+        toolSwapSelectOverlay.hidden = true;
+      }
 
       function beginRound() {
         state.tutorial = null;
@@ -3649,6 +3759,7 @@
       }
 
       function isTurnTimerPaused() {
+        if (state.toolSwapSelection) return true;
         if (state.tutorial && (state.tutorial.speaking || !gameSettingsOverlay.hidden)) return true;
         if (onlineSession?.started && onlineSession.role === 'challenger') return state.turnPausedByHost;
         if (state.aiMode && turns.playerIndex === state.aiOwner) return true;
@@ -3716,6 +3827,7 @@
 
       function expireCurrentTurn() {
         if (turns.isComplete || state.turnDeadline == null) return;
+        closeCardSelectionsForOwner(turns.playerIndex, { restoreToolSwap: true });
         if (state.mimicPlacement) cancelMimicPlacement(false);
         const unit = turns.currentUnit;
         if (state.supportUnit && !state.supportUnit.hasLaunched) {
@@ -3790,6 +3902,268 @@
         if (recipient !== owner) card.fateTransferred = true;
         state.hands[recipient].push(card);
         return recipient;
+      }
+
+      function recordCardPlayed(card, owner) {
+        if (!card || card.id === 'analysis') return;
+        state.usedCardHistory ||= [];
+        state.usedCardHistory.push({ id: card.id, refined: Boolean(card.refined), owner,
+          turn: turns.globalTurn, sequence: state.usedCardHistory.length });
+      }
+
+      function analysisCandidates() {
+        const latestById = new Map();
+        const refinableCardIds = new Set(cardDefinitions().filter(card => refinedCardDefinition(card.id)).map(card => card.id));
+        for (const played of state.usedCardHistory || []) {
+          if (!played?.id || played.id === 'analysis' || !refinableCardIds.has(played.id)) continue;
+          latestById.set(played.id, { id: played.id, refined: Boolean(played.refined) });
+        }
+        return [...latestById.values()].reverse();
+      }
+
+      function renderAnalysisSelection() {
+        const pending = state.analysisSelection;
+        if (!pending) {
+          analysisSelectOverlay.hidden = true;
+          return;
+        }
+        const candidates = analysisCandidates();
+        analysisCardOptions.replaceChildren();
+        for (const candidate of candidates) {
+          const base = cardDefinitions().find(card => card.id === candidate.id);
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'analysis-card-option';
+          button.setAttribute('role', 'option');
+          button.setAttribute('aria-selected', String(pending.selectedCardId === candidate.id));
+          button.classList.toggle('is-selected', pending.selectedCardId === candidate.id);
+          const image = document.createElement('img');
+          image.src = candidate.refined
+            ? CARD_PRESENTATION[candidate.id]?.refinedArt || CARD_PRESENTATION[candidate.id]?.art || ''
+            : CARD_PRESENTATION[candidate.id]?.art || '';
+          image.alt = '';
+          image.draggable = false;
+          const name = document.createElement('span');
+          name.textContent = candidate.refined
+            ? cardDisplayName({ ...base, refined: true })
+            : base.name;
+          if (candidate.refined) button.classList.add('was-refined');
+          button.append(image, name);
+          button.addEventListener('click', () => {
+            pending.selectedCardId = candidate.id;
+            renderAnalysisSelection();
+          });
+          analysisCardOptions.append(button);
+        }
+        analysisSelectHint.textContent = candidates.length
+          ? (pending.refined
+            ? '선택한 카드의 정제본과 일반본을 각각 한 장씩 회수합니다.'
+            : '선택한 카드의 정제된 버전 한 장을 회수합니다.')
+          : '이번 게임에서 분석할 카드가 아직 시전되지 않았습니다.';
+        analysisSelectionCount.textContent = candidates.length ? `${candidates.length}종의 시전 기록` : '기록 없음';
+        analysisConfirmButton.disabled = !pending.selectedCardId || !candidates.some(card => card.id === pending.selectedCardId);
+        analysisSelectOverlay.hidden = !canControlPlayer(pending.owner) || Boolean(pending.awaiting);
+      }
+
+      function startAnalysisScan() {
+        const image = analysisScanVfx.querySelector('img');
+        const rect = canvas.getBoundingClientRect();
+        Object.assign(analysisScanVfx.style, {
+          left: `${rect.left}px`, top: `${rect.top}px`, width: `${rect.width}px`, height: `${rect.height}px`
+        });
+        image.src = 'in-game-screen/game-objects/analysis-radar-scan.svg?cast=' + Date.now();
+        analysisScanVfx.hidden = false;
+        playElevenLabsSound('analysisScan', { volume: 1.1 });
+        clearTimeout(startAnalysisScan.timer);
+        startAnalysisScan.timer = setTimeout(() => { analysisScanVfx.hidden = true; }, 2200);
+      }
+
+      function openAnalysisSelection(card, owner, point) {
+        state.analysisSelection = { owner, cardInstanceId: card.instanceId, refined: Boolean(card.refined),
+          point: { x: point.x, y: point.y }, selectedCardId: null, awaiting: false,
+          turn: turns.globalTurn, round: onlineSession?.roundIndex ?? 0 };
+        if (state.aiMode && owner === state.aiOwner) {
+          const priority = ['blackhole', 'pulse', 'ammo', 'hardening', 'guard', 'escape', 'reposition', 'brick'];
+          const candidate = [...analysisCandidates()].sort((a, b) =>
+            (priority.indexOf(a.id) < 0 ? priority.length : priority.indexOf(a.id)) -
+            (priority.indexOf(b.id) < 0 ? priority.length : priority.indexOf(b.id)))[0];
+          return candidate ? confirmAnalysisSelection(candidate.id, owner, true) : cancelAnalysisSelection(owner, true);
+        }
+        renderAnalysisSelection();
+        if (!analysisSelectOverlay.hidden) {
+          startAnalysisScan();
+          analysisCancelButton.focus();
+        }
+        return true;
+      }
+
+      function createAnalysisCard(id, refined) {
+        const definition = cardDefinitions().find(card => card.id === id);
+        if (!definition) return null;
+        return { ...definition, instanceId: `card-${++state.nextCardId}`, refined: Boolean(refined),
+          analysisGranted: true, ...(id === 'fate' ? { fateTransferred: true } : {}) };
+      }
+
+      function confirmAnalysisSelection(cardId, owner = state.analysisSelection?.owner, authoritative = false) {
+        const pending = state.analysisSelection;
+        if (!pending || owner !== pending.owner || (!authoritative && !canControlPlayer(owner)) ||
+            !analysisCandidates().some(candidate => candidate.id === cardId)) return false;
+        const hand = state.hands[owner];
+        const index = hand.findIndex(card => card.instanceId === pending.cardInstanceId && card.id === 'analysis' &&
+          Boolean(card.refined) === pending.refined);
+        if (index < 0) return false;
+        const source = hand[index];
+        hand.splice(index, 1);
+        recordCardPlayed(source, owner);
+        const acquired = pending.refined
+          ? [createAnalysisCard(cardId, true), createAnalysisCard(cardId, false)]
+          : [createAnalysisCard(cardId, true)];
+        hand.push(...acquired.filter(Boolean));
+        const impactPoint = pending.point;
+        state.analysisSelection = null;
+        analysisSelectOverlay.hidden = true;
+        analysisScanVfx.hidden = true;
+        state.effects.push({ type: 'analysis-acquire', x: impactPoint?.x, y: impactPoint?.y,
+          age: 0, duration: .8, refined: source.refined });
+        emitGameFeedback('connected', impactPoint, source.refined ? '정제된 분석' : '분석', '#b99ae7');
+        renderHands();
+        updateHud();
+        return true;
+      }
+
+      function cancelAnalysisSelection(owner = state.analysisSelection?.owner, authoritative = false) {
+        const pending = state.analysisSelection;
+        if (!pending || owner !== pending.owner || (!authoritative && !canControlPlayer(owner))) return false;
+        state.analysisSelection = null;
+        analysisSelectOverlay.hidden = true;
+        analysisScanVfx.hidden = true;
+        return true;
+      }
+
+      function toolSwapHandChoices(owner, pending = state.toolSwapSelection) {
+        if (!pending) return [];
+        return (state.hands[owner] || []).filter(card => card.instanceId !== pending.cardInstanceId);
+      }
+
+      function toolSwapBagChoices(owner) {
+        return (state.decks[owner] || []).map((card, index) => ({ card, index }))
+          .filter(({ card }) => isCardUnlocked(card, owner));
+      }
+
+      function canStartToolSwap(card, owner) {
+        return heroFor(owner)?.id === 'refiner' &&
+          toolSwapHandChoices(owner, { cardInstanceId: card.instanceId }).length > 0 &&
+          toolSwapBagChoices(owner).length > 0;
+      }
+
+      function renderToolSwapSelection() {
+        const pending = state.toolSwapSelection;
+        if (!pending) {
+          toolSwapSelectOverlay.hidden = true;
+          return;
+        }
+        const handChoices = toolSwapHandChoices(pending.owner, pending);
+        const bagChoices = toolSwapBagChoices(pending.owner);
+        const fillOptions = (container, choices, selected, key, getCard) => {
+          container.replaceChildren();
+          for (const choice of choices) {
+            const card = getCard(choice);
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'analysis-card-option';
+            button.setAttribute('role', 'option');
+            button.setAttribute('aria-selected', String(selected === key(choice)));
+            button.classList.toggle('is-selected', selected === key(choice));
+            if (card.refined) button.classList.add('was-refined');
+            const image = document.createElement('img');
+            image.src = card.refined
+              ? CARD_PRESENTATION[card.id]?.refinedArt || CARD_PRESENTATION[card.id]?.art || ''
+              : CARD_PRESENTATION[card.id]?.art || '';
+            image.alt = '';
+            image.draggable = false;
+            const name = document.createElement('span');
+            name.textContent = cardDisplayName(card);
+            button.append(image, name);
+            button.addEventListener('click', () => {
+              if (pending.awaiting) return;
+              if (container === toolSwapHandOptions) pending.selectedHandInstanceId = key(choice);
+              else pending.selectedDeckIndex = key(choice);
+              renderToolSwapSelection();
+            });
+            container.append(button);
+          }
+          if (!choices.length) {
+            const empty = document.createElement('p');
+            empty.className = 'tool-swap-empty';
+            empty.textContent = '선택 가능한 카드가 없습니다.';
+            container.append(empty);
+          }
+        };
+        fillOptions(toolSwapHandOptions, handChoices, pending.selectedHandInstanceId,
+          card => card.instanceId, card => card);
+        fillOptions(toolSwapBagOptions, bagChoices, pending.selectedDeckIndex,
+          entry => entry.index, entry => entry.card);
+        toolSwapHandCount.textContent = `${handChoices.length}장`;
+        toolSwapBagCount.textContent = `${bagChoices.length}장`;
+        toolSwapSelectHint.textContent = pending.refined
+          ? '손패 카드는 손에 남고, 두 카드 모두 정제됩니다.'
+          : '손패 카드와 가방 카드가 서로 자리를 바꾸며, 두 카드 모두 정제됩니다.';
+        const handSelected = handChoices.some(card => card.instanceId === pending.selectedHandInstanceId);
+        const bagSelected = bagChoices.some(entry => entry.index === pending.selectedDeckIndex);
+        toolSwapSelectionStatus.textContent = pending.awaiting
+          ? '교체를 적용하고 있습니다…'
+          : `손패 ${handSelected ? '선택됨' : '선택 대기'} · 가방 ${bagSelected ? '선택됨' : '선택 대기'}`;
+        toolSwapConfirmButton.disabled = pending.awaiting || !handSelected || !bagSelected;
+        toolSwapSelectOverlay.hidden = !canControlPlayer(pending.owner) || Boolean(pending.awaiting);
+      }
+
+      function openToolSwapSelection(card, owner, point) {
+        if (!canStartToolSwap(card, owner)) return false;
+        state.toolSwapSelection = {
+          owner, cardInstanceId: card.instanceId, refined: Boolean(card.refined),
+          point: { x: point.x, y: point.y }, selectedHandInstanceId: null, selectedDeckIndex: null, awaiting: false,
+          sourceCard: { ...card }, turn: turns.globalTurn, round: onlineSession?.roundIndex ?? 0
+        };
+        playElevenLabsSound('toolSwapCast', { volume: 1.05 });
+        if (state.aiMode && owner === state.aiOwner) {
+          const handChoice = toolSwapHandChoices(owner).find(item => !item.refined && refinedCardDefinition(item)) || toolSwapHandChoices(owner)[0];
+          const bagChoice = toolSwapBagChoices(owner).find(entry => !entry.card.refined && refinedCardDefinition(entry.card)) || toolSwapBagChoices(owner)[0];
+          return handChoice && bagChoice
+            ? confirmToolSwapSelection(handChoice.instanceId, bagChoice.index, owner, true)
+            : false;
+        }
+        renderToolSwapSelection();
+        toolSwapConfirmButton.focus();
+        return true;
+      }
+
+      function confirmToolSwapSelection(handInstanceId, deckIndex, owner = state.toolSwapSelection?.owner, authoritative = false) {
+        const pending = state.toolSwapSelection;
+        if (!pending || owner !== pending.owner || (!authoritative && !canControlPlayer(owner))) return false;
+        const hand = state.hands[owner];
+        const deck = state.decks[owner];
+        const handIndex = hand.findIndex(card => card.instanceId === handInstanceId && card.instanceId !== pending.cardInstanceId);
+        if (handIndex < 0 || !Number.isInteger(deckIndex) || deckIndex < 0 || deckIndex >= deck.length || !isCardUnlocked(deck[deckIndex], owner)) return false;
+        const chosenHandCard = { ...hand[handIndex], refined: true };
+        const chosenBagCard = { ...deck[deckIndex], refined: true, instanceId: `card-${++state.nextCardId}` };
+        if (pending.refined) {
+          hand[handIndex] = chosenHandCard;
+          deck.splice(deckIndex, 1);
+          addDrawnCardToHand(owner, chosenBagCard);
+        } else {
+          delete chosenHandCard.instanceId;
+          hand.splice(handIndex, 1);
+          deck[deckIndex] = chosenHandCard;
+          addDrawnCardToHand(owner, chosenBagCard);
+        }
+        const impactPoint = pending.point;
+        state.toolSwapSelection = null;
+        toolSwapSelectOverlay.hidden = true;
+        playElevenLabsSound('toolSwapForge', { volume: 1.1 });
+        emitGameFeedback('connected', impactPoint, '도구 교체', '#b99ae7');
+        renderHands();
+        updateHud();
+        return true;
       }
 
       function hasUnrefinedFate(owner) {
@@ -5543,8 +5917,8 @@
               if (b.status === 'resting' && !isFixedStone(b)) b.status = 'sliding';
               detonatePendingPulseTriggers(a);
               detonatePendingPulseTriggers(b);
-              resolveMimicImpact(a);
-              resolveMimicImpact(b);
+              dispatchUnitImpact(a);
+              dispatchUnitImpact(b);
             }
             if (a.status === 'mimic-removed' || b.status === 'mimic-removed') continue;
             detonateChargedPulse(a);
@@ -5609,7 +5983,7 @@
                 brick.vy -= impulse * ny / brick.mass * brickResponse * unitImpact * (unitIsStriker ? CONFIG.impactScale : 1);
               }
               detonatePendingPulseTriggers(unit);
-              resolveMimicImpact(unit);
+              dispatchUnitImpact(unit);
             }
             if (unit.status === 'mimic-removed') break;
             if (detonateChargedPulse(unit)) break;
@@ -5689,7 +6063,7 @@
               playUnitImpactSound(-toward, [unit]);
               unit.vx -= toward * 1.58 * worldX;
               unit.vy -= toward * 1.58 * worldY;
-              resolveMimicImpact(unit);
+              dispatchUnitImpact(unit);
             }
           }
           for (const dummy of adventure.dummies) {
@@ -5701,7 +6075,7 @@
             const ny = distance > .001 ? dy / distance : 0;
             unit.x += nx * (unit.radius + dummy.radius - distance);
             unit.y += ny * (unit.radius + dummy.radius - distance);
-            resolveMimicImpact(unit);
+            dispatchUnitImpact(unit);
             if (unit.status === 'mimic-removed') break;
             if (dummy.recharge === 0) {
               emitAdventureEvent({ type: 'object-collision', objectId: dummy.id });
@@ -5727,13 +6101,12 @@
                     target.vy -= (1 + dummy.ricochetRestitution) * toward * ny * CONFIG.impactScale;
                   }
                   const outgoingSpeed = Math.hypot(target.vx, target.vy);
-                  target.vx += (outgoingSpeed > .001 ? target.vx / outgoingSpeed : nx) * force;
-                  target.vy += (outgoingSpeed > .001 ? target.vy / outgoingSpeed : ny) * force;
+                  applyAreaImpact(target, (outgoingSpeed > .001 ? target.vx / outgoingSpeed : nx) * force,
+                    (outgoingSpeed > .001 ? target.vy / outgoingSpeed : ny) * force);
                 } else {
-                  target.vx += (targetDistance > .001 ? targetDx / targetDistance : nx) * force;
-                  target.vy += (targetDistance > .001 ? targetDy / targetDistance : ny) * force;
+                  applyAreaImpact(target, (targetDistance > .001 ? targetDx / targetDistance : nx) * force,
+                    (targetDistance > .001 ? targetDy / targetDistance : ny) * force);
                 }
-                target.status = 'sliding';
               }
               state.effects.push({ type: 'pulse', x: dummy.x, y: dummy.y, age: 0,
                 duration: dummy.pulseEffectSeconds, radius: dummy.pulseRadius });
@@ -5820,7 +6193,7 @@
         if (!fateAllowsCard(card, owner) || (card.id === 'fate' && card.refined)) return false;
         const effectiveUnit = ['tracking', 'neutralize'].includes(card.id) ? unit : unit || turns.currentUnit;
         const allowedHeroes = cardDefinitions().find(definition => definition.id === card.id)?.heroIds;
-        if (card.id !== 'fate' && Array.isArray(allowedHeroes) && allowedHeroes.length && !allowedHeroes.includes(heroFor(owner)?.id)) return false;
+        if (!card.analysisGranted && card.id !== 'fate' && Array.isArray(allowedHeroes) && allowedHeroes.length && !allowedHeroes.includes(heroFor(owner)?.id)) return false;
         if (!canUseCardOnUnit(card, owner, effectiveUnit)) return false;
         unit = effectiveUnit;
         if (card.id === 'trick') return beginMimicPlacement(card, owner, unit);
@@ -5953,13 +6326,14 @@
         recordTutorialEvent('card', card.id);
         if (state.adventure && owner === 0) emitAdventureEvent({ type: 'card-used', cardId: card.id });
         hand.splice(cardIndex, 1);
+        recordCardPlayed(card, owner);
         renderHands();
         updateHud();
         return true;
       }
 
       function useBoardCard(cardId, owner, point) {
-        if (state.mimicPlacement) return false;
+        if (state.mimicPlacement || state.toolSwapSelection) return false;
         const hand = state.hands[owner];
         const cardIndex = hand.findIndex(card => card.instanceId === cardId);
         if (cardIndex < 0 || !point || owner !== turns.playerIndex ||
@@ -5967,8 +6341,20 @@
         const card = hand[cardIndex];
         if (!fateAllowsCard(card, owner)) return false;
         const allowedHeroes = CARD_METADATA[card.id]?.heroIds;
-        if (!(['dark-charge', 'reinforcements'].includes(card.id) || (card.id === 'fate' && card.refined)) ||
-            (card.id !== 'fate' && allowedHeroes?.length && !allowedHeroes.includes(heroFor(owner)?.id)) || !isCardUnlocked(card, owner)) return false;
+        if (!(['dark-charge', 'reinforcements', 'analysis', 'tool-swap'].includes(card.id) || (card.id === 'fate' && card.refined)) ||
+            (!card.analysisGranted && card.id !== 'fate' && allowedHeroes?.length && !allowedHeroes.includes(heroFor(owner)?.id)) ||
+            (!card.analysisGranted && !isCardUnlocked(card, owner))) return false;
+        if (card.id === 'analysis') return openAnalysisSelection(card, owner, point);
+        if (card.id === 'tool-swap') {
+          if (!canStartToolSwap(card, owner)) return false;
+          hand.splice(cardIndex, 1);
+          recordCardPlayed(card, owner);
+          recordTutorialEvent('card', card.id);
+          if (state.adventure && owner === 0) emitAdventureEvent({ type: 'card-used', cardId: card.id });
+          renderHands();
+          updateHud();
+          return openToolSwapSelection(card, owner, point);
+        }
         if (card.id === 'reinforcements') {
           if (state.phase !== 'turn-ready' || !turns.currentUnit?.hasLaunched || state.supportUnit ||
               point.x < TABLE.left || point.x > TABLE.right || point.y < TABLE.top || point.y > TABLE.bottom) return false;
@@ -5991,6 +6377,7 @@
         recordTutorialEvent('card', card.id);
         if (state.adventure && owner === 0) emitAdventureEvent({ type: 'card-used', cardId: card.id });
         hand.splice(cardIndex, 1);
+        recordCardPlayed(card, owner);
         renderHands();
         updateHud();
         return true;
@@ -6006,13 +6393,15 @@
             (['brick', 'data-barrier'].includes(card.id)) ||
             (unit.unitKind === 'brick' && card.id !== 'repulsion-field')) return false;
         const allowedHeroes = cardDefinitions().find(definition => definition.id === card.id)?.heroIds;
-        if (card.id !== 'fate' && Array.isArray(allowedHeroes) && allowedHeroes.length && !allowedHeroes.includes(heroFor(owner)?.id)) return false;
+        if (!card.analysisGranted && card.id !== 'fate' && Array.isArray(allowedHeroes) && allowedHeroes.length && !allowedHeroes.includes(heroFor(owner)?.id)) return false;
         if (card.id === 'ammo' && (state.repositionMode === 'blackhole' || state.repositionMode === 'trigger' ||
             state.effects.some(effect => effect.type === 'blackhole-fan' && effect.age < effect.duration))) return false;
         if (!isCardUnlocked(card, owner)) return false;
+        // Hero restrictions are checked above, including the analysisGranted exception.
+        // Refinement changes Mimic's impact result, not who may target a valid stone.
         if (card.id === 'trick' && (unit.unitKind !== 'stone' || unit.owner !== owner || isNeutralStone(unit) ||
             !unit.hasLaunched || !['sliding', 'resting'].includes(unit.status) || unit.mimicCharge || unit.mimicClone ||
-            state.mimicPlacement || card.refined && !['joker'].includes(heroFor(owner)?.id))) return false;
+            state.mimicPlacement)) return false;
         if (unit.status === 'ready' && unit !== turns.currentUnit && unit !== state.supportUnit) return false;
         if (UNIT_EFFECTS[card.id] && getUnitEffectStacks(unit, card.id) >= UNIT_EFFECTS[card.id].maxStacks) return false;
         if (card.id === 'repulsion-field' && hasRepulsionField(unit)) return false;
@@ -6226,6 +6615,7 @@
         if (pending.refined) state.effects.push({ type: 'refined-card-use', x: source.x, y: source.y, age: 0, duration: .58 });
         recordTutorialEvent('card', card.id);
         if (state.adventure && pending.owner === 0) emitAdventureEvent({ type: 'card-used', cardId: card.id });
+        recordCardPlayed(card, pending.owner);
         renderHands();
         updateHud();
         return true;
@@ -6253,6 +6643,7 @@
             unit.previousY = unit.y;
             unit.status = 'resting';
             unit.vx = unit.vy = 0;
+            unit.heavyBlowChainPending = false;
             partner.status = 'mimic-removed';
             partner.vx = partner.vy = 0;
           }
@@ -6260,6 +6651,26 @@
           unit.status = 'mimic-removed';
           unit.vx = unit.vy = 0;
         }
+        return true;
+      }
+
+      // A single hit event for contact and card-driven forces. Reactive stone
+      // effects subscribe here; movement from launching or friction does not.
+      function dispatchUnitImpact(unit, impactKind = 'collision') {
+        if (unit?.unitKind !== 'stone' || unit.status === 'fallen' || unit.status === 'mimic-removed') return false;
+        if (impactKind === 'collision') resolveNeutralizationCollision(unit);
+        return resolveMimicImpact(unit);
+      }
+
+      function applyAreaImpact(target, forceX, forceY) {
+        if (target.status === 'fallen' || target.status === 'mimic-removed') return false;
+        if (!isFixedStone(target)) {
+          target.vx += forceX;
+          target.vy += forceY;
+          markRefinedEscapeMovement(target);
+          if (target.unitKind !== 'brick') target.status = 'sliding';
+        }
+        dispatchUnitImpact(target, 'force');
         return true;
       }
 
@@ -6300,6 +6711,7 @@
             !['aiming', 'sliding', 'turn-ready', 'reposition'].includes(state.phase) ||
             !canPlaceBrick(point, card?.id === 'brick' && Boolean(card?.refined))) return false;
         hand.splice(index, 1);
+        recordCardPlayed(card, owner);
         if (card.id === 'brick') {
           const variant = chooseFalseWallVariant();
           state.effects.push({ type: 'brick-drop', id: `brick-drop-${card.instanceId}-${Date.now()}`,
@@ -6389,8 +6801,10 @@
         } else {
           const card = state.hands[drag.owner].find(item => item.instanceId === drag.id);
           const target = drag.point && findCardTarget(drag.point, drag.owner, drag.type);
-          const validDrop = drag.type === 'dark-charge' || (drag.type === 'fate' && card?.refined)
-            ? Boolean(drag.point)
+          const validDrop = drag.type === 'tool-swap'
+            ? Boolean(drag.point && card && canStartToolSwap(card, drag.owner))
+            : drag.type === 'dark-charge' || drag.type === 'analysis' || (drag.type === 'fate' && card?.refined)
+              ? Boolean(drag.point)
             : drag.type === 'reinforcements'
               ? Boolean(drag.point && state.phase === 'turn-ready' && turns.currentUnit?.hasLaunched && !state.supportUnit)
             : Boolean(target && canUseCardOnUnit(card, drag.owner, target));
@@ -6408,7 +6822,7 @@
         const insideCanvas = event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
         let triggerDrop = null;
         const draggedCard = state.hands[drag.owner]?.find(card => card.instanceId === drag.id);
-        if (moved && (['dark-charge', 'reinforcements'].includes(drag.type) ||
+        if (moved && (['dark-charge', 'reinforcements', 'analysis', 'tool-swap'].includes(drag.type) ||
             (drag.type === 'fate' && draggedCard?.refined)) && insideCanvas && drag.owner === turns.playerIndex) {
           const point = eventPoint(event);
           if (shouldForwardOnlineAction()) sendOnlineAction({ type: 'board-card', cardId: drag.id, point });
@@ -6511,7 +6925,7 @@
         const refinedPulse = chargedCard && Boolean(source.ability?.refinedPulse);
         const targets = chargedCard ? state.units : [...state.units, ...state.bricks];
         for (const target of targets) {
-          if (target === source || target.status === 'fallen' || target.status === 'ready' || isFixedStone(target)) continue;
+          if (target === source || target.status === 'fallen' || target.status === 'mimic-removed' || target.status === 'ready' || isFixedStone(target)) continue;
           if (target.barrier) continue;
           if (isRefinedImmune(target, 'pulse')) continue;
           const dx = target.x - source.x;
@@ -6520,11 +6934,9 @@
           if (distance > range) continue;
           const angle = distance > 0.001 ? Math.atan2(dy, dx) : Math.random() * Math.PI * 2;
           const teamScale = chargedCard && target.unitKind !== 'brick' && areRuleAllies(target, source) ? .5 : 1;
-          target.vx += Math.cos(angle) * impulse * teamScale * CONFIG.impactScale;
-          target.vy += Math.sin(angle) * impulse * teamScale * CONFIG.impactScale;
           if (refinedPulse && target.unitKind === 'stone' && !areRuleAllies(target, source)) target.refinedPulseFrictionTimer = 3.5;
-          markRefinedEscapeMovement(target);
-          if (target.unitKind !== 'brick') target.status = 'sliding';
+          applyAreaImpact(target, Math.cos(angle) * impulse * teamScale * CONFIG.impactScale,
+            Math.sin(angle) * impulse * teamScale * CONFIG.impactScale);
         }
         if (chargedCard) for (let index = state.bricks.length - 1; index >= 0; index -= 1) {
           const structure = state.bricks[index];
@@ -6574,7 +6986,7 @@
         state.effects.push({ type: 'blackhole', x: source.x, y: source.y, age: 0,
           duration: BLACK_HOLE.duration, radius: range, shake: 6.5 });
         for (const target of [...state.units, ...state.bricks]) {
-          if (target === source || target.barrier || target.status === 'fallen' || target.status === 'ready' || isFixedStone(target) || isRefinedImmune(target, 'blackhole')) continue;
+          if (target === source || target.barrier || target.status === 'fallen' || target.status === 'mimic-removed' || target.status === 'ready' || isFixedStone(target) || isRefinedImmune(target, 'blackhole')) continue;
           const dx = source.x - target.x;
           const dy = source.y - target.y;
           const distance = Math.hypot(dx, dy);
@@ -6583,10 +6995,7 @@
           const friction = target.frictionAtPosition();
           const falloff = .72 + .28 * (1 - distance / range);
           const pull = BLACK_HOLE.impulse * falloff / (1 + friction * 18) * CONFIG.impactScale;
-          target.vx += dx / distance * pull;
-          target.vy += dy / distance * pull;
-          markRefinedEscapeMovement(target);
-          if (target.unitKind !== 'brick') target.status = 'sliding';
+          applyAreaImpact(target, dx / distance * pull, dy / distance * pull);
         }
         for (let i = 0; i < 36; i += 1) {
           const angle = Math.PI * 2 * i / 36;
@@ -6610,7 +7019,7 @@
         state.effects.push({ type: 'blackhole-fan', sourceUnitId: source.id, x: source.x, y: source.y, angle: centerAngle,
           age: 0, duration: BLACK_HOLE.duration, radius: range, halfAngle, shake: 6.5 });
         for (const target of [...state.units, ...state.bricks]) {
-          if (target === source || target.barrier || target.status === 'fallen' || target.status === 'ready' || isFixedStone(target) ||
+          if (target === source || target.barrier || target.status === 'fallen' || target.status === 'mimic-removed' || target.status === 'ready' || isFixedStone(target) ||
               isRefinedImmune(target, 'blackhole')) continue;
           const dx = source.x - target.x;
           const dy = source.y - target.y;
@@ -6624,10 +7033,7 @@
           const falloff = .72 + .28 * (1 - distance / range);
           const coneFalloff = .78 + .22 * (1 - Math.abs(angleDifference) / halfAngle);
           const pull = BLACK_HOLE.impulse * falloff * coneFalloff / (1 + friction * 18) * CONFIG.impactScale;
-          target.vx += dx / distance * pull;
-          target.vy += dy / distance * pull;
-          markRefinedEscapeMovement(target);
-          if (target.unitKind !== 'brick') target.status = 'sliding';
+          applyAreaImpact(target, dx / distance * pull, dy / distance * pull);
         }
         for (let i = 0; i < 30; i += 1) {
           const a = centerAngle + (Math.random() - .5) * halfAngle * 2;
@@ -6743,22 +7149,20 @@
         }
 
         for (const target of state.units) {
-          if (target === source || target.status === 'fallen') continue;
+          if (target === source || target.status === 'fallen' || target.status === 'mimic-removed') continue;
           const hit = insideFan(target);
           if (!hit) continue;
           const falloff = 1 - hit.distance / range;
           const impulse = 520 * (.34 + .66 * falloff) * CONFIG.impactScale;
+          const impactX = target.x, impactY = target.y;
           if (!isFixedStone(target)) {
-            target.vx += dirX * impulse;
-            target.vy += dirY * impulse;
             target.heavyBlowChainPending = true;
-            markRefinedEscapeMovement(target);
-            if (target.status === 'resting' || target.status === 'ready') target.status = 'sliding';
           }
           const removedDefense = target.unitKind === 'brick' ? null : removeLatestDefenseCardStack(target);
-          state.effects.push({ type: 'heavy-blow-hit', x: target.x, y: target.y, age: 0, duration: .42,
+          applyAreaImpact(target, dirX * impulse, dirY * impulse);
+          state.effects.push({ type: 'heavy-blow-hit', x: impactX, y: impactY, age: 0, duration: .42,
             defensePeeled: Boolean(removedDefense), shake: 2.2 });
-          if (target.unitKind !== 'brick') {
+          if (target.unitKind !== 'brick' && target.status !== 'mimic-removed') {
             detonatePendingPulseTriggers(target);
             detonateChargedPulse(target);
           }
@@ -7003,6 +7407,7 @@
         const cardIndex = hand.findIndex(card => card.instanceId === pending.cardInstanceId);
         if (state.phase !== 'trigger-select' || !unit || !isCardAlly(unit, pending.owner) || unit.status === 'fallen' ||
             cardIndex < 0 || unit.launchCardPending || unit.chargedTrigger || state.lastTriggerCast?.[pending.owner] === type.id) return false;
+        const usedCard = hand[cardIndex];
         unit.chargedTrigger = { typeId: type.id, refined: Boolean(pending.refined) };
         if (isNeutralStone(unit)) unit.cardEffectOwner = pending.owner;
         unit.launchCardPending = true;
@@ -7015,6 +7420,7 @@
         state.phase = 'reposition';
         state.powerMeter = null;
         hand.splice(cardIndex, 1);
+        recordCardPlayed(usedCard, pending.owner);
         emitGameFeedback('releaseCharge', unit, pending.refined ? '정제된 해방' : '해방', type.color);
         if (pending.refined) state.effects.push({ type: 'refined-card-use', x: unit.x, y: unit.y, age: 0, duration: .58 });
         recordTutorialEvent('card', 'release');
@@ -7242,7 +7648,7 @@
               if (distance >= bullet.radius + target.radius) continue;
               resolveNeutralizationCollision(target);
               if (bullet.projectileKind === 'charged-trigger') {
-                resolveMimicImpact(target);
+                dispatchUnitImpact(target);
                 if (target.status !== 'mimic-removed')
                 activateTriggerOnUnit(target, ITEM_TRIGGERS.find(item => item.id === bullet.triggerTypeId), { casterOwner: bullet.owner });
                 removeBullet(bullet, index);
@@ -7257,7 +7663,7 @@
                 const surfaceX = target.x + normalX * target.radius;
                 const surfaceY = target.y + normalY * target.radius;
                 reflectBulletFrom(bullet, target, normalX, normalY, surfaceX, surfaceY);
-                resolveMimicImpact(target);
+                dispatchUnitImpact(target);
                 reflected = true;
                 break;
               }
@@ -7274,7 +7680,7 @@
                 if (!isFixedStone(target) && Math.hypot(target.vx, target.vy) > CONFIG.stopSpeed) target.status = 'sliding';
                 playUnitImpactSound(impulse);
               }
-              resolveMimicImpact(target);
+              dispatchUnitImpact(target);
               removeBullet(bullet, index);
               consumed = true;
               break;
@@ -7319,7 +7725,7 @@
                   target.vy -= (1 + CONFIG.restitution) * toward * ny;
                 }
                 markRefinedEscapeMovement(target);
-                resolveMimicImpact(target);
+                dispatchUnitImpact(target);
               }
               if (target.status === 'resting' && !isFixedStone(target) && Math.hypot(target.vx, target.vy) > CONFIG.stopSpeed) target.status = 'sliding';
             }
@@ -7389,7 +7795,7 @@
             if (isFixedStone(unit)) {
               if (relativeNormal < 0) {
                 resolveNeutralizationCollision(unit);
-                resolveMimicImpact(unit);
+                dispatchUnitImpact(unit);
               }
               continue;
             }
@@ -7401,7 +7807,7 @@
               const response = hasRepulsionField(unit) ? AI_BALANCE.repulsion.responseMultiplier : 1;
               unit.vx -= (1 + CONFIG.restitution) * relativeNormal * nx * response;
               unit.vy -= (1 + CONFIG.restitution) * relativeNormal * ny * response;
-              resolveMimicImpact(unit);
+              dispatchUnitImpact(unit);
             }
             if (unit.status === 'resting' && Math.hypot(unit.vx, unit.vy) > CONFIG.stopSpeed) unit.status = 'sliding';
           }
@@ -7428,6 +7834,11 @@
       }
 
       function endTurn() {
+        if (state.toolSwapSelection) return;
+        if (state.analysisSelection && state.analysisSelection.owner === turns.playerIndex &&
+            (!onlineSession || onlineSession.role === 'host')) {
+          cancelAnalysisSelection(state.analysisSelection.owner, true);
+        }
         if (state.adventure || state.mimicPlacement || state.phase !== 'turn-ready' || state.bullets.length > 0) return;
         if (state.tutorial) {
           if (!turns.currentUnit?.hasLaunched || turns.currentUnit.status !== 'resting') return;
@@ -8878,6 +9289,9 @@
           playerTutorialCompleted: [...state.playerTutorialCompleted],
           particles: state.particles.map(particle => ({ ...particle })),
           effects: state.effects.map(effect => ({ ...effect })),
+          usedCardHistory: (state.usedCardHistory || []).map(entry => ({ ...entry })),
+          analysisSelection: state.analysisSelection ? { ...state.analysisSelection, point: { ...state.analysisSelection.point } } : null,
+          toolSwapSelection: state.toolSwapSelection ? { ...state.toolSwapSelection, point: { ...state.toolSwapSelection.point } } : null,
           phase: state.pendingTriggerCharge ? 'trigger-select' : state.phase === 'trigger-select' ? (state.phaseBeforeTriggerSelect || 'turn-ready') : state.phase,
           pendingTriggerCharge: state.pendingTriggerCharge ? { ...state.pendingTriggerCharge,
             phaseBeforeAim: state.phaseBeforeTriggerAim } : null,
@@ -8949,10 +9363,20 @@
 
       function applyOnlineSnapshot(snapshot) {
         const snapshotTime = performance.now();
+        const previousAnalysisSelection = state.analysisSelection;
+        const previousToolSwapSelection = state.toolSwapSelection;
         const previousHeroChoice = state.heroChoices[onlineSession.playerIndex];
         const previousHeroOffers = state.heroOffers[onlineSession.playerIndex]?.join(',');
         const sameRound = snapshot.series?.roundIndex === onlineSession.roundIndex && snapshot.currentMapId === state.currentMap.id;
         const sameTurn = sameRound && snapshot.globalTurn === turns.globalTurn;
+        const snapshotRound = snapshot.series?.roundIndex ?? 0;
+        const snapshotActiveOwner = ((snapshot.startingPlayer || 0) + snapshot.globalTurn) % PLAYER.length;
+        const selectionMatchesSnapshot = selection => Boolean(selection && selection.owner === snapshotActiveOwner &&
+          (selection.turn === snapshot.globalTurn || (selection.turn == null && sameTurn)) &&
+          (selection.round === snapshotRound || (selection.round == null && sameRound)) &&
+          !['finished', 'dealing', 'intro', 'map-select', 'hero-select'].includes(snapshot.phase));
+        const snapshotAnalysisSelection = selectionMatchesSnapshot(snapshot.analysisSelection) ? snapshot.analysisSelection : null;
+        const snapshotToolSwapSelection = selectionMatchesSnapshot(snapshot.toolSwapSelection) ? snapshot.toolSwapSelection : null;
         const inputAllowed = sameTurn && (['placement', 'aiming', 'sliding', 'turn-ready', 'reposition'].includes(snapshot.phase) ||
           (snapshot.phase === 'trigger-select' && snapshot.pendingTriggerCharge?.owner === onlineSession.playerIndex)) &&
           ((snapshot.startingPlayer || 0) + snapshot.globalTurn) % PLAYER.length === onlineSession.playerIndex;
@@ -8974,6 +9398,23 @@
             ((HEROES.find(hero => hero.id === snapshot.hero?.choices[onlineSession.playerIndex])?.trapLimit ?? 1) +
              (snapshot.triggerBonusCharges?.[onlineSession.playerIndex] || 0));
         const preserveTriggerSelection = preserveChargeSelection || preservePlacementSelection;
+        const preserveAnalysisSelection = sameTurn && snapshotAnalysisSelection?.owner === onlineSession.playerIndex &&
+          previousAnalysisSelection?.owner === snapshot.analysisSelection.owner &&
+          previousAnalysisSelection?.cardInstanceId === snapshot.analysisSelection.cardInstanceId &&
+          (previousAnalysisSelection?.turn == null || previousAnalysisSelection.turn === snapshot.globalTurn);
+        const localAnalysisSelection = preserveAnalysisSelection ? {
+          selectedCardId: previousAnalysisSelection.selectedCardId,
+          awaiting: previousAnalysisSelection.awaiting
+        } : null;
+        const preserveToolSwapSelection = sameTurn && snapshotToolSwapSelection?.owner === onlineSession.playerIndex &&
+          previousToolSwapSelection?.owner === snapshot.toolSwapSelection.owner &&
+          previousToolSwapSelection?.cardInstanceId === snapshot.toolSwapSelection.cardInstanceId &&
+          (previousToolSwapSelection?.turn == null || previousToolSwapSelection.turn === snapshot.globalTurn);
+        const localToolSwapSelection = preserveToolSwapSelection ? {
+          selectedHandInstanceId: previousToolSwapSelection.selectedHandInstanceId,
+          selectedDeckIndex: previousToolSwapSelection.selectedDeckIndex,
+          awaiting: previousToolSwapSelection.awaiting
+        } : null;
         if (!preserveAim) localAimPointerId = null;
         if (!inputAllowed) cancelCardDrag();
         if (!preserveTriggerSelection) {
@@ -9012,6 +9453,29 @@
         state.playerTutorialCompleted = snapshot.playerTutorialCompleted || [false, false];
         state.particles = snapshot.particles;
         state.effects = snapshot.effects;
+        state.usedCardHistory = (snapshot.usedCardHistory || []).map(entry => ({ ...entry }));
+        state.analysisSelection = snapshotAnalysisSelection ? {
+          ...snapshotAnalysisSelection,
+          point: { ...snapshotAnalysisSelection.point },
+          selectedCardId: localAnalysisSelection?.selectedCardId ?? snapshotAnalysisSelection.selectedCardId ?? null,
+          awaiting: localAnalysisSelection?.awaiting ?? Boolean(snapshotAnalysisSelection.awaiting)
+        } : null;
+        state.toolSwapSelection = snapshotToolSwapSelection ? {
+          ...snapshotToolSwapSelection,
+          point: { ...snapshotToolSwapSelection.point },
+          selectedHandInstanceId: localToolSwapSelection?.selectedHandInstanceId ?? null,
+          selectedDeckIndex: localToolSwapSelection?.selectedDeckIndex ?? null,
+          awaiting: localToolSwapSelection?.awaiting ?? Boolean(snapshotToolSwapSelection.awaiting)
+        } : null;
+        if (state.toolSwapSelection && !preserveToolSwapSelection &&
+            onlineSession.role === 'challenger' && state.toolSwapSelection.owner === onlineSession.playerIndex) {
+          playElevenLabsSound('toolSwapCast', { volume: 1.05 });
+        }
+        if (state.analysisSelection && !preserveAnalysisSelection && state.analysisSelection.owner === onlineSession.playerIndex) startAnalysisScan();
+        else if (!state.analysisSelection) {
+          analysisSelectOverlay.hidden = true;
+          analysisScanVfx.hidden = true;
+        }
         state.mimicPlacement = snapshot.mimicPlacement
           ? { ...snapshot.mimicPlacement, cursor: preserveMimicCursor ? localMimicCursor : null }
           : null;
@@ -9108,6 +9572,8 @@
           Object.assign(new CurlingUnit({ id: snapshot.supportUnit.id, owner: snapshot.supportUnit.owner,
             turnNumber: snapshot.supportUnit.turnNumber, x: snapshot.supportUnit.x, y: snapshot.supportUnit.y }), snapshot.supportUnit) : null;
         state.repositionUnit = state.units.find(unit => unit.id === snapshot.repositionUnitId) || null;
+        renderAnalysisSelection();
+        renderToolSwapSelection();
         mapIndicator.textContent = currentMap.name;
         dealPlayer.textContent = snapshot.dealPlayer;
         state.dealOwner = snapshot.dealOwner;
@@ -9136,6 +9602,7 @@
           if (snapshot.series.result) showOnlineResult(snapshot.series.result);
         }
         renderHands();
+        renderAnalysisSelection();
         updateHud();
         if (state.phase === 'finished') resultOverlay.hidden = false;
         else if (!snapshot.series?.result) resultOverlay.hidden = true;
@@ -9178,6 +9645,18 @@
         if (action.type === 'board-card') {
           useBoardCard(action.cardId, 1, action.point);
           publishOnlineSnapshot(performance.now());
+          return;
+        }
+        if (action.type === 'analysis-select' && state.analysisSelection?.owner === 1) {
+          if (confirmAnalysisSelection(action.cardId, 1, true)) publishOnlineSnapshot(performance.now());
+          return;
+        }
+        if (action.type === 'analysis-cancel' && state.analysisSelection?.owner === 1) {
+          if (cancelAnalysisSelection(1, true)) publishOnlineSnapshot(performance.now());
+          return;
+        }
+        if (action.type === 'tool-swap-select' && state.toolSwapSelection?.owner === 1) {
+          if (confirmToolSwapSelection(action.handInstanceId, action.deckIndex, 1, true)) publishOnlineSnapshot(performance.now());
           return;
         }
         if (state.phase === 'trigger-select') return;
@@ -9449,6 +9928,7 @@
       }
 
       function dealCards() {
+        resetGameCardHistory();
         state.phase = 'dealing';
         state.lastTriggerCast = [null, null];
         if (state.aiMode && guestProfile?.username && guestToken && !state.aiMatchPromise) {
@@ -10143,6 +10623,7 @@
 
       function finishGame() {
         state.phase = 'finished';
+        resetGameCardHistory();
         state.powerMeter = null;
         state.turnDeadline = null;
         state.turnPausedAt = null;
@@ -12789,6 +13270,51 @@
         if (heroFor(owner)?.id === 'refiner') openRefinerySelection(owner);
       }));
       refineryCancelButton.addEventListener('click', () => { refinerySelectOverlay.hidden = true; });
+      analysisConfirmButton.addEventListener('click', () => {
+        const pending = state.analysisSelection;
+        if (!pending?.selectedCardId || pending.awaiting) return;
+        if (shouldForwardOnlineAction()) {
+          pending.awaiting = true;
+          renderAnalysisSelection();
+          sendOnlineAction({ type: 'analysis-select', cardId: pending.selectedCardId });
+          return;
+        }
+        if (confirmAnalysisSelection(pending.selectedCardId, pending.owner, true) && onlineSession?.role === 'host') {
+          publishOnlineSnapshot(performance.now());
+        }
+      });
+      analysisCancelButton.addEventListener('click', () => {
+        const pending = state.analysisSelection;
+        if (!pending || pending.awaiting) return;
+        if (shouldForwardOnlineAction()) {
+          pending.awaiting = true;
+          renderAnalysisSelection();
+          sendOnlineAction({ type: 'analysis-cancel' });
+          return;
+        }
+        if (cancelAnalysisSelection(pending.owner, true) && onlineSession?.role === 'host') {
+          publishOnlineSnapshot(performance.now());
+        }
+      });
+      analysisSelectOverlay.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && state.analysisSelection && !state.analysisSelection.awaiting) {
+          event.preventDefault();
+          analysisCancelButton.click();
+        }
+      });
+      toolSwapConfirmButton.addEventListener('click', () => {
+        const pending = state.toolSwapSelection;
+        if (!pending?.selectedHandInstanceId || !Number.isInteger(pending.selectedDeckIndex) || pending.awaiting) return;
+        if (shouldForwardOnlineAction()) {
+          pending.awaiting = true;
+          renderToolSwapSelection();
+          sendOnlineAction({ type: 'tool-swap-select', handInstanceId: pending.selectedHandInstanceId, deckIndex: pending.selectedDeckIndex });
+          return;
+        }
+        if (confirmToolSwapSelection(pending.selectedHandInstanceId, pending.selectedDeckIndex, pending.owner, true) && onlineSession?.role === 'host') {
+          publishOnlineSnapshot(performance.now());
+        }
+      });
       confirmTriggerButton.addEventListener('click', confirmItemTriggerPlacement);
       cancelTriggerButton.addEventListener('click', cancelItemTriggerPlacement);
       endTurnButton.addEventListener('click', endTurn);

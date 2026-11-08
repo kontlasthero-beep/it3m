@@ -387,5 +387,35 @@
     "file": "mimic-laugh-2s.mp3",
     "duration": 2,
     "prompt": "Exactly two seconds. A short eccentric Joker-like human laugh for a dark post-apocalyptic fantasy game, playful but slightly unsettling, a close breathy chuckle that breaks into a few quick amused pulses and fades with mild reverb. Clear audible volume, not a scream, not sinister horror, no intelligible words, no music, no other sound effects."
+  },
+  {
+    "id": "analysisScan",
+    "name": "분석 레이더 스캔",
+    "group": "카드와 트리거",
+    "description": "리파이너가 사용된 카드 기록을 분석할 때",
+    "file": "analysis-radar-scan-v1.mp3",
+    "duration": 2,
+    "modelId": "eleven_text_to_sound_v3",
+    "prompt": "Exactly two seconds. A present analog radar sweep for Second Chance: low resonant ping immediately, rising glassy scan shimmer sweeps across recovered card-data, two crisp distant echo pings, short subtle reverb. Tactile salvaged technology, curious and precise with a mysterious mana undertone, clear strong volume without clipping. No voice, music, alarm, gunshot, generic digital beep, or silent lead-in."
+  },
+  {
+    "id": "toolSwapRummage",
+    "name": "도구 교체 · 공구함 뒤적임",
+    "group": "카드와 트리거",
+    "description": "도구 교체 카드를 시전해 허리춤의 공구를 고를 때",
+    "file": "tool-swap-rummage-2s.mp3",
+    "duration": 2,
+    "modelId": "eleven_text_to_sound_v3",
+    "prompt": "Exactly two seconds. Close, tactile foley of a Refiner rummaging through a worn compact toolbox and belt pouch: canvas rustle, small metal tools shifting and lightly clinking, a brief deliberate tool selection and clasp click. Clear upfront sound with gentle natural reverb, grounded post-apocalyptic salvaged gear, intimate and readable on laptop speakers. No speech, music, machinery motor, alarm, or exaggerated metallic clang."
+  },
+  {
+    "id": "toolSwapForgeDraw",
+    "name": "도구 교체 · 정제 카드 획득",
+    "group": "카드와 트리거",
+    "description": "가방에서 선택한 정제 카드를 손으로 가져올 때",
+    "file": "tool-swap-forge-draw-2s.mp3",
+    "duration": 2,
+    "modelId": "eleven_text_to_sound_v3",
+    "prompt": "Exactly two seconds. One single decisive hammer strike on an energy-charged sword resting on a blacksmith's anvil as a refined card is drawn: immediate solid hammer-on-anvil impact, a brief bright resonant blade ring with subtle magical energy flowing through it, then a short warm reverberant decay. The strike is clearly audible and weighty, not a musical chime or repeated hammering. No voice, no music, no machinery loop, no extra impacts."
   }
 ]

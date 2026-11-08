@@ -70,7 +70,7 @@ async function generateWithRetry(effect) {
   const endpoint = 'https://api.elevenlabs.io/v1/sound-generation';
   const body = {
     text: effect.prompt,
-    model_id: 'eleven_text_to_sound_v2',
+    model_id: effect.modelId || 'eleven_text_to_sound_v2',
     duration_seconds: effect.duration,
     prompt_influence: 0.55
   };

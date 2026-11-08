@@ -12,6 +12,20 @@
   }
 
   const definitions = {
+    analysis: {
+      id: 'analysis',
+      name: '정제된 분석',
+      description: '이 게임에서 시전된 카드 하나를 선택해 정제된 카드와 일반 카드를 각각 한 장씩 가져옵니다.',
+      mechanic: { kind: 'copy-used-card-pair', refinedCount: 1, ordinaryCount: 1, exclude: ['analysis'] },
+      storyPlaceholder: ''
+    },
+    'tool-swap': {
+      id: 'tool-swap',
+      name: '정제된 도구 교체',
+      description: '손패의 카드와 가방의 카드를 한 장씩 선택합니다, 둘을 모두 정제하고, 선택한 가방의 카드를 뽑습니다.',
+      mechanic: { kind: 'refined-tool-swap', handCardStaysInHand: true, drawSelectedBagCard: true, refineEachAtMostOnce: true },
+      storyPlaceholder: ''
+    },
     fate: {
       id: 'fate',
       name: '정제된 운명',

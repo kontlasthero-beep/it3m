@@ -1,0 +1,177 @@
+.overlay.analysis-select-overlay {
+  position: fixed;
+  z-index: 1200;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: clamp(14px, 3vw, 36px);
+  overflow: hidden;
+  background: rgb(3 10 11 / 78%);
+  backdrop-filter: blur(5px);
+}
+
+.analysis-select-overlay[hidden],
+.analysis-scan-vfx[hidden] { display: none; }
+
+.analysis-scan-vfx {
+  position: fixed;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: .82;
+  mix-blend-mode: screen;
+}
+
+.analysis-scan-vfx img { display: block; width: 100%; height: 100%; object-fit: fill; }
+
+.dialog.analysis-select-dialog {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-rows: auto auto minmax(160px, 1fr) auto;
+  gap: 14px;
+  width: min(900px, 100%);
+  max-height: min(82vh, 900px);
+  padding: clamp(18px, 3vw, 32px);
+  overflow: hidden;
+  color: #eee4cf;
+  background:
+    linear-gradient(135deg, rgb(26 49 49 / 98%), rgb(10 23 24 / 99%) 58%),
+    url("shared-ui/deck-redesign/deck-window-v2.png") center / cover;
+  border: 1px solid #a77a4e;
+  box-shadow: 0 24px 80px rgb(0 0 0 / 58%), inset 0 0 0 1px rgb(123 160 148 / 38%);
+  clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px);
+  animation: analysis-dialog-arrive 260ms cubic-bezier(.2,.75,.25,1) both;
+}
+
+.analysis-select-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgb(194 151 94 / 52%);
+}
+
+.analysis-eyebrow {
+  color: #79bdb0;
+  font: 600 10px/1.3 "SecondChance Gowun Batang", serif;
+  letter-spacing: .18em;
+}
+
+.analysis-select-header h2 {
+  margin: 4px 0 0;
+  color: #f2e6ce;
+  font: 500 clamp(23px, 3vw, 32px)/1.15 "SecondChance Gowun Batang", serif;
+}
+
+.analysis-select-header button,
+.analysis-select-footer button {
+  min-height: 42px;
+  padding: 9px 18px;
+  color: #f1e4ca;
+  font: 600 14px/1.15 "SecondChance Gowun Batang", serif;
+  white-space: nowrap;
+  background: linear-gradient(180deg, #203b3a, #102122);
+  border: 1px solid #9d784d;
+  box-shadow: inset 0 0 0 1px rgb(230 191 127 / 10%);
+  cursor: pointer;
+}
+
+.analysis-select-header button:hover,
+.analysis-select-footer button:not(:disabled):hover { filter: brightness(1.16); }
+.analysis-select-header button:focus-visible,
+.analysis-select-footer button:focus-visible,
+.analysis-card-option:focus-visible { outline: 2px solid #8bd8c5; outline-offset: 3px; }
+
+.analysis-select-hint {
+  margin: 0;
+  color: #bbc5be;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.analysis-card-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  align-content: start;
+  gap: 12px;
+  min-height: 150px;
+  padding: 8px 12px 12px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-color: #94734d #0b1718;
+  scrollbar-width: thin;
+}
+
+.analysis-card-option {
+  position: relative;
+  z-index: 0;
+  display: grid;
+  grid-template-rows: minmax(120px, 1fr) auto;
+  gap: 0;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  color: #eee5d2;
+  text-align: center;
+  background: linear-gradient(180deg, #152a2b, #0b1718);
+  border: 1px solid #68766c;
+  border-radius: 4px;
+  box-shadow: 0 5px 14px rgb(0 0 0 / 30%);
+  cursor: pointer;
+  transition: border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+}
+
+.analysis-card-option:hover { transform: translateY(-2px); border-color: #c39a61; }
+.analysis-card-option.is-selected {
+  z-index: 2;
+  transform: translateY(-2px) scale(1.035);
+  border-color: #d4b4ff;
+  box-shadow: 0 0 0 2px rgb(187 145 241 / 48%), 0 0 22px rgb(168 112 235 / 38%),
+    inset 0 0 14px rgb(164 120 222 / 18%);
+}
+.analysis-card-option.was-refined:not(.is-selected) { border-color: #9c83bd; }
+.analysis-card-option img { display: block; width: 100%; height: 100%; min-height: 120px; object-fit: cover; }
+.analysis-card-option span {
+  display: block;
+  min-height: 36px;
+  padding: 8px 5px;
+  overflow: hidden;
+  font: 600 13px/1.3 "SecondChance Gowun Batang", serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-top: 1px solid rgb(163 130 83 / 60%);
+}
+
+.analysis-select-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgb(115 144 134 / 34%);
+}
+
+.analysis-select-footer span { color: #9eaea7; font-size: 12px; }
+.analysis-select-footer button.primary { color: #101918; background: linear-gradient(#d1ae70, #a5793f); }
+.analysis-select-footer button:disabled { color: #76807a; border-color: #4c5651; background: #192222; cursor: not-allowed; filter: grayscale(.6); }
+
+@keyframes analysis-dialog-arrive {
+  from { opacity: 0; transform: translateY(16px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 560px) {
+  .analysis-select-dialog { gap: 10px; padding: 17px; max-height: 88vh; }
+  .analysis-card-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .analysis-card-option { grid-template-rows: 110px auto; }
+  .analysis-card-option img { min-height: 110px; }
+  .analysis-select-footer { align-items: stretch; flex-direction: column; }
+  .analysis-select-footer button { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .analysis-select-dialog, .analysis-card-option { animation: none; transition: none; }
+  .analysis-card-option.is-selected { transform: none; }
+}
