@@ -6400,7 +6400,7 @@
         // Hero restrictions are checked above, including the analysisGranted exception.
         // Refinement changes Mimic's impact result, not who may target a valid stone.
         if (card.id === 'trick' && (unit.unitKind !== 'stone' || unit.owner !== owner || isNeutralStone(unit) ||
-            !unit.hasLaunched || !['sliding', 'resting'].includes(unit.status) || unit.mimicCharge || unit.mimicClone ||
+            !unit.hasLaunched || unit.status !== 'resting' || unit.mimicCharge || unit.mimicClone ||
             state.mimicPlacement)) return false;
         if (unit.status === 'ready' && unit !== turns.currentUnit && unit !== state.supportUnit) return false;
         if (UNIT_EFFECTS[card.id] && getUnitEffectStacks(unit, card.id) >= UNIT_EFFECTS[card.id].maxStacks) return false;
@@ -6466,10 +6466,8 @@
         return true;
       }
 
-      function activateTriggerOnUnit(unit, type, { audio = true, casterOwner = unit?.owner } = {}) {
+      function activateTriggerOnUnit(unit, type, { audio = true, casterOwner = unit?.owner, recordPlayerUse = true } = {}) {
         if (!unit || !type || unit.status === 'fallen') return false;
-        if (Number.isInteger(casterOwner) && casterOwner >= 0 && casterOwner < state.lastTriggerCast.length)
-          state.lastTriggerCast[casterOwner] = type.id;
         if (type.id === 'blackhole') triggerBlackHole(unit, type.range, audio);
         else if (type.id === 'pulse') {
           unit.pendingPulseTriggers ||= [];
@@ -6478,7 +6476,9 @@
         } else if (UNIT_EFFECTS[type.id]) {
           if (!applyUnitEffectStack(unit, type.id)) return false;
           if (audio) playSound(type.id === 'hardening' ? 'hardening' : 'card');
-        }
+        } else return false;
+        if (recordPlayerUse && Number.isInteger(casterOwner) && casterOwner >= 0 && casterOwner < state.lastTriggerCast.length)
+          state.lastTriggerCast[casterOwner] = type.id;
         state.effects.push({ type: 'item', x: unit.x, y: unit.y, age: 0, duration: .45, color: type.color });
         return true;
       }
@@ -6508,7 +6508,7 @@
         const targets = state.units
           .filter(unit => (cardId === 'trick'
             ? unit.unitKind === 'stone' && unit.owner === owner && !isNeutralStone(unit) &&
-              unit.hasLaunched && ['sliding', 'resting'].includes(unit.status) &&
+              unit.hasLaunched && unit.status === 'resting' &&
               !unit.mimicCharge && !unit.mimicClone
             : cardId === 'fate'
             ? unit.unitKind === 'stone' && !isNeutralStone(unit) && unit.owner === owner
@@ -6527,13 +6527,13 @@
       }
 
       function mimicPlacementRange(unit) {
-        return (unit?.radius || CONFIG.unitRadius) * 4;
+        return (unit?.radius || CONFIG.unitRadius) * 5;
       }
 
       function canPlaceMimicClone(point, pending = state.mimicPlacement) {
         if (!pending || !point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return false;
         const source = state.units.find(unit => unit.id === pending.sourceId);
-        if (!source || source.status === 'fallen' || source.status === 'mimic-removed' ||
+        if (!source || source.status !== 'resting' ||
             !source.hasLaunched || source.mimicCharge || source.mimicClone || isNeutralStone(source)) return false;
         const radius = CONFIG.unitRadius * heroRule(pending.owner, 'capScale', 1);
         if (Math.hypot(point.x - source.x, point.y - source.y) > mimicPlacementRange(source) ||
@@ -7462,7 +7462,10 @@
             state.adventure.collectedTriggerIds.add(trigger.id);
             emitAdventureEvent({ type: 'trigger-collected', objectId: trigger.id });
           }
-          activateTriggerOnUnit(unit, trigger.type, { casterOwner: Number.isInteger(trigger.owner) ? trigger.owner : unit.owner });
+          activateTriggerOnUnit(unit, trigger.type, {
+            casterOwner: Number.isInteger(trigger.owner) ? trigger.owner : unit.owner,
+            recordPlayerUse: false
+          });
         }
       }
 

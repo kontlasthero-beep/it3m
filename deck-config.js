@@ -4,13 +4,14 @@ const CARD_LEVELS = Object.freeze({
   hardening: 1, guard: 1, pulse: 1, reposition: 1, brick: 1,
   blackhole: 1, ammo: 1, bluffing: 1, escape: 2, 'data-barrier': 2,
   'repulsion-field': 999, 'dark-charge': 1, release: 1, 'heavy-blow': 1, reinforcements: 1, tracking: 1, neutralize: 1,
-  fate: 1, trick: 1
+  fate: 1, trick: 1, analysis: 1, 'tool-swap': 1
 });
 const HERO_RESTRICTED_CARDS = Object.freeze({
   'dark-charge': 'trap-master', release: 'trap-master',
   'heavy-blow': 'big-boy', reinforcements: 'big-boy',
   tracking: 'hunter', neutralize: 'hunter',
-  fate: 'joker', trick: 'joker'
+  fate: 'joker', trick: 'joker',
+  analysis: 'refiner', 'tool-swap': 'refiner'
 });
 
 const DEFAULT_DECK = Object.freeze([
@@ -18,6 +19,12 @@ const DEFAULT_DECK = Object.freeze([
 ]);
 const DECK_PRESET_COUNT = 9;
 const HERO_IDS = Object.freeze(['trap-master', 'hunter', 'big-boy', 'joker', 'refiner']);
+
+for (const [cardId, heroId] of Object.entries(HERO_RESTRICTED_CARDS)) {
+  if (!Object.hasOwn(CARD_LEVELS, cardId) || !HERO_IDS.includes(heroId)) {
+    throw new Error(`Invalid hero card rule: ${cardId} -> ${heroId}`);
+  }
+}
 
 function normalizeDeckNames(value) {
   const names = Array.isArray(value) ? value : [];
