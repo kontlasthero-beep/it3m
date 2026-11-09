@@ -475,3 +475,1520 @@
   #deckOverlay .deck-presets button,
   #deckOverlay .deck-actions button { transition-duration: 1ms !important; }
 }
+
+/* Bounded sliding deck/hero browser. Every animated panel stays inside this viewport. */
+#deckOverlay[data-view="hero"] .deck-hero-screen {
+  box-sizing: border-box;
+  place-items: center;
+  padding: clamp(8px, 2vw, 24px);
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-dialog {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: min(1120px, 100%);
+  height: min(820px, calc(100dvh - 32px));
+  max-height: calc(100dvh - 32px);
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: clamp(14px, 2.3vw, 28px);
+  overflow: hidden;
+  contain: layout paint;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-screen-header {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  padding: 0 0 12px;
+  border-bottom: 1px solid rgba(190, 151, 91, .48);
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-screen-header > div { min-width: 0; }
+#deckOverlay[data-view="hero"] .deck-hero-screen-header h3 {
+  margin: 3px 0 0;
+  color: #f0e1c4;
+  font: 400 clamp(21px, 2.2vw, 30px)/1.25 var(--ui-serif, Georgia, serif);
+  overflow-wrap: anywhere;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-screen-header > button,
+#deckOverlay[data-view="hero"] .deck-hero-detail-heading > button,
+#deckOverlay[data-view="hero"] .deck-recommendations-heading > button {
+  flex: 0 0 auto;
+  max-width: 42%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 7px 12px;
+  border: 1px solid transparent;
+  border-image: url("shared-ui/deck-redesign/deck-slot-v2.png") 18% 7% fill / 7px / 0 stretch;
+  color: #ead9b8;
+  background: #101d1e;
+  font: 600 13px/1.25 var(--ui-serif, Georgia, serif);
+  overflow-wrap: anywhere;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-browser {
+  position: relative;
+  display: block;
+  flex: 1 1 auto;
+  width: 100%;
+  height: 0;
+  min-width: 0;
+  min-height: 0;
+  margin: 14px 0 0;
+  overflow: hidden;
+  contain: layout paint;
+  clip-path: inset(0 round 2px);
+  isolation: isolate;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list,
+#deckOverlay[data-view="hero"] .deck-hero-side-panel {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 0;
+  background: #0d191a url("shared-ui/deck-redesign/deck-window-v2.png") center / 100% 100% no-repeat;
+  transition: transform .32s cubic-bezier(.2,.72,.25,1), opacity .24s ease;
+  will-change: transform;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list {
+  z-index: 2;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  align-content: stretch;
+  gap: clamp(10px, 1.6vh, 18px);
+  padding: clamp(16px, 2.4vw, 28px);
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-side-panel {
+  z-index: 1;
+  display: block;
+  padding: clamp(14px, 2.3vw, 28px);
+  opacity: 0;
+  transform: translate3d(102%, 0, 0);
+  pointer-events: none;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-browser[data-pane="hero"] .deck-hero-list,
+#deckOverlay[data-view="hero"] .deck-hero-browser[data-pane="recommendations"] .deck-hero-list {
+  opacity: 0;
+  transform: translate3d(-102%, 0, 0);
+  pointer-events: none;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-browser[data-pane="hero"] .deck-hero-side-panel,
+#deckOverlay[data-view="hero"] .deck-hero-browser[data-pane="recommendations"] .deck-hero-side-panel {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  pointer-events: auto;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-hub-heading h4,
+#deckOverlay[data-view="hero"] .deck-recommendations-heading h4 {
+  margin: 0;
+  color: #f0dfc0;
+  font: 400 clamp(19px, 2vw, 26px)/1.25 var(--ui-serif, Georgia, serif);
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-hub-heading p,
+#deckOverlay[data-view="hero"] .deck-recommendations-heading p {
+  margin: 4px 0 0;
+  color: #b7c2bb;
+  font: 400 13px/1.5 var(--ui-sans, Arial, sans-serif);
+  overflow-wrap: anywhere;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list-items {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-auto-rows: minmax(0, 1fr);
+  gap: clamp(8px, 1.2vw, 14px);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list-item {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  justify-items: center;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 9px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-image: url("shared-ui/deck-redesign/deck-slot-v2.png") 18% 7% fill / 8px / 0 stretch;
+  color: #e8e0d0;
+  background: #101d1e;
+  text-align: center;
+  transition: transform .2s ease, filter .2s ease, box-shadow .2s ease;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list-item img {
+  display: block;
+  width: min(100%, 132px);
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  object-fit: cover;
+  object-position: center 16%;
+  border: 1px solid rgba(190,151,91,.68);
+  background: #0b1516;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list-item strong {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  color: inherit;
+  font: 600 clamp(13px, 1.1vw, 16px)/1.3 var(--ui-serif, Georgia, serif);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list-item:hover { filter: brightness(1.12); transform: translateY(-2px); }
+#deckOverlay[data-view="hero"] .deck-hero-list-item.is-selected {
+  color: #f4dfb7;
+  box-shadow: inset 0 0 22px rgba(195,151,83,.15), 0 0 12px rgba(195,151,83,.2);
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-recommended-entry {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  min-height: 68px;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-image: url("shared-ui/deck-redesign/deck-slot-v2.png") 18% 7% fill / 9px / 0 stretch;
+  color: #ead9b8;
+  background: #101d1e;
+  text-align: left;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-recommended-entry img {
+  display: block;
+  width: 46px;
+  height: 46px;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: sepia(.25) saturate(.85);
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-recommended-entry span { display: grid; gap: 3px; min-width: 0; }
+#deckOverlay[data-view="hero"] .deck-hero-recommended-entry strong { font: 600 16px/1.3 var(--ui-serif, Georgia, serif); }
+#deckOverlay[data-view="hero"] .deck-hero-recommended-entry small { color: #b7c2bb; font: 400 12px/1.4 var(--ui-sans, Arial, sans-serif); overflow-wrap: anywhere; }
+#deckOverlay[data-view="hero"] .deck-hero-recommended-entry b { color: #d3b27a; font-size: 24px; }
+
+#deckOverlay[data-view="hero"] .deck-hero-empty {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-content: center;
+  justify-items: center;
+  gap: 9px;
+  box-sizing: border-box;
+  padding: 20px;
+  color: #d7ddd5;
+  text-align: center;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-empty-mark { color: #c79b5b; font: 400 36px/1 var(--ui-serif, Georgia, serif); }
+#deckOverlay[data-view="hero"] .deck-hero-empty strong { color: #f0d7a7; font: 400 22px/1.3 var(--ui-serif, Georgia, serif); }
+#deckOverlay[data-view="hero"] .deck-hero-empty p { max-width: 42ch; margin: 0; color: #b7c2bb; line-height: 1.55; }
+
+#deckOverlay[data-view="hero"] .deck-hero-profile {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  gap: 12px;
+  overflow: hidden;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-detail-heading,
+#deckOverlay[data-view="hero"] .deck-recommendations-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-detail-heading > span { color: #b7c2bb; font: 500 12px/1.2 var(--ui-sans, Arial, sans-serif); }
+
+#deckOverlay[data-view="hero"] .deck-hero-profile-main {
+  display: grid;
+  grid-template-columns: minmax(190px, .72fr) minmax(0, 1.28fr);
+  align-items: center;
+  gap: clamp(16px, 3vw, 36px);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-portrait-frame {
+  width: min(100%, 300px);
+  height: min(100%, 390px);
+  min-width: 0;
+  min-height: 0;
+  justify-self: center;
+  box-sizing: border-box;
+  padding: 12px;
+  overflow: hidden;
+  background: #0a1415;
+  box-shadow: 0 8px 24px rgba(0,0,0,.38);
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-portrait-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+  object-position: center 15%;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-identity {
+  display: grid;
+  align-content: center;
+  gap: 10px;
+  min-width: 0;
+  max-width: 60ch;
+  overflow: hidden;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-identity > span { color: #82b7a7; font: 600 11px/1.3 var(--ui-sans, Arial, sans-serif); letter-spacing: .12em; }
+#deckOverlay[data-view="hero"] .deck-hero-identity strong { color: #f0d7a7; font: 400 clamp(25px, 3vw, 38px)/1.2 var(--ui-serif, Georgia, serif); overflow-wrap: anywhere; }
+#deckOverlay[data-view="hero"] .deck-hero-identity p { margin: 0; color: #e1e0d6; font: 400 clamp(14px, 1.35vw, 17px)/1.65 var(--ui-sans, Arial, sans-serif); overflow-wrap: anywhere; }
+
+#deckOverlay[data-view="hero"] .deck-hero-exclusive-cards {
+  display: grid;
+  grid-column: auto;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+  gap: 8px;
+  min-width: 0;
+  max-height: 118px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-exclusive-label { grid-column: 1 / -1; color: #8fbeb1; font: 600 11px/1.3 var(--ui-sans, Arial, sans-serif); }
+#deckOverlay[data-view="hero"] .deck-hero-exclusive-card {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 5px 7px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-image: url("shared-ui/deck-redesign/deck-slot-v2.png") 18% 7% fill / 7px / 0 stretch;
+  background: #101d1e;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-exclusive-card img {
+  display: block;
+  width: 42px;
+  height: 54px;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+  object-position: center 22%;
+  overflow: hidden;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-exclusive-card strong {
+  display: -webkit-box;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  color: #ead9b8;
+  font: 600 12px/1.35 var(--ui-serif, Georgia, serif);
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-actions { display: flex; grid-column: auto; justify-content: flex-end; min-width: 0; }
+#deckOverlay[data-view="hero"] .deck-hero-actions button { width: min(340px, 100%); min-height: 46px; }
+
+#deckOverlay[data-view="hero"] .deck-recommendations-panel {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+#deckOverlay[data-view="hero"] .deck-recommendation-hero-picker {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 2px 2px 7px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+
+#deckOverlay[data-view="hero"] .deck-recommendation-hero {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  flex: 0 0 132px;
+  min-width: 0;
+  min-height: 46px;
+  padding: 4px 7px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-image: url("shared-ui/deck-redesign/deck-slot-v2.png") 18% 7% fill / 7px / 0 stretch;
+  background: #101d1e;
+  color: #e8e0d0;
+}
+
+#deckOverlay[data-view="hero"] .deck-recommendation-hero img {
+  width: 34px;
+  height: 38px;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+  object-position: center 15%;
+}
+
+#deckOverlay[data-view="hero"] .deck-recommendation-hero strong { min-width: 0; overflow: hidden; font: 600 12px/1.25 var(--ui-serif, Georgia, serif); text-overflow: ellipsis; white-space: nowrap; }
+#deckOverlay[data-view="hero"] .deck-recommendation-hero.is-selected { box-shadow: inset 0 0 16px rgba(197,152,83,.17), 0 0 8px rgba(197,152,83,.22); color: #f0d7a7; }
+
+#deckOverlay[data-view="hero"] .deck-recommendation-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: minmax(98px, 1fr);
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+  min-height: 0;
+  padding: 2px 4px 5px 2px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+#deckOverlay[data-view="hero"] .deck-recommendation-card {
+  display: grid;
+  grid-template-columns: clamp(54px, 7vw, 78px) minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  min-height: 98px;
+  box-sizing: border-box;
+  padding: 9px 12px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-image: url("shared-ui/deck-redesign/deck-slot-v2.png") 18% 7% fill / 8px / 0 stretch;
+  color: #eee4d2;
+  background: #101d1e;
+  text-align: left;
+  transition: filter .16s ease, transform .16s ease;
+}
+
+#deckOverlay[data-view="hero"] .deck-recommendation-card .recommendation-hero-portrait {
+  display: block;
+  width: 100%;
+  height: clamp(66px, 9vh, 82px);
+  max-width: 78px;
+  max-height: 82px;
+  object-fit: cover;
+  object-position: center 15%;
+  border: 1px solid rgba(190,151,91,.68);
+  background: #0b1516;
+}
+
+#deckOverlay[data-view="hero"] .recommendation-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  color: #c5cec6;
+  font: 400 12px/1.4 var(--ui-sans, Arial, sans-serif);
+  overflow-wrap: anywhere;
+}
+
+#deckOverlay[data-view="hero"] .recommendation-copy .recommendation-specialty {
+  color: #83b6a9;
+  font: 600 10px/1.25 var(--ui-sans, Arial, sans-serif);
+  letter-spacing: .05em;
+}
+
+#deckOverlay[data-view="hero"] .recommendation-copy strong {
+  min-width: 0;
+  color: #f0d7a7;
+  font: 400 clamp(15px, 1.35vw, 19px)/1.25 var(--ui-serif, Georgia, serif);
+  overflow-wrap: anywhere;
+}
+
+#deckOverlay[data-view="hero"] .recommendation-copy > span:last-child {
+  display: -webkit-box;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-screen :is(button, img, p, strong, small, span) { max-width: 100%; box-sizing: border-box; }
+#deckOverlay[data-view="hero"] .deck-hero-screen img { height: auto; }
+#deckOverlay[data-view="hero"] .deck-hero-list-item img { height: 100%; }
+#deckOverlay[data-view="hero"] .deck-hero-portrait-frame img { height: 100%; }
+#deckOverlay[data-view="hero"] .deck-hero-exclusive-card img { height: 54px; }
+#deckOverlay[data-view="hero"] .deck-recommendation-hero img { height: 38px; }
+#deckOverlay[data-view="hero"] .deck-recommendation-card img { height: clamp(66px, 9vh, 82px); }
+#deckOverlay[data-view="hero"] [hidden] { display: none !important; }
+
+@media (max-width: 760px) {
+  #deckOverlay[data-view="hero"] .deck-hero-dialog { height: min(740px, calc(100dvh - 20px)); max-height: calc(100dvh - 20px); padding: 12px; }
+  #deckOverlay[data-view="hero"] .deck-hero-list { padding: 12px; }
+  #deckOverlay[data-view="hero"] .deck-hero-list-items { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: minmax(118px, 1fr); overflow-y: auto; }
+  #deckOverlay[data-view="hero"] .deck-hero-profile-main { grid-template-columns: minmax(130px, .75fr) minmax(0, 1.25fr); gap: 14px; }
+  #deckOverlay[data-view="hero"] .deck-hero-portrait-frame { width: min(100%, 240px); }
+  #deckOverlay[data-view="hero"] .deck-recommendation-list { grid-template-columns: minmax(0, 1fr); grid-auto-rows: minmax(82px, auto); }
+  #deckOverlay[data-view="hero"] .deck-recommendation-card { min-height: 82px; }
+}
+
+@media (max-width: 480px) {
+  #deckOverlay[data-view="hero"] .deck-hero-screen { padding: 6px; }
+  #deckOverlay[data-view="hero"] .deck-hero-dialog { height: calc(100dvh - 12px); max-height: calc(100dvh - 12px); padding: 9px; }
+  #deckOverlay[data-view="hero"] .deck-hero-screen-header { gap: 6px; padding-bottom: 8px; }
+  #deckOverlay[data-view="hero"] .deck-hero-screen-header > button,
+  #deckOverlay[data-view="hero"] .deck-hero-detail-heading > button,
+  #deckOverlay[data-view="hero"] .deck-recommendations-heading > button { max-width: 40%; padding: 6px 8px; font-size: 11px; }
+  #deckOverlay[data-view="hero"] .deck-hero-browser { margin-top: 8px; }
+  #deckOverlay[data-view="hero"] .deck-hero-list { padding: 10px; }
+  #deckOverlay[data-view="hero"] .deck-hero-list-items { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: minmax(118px, 1fr); }
+  #deckOverlay[data-view="hero"] .deck-hero-list-item img { width: min(100%, 92px); }
+  #deckOverlay[data-view="hero"] .deck-hero-recommended-entry { grid-template-columns: 42px minmax(0, 1fr) auto; min-height: 58px; padding: 7px 9px; }
+  #deckOverlay[data-view="hero"] .deck-hero-recommended-entry img { width: 36px; height: 36px; }
+  #deckOverlay[data-view="hero"] .deck-hero-profile { gap: 8px; }
+  #deckOverlay[data-view="hero"] .deck-hero-profile-main { grid-template-columns: minmax(90px, .65fr) minmax(0, 1.35fr); gap: 9px; }
+  #deckOverlay[data-view="hero"] .deck-hero-portrait-frame { padding: 7px; }
+  #deckOverlay[data-view="hero"] .deck-hero-identity { gap: 6px; }
+  #deckOverlay[data-view="hero"] .deck-hero-identity p { font-size: 12px; line-height: 1.45; }
+  #deckOverlay[data-view="hero"] .deck-hero-exclusive-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 104px; gap: 5px; }
+  #deckOverlay[data-view="hero"] .deck-hero-exclusive-card { grid-template-columns: 32px minmax(0, 1fr); gap: 5px; padding: 4px; }
+  #deckOverlay[data-view="hero"] .deck-hero-exclusive-card img { width: 32px; height: 42px; }
+  #deckOverlay[data-view="hero"] .deck-recommendation-hero { flex-basis: 108px; grid-template-columns: 30px minmax(0, 1fr); }
+  #deckOverlay[data-view="hero"] .deck-recommendation-hero img { width: 28px; height: 34px; }
+  #deckOverlay[data-view="hero"] .deck-recommendation-card { grid-template-columns: 54px minmax(0, 1fr); gap: 8px; padding: 7px; }
+  #deckOverlay[data-view="hero"] .recommendation-hero-portrait { height: 66px; }
+  #deckOverlay[data-view="hero"] .recommendation-copy { font-size: 11px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #deckOverlay[data-view="hero"] .deck-hero-list,
+  #deckOverlay[data-view="hero"] .deck-hero-side-panel,
+  #deckOverlay[data-view="hero"] .deck-hero-list-item,
+  #deckOverlay[data-view="hero"] .deck-recommendation-card { transition: none !important; transform: none !important; }
+}
+
+/* Redesigned hero-selection step: compact roster, readable profile, and a five-entry recommendation rail. */
+#deckOverlay[data-view="hero"] .deck-hero-screen {
+  align-items: center;
+  justify-items: center;
+  padding: clamp(10px, 2.4vw, 28px);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-dialog {
+  display: block;
+  width: min(1120px, 100%);
+  max-width: 1120px;
+  max-height: min(900px, calc(100dvh - 24px));
+  min-width: 0;
+  padding: clamp(18px, 2.8vw, 34px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  color: #f0e5d0;
+  background-color: #0d191a;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-dialog > :is(h2, h3) {
+  max-width: 100%;
+  color: #f0e1c4;
+  font-family: var(--ui-serif, Georgia, serif);
+  font-weight: 400;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-browser {
+  display: grid;
+  grid-template-columns: minmax(220px, .72fr) minmax(0, 1.65fr);
+  align-items: stretch;
+  gap: clamp(18px, 2.5vw, 32px);
+  width: 100%;
+  min-width: 0;
+  margin-top: clamp(12px, 2vh, 22px);
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list,
+#deckOverlay[data-view="hero"] .deck-hero-side-panel {
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  max-height: min(70dvh, 650px);
+  padding: 0 clamp(10px, 1.2vw, 16px) 0 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-right: 1px solid rgba(184, 145, 83, .34);
+  scrollbar-color: rgba(178, 142, 82, .65) rgba(6, 14, 15, .4);
+  scrollbar-width: thin;
+}
+
+#deckOverlay[data-view="hero"] #deckHeroRecommendedButton,
+#deckOverlay[data-view="hero"] .deck-hero-list-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  min-height: 58px;
+  box-sizing: border-box;
+  padding: 9px 12px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-image: url("shared-ui/deck-redesign/deck-slot-v2.png") 18% 7% fill / 7px / 0 stretch;
+  border-radius: 0;
+  color: #e8e0d0;
+  background: #101d1e;
+  box-shadow: inset 0 1px rgba(240, 220, 177, .08), 0 3px 8px rgba(0, 0, 0, .2);
+  text-align: left;
+  cursor: pointer;
+  transition: color .16s ease, filter .16s ease, transform .16s ease, box-shadow .16s ease;
+}
+
+#deckOverlay[data-view="hero"] #deckHeroRecommendedButton {
+  justify-content: flex-start;
+  min-height: 52px;
+  margin-bottom: 4px;
+  color: #f1d59d;
+}
+
+#deckOverlay[data-view="hero"] #deckHeroRecommendedButton::before {
+  flex: 0 0 5px;
+  align-self: stretch;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #bd9251, #6ba99a);
+  content: "";
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list-items {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list-item img,
+#deckOverlay[data-view="hero"] .deck-hero-list-item .deck-hero-list-portrait {
+  display: block;
+  width: 40px;
+  height: 44px;
+  flex: 0 0 40px;
+  object-fit: cover;
+  object-position: center 17%;
+  border: 1px solid rgba(190, 151, 91, .7);
+  background: #0a1415;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, .35);
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list-item :is(span, strong, .deck-hero-list-copy) {
+  min-width: 0;
+  overflow: hidden;
+  color: inherit;
+  font-family: var(--ui-serif, Georgia, serif);
+  font-size: clamp(14px, 1.15vw, 17px);
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list-item:hover,
+#deckOverlay[data-view="hero"] #deckHeroRecommendedButton:hover {
+  filter: brightness(1.13);
+  transform: translateX(2px);
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list-item.is-selected {
+  color: #f3dfb8;
+  background-color: #142425;
+  box-shadow: inset 3px 0 #c29858, inset 0 0 16px rgba(195, 151, 83, .1), 0 3px 9px rgba(0, 0, 0, .25);
+}
+
+#deckOverlay[data-view="hero"] :is(#deckHeroRecommendedButton, .deck-hero-list-item):focus-visible,
+#deckOverlay[data-view="hero"] .deck-recommendation-card:focus-visible,
+#deckOverlay[data-view="hero"] .deck-hero-actions button:focus-visible {
+  outline: 2px solid #e8cb92;
+  outline-offset: 3px;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-side-panel {
+  align-self: stretch;
+  min-height: 0;
+  padding: clamp(12px, 1.8vw, 22px);
+  overflow-x: hidden;
+  border-left: 1px solid rgba(127, 184, 169, .35);
+  background: linear-gradient(110deg, rgba(16, 31, 32, .42), rgba(12, 24, 25, .12));
+  animation: deck-hero-panel-enter .24s cubic-bezier(.2, .72, .25, 1) both;
+}
+
+@keyframes deck-hero-panel-enter {
+  from { opacity: .25; transform: translateX(18px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-side-panel:is([deck-hero-panel-mode="hero"], [data-deck-hero-panel-mode="hero"], .deck-hero-panel-mode-hero) {
+  animation-name: deck-hero-profile-enter;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-side-panel:is([deck-hero-panel-mode="recommendations"], [data-deck-hero-panel-mode="recommendations"], .deck-hero-panel-mode-recommendations) {
+  animation-name: deck-hero-recommendations-enter;
+}
+
+@keyframes deck-hero-profile-enter {
+  from { opacity: .25; transform: translateX(18px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes deck-hero-recommendations-enter {
+  from { opacity: .25; transform: translateX(22px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-profile {
+  display: grid;
+  grid-template-columns: minmax(150px, .68fr) minmax(0, 1.32fr);
+  align-items: start;
+  gap: clamp(14px, 2vw, 26px);
+  width: 100%;
+  min-width: 0;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-profile > :is(img, .deck-hero-portrait-frame) {
+  width: 100%;
+  max-width: 270px;
+  height: clamp(220px, 43dvh, 390px);
+  min-width: 0;
+  justify-self: center;
+  box-sizing: border-box;
+  object-fit: cover;
+  object-position: center 17%;
+  border: 1px solid transparent;
+  border-image: url("shared-ui/deck-redesign/hero-portrait-frame-v2.png") 12% 8% fill / 10px / 0 stretch;
+  background: #0b1516;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .35), 0 0 14px rgba(190, 151, 91, .08);
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-profile > .deck-hero-portrait-frame {
+  padding: 14px;
+  overflow: hidden;
+  border: 0;
+  border-image: none;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-profile > .deck-hero-portrait-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 17%;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-profile :is(.deck-hero-identity, .deck-hero-profile-identity, .deck-hero-profile-copy) {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+  color: #e6e2d8;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-profile :is(h3, h4, .deck-hero-name, .deck-hero-identity strong) {
+  margin: 0;
+  color: #f0d7a7;
+  font-family: var(--ui-serif, Georgia, serif);
+  font-size: clamp(22px, 2vw, 30px);
+  font-weight: 400;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-profile :is(p, .deck-hero-ability) {
+  margin: 0;
+  color: #d7ddd5;
+  font-size: clamp(14px, 1.15vw, 16px);
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-profile :is(.deck-hero-exclusive-cards, .deck-hero-card-chips) {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  min-width: 0;
+  margin-top: 4px;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-profile :is(.deck-hero-exclusive-cards, .deck-hero-card-chips) > * {
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 5px 9px;
+  border: 1px solid rgba(127, 184, 169, .3);
+  color: #b9d0c5;
+  background: rgba(7, 17, 18, .42);
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-actions {
+  grid-column: 1 / -1;
+  width: 100%;
+  margin-top: 8px;
+}
+
+#deckOverlay[data-view="hero"] .deck-recommendation-list {
+  display: grid;
+  grid-template-rows: repeat(5, minmax(62px, auto));
+  gap: 9px;
+  width: 100%;
+  min-width: 0;
+}
+
+#deckOverlay[data-view="hero"] .deck-recommendation-card {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  min-height: 62px;
+  box-sizing: border-box;
+  padding: 7px 11px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-image: url("shared-ui/deck-redesign/deck-slot-v2.png") 18% 7% fill / 7px / 0 stretch;
+  border-radius: 0;
+  color: #eee4d2;
+  background: #101d1e;
+  box-shadow: inset 0 1px rgba(240, 220, 177, .07), 0 3px 8px rgba(0, 0, 0, .18);
+  text-align: left;
+  cursor: pointer;
+  transition: filter .16s ease, transform .16s ease, box-shadow .16s ease;
+}
+
+#deckOverlay[data-view="hero"] .deck-recommendation-card:hover {
+  filter: brightness(1.12);
+  transform: translateX(2px);
+}
+
+#deckOverlay[data-view="hero"] .recommendation-hero-portrait {
+  display: block;
+  width: 52px;
+  height: 48px;
+  min-width: 0;
+  object-fit: cover;
+  object-position: center 17%;
+  border: 1px solid rgba(190, 151, 91, .68);
+  background: #0b1516;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, .3);
+}
+
+#deckOverlay[data-view="hero"] .recommendation-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  color: #bfcac1;
+  font-size: 13px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+#deckOverlay[data-view="hero"] .recommendation-copy :is(strong, b, .recommendation-name) {
+  color: #f0d7a7;
+  font-family: var(--ui-serif, Georgia, serif);
+  font-size: clamp(15px, 1.25vw, 18px);
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+@media (max-width: 760px) {
+  #deckOverlay[data-view="hero"] .deck-hero-dialog {
+    width: min(620px, 100%);
+    max-height: calc(100dvh - 16px);
+    padding: 20px clamp(12px, 3vw, 20px);
+  }
+
+  #deckOverlay[data-view="hero"] .deck-hero-browser {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  #deckOverlay[data-view="hero"] .deck-hero-list {
+    max-height: min(24dvh, 190px);
+    padding: 0 0 9px;
+    border-right: 0;
+    border-bottom: 1px solid rgba(184, 145, 83, .34);
+  }
+
+  #deckOverlay[data-view="hero"] .deck-hero-list-items {
+    grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  }
+
+  #deckOverlay[data-view="hero"] .deck-hero-side-panel {
+    padding: 8px 0 0;
+    border-left: 0;
+    background: none;
+  }
+}
+
+@media (max-width: 480px) {
+  #deckOverlay[data-view="hero"] .deck-hero-profile {
+    grid-template-columns: minmax(88px, .6fr) minmax(0, 1.4fr);
+    gap: 11px;
+  }
+
+  #deckOverlay[data-view="hero"] .deck-hero-profile > :is(img, .deck-hero-portrait-frame) {
+    height: clamp(150px, 29dvh, 220px);
+  }
+
+  #deckOverlay[data-view="hero"] .deck-hero-profile :is(p, .deck-hero-ability) {
+    font-size: 13px;
+  }
+
+  #deckOverlay[data-view="hero"] .deck-recommendation-list {
+    grid-template-rows: none;
+    grid-auto-rows: minmax(58px, auto);
+    gap: 7px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #deckOverlay[data-view="hero"] .deck-hero-side-panel,
+  #deckOverlay[data-view="hero"] #deckHeroRecommendedButton,
+  #deckOverlay[data-view="hero"] .deck-hero-list-item,
+  #deckOverlay[data-view="hero"] .deck-recommendation-card {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* Final bounds for every hero/recommendation slide. Keep this after legacy
+   responsive rules: those rules used to turn the viewport back into an
+   unconstrained grid, letting textured panels and their contents escape. */
+#deckOverlay[data-view="hero"] .deck-hero-screen {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding: clamp(8px, 2vw, 24px);
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(1120px, 100%);
+  height: min(820px, calc(100dvh - 32px));
+  max-width: 100%;
+  max-height: calc(100dvh - 32px);
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  contain: layout paint;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-browser {
+  position: relative;
+  display: block;
+  flex: 1 1 auto;
+  width: 100%;
+  height: 0;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 0;
+  margin-top: clamp(8px, 1.5vh, 14px);
+  overflow: clip;
+  contain: layout paint;
+  clip-path: inset(0);
+  isolation: isolate;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list,
+#deckOverlay[data-view="hero"] .deck-hero-side-panel {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  align-content: stretch;
+  padding: clamp(12px, 2vw, 24px);
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-side-panel {
+  display: block;
+  padding: clamp(12px, 2vw, 24px);
+  overflow: hidden;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-profile {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+#deckOverlay[data-view="hero"] .deck-recommendations-panel {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-browser :is(img, button, p, span, strong, small) {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+@supports not (overflow: clip) {
+  #deckOverlay[data-view="hero"] .deck-hero-browser { overflow: hidden; }
+}
+
+@media (max-width: 760px) {
+  #deckOverlay[data-view="hero"] .deck-hero-screen { padding: 6px; }
+  #deckOverlay[data-view="hero"] .deck-hero-dialog {
+    width: min(700px, 100%);
+    height: calc(100dvh - 16px);
+    max-height: calc(100dvh - 16px);
+    padding: clamp(10px, 2.5vw, 18px);
+  }
+  #deckOverlay[data-view="hero"] .deck-hero-browser { margin-top: 8px; }
+  #deckOverlay[data-view="hero"] .deck-hero-list-items {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-rows: minmax(0, 1fr);
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  #deckOverlay[data-view="hero"] .deck-hero-profile-main { grid-template-columns: minmax(100px, .65fr) minmax(0, 1.35fr); }
+}
+
+@media (max-width: 480px) {
+  #deckOverlay[data-view="hero"] .deck-hero-dialog {
+    width: 100%;
+    height: calc(100dvh - 12px);
+    max-height: calc(100dvh - 12px);
+    padding: 8px;
+  }
+  #deckOverlay[data-view="hero"] .deck-hero-screen-header { gap: 6px; }
+  #deckOverlay[data-view="hero"] .deck-hero-list { padding: 9px; }
+  #deckOverlay[data-view="hero"] .deck-hero-list-items { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #deckOverlay[data-view="hero"] .deck-hero-profile { gap: 8px; }
+  #deckOverlay[data-view="hero"] .deck-hero-profile-main { grid-template-columns: minmax(82px, .58fr) minmax(0, 1.42fr); gap: 8px; }
+  #deckOverlay[data-view="hero"] .deck-hero-profile > :is(img, .deck-hero-portrait-frame) { height: clamp(140px, 26dvh, 210px); }
+  #deckOverlay[data-view="hero"] .deck-hero-exclusive-cards { max-height: 96px; overflow-y: auto; }
+  #deckOverlay[data-view="hero"] .deck-recommendation-list { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-auto-rows: minmax(58px, auto); overflow-y: auto; }
+}
+
+/* Portrait-led hero cards and legible recommendation controls. */
+#deckOverlay[data-view="hero"] .deck-hero-list-items {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-auto-rows: minmax(0, 1fr);
+  gap: clamp(8px, 1.2vw, 14px);
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list-item {
+  position: relative;
+  display: block;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-image: none;
+  background: #101d1e;
+  isolation: isolate;
+  text-align: center;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list-item::before {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  box-sizing: border-box;
+  border: 12px solid transparent;
+  border-image: url("shared-ui/deck-redesign/hero-portrait-frame-v2.png") 7% 8% / 12px / 0 stretch;
+  content: "";
+  pointer-events: none;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list-item img,
+#deckOverlay[data-view="hero"] .deck-hero-list-item .deck-hero-list-portrait {
+  position: absolute;
+  inset: 5.5% 6% 4.5%;
+  width: 88%;
+  height: 90%;
+  max-width: none;
+  max-height: none;
+  min-height: 0;
+  border: 0;
+  object-fit: cover;
+  object-position: center 18%;
+  box-shadow: none;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list-item::after {
+  position: absolute;
+  z-index: 1;
+  inset: 35% 6% 4.5%;
+  background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, .48) 48%, rgba(0, 0, 0, .9));
+  content: "";
+  pointer-events: none;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list-item strong {
+  position: absolute;
+  z-index: 2;
+  right: 16px;
+  bottom: 8%;
+  left: 16px;
+  width: auto;
+  max-width: calc(100% - 32px);
+  color: #f0e1c4;
+  font: 400 clamp(16px, 1.55vw, 22px)/1.25 var(--ui-serif, Georgia, serif);
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  text-overflow: ellipsis;
+  text-shadow: 0 2px 5px #000;
+  white-space: normal;
+}
+
+#deckOverlay[data-view="hero"] .deck-recommendation-hero-picker {
+  gap: 10px;
+  padding: 3px 3px 9px;
+}
+
+#deckOverlay[data-view="hero"] .deck-recommendation-hero {
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 9px;
+  flex: 1 0 154px;
+  min-height: 70px;
+  padding: 7px 9px;
+  text-align: left;
+}
+
+#deckOverlay[data-view="hero"] .deck-recommendation-hero img {
+  width: 52px;
+  height: 56px;
+  max-height: none;
+  object-fit: cover;
+  object-position: center 18%;
+}
+
+#deckOverlay[data-view="hero"] .deck-recommendation-hero strong {
+  display: -webkit-box;
+  font-size: 15px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  text-overflow: ellipsis;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+#deckOverlay[data-view="hero"] .deck-recommendation-list {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: none;
+  grid-auto-rows: minmax(112px, auto);
+  align-content: start;
+  gap: 10px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+#deckOverlay[data-view="hero"] .deck-recommendation-card {
+  grid-template-columns: 80px minmax(0, 1fr);
+  gap: 12px;
+  min-height: 112px;
+  padding: 10px 13px;
+}
+
+#deckOverlay[data-view="hero"] .recommendation-hero-portrait {
+  width: 80px;
+  height: 88px;
+  max-width: 100%;
+  max-height: none;
+  object-fit: cover;
+  object-position: center 18%;
+}
+
+#deckOverlay[data-view="hero"] .recommendation-copy {
+  min-width: 0;
+  max-height: none;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+#deckOverlay[data-view="hero"] .recommendation-copy :is(strong, b, .recommendation-name) {
+  font-size: clamp(17px, 1.5vw, 20px);
+}
+
+#deckOverlay[data-view="hero"] :is(.deck-recommendation-hero, .deck-recommendation-card):focus-visible {
+  outline: 2px solid #e8cb92;
+  outline-offset: 2px;
+}
+
+@media (max-width: 760px) {
+  #deckOverlay[data-view="hero"] .deck-hero-list-items {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-rows: minmax(250px, 1fr);
+    overflow-y: auto;
+  }
+  #deckOverlay[data-view="hero"] .deck-recommendation-hero { flex: 0 0 158px; }
+  #deckOverlay[data-view="hero"] .deck-recommendation-list { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 480px) {
+  #deckOverlay[data-view="hero"] .deck-hero-list-items {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: minmax(230px, 1fr);
+  }
+  #deckOverlay[data-view="hero"] .deck-hero-list-item strong {
+    right: 14px;
+    bottom: 8%;
+    left: 14px;
+    max-width: calc(100% - 28px);
+    font-size: clamp(15px, 4vw, 18px);
+  }
+  #deckOverlay[data-view="hero"] .deck-recommendation-hero {
+    grid-template-columns: 46px minmax(0, 1fr);
+    flex-basis: 142px;
+    min-height: 64px;
+    padding: 6px 8px;
+  }
+  #deckOverlay[data-view="hero"] .deck-recommendation-hero img { width: 46px; height: 50px; }
+  #deckOverlay[data-view="hero"] .deck-recommendation-card {
+    grid-template-columns: 66px minmax(0, 1fr);
+    gap: 9px;
+    min-height: 104px;
+    padding: 8px 10px;
+  }
+  #deckOverlay[data-view="hero"] .deck-recommendation-card .recommendation-hero-portrait { width: 66px; height: 82px; }
+  #deckOverlay[data-view="hero"] .recommendation-copy { font-size: 12px; }
+}
+
+/* Final hero-detail layout: keep the portrait, copy, exclusive cards and action in one reading column. */
+#deckOverlay[data-view="hero"] .deck-hero-profile {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  align-items: stretch;
+  gap: clamp(10px, 1.45dvh, 16px);
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-profile > * { grid-column: 1 / -1; min-width: 0; }
+
+#deckOverlay[data-view="hero"] .deck-hero-detail-heading {
+  min-height: 38px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid rgba(183, 145, 91, .34);
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-profile-main {
+  grid-template-columns: minmax(220px, .92fr) minmax(0, 1.08fr);
+  align-items: center;
+  gap: clamp(18px, 3.2vw, 42px);
+  width: 100%;
+  min-height: clamp(280px, 43dvh, 460px);
+  overflow: hidden;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-portrait-frame {
+  width: min(100%, 390px);
+  height: clamp(280px, 43dvh, 460px);
+  max-height: 100%;
+  padding: 12px;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-portrait-frame img {
+  object-fit: cover;
+  object-position: center 26%;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-identity {
+  align-content: center;
+  justify-items: start;
+  width: 100%;
+  max-width: 58ch;
+  margin: 0;
+  text-align: left;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-identity strong {
+  font-size: clamp(28px, 3.25vw, 44px);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-identity p {
+  max-width: 48ch;
+  font-size: clamp(15px, 1.45vw, 18px);
+  line-height: 1.7;
+  word-break: keep-all;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-exclusive-cards {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+  align-content: start;
+  max-height: min(20dvh, 168px);
+  padding: 2px;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-exclusive-label { margin-bottom: 2px; }
+
+#deckOverlay[data-view="hero"] .deck-hero-actions {
+  justify-content: flex-end;
+  width: 100%;
+  margin-top: 0;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-actions button {
+  width: min(390px, 100%);
+  min-height: 52px;
+  white-space: normal;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list-item[data-hero-id="trap-master"] img { object-position: 70% 25%; }
+#deckOverlay[data-view="hero"] .deck-hero-list-item[data-hero-id="hunter"] img { object-position: 59% 28%; }
+#deckOverlay[data-view="hero"] .deck-hero-list-item[data-hero-id="big-boy"] img { object-position: 53% 26%; }
+#deckOverlay[data-view="hero"] .deck-hero-list-item[data-hero-id="joker"] img { object-position: 53% 24%; }
+#deckOverlay[data-view="hero"] .deck-hero-list-item[data-hero-id="refiner"] img { object-position: 57% 23%; }
+#deckOverlay[data-view="hero"] .deck-hero-portrait-frame img[data-hero-id="trap-master"] { object-position: 70% 25%; }
+#deckOverlay[data-view="hero"] .deck-hero-portrait-frame img[data-hero-id="hunter"] { object-position: 59% 28%; }
+#deckOverlay[data-view="hero"] .deck-hero-portrait-frame img[data-hero-id="big-boy"] { object-position: 53% 26%; }
+#deckOverlay[data-view="hero"] .deck-hero-portrait-frame img[data-hero-id="joker"] { object-position: 53% 24%; }
+#deckOverlay[data-view="hero"] .deck-hero-portrait-frame img[data-hero-id="refiner"] { object-position: 57% 23%; }
+
+@media (max-width: 760px) {
+  #deckOverlay[data-view="hero"] .deck-hero-profile {
+    height: auto;
+    max-height: 100%;
+    grid-template-rows: auto auto auto auto;
+  }
+  #deckOverlay[data-view="hero"] .deck-hero-profile-main {
+    grid-template-columns: minmax(150px, .78fr) minmax(0, 1.22fr);
+    min-height: clamp(230px, 37dvh, 340px);
+    gap: 16px;
+  }
+  #deckOverlay[data-view="hero"] .deck-hero-portrait-frame {
+    width: min(100%, 300px);
+    height: clamp(230px, 37dvh, 340px);
+    padding: 9px;
+  }
+  #deckOverlay[data-view="hero"] .deck-hero-exclusive-cards { max-height: 132px; }
+}
+
+@media (max-width: 480px) {
+  #deckOverlay[data-view="hero"] .deck-hero-profile-main {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    gap: 13px;
+    min-height: 0;
+    overflow: visible;
+  }
+  #deckOverlay[data-view="hero"] .deck-hero-portrait-frame {
+    width: min(72vw, 250px);
+    height: clamp(220px, 32dvh, 290px);
+  }
+  #deckOverlay[data-view="hero"] .deck-hero-identity {
+    justify-items: center;
+    text-align: center;
+  }
+  #deckOverlay[data-view="hero"] .deck-hero-identity p { word-break: normal; }
+  #deckOverlay[data-view="hero"] .deck-hero-exclusive-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-height: 150px;
+  }
+  #deckOverlay[data-view="hero"] .deck-hero-actions button { width: 100%; }
+}
+
+/* Safe content area for the ornamental frame assets.
+   The bitmap bounds include corner metalwork; the controls must stay inside the clear center. */
+#deckOverlay[data-view="hero"] .deck-hero-list {
+  --hero-frame-safe-x: clamp(38px, 5.8vw, 74px);
+  --hero-frame-safe-top: clamp(46px, 4.8vw, 62px);
+  --hero-frame-safe-bottom: clamp(46px, 5vw, 64px);
+  padding: var(--hero-frame-safe-top) var(--hero-frame-safe-x) var(--hero-frame-safe-bottom);
+  gap: clamp(10px, 1.35vh, 16px);
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-hub-heading {
+  width: min(100%, 54rem);
+  justify-self: center;
+  padding-inline: clamp(8px, 1.2vw, 16px);
+  box-sizing: border-box;
+  text-align: center;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list-items {
+  min-width: 0;
+  padding-inline: 2px;
+  box-sizing: border-box;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list-item {
+  isolation: isolate;
+}
+
+/* Let the artwork bleed beneath the transparent aperture; the frame stays on top and masks its edge. */
+#deckOverlay[data-view="hero"] .deck-hero-list-item img,
+#deckOverlay[data-view="hero"] .deck-hero-list-item .deck-hero-list-portrait {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: scale(1.055);
+  transform-origin: center;
+  z-index: 0;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list-item::after {
+  /* The hero cards grew, so the portrait fade must reach the frame's new lower safe edge. */
+  inset: 34% 6% 0;
+  z-index: 1;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list-item strong {
+  right: 10%;
+  bottom: 6.8%;
+  left: 10%;
+  max-width: 80%;
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-recommended-entry {
+  width: 84%;
+  justify-self: center;
+  min-height: clamp(62px, 7.4vh, 72px);
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-side-panel {
+  padding: clamp(34px, 4.4vw, 56px) clamp(32px, 4.6vw, 58px) clamp(36px, 4.8vw, 62px);
+}
+
+@media (max-width: 760px) {
+  #deckOverlay[data-view="hero"] .deck-hero-list {
+    --hero-frame-safe-x: 28px;
+    --hero-frame-safe-top: 38px;
+    --hero-frame-safe-bottom: 28px;
+  }
+  #deckOverlay[data-view="hero"] .deck-hero-recommended-entry { width: 90%; }
+  #deckOverlay[data-view="hero"] .deck-hero-side-panel { padding: 36px 28px 32px; }
+}
+
+@media (max-width: 480px) {
+  #deckOverlay[data-view="hero"] .deck-hero-list {
+    --hero-frame-safe-x: 18px;
+    --hero-frame-safe-top: 32px;
+    --hero-frame-safe-bottom: 22px;
+  }
+  #deckOverlay[data-view="hero"] .deck-hero-list-item strong {
+    right: 9%;
+    bottom: 6.5%;
+    left: 9%;
+    max-width: 82%;
+  }
+  #deckOverlay[data-view="hero"] .deck-hero-recommended-entry { width: 86%; }
+  #deckOverlay[data-view="hero"] .deck-hero-side-panel { padding: 30px 18px 26px; }
+}

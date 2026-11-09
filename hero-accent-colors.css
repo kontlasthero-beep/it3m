@@ -1,0 +1,231 @@
+/*
+ * Hero HUD material variants. The broad panel color and the supplied raster
+ * frame carry identity; the original illustrations stay untouched.
+ */
+[data-hero-id="big-boy"] {
+  --hero-accent: #aaa49b;
+  --hero-accent-rgb: 170, 164, 155;
+  --hero-deep: #17191c;
+  --hero-surface: #292b2e;
+  --hero-mid: #37393b;
+  --hero-ink: #e2ddd4;
+  --hero-slot-frame: url("shared-ui/hero-hud/slot-big-boy.png");
+  --hero-portrait-frame: url("shared-ui/hero-hud/portrait-frame-big-boy.png");
+}
+
+[data-hero-id="trap-master"] {
+  --hero-accent: #b69acb;
+  --hero-accent-rgb: 182, 154, 203;
+  --hero-deep: #211a29;
+  --hero-surface: #33283e;
+  --hero-mid: #42334f;
+  --hero-ink: #eee4f4;
+  --hero-slot-frame: url("shared-ui/hero-hud/slot-trap-master.png");
+  --hero-portrait-frame: url("shared-ui/hero-hud/portrait-frame-trap-master.png");
+}
+
+[data-hero-id="hunter"] {
+  --hero-accent: #c49567;
+  --hero-accent-rgb: 196, 149, 103;
+  --hero-deep: #291e17;
+  --hero-surface: #3a2a1e;
+  --hero-mid: #4b3524;
+  --hero-ink: #f0e1ca;
+  --hero-slot-frame: url("shared-ui/hero-hud/slot-hunter.png");
+  --hero-portrait-frame: url("shared-ui/hero-hud/portrait-frame-hunter.png");
+}
+
+[data-hero-id="joker"] {
+  --hero-accent: #9ab47b;
+  --hero-accent-rgb: 154, 180, 123;
+  --hero-deep: #19251a;
+  --hero-surface: #293929;
+  --hero-mid: #364a34;
+  --hero-ink: #e4ecd9;
+  --hero-slot-frame: url("shared-ui/hero-hud/slot-joker.png");
+  --hero-portrait-frame: url("shared-ui/hero-hud/portrait-frame-joker.png");
+}
+
+[data-hero-id="refiner"] {
+  --hero-accent: #d6b24f;
+  --hero-accent-rgb: 214, 178, 79;
+  --hero-deep: #28220f;
+  --hero-surface: #3d3319;
+  --hero-mid: #55461f;
+  --hero-ink: #f2e8c8;
+  --hero-slot-frame: url("shared-ui/hero-hud/slot-refiner.png");
+  --hero-portrait-frame: url("shared-ui/hero-hud/portrait-frame-refiner.png");
+}
+
+/* Hero-only cards: color the card plate and material frame, not the artwork. */
+body .card-face[data-hero-id] {
+  border: 1px solid transparent !important;
+  border-image: var(--hero-portrait-frame) 12% 8% fill / 8px / 0 stretch !important;
+  background: linear-gradient(145deg, var(--hero-mid), var(--hero-deep) 72%) !important;
+  box-shadow: inset 0 0 0 1px rgba(var(--hero-accent-rgb), .34), 0 4px 12px #0008 !important;
+  outline: 0;
+}
+
+body .card-face[data-hero-id] .card-name {
+  border-top: 1px solid rgba(var(--hero-accent-rgb), .72) !important;
+  color: var(--hero-ink) !important;
+  background: linear-gradient(180deg, var(--hero-mid), var(--hero-deep)) !important;
+  text-shadow: 0 1px 2px #000b;
+}
+
+/* Catalog entries and exclusive card previews use the hero's full material. */
+body #catalogOverlay .catalog-entry[data-hero-id] {
+  border: 1px solid transparent !important;
+  border-image: var(--hero-slot-frame) 18% 7% fill / 10px / 0 stretch !important;
+  background: linear-gradient(120deg, var(--hero-surface), var(--hero-deep) 78%) !important;
+  box-shadow: inset 0 0 24px rgba(var(--hero-accent-rgb), .13), 0 6px 15px #0006 !important;
+}
+
+body #catalogOverlay .catalog-entry[data-hero-id] h3 {
+  color: var(--hero-ink) !important;
+}
+
+body #catalogOverlay .catalog-entry[data-hero-id] :is(.catalog-portrait, .catalog-card-art) {
+  border: 3px solid transparent !important;
+  border-image: var(--hero-portrait-frame) 12% 8% fill / 5px / 0 stretch !important;
+  background-color: var(--hero-deep) !important;
+}
+
+/* Match hero picker: the entire selectable tile receives the hero treatment. */
+body #heroSelectOverlay .hero-option[data-hero-id] {
+  border: 2px solid rgba(var(--hero-accent-rgb), .68) !important;
+  border-image: none !important;
+  color: var(--hero-ink) !important;
+  background: linear-gradient(145deg, rgba(var(--hero-accent-rgb), .22), var(--hero-surface) 34%, var(--hero-deep) 88%) !important;
+  box-shadow: inset 0 0 26px rgba(var(--hero-accent-rgb), .16), 0 5px 14px #0008 !important;
+}
+
+body #heroSelectOverlay .hero-option[data-hero-id] .hero-portrait {
+  border: 0 !important;
+  border-image: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+body #heroSelectOverlay .hero-option[data-hero-id] .hero-option-name {
+  color: var(--hero-ink) !important;
+  text-shadow: 0 1px 3px #000c;
+}
+
+body #heroSelectOverlay .hero-option[data-hero-id].selected {
+  border-color: var(--hero-accent) !important;
+  background: linear-gradient(145deg, rgba(var(--hero-accent-rgb), .34), var(--hero-mid) 40%, var(--hero-deep) 86%) !important;
+  box-shadow: inset 0 0 34px rgba(var(--hero-accent-rgb), .27), 0 7px 18px #0009 !important;
+  animation: none !important;
+}
+
+/* In-match hero badges, hand plates, and score plates follow the assigned hero. */
+body.game-active .player-panel[data-hero-id],
+body.game-active .hand-panel[data-hero-id] {
+  border-color: rgba(var(--hero-accent-rgb), .74) !important;
+  background: linear-gradient(135deg, var(--hero-surface), var(--hero-deep) 82%) !important;
+  box-shadow: inset 0 0 22px rgba(var(--hero-accent-rgb), .12), 0 8px 20px #0007 !important;
+}
+
+body.game-active .hand-panel[data-hero-id].current {
+  border-color: var(--hero-accent) !important;
+  box-shadow: inset 0 0 28px rgba(var(--hero-accent-rgb), .23), 0 0 16px rgba(var(--hero-accent-rgb), .2), 0 8px 20px #0007 !important;
+}
+
+body.game-active .hand-panel[data-hero-id] .hand-hero {
+  color: var(--hero-accent) !important;
+}
+
+body.game-active .hero-badge[data-hero-id] {
+  border-color: rgba(var(--hero-accent-rgb), .76) !important;
+  color: var(--hero-ink) !important;
+  background: linear-gradient(120deg, var(--hero-mid), var(--hero-deep)) !important;
+}
+
+/* Deck hero roster, selected profile, exclusive cards, and recommendation set. */
+#deckOverlay[data-view="hero"] .deck-hero-list-item[data-hero-id],
+#deckOverlay[data-view="hero"] .deck-recommendation-hero[data-hero-id],
+#deckOverlay[data-view="hero"] .deck-recommendation-card[data-hero-id],
+#deckOverlay[data-view="hero"] .deck-hero-exclusive-card[data-hero-id] {
+  border: 1px solid rgba(var(--hero-accent-rgb), .58) !important;
+  border-image: none !important;
+  color: var(--hero-ink) !important;
+  background: linear-gradient(135deg, var(--hero-surface), var(--hero-deep) 78%) !important;
+  box-shadow: inset 0 0 20px rgba(var(--hero-accent-rgb), .12), 0 3px 9px #0006 !important;
+}
+
+/* The tall hero cards used to stack a stretched horizontal slot frame, the
+   generic portrait frame, and another hero frame on the image itself. Keep a
+   single portrait-shaped hero frame; use the card surface for selection color. */
+#deckOverlay[data-view="hero"] .deck-hero-list-item[data-hero-id] {
+  border: 0 !important;
+  border-image: none !important;
+  box-shadow: inset 0 0 22px rgba(var(--hero-accent-rgb), .13), 0 5px 14px #0008 !important;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list-item[data-hero-id]::before {
+  border-image: var(--hero-portrait-frame) 7% 8% / 12px / 0 stretch !important;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list-item[data-hero-id] img,
+#deckOverlay[data-view="hero"] .deck-hero-list-item[data-hero-id] .deck-hero-list-portrait {
+  border: 0 !important;
+  border-image: none !important;
+  box-shadow: none !important;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-list-item[data-hero-id].is-selected,
+#deckOverlay[data-view="hero"] .deck-recommendation-hero[data-hero-id].is-selected {
+  background: linear-gradient(135deg, var(--hero-mid), var(--hero-deep) 76%) !important;
+  box-shadow: inset 0 0 34px rgba(var(--hero-accent-rgb), .3), 0 6px 16px #0009 !important;
+}
+
+#deckOverlay[data-view="hero"] .deck-recommendation-hero[data-hero-id] img,
+#deckOverlay[data-view="hero"] .deck-recommendation-card[data-hero-id] .recommendation-hero-portrait {
+  border: 3px solid transparent !important;
+  border-image: var(--hero-portrait-frame) 12% 8% fill / 5px / 0 stretch !important;
+  background-color: var(--hero-deep) !important;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-profile[data-hero-id] {
+  background: linear-gradient(115deg, rgba(var(--hero-accent-rgb), .13), transparent 68%);
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-profile[data-hero-id] .deck-hero-portrait-frame {
+  border: 7px solid transparent !important;
+  border-image: var(--hero-portrait-frame) 12% 8% fill / 10px / 0 stretch !important;
+  background-color: var(--hero-deep) !important;
+  box-shadow: 0 8px 22px #0008, inset 0 0 18px rgba(var(--hero-accent-rgb), .18) !important;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-profile[data-hero-id] :is(.deck-hero-identity, .deck-hero-profile-copy) strong,
+#deckOverlay[data-view="hero"] .deck-hero-profile[data-hero-id] .deck-hero-exclusive-label,
+#deckOverlay[data-view="hero"] .deck-recommendation-panel[data-hero-id] .deck-recommendations-heading {
+  color: var(--hero-accent) !important;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-profile[data-hero-id] .deck-hero-exclusive-card[data-hero-id] {
+  background: linear-gradient(130deg, var(--hero-mid), var(--hero-deep)) !important;
+}
+
+#deckOverlay[data-view="hero"] .deck-hero-side-panel[data-hero-id] {
+  background: linear-gradient(110deg, rgba(var(--hero-accent-rgb), .16), rgba(var(--hero-accent-rgb), .035) 60%, transparent) !important;
+}
+
+#deckOverlay[data-view="hero"] .deck-recommendations-panel[data-hero-id] {
+  background: linear-gradient(120deg, rgba(var(--hero-accent-rgb), .13), transparent 70%);
+}
+
+#deckOverlay[data-view="hero"] .deck-recommendation-card[data-hero-id] .recommendation-copy :is(strong, b, .recommendation-name) {
+  color: var(--hero-ink) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body #heroSelectOverlay .hero-option[data-hero-id],
+  #deckOverlay[data-view="hero"] .deck-hero-list-item[data-hero-id],
+  #deckOverlay[data-view="hero"] .deck-recommendation-card[data-hero-id] {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+  }
+}

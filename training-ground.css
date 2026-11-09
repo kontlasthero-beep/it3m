@@ -1,0 +1,451 @@
+/* Second Chance training ground. Loaded by the training feature when its markup is present. */
+#trainingSetupOverlay,
+#trainingCardOverlay,
+#trainingToolbar {
+  --training-ink: #f0e1c4;
+  --training-muted: #b8c4ba;
+  --training-copper: #b68054;
+  --training-copper-light: #d5a16d;
+  --training-hairline: rgba(201, 151, 94, .34);
+  color: var(--training-ink);
+  font-family: "SecondChance Plex", "Malgun Gothic", "Segoe UI", sans-serif;
+  line-height: 1.45;
+}
+
+#trainingSetupOverlay *,
+#trainingCardOverlay *,
+#trainingToolbar * { box-sizing: border-box; min-width: 0; }
+
+#trainingSetupOverlay[hidden],
+#trainingCardOverlay[hidden],
+#trainingToolbar[hidden],
+#trainingSetupOverlay [hidden],
+#trainingCardOverlay [hidden],
+#trainingToolbar [hidden] { display: none !important; }
+
+#trainingSetupOverlay,
+#trainingCardOverlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: rgba(4, 11, 12, .82);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+#trainingSetupOverlay { z-index: 80; }
+#trainingCardOverlay { z-index: 85; }
+
+#trainingSetupOverlay .training-setup-dialog,
+#trainingCardOverlay .training-card-dialog,
+#trainingToolbar .training-panel {
+  position: relative;
+  isolation: isolate;
+  border: 1px solid var(--training-copper);
+  /* Slice the approved deck window so the worn corners retain their shape. */
+  border-image: url("shared-ui/deck-redesign/deck-window-v2.png") 100 100 100 100 fill / 12px / 0 stretch;
+  border-radius: 0;
+  background:
+    linear-gradient(135deg, rgba(234, 191, 130, .08), transparent 23%, transparent 76%, rgba(89, 54, 31, .14)),
+    linear-gradient(155deg, #183334, #102324 53%, #0d1c1d);
+  box-shadow: 0 20px 58px rgba(0, 0, 0, .65), inset 0 1px 0 rgba(240, 206, 157, .16), inset 0 0 24px rgba(0, 0, 0, .34);
+  clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px);
+}
+
+#trainingSetupOverlay .training-setup-dialog,
+#trainingCardOverlay .training-card-dialog {
+  width: min(100%, 850px);
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+  margin: auto 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: clamp(22px, 3vw, 36px);
+  text-align: left;
+}
+
+#trainingSetupOverlay .training-setup-dialog { width: min(100%, 780px); }
+#trainingCardOverlay .training-card-dialog { width: min(100%, 960px); }
+
+#trainingSetupOverlay :is(.training-setup-header, .training-header),
+#trainingCardOverlay :is(.training-card-header, .training-header),
+#trainingToolbar .training-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--training-hairline);
+}
+
+#trainingSetupOverlay :is(.training-eyebrow, .training-kicker),
+#trainingCardOverlay :is(.training-eyebrow, .training-kicker),
+#trainingToolbar :is(.training-eyebrow, .training-kicker) {
+  display: block;
+  margin-bottom: 4px;
+  color: #c99b6d;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+#trainingSetupOverlay h2,
+#trainingCardOverlay h2,
+#trainingToolbar .training-panel h2 {
+  margin: 0;
+  color: var(--training-ink);
+  font-family: "SecondChance Gowun Batang", Georgia, serif;
+  font-size: clamp(22px, 3vw, 30px);
+  font-weight: 400;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+#trainingToolbar .training-panel h2 { font-size: 21px; }
+
+#trainingSetupOverlay :is(p, small),
+#trainingCardOverlay :is(p, small),
+#trainingToolbar :is(p, small) {
+  color: var(--training-muted);
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+#trainingSetupOverlay p,
+#trainingCardOverlay p,
+#trainingToolbar p { margin: 8px 0 0; }
+
+#trainingSetupOverlay button,
+#trainingCardOverlay button,
+#trainingToolbar button {
+  border: 0 solid transparent;
+  border-image: url("shared-ui/salvage-hud-v2/button.png") 18% 8% fill / 10px 14px / 0 stretch;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: inset 0 1px 0 rgba(244, 216, 168, .1), 0 3px 8px rgba(0, 0, 0, .24);
+  color: var(--training-ink);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  cursor: pointer;
+  transition: border-color .18s ease, background-color .18s ease, filter .18s ease, transform .18s ease;
+}
+
+#trainingSetupOverlay button:hover:not(:disabled),
+#trainingCardOverlay button:hover:not(:disabled),
+#trainingToolbar button:hover:not(:disabled) { border-color: var(--training-copper-light); filter: brightness(1.13); }
+
+#trainingSetupOverlay button:focus-visible,
+#trainingCardOverlay button:focus-visible,
+#trainingToolbar button:focus-visible { outline: 2px solid #f0c991; outline-offset: 3px; }
+
+#trainingSetupOverlay button:disabled,
+#trainingCardOverlay button:disabled,
+#trainingToolbar button:disabled { opacity: .48; cursor: not-allowed; }
+
+#trainingSetupOverlay :is(.primary, .training-primary),
+#trainingCardOverlay :is(.primary, .training-primary),
+#trainingToolbar :is(.primary, .training-primary) {
+  border-image-source: url("shared-ui/salvage-hud-v2/button-plum.png");
+  color: #fff0d5;
+}
+
+#trainingSetupOverlay :is(.training-setup-actions, .training-actions),
+#trainingCardOverlay :is(.training-card-actions, .training-actions) {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 22px;
+  padding-top: 17px;
+  border-top: 1px solid var(--training-hairline);
+}
+
+#trainingSetupOverlay :is(.training-setup-actions, .training-actions) button,
+#trainingCardOverlay :is(.training-card-actions, .training-actions) button { min-height: 43px; padding: 9px 18px; }
+
+/* Hero selection: a quiet portrait well inside each copper-edged slot. */
+#trainingSetupOverlay .training-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  margin-top: 20px;
+}
+
+#trainingSetupOverlay .training-hero-group { min-width: 0; }
+#trainingSetupOverlay .training-hero-group h3 {
+  margin: 0 0 9px;
+  color: #dec69e;
+  font: 400 18px/1.3 "SecondChance Gowun Batang", Georgia, serif;
+}
+#trainingSetupOverlay .training-hero-choices {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 9px;
+}
+
+#trainingSetupOverlay .training-hero-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  min-height: 152px;
+  padding: 9px 13px 17px;
+  overflow: hidden;
+  border: 0 solid transparent;
+  border-image: url("shared-ui/deck-redesign/hero-portrait-frame-v2.png") 7% 8% fill / 10px / 0 stretch;
+  background: linear-gradient(160deg, #203a39, #101f20 78%);
+  color: var(--training-ink);
+  text-align: left;
+  clip-path: polygon(9px 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 9px), calc(100% - 9px) 100%, 9px 100%, 0 calc(100% - 9px), 0 9px);
+}
+
+#trainingSetupOverlay .training-hero-card::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(188, 135, 79, .28);
+  pointer-events: none;
+}
+
+#trainingSetupOverlay .training-hero-card::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  right: 11px;
+  bottom: 12px;
+  left: 11px;
+  height: 56px;
+  background: linear-gradient(0deg, rgba(5, 11, 12, .98) 0%, rgba(5, 11, 12, .78) 54%, rgba(5, 11, 12, 0) 100%);
+  pointer-events: none;
+}
+
+#trainingSetupOverlay .training-hero-card img,
+#trainingSetupOverlay .training-hero-card .training-hero-portrait {
+  display: block;
+  flex: 0 0 auto;
+  width: 100%;
+  height: clamp(82px, 12.5vh, 116px);
+  object-fit: cover;
+  object-position: center 22%;
+  border: 1px solid rgba(166, 126, 79, .52);
+  background: #0b1819;
+}
+
+#trainingSetupOverlay .training-hero-card :is(strong, .training-hero-name) {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  margin: auto 0 0;
+  padding: 5px 10px 8px;
+  color: var(--training-ink);
+  font-family: "SecondChance Gowun Batang", Georgia, serif;
+  font-size: clamp(13px, 1.25vw, 16px);
+  font-weight: 400;
+  line-height: 1.25;
+  text-align: center;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+#trainingSetupOverlay .training-hero-card :is(small, .training-hero-description) {
+  display: block;
+  margin-top: 4px;
+  color: #b7c2b9;
+  font-size: 11px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+#trainingSetupOverlay .training-hero-card:is(.is-selected, .selected, [aria-selected="true"], [data-selected="true"]),
+#trainingSetupOverlay .training-hero-card:has(input:checked) {
+  filter: brightness(1.16);
+  box-shadow: inset 0 0 0 1px rgba(238, 189, 117, .45), 0 0 0 1px rgba(226, 168, 99, .28);
+}
+
+#trainingSetupOverlay .training-hero-card:is(.is-selected, .selected, [aria-selected="true"], [data-selected="true"])::after,
+#trainingSetupOverlay .training-hero-card:has(input:checked)::after { border-color: rgba(232, 185, 117, .65); }
+#trainingSetupOverlay .training-hero-card:focus-visible { border-color: #f0c991; box-shadow: inset 0 0 0 2px #f0c991; }
+
+/* Right-hand field tools. A collapsed toolbar leaves its edge tab available. */
+#trainingToolbar {
+  position: fixed;
+  z-index: 55;
+  top: max(76px, calc(env(safe-area-inset-top) + 12px));
+  right: max(12px, env(safe-area-inset-right));
+  width: min(340px, calc(100vw - 64px));
+  max-height: calc(100dvh - 96px);
+  overflow: visible;
+  transition: width .22s ease;
+}
+
+#trainingToolbar .training-panel {
+  width: 100%;
+  max-height: calc(100dvh - 96px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 19px 17px 17px;
+}
+
+#trainingToolbar .training-panel-toggle {
+  position: absolute;
+  z-index: 2;
+  top: 12px;
+  left: -118px;
+  display: grid;
+  place-items: center;
+  width: 118px;
+  min-width: 118px;
+  height: 48px;
+  padding: 4px;
+  border-right: 0;
+  color: #f2d9ad;
+  font-size: 13px;
+  line-height: 1;
+  text-align: center;
+}
+
+#trainingToolbar:is(.is-collapsed, .collapsed, [data-collapsed="true"]),
+#trainingToolbar:has(> .training-panel-toggle[aria-expanded="false"]) { width: 0; }
+
+#trainingToolbar:is(.is-collapsed, .collapsed, [data-collapsed="true"]) .training-panel,
+#trainingToolbar:has(> .training-panel-toggle[aria-expanded="false"]) .training-panel { display: none; }
+
+#trainingToolbar .training-panel :is(.training-panel-section, .training-tool-section) { margin-top: 17px; }
+#trainingToolbar .training-panel h3 { margin: 0 0 9px; color: #dec69e; font-size: 12px; font-weight: 600; letter-spacing: .04em; overflow-wrap: anywhere; }
+
+#trainingToolbar .training-tool-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 15px;
+}
+
+#trainingToolbar .training-tool-grid > * { min-width: 0; }
+#trainingToolbar .training-tool-grid button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 60px;
+  width: 100%;
+  padding: 8px 7px;
+  line-height: 1.28;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+#trainingToolbar .training-tool-grid button img { width: 27px; height: 27px; flex: none; object-fit: contain; }
+#trainingToolbar #trainingLaunchButton img { filter: drop-shadow(0 0 5px rgba(225, 177, 101, .38)); }
+#trainingToolbar #trainingConfigureButton { min-height: 64px; }
+#trainingToolbar .training-tool-grid button span { min-width: 0; }
+#trainingToolbar .training-tool-grid button:is(.is-active, .active, [aria-pressed="true"], [data-active="true"]) { border-image-source: url("shared-ui/salvage-hud-v2/button-plum.png"); color: #fff0cf; }
+#trainingToolbar .training-panel :is(input, select) { max-width: 100%; border: 1px solid #6e7669; border-radius: 0; background: #0d1a1b; color: var(--training-ink); font: inherit; }
+#trainingToolbar .training-panel :is(input, select):focus-visible { outline: 2px solid #f0c991; outline-offset: 2px; }
+
+/* Full card catalog. Cards stay legible before and after an artwork image loads. */
+#trainingCardOverlay .training-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 170px), 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+#trainingCardOverlay .training-card-item {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  min-height: 268px;
+  padding: 9px;
+  border: 1px solid #836342;
+  background: linear-gradient(160deg, #1b3433, #0d1b1c 80%);
+  color: var(--training-ink);
+  text-align: left;
+  clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
+}
+
+#trainingCardOverlay .training-card-item img { display: block; width: 100%; max-height: 155px; aspect-ratio: 4 / 3; object-fit: contain; border: 1px solid rgba(167, 123, 77, .38); background: #0b1718; }
+#trainingCardOverlay .training-card-item h3 { margin: 8px 0 0; font: 400 16px/1.25 "SecondChance Gowun Batang", Georgia, serif; }
+#trainingCardOverlay .training-card-item p { margin: 6px 0; font-size: 11px; line-height: 1.4; }
+#trainingCardOverlay .training-card-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 8px; }
+#trainingCardOverlay .training-card-actions button { flex: 1 1 100%; min-height: 34px; padding: 5px 7px; }
+#trainingCardOverlay .training-card-item.refined { border-color: #a78ac9; box-shadow: inset 0 0 15px rgba(148, 91, 190, .18); }
+#trainingCardOverlay .training-card-item :is(strong, .training-card-name) { display: block; margin-top: 8px; color: #f0e1c4; font-size: 13px; line-height: 1.3; overflow-wrap: anywhere; }
+#trainingCardOverlay .training-card-item :is(small, .training-card-description) { display: block; margin-top: 4px; color: #bac6bd; font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
+#trainingCardOverlay .training-card-item:is(.is-selected, .selected, [aria-selected="true"], [aria-pressed="true"], [data-selected="true"]) { border-color: #e1ac70; background: linear-gradient(160deg, #334c45, #172727); box-shadow: inset 0 0 0 1px rgba(232, 185, 117, .4); }
+#trainingCardOverlay .training-card-item:focus-visible { border-color: #f0c991; box-shadow: inset 0 0 0 2px #f0c991; }
+
+/* A DOM cursor can be positioned by left/top; the same SVG works as a native cursor. */
+.training-placement-cursor,
+#trainingPlacementCursor {
+  position: fixed;
+  z-index: 60;
+  width: 52px;
+  height: 52px;
+  transform: translate(-50%, -50%);
+  background: url("shared-ui/training-ground/target.svg") center / contain no-repeat;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .8));
+  pointer-events: none;
+}
+
+.training-placement-cursor[hidden],
+#trainingPlacementCursor[hidden] { display: none !important; }
+
+.training-placement-cursor:is(.is-invalid, [data-valid="false"]),
+#trainingPlacementCursor:is(.is-invalid, [data-valid="false"]) { filter: grayscale(1) sepia(1) saturate(4) hue-rotate(310deg) drop-shadow(0 2px 3px rgba(0, 0, 0, .8)); opacity: .7; }
+
+body:is(.training-placing, [data-training-placement="true"]) :is(canvas, .game-shell) { cursor: url("shared-ui/training-ground/target.svg") 26 26, crosshair; }
+
+@media (max-width: 620px) {
+  #trainingSetupOverlay,
+  #trainingCardOverlay { align-items: flex-start; padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); }
+  #trainingSetupOverlay .training-setup-dialog,
+  #trainingCardOverlay .training-card-dialog { max-height: calc(100dvh - 20px); padding: 22px 17px; }
+  #trainingSetupOverlay .training-hero-grid { gap: 14px; }
+  #trainingSetupOverlay .training-hero-choices { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+  #trainingSetupOverlay .training-hero-card { min-height: 140px; padding: 8px 10px 15px; }
+  #trainingSetupOverlay .training-hero-card img,
+  #trainingSetupOverlay .training-hero-card .training-hero-portrait { height: clamp(78px, 15vh, 104px); }
+  #trainingSetupOverlay .training-hero-card::before { right: 9px; bottom: 10px; left: 9px; height: 52px; }
+  #trainingCardOverlay .training-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+  #trainingToolbar { top: max(60px, calc(env(safe-area-inset-top) + 8px)); right: max(8px, env(safe-area-inset-right)); width: min(300px, calc(100vw - 56px)); max-height: calc(100dvh - 70px); }
+  #trainingToolbar .training-panel { max-height: calc(100dvh - 70px); }
+  #trainingToolbar .training-tool-grid button { min-height: 58px; padding: 7px 5px; font-size: 12px; }
+  #trainingToolbar #trainingConfigureButton { min-height: 64px; }
+}
+
+@media (max-width: 370px) {
+  #trainingSetupOverlay .training-hero-choices { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #trainingCardOverlay .training-card-grid { grid-template-columns: minmax(0, 1fr); }
+  #trainingSetupOverlay .training-hero-card { min-height: 0; }
+  #trainingSetupOverlay .training-hero-card img,
+  #trainingSetupOverlay .training-hero-card .training-hero-portrait { height: 112px; }
+  #trainingSetupOverlay .training-hero-card :is(strong, .training-hero-name) { min-height: 36px; padding: 4px 8px 7px; }
+  #trainingSetupOverlay :is(.training-setup-actions, .training-actions) button,
+  #trainingCardOverlay :is(.training-card-actions, .training-actions) button { flex: 1 1 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #trainingSetupOverlay *,
+  #trainingCardOverlay *,
+  #trainingToolbar *,
+  #trainingToolbar { animation: none !important; scroll-behavior: auto !important; transition: none !important; }
+}

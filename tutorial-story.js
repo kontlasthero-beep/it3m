@@ -4,7 +4,7 @@
   const line = (id, text) => ({ id, text, voiceSrc: null });
   root.SecondChanceTutorial = {
     speaker: '더글라스 피스트 · 빅보이',
-    portrait: '영웅 초상화/big boy.png',
+    portrait: '삽화-디테일 제거/영웅-초상화/big boy.png',
     introduction: [
       line('welcome', '너가 이번에 새로 들어왔다는 신입이냐.'),
       line('introduce', '내 이름은 더글라스 피스트, 사람들은 날 빅보이라고도 부르지.'),
@@ -17,8 +17,8 @@
       line('risk', '너무 멀리 나아가면 추락할 수도 있지. 그렇지만 가능한 멀리 나아가야 한다. 더 많은 것들을 차지하기 위해서 말이야.')
     ],
     lessons: [
-      { id: 'launch', title: '멀리 나아가기', text: '발사 버튼을 누르고, 얼마만큼의 힘으로 스톤을 발사할지 결정하세요. 결정을 완료했으면 스톤을 드래그하여 방향을 정해 발사하세요.', objective: '80점 이상인 위치에 스톤을 멈추세요.', dialogue: [] },
-      { id: 'collision', title: '상대 밀어내기', text: '발사 파워와 방향을 정해 상대 스톤을 테이블 밖으로 밀어내세요.', objective: '상대 스톤을 떨어뜨리세요.', dialogue: [
+      { id: 'launch', title: '멀리 나아가기', text: '테이블을 클릭해 스톤의 시작 높이를 정하세요. 스톤을 원하는 방향의 반대로 당기면 힘과 방향이 정해집니다. 놓으면 발사됩니다.', objective: '80점 이상인 위치에 스톤을 멈추세요.', dialogue: [] },
+      { id: 'collision', title: '상대 밀어내기', text: '스톤을 원하는 방향의 반대로 당겨 상대 스톤을 테이블 밖으로 밀어내세요.', objective: '상대 스톤을 떨어뜨리세요.', dialogue: [
         line('push-intro', '만약 너를 가로막는 뭔가가 등장한다면… 뭘 해야 할지 알고 있지? 힘껏 밀쳐내 떨어뜨려 버리라고.')
       ] },
       { id: 'cards', title: '카드 사용', kind: 'card', elementId: 'ammo', timed: true, text: '총알 장전 카드를 자신의 스톤에 사용하고, 스톤을 드래그해 총알을 발사하세요.', objective: '총알 장전으로 상대 스톤을 떨어뜨리세요.', dialogue: [

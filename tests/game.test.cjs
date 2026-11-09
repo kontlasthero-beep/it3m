@@ -1545,11 +1545,11 @@ test('data barrier unlocks at level two, appears locked in the catalog, and uses
   const g = game();
   g.run(`state.playerLevels=[1,1]; renderCatalog('cards');
     assert.equal(deckCard('data-barrier').unlockLevel,2);
-    assert.equal(CARD_PRESENTATION['data-barrier'].art,'Card_illustration/Data Barrier-v5.png');
+    assert.equal(CARD_PRESENTATION['data-barrier'].art,'Card_illustration/Data Barrier-v6.png');
     assert.equal(CARD_DESCRIPTIONS['data-barrier'],'내 스톤만 통과 가능한 특수 장벽을 배치합니다. 장벽은 다음 상대 턴까지 유지됩니다.');
     assert.equal(isCardUnlocked(deckCard('data-barrier'),0),false);
     state.playerLevels[0]=2; assert.equal(isCardUnlocked(deckCard('data-barrier'),0),true);`);
-  assert.ok(fs.existsSync(path.join(__dirname, '../Card_illustration/Data Barrier-v5.png')));
+  assert.ok(fs.existsSync(path.join(__dirname, '../Card_illustration/Data Barrier-v6.png')));
 });
 
 test('data barrier is fixed, friendly stones pass, enemies collide, and bullets destroy it', () => {

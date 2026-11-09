@@ -62,11 +62,22 @@
     ...[
       ['hardening.png', '경질화'], ['Protective barrier.png', '방호벽'], ['release .png', '방출'],
       ['Relocation.png', '재배치'], ['Structure Drop.png', '구조물 투하'], ['blackhole release.png', '블랙홀 방출'],
-      ['Load.png', '총알 장전'], ['Bluffing.png', '속임수'], ['Escape.png', '탈출'], ['Data Barrier-v5.png', '데이터 장벽']
-    ].map(([file, name]) => ({ id: `builtin:card-${file}`, name, category: 'card', kind: 'decoration', owner: 'neutral', src: `Card_illustration/${file}`, width: 84, height: 110 })),
+      ['Load.png', '총알 장전'], ['Bluffing.png', '속임수'], ['Escape.png', '탈출'], ['Data Barrier-v6.png', '데이터 장벽'],
+      ['Repulsion Field.png', '반발장'], ['Dark Charge.png', '암흑 충전'], ['Haebang.png', '해방'],
+      ['heavy-blow.png', '묵직한 한방'], ['reinforcements.png', '지원군'], ['tracking.png', '추적'],
+      ['neutralize.png', '무력화'], ['fate.png', '운명'], ['trick.png', '묘기'],
+      ['analysis-closeup.png', '분석'], ['tool-swap.png', '도구 교체']
+    ].map(([file, name]) => ({
+      id: `builtin:card-${file}`, name, category: 'card', kind: 'decoration', owner: 'neutral',
+      src: ['Data Barrier-v6.png', 'fate.png'].includes(file)
+        ? `Card_illustration/${file}`
+        : `삽화-디테일 제거/카드-삽화/${file}`,
+      width: 84, height: 110
+    })),
     ...[
-      ['big boy.png', '빅보이'], ['hunter.png', '헌터'], ['trap master.png', '트랩 마스터'], ['joker.png', '조커']
-    ].map(([file, name]) => ({ id: `builtin:portrait-${file}`, name, category: 'portrait', kind: 'decoration', owner: 'neutral', src: `영웅 초상화/${file}`, width: 104, height: 122 })),
+      ['big boy.png', '빅보이'], ['hunter.png', '헌터'], ['trap master.png', '트랩 마스터'],
+      ['joker.png', '조커'], ['en-smith-refiner.png', '리파이너']
+    ].map(([file, name]) => ({ id: `builtin:portrait-${file}`, name, category: 'portrait', kind: 'decoration', owner: 'neutral', src: `삽화-디테일 제거/영웅-초상화/${file}`, width: 104, height: 122 })),
     { id: 'builtin:background', name: '배경 이미지', category: 'decoration', kind: 'decoration', owner: 'neutral', src: 'Background.png', width: 230, height: 145 },
     { id: 'builtin:note', name: '주석 표식', category: 'decoration', kind: 'note', owner: 'neutral', width: 34, height: 34 },
     { id: 'builtin:zone', name: '목표 영역', category: 'decoration', kind: 'zone', owner: 'neutral', width: 140, height: 95 }
@@ -951,7 +962,7 @@
     renderDialogue(); scheduleSave();
   }
   function previewPortraitSource(assetId) {
-    return assetById(assetId)?.src || '영웅 초상화/big boy.png';
+    return assetById(assetId)?.src || '삽화-디테일 제거/영웅-초상화/big boy.png';
   }
   function previewTypingSound(assetId) {
     const source = assetById(assetId)?.src;

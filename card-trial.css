@@ -1,0 +1,94 @@
+.card-trial-toolbar {
+  position: fixed;
+  z-index: 39;
+  top: max(12px, env(safe-area-inset-top));
+  left: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  width: min(760px, calc(100vw - 28px));
+  padding: 12px 14px 12px 17px;
+  transform: translateX(-50%);
+  border: 1px solid rgba(193, 151, 91, .88);
+  border-radius: 5px;
+  background: linear-gradient(135deg, rgba(19, 34, 35, .98), rgba(10, 19, 21, .97));
+  box-shadow: 0 12px 34px rgba(0, 0, 0, .58), inset 0 1px 0 rgba(231, 205, 155, .12);
+  color: #f2ecdf;
+  animation: card-trial-enter .24s ease-out both;
+}
+
+.card-trial-toolbar[hidden] { display: none !important; }
+
+.card-trial-toolbar-copy {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.card-trial-kicker {
+  color: #78b7aa;
+  font: 700 9px/1.2 "SecondChance Plex", sans-serif;
+  letter-spacing: .16em;
+}
+
+.card-trial-toolbar-copy strong {
+  overflow: hidden;
+  color: #f0dfbc;
+  font-size: 15px;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-trial-toolbar-copy > span:last-child {
+  color: #adb9b5;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.card-trial-toolbar-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 7px;
+}
+
+.card-trial-toolbar-actions button {
+  min-height: 36px;
+  padding: 6px 12px;
+  border-color: #66736b;
+  background: linear-gradient(180deg, #243838, #142324);
+  color: #eee7d8;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.card-trial-toolbar-actions button.primary {
+  border-color: #c39b5f;
+  color: #f2d8a4;
+}
+
+.card-trial-toolbar-actions button:hover { border-color: #e0bd7c; }
+
+@keyframes card-trial-enter {
+  from { opacity: 0; transform: translate(-50%, -8px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@media (max-width: 560px) {
+  .card-trial-toolbar {
+    align-items: stretch;
+    gap: 9px;
+    padding: 10px;
+  }
+
+  .card-trial-toolbar-copy strong { font-size: 13px; }
+  .card-trial-toolbar-copy > span:last-child { font-size: 10px; }
+  .card-trial-toolbar-actions { flex-direction: column; justify-content: center; gap: 5px; }
+  .card-trial-toolbar-actions button { min-height: 31px; padding: 4px 8px; font-size: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-trial-toolbar { animation: none; }
+}

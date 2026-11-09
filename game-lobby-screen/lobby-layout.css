@@ -762,6 +762,7 @@
 #startOverlay.is-profile-lobby #openLocalScreenButton { --mode-icon: url("../shared-ui/expedition-ui-kit-v1/icons/people.svg"); }
 #startOverlay.is-profile-lobby #openTutorialButton { --mode-icon: url("../shared-ui/expedition-ui-kit-v1/icons/book.svg"); }
 #startOverlay.is-profile-lobby #openAdventureScreenButton { --mode-icon: url("../shared-ui/expedition-ui-kit-v1/icons/compass.svg"); }
+#startOverlay.is-profile-lobby #openTrainingButton { --mode-icon: url("../shared-ui/training-ground/target.svg"); grid-column: 1 / -1; }
 
 @media (max-width: 420px) {
   #startOverlay.is-profile-lobby #startMenu .start-menu-grid button,
@@ -865,9 +866,11 @@
   text-align: center;
 }
 #startOverlay.is-profile-lobby #startMenu #playMenuHomeButton::after { content: none; }
+
 #startOverlay.is-profile-lobby #openPlayMenuButton { --nav-icon: url("../shared-ui/expedition-ui-kit-v1/icons/play.svg"); }
 #startOverlay.is-profile-lobby #openSingleLobbyButton { --nav-icon: url("../shared-ui/expedition-ui-kit-v1/icons/compass.svg"); }
 #startOverlay.is-profile-lobby #openCatalogButton { --nav-icon: url("../shared-ui/expedition-ui-kit-v1/icons/book.svg"); }
+#startOverlay.is-profile-lobby #openHomeSettingsButton { --nav-icon: url("../shared-ui/expedition-ui-kit-v1/icons/settings.svg"); }
 #startOverlay.is-profile-lobby #openHomeDeckButton,
 #startOverlay.is-profile-lobby #openMenuDeckButton { --nav-icon: url("../shared-ui/expedition-ui-kit-v1/icons/cards.svg"); }
 #startOverlay.is-profile-lobby #openAccountButton { --nav-icon: url("../shared-ui/expedition-ui-kit-v1/icons/person.svg"); }
@@ -1010,4 +1013,33 @@
 #startOverlay.is-home-lobby:not(.is-profile-lobby) #guestPlayButton:focus-visible {
   outline: 2px solid #e6c184;
   outline-offset: 3px;
+}
+
+/* Final slide viewport rule: later mobile rules must not restore visible bleed. */
+#startOverlay.is-profile-lobby #startMenu {
+  position: relative;
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow-x: clip;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  isolation: isolate;
+}
+
+#startOverlay.is-profile-lobby #startMenu .lobby-mode-panel {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  backface-visibility: hidden;
+}
+
+#startOverlay.is-profile-lobby #startMenu .lobby-mode-panel :is(img, button, p, span, strong, small) {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+@supports not (overflow: clip) {
+  #startOverlay.is-profile-lobby #startMenu { overflow-x: hidden; }
 }

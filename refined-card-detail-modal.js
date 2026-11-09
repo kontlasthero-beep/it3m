@@ -35,10 +35,11 @@
     if (!definitions || typeof definitions !== "object") return null;
     const entry = Object.values(definitions).find((card) => card.name === `정제된 ${base.name}`);
     if (!entry || !entry.id) return null;
+    const presentation = global.SecondChanceCardPresentation?.[entry.id];
     return {
       name: entry.name,
       description: entry.description,
-      artSrc: `Card_illustration/refined/${entry.id}.webp`,
+      artSrc: presentation?.refinedArt || `Card_illustration/refined/${entry.id}.webp`,
       artAlt: `${entry.name} 카드 삽화`
     };
   }
@@ -152,6 +153,12 @@
       toggleButton.setAttribute("aria-pressed", "false");
       toggleRow.append(toggleButton);
     }
+    let trialButton = null;
+    if (typeof settings.onTrial === "function") {
+      trialButton = makeElement("button", "sc-card-detail-trial", "시험하기");
+      trialButton.type = "button";
+      toggleRow.append(trialButton);
+    }
     copy.append(effectSection);
     if (refined) copy.append(toggleRow);
     let addButton = null;
@@ -180,7 +187,7 @@
       previousFocus: inheritedFocus && inheritedFocus.isConnected ? inheritedFocus : document.activeElement,
       previousOverflow: document.body.style.overflow,
       closing: false,
-      isRefined: false,
+      isRefined: settings.initialRefined === true && Boolean(refined),
       swapTimer: null,
       removeTimer: null,
       onDocumentKeydown: null
@@ -205,11 +212,35 @@
       }
     }
     setArtwork(base);
+    if (instance.isRefined) {
+      dialog.classList.add("sc-card-detail-is-refined");
+      headingGroup.querySelector("h2").textContent = refined.name;
+      effectText.textContent = refined.effect;
+      if (versionLabel) versionLabel.textContent = "정제형";
+      if (toggleButton) {
+        toggleButton.textContent = "기본 버전 보기";
+        toggleButton.setAttribute("aria-pressed", "true");
+        toggleButton.setAttribute("aria-label", "기본 카드 효과 보기");
+      }
+      setArtwork(refined);
+    }
 
     root.addEventListener("click", (event) => {
       if (event.target === root) close();
     });
     closeButton.addEventListener("click", close);
+    if (trialButton) {
+      trialButton.addEventListener("click", () => {
+        if (instance.closing) return;
+        instance.closing = true;
+        instance.root.classList.add("sc-card-detail-is-closing");
+        instance.removeTimer = global.setTimeout(() => {
+          if (current !== instance) return;
+          disposeActive(false);
+          settings.onTrial(instance.isRefined);
+        }, MOTION_MS);
+      });
+    }
     if (addButton && typeof settings.addToBag === "function") {
       addButton.addEventListener("click", () => {
         if (instance.closing || addButton.disabled) return;

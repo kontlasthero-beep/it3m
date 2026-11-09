@@ -6,18 +6,18 @@
   'use strict';
 
   const CARDS = Object.freeze([
-    { id: 'hardening', name: '경질화', art: 'Card_illustration/hardening.png' },
-    { id: 'guard', name: '방호벽', art: 'Card_illustration/Protective barrier.png' },
-    { id: 'pulse', name: '방출', art: 'Card_illustration/release .png' },
-    { id: 'reposition', name: '재배치', art: 'Card_illustration/Relocation.png' },
-    { id: 'brick', name: '구조물 투하', art: 'Card_illustration/Structure Drop.png' },
-    { id: 'blackhole', name: '블랙홀 방출', art: 'Card_illustration/blackhole release.png' },
-    { id: 'ammo', name: '총알 장전', art: 'Card_illustration/Load.png' },
-    { id: 'bluffing', name: '속임수', art: 'Card_illustration/Bluffing.png' },
-    { id: 'escape', name: '탈출', art: 'Card_illustration/Escape.png' },
-    { id: 'data-barrier', name: '데이터 장벽', art: 'Card_illustration/Data Barrier-v5.png' },
-    { id: 'tracking', name: '추적', art: 'Card_illustration/tracking.png' },
-    { id: 'neutralize', name: '무력화', art: 'Card_illustration/neutralize.png' }
+    { id: 'hardening', name: '경질화', art: '삽화-디테일 제거/카드-삽화/hardening.png' },
+    { id: 'guard', name: '방호벽', art: '삽화-디테일 제거/카드-삽화/Protective barrier.png' },
+    { id: 'pulse', name: '방출', art: '삽화-디테일 제거/카드-삽화/release .png' },
+    { id: 'reposition', name: '재배치', art: '삽화-디테일 제거/카드-삽화/Relocation.png' },
+    { id: 'brick', name: '구조물 투하', art: '삽화-디테일 제거/카드-삽화/Structure Drop.png' },
+    { id: 'blackhole', name: '블랙홀 방출', art: '삽화-디테일 제거/카드-삽화/blackhole release.png' },
+    { id: 'ammo', name: '총알 장전', art: '삽화-디테일 제거/카드-삽화/Load.png' },
+    { id: 'bluffing', name: '속임수', art: '삽화-디테일 제거/카드-삽화/Bluffing.png' },
+    { id: 'escape', name: '탈출', art: '삽화-디테일 제거/카드-삽화/Escape.png' },
+    { id: 'data-barrier', name: '데이터 장벽', art: 'Card_illustration/Data Barrier-v6.png' },
+    { id: 'tracking', name: '추적', art: '삽화-디테일 제거/카드-삽화/tracking.png' },
+    { id: 'neutralize', name: '무력화', art: '삽화-디테일 제거/카드-삽화/neutralize.png' }
   ]);
   const CARD_IDS = new Set(CARDS.map(card => card.id));
   const MAX_CARDS = 40;

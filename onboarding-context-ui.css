@@ -1,0 +1,789 @@
+/*
+ * Second Chance contextual onboarding UI
+ * Scoped styling only: this file does not create controls or alter game behavior.
+ * Text and values stay in HTML so they remain readable, selectable, and responsive.
+ */
+
+:root {
+  --onboarding-ink: #f0e5d1;
+  --onboarding-muted: #aebbb5;
+  --onboarding-copper: #b98a5d;
+  --onboarding-copper-bright: #d1a567;
+  --onboarding-signal: #74c9c0;
+  --onboarding-panel: #101d1f;
+  --onboarding-panel-deep: #0b1517;
+  --onboarding-panel-art: url("shared-ui/salvage-hud-v2/panel.png");
+}
+
+/* Contextual help: one concise panel, with its own scroll area on short screens. */
+#contextHelpOverlay[hidden] {
+  display: none !important;
+}
+
+#contextHelpOverlay:not([hidden]) {
+  position: fixed;
+  z-index: 1200;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  padding: max(18px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom));
+  background: rgba(3, 9, 10, .78);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  animation: context-help-backdrop-in .18s ease-out both;
+}
+
+.context-help-dialog {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 0;
+  box-sizing: border-box;
+  width: min(620px, 100%);
+  max-height: min(780px, 84vh, 84dvh);
+  min-width: 0;
+  overflow: hidden;
+  padding: clamp(18px, 3.2vw, 30px);
+  border: 18px solid transparent;
+  border-image: var(--onboarding-panel-art) 88 100 88 100 fill / 18px / 0 stretch;
+  background: linear-gradient(145deg, #152528 0%, var(--onboarding-panel) 56%, #0c1719 100%);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, .68), inset 0 0 0 1px rgba(116, 201, 192, .18);
+  color: var(--onboarding-ink);
+  animation: context-help-panel-in .22s cubic-bezier(.2, .75, .25, 1) both;
+}
+
+.context-help-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+  padding: 0 0 14px;
+  border-bottom: 1px solid rgba(185, 138, 93, .62);
+}
+
+.context-help-header h2,
+.context-help-header h3,
+.context-help-title {
+  min-width: 0;
+  margin: 0;
+  color: var(--onboarding-ink);
+  font: 400 clamp(21px, 3vw, 28px)/1.25 var(--ui-serif, "SecondChance Gowun Batang", Georgia, serif);
+  letter-spacing: .025em;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+
+.context-help-close {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  box-sizing: border-box;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgba(185, 138, 93, .8);
+  border-radius: 2px;
+  background: linear-gradient(145deg, #203235, #101d1f 72%);
+  box-shadow: inset 0 0 0 1px rgba(10, 20, 22, .9);
+  color: var(--onboarding-ink);
+  font: 400 23px/1 var(--ui-sans, "SecondChance Plex", "Malgun Gothic", sans-serif);
+  cursor: pointer;
+  transition: border-color .16s ease, background-color .16s ease, color .16s ease;
+}
+
+.context-help-close:hover {
+  border-color: var(--onboarding-copper-bright);
+  color: #fff4df;
+  background-color: #263b3c;
+}
+
+.context-help-content {
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 18px 3px 2px 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(185, 138, 93, .78) rgba(7, 15, 16, .34);
+  color: #d2d9d3;
+  font: 400 15px/1.7 var(--ui-sans, "SecondChance Plex", "Malgun Gothic", sans-serif);
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+.context-help-content > :first-child { margin-top: 0; }
+.context-help-content > :last-child { margin-bottom: 0; }
+.context-help-content h3,
+.context-help-content h4 {
+  margin: 1.1em 0 .4em;
+  color: #e6c48d;
+  font: 400 17px/1.45 var(--ui-serif, "SecondChance Gowun Batang", Georgia, serif);
+  overflow-wrap: anywhere;
+}
+.context-help-content p,
+.context-help-content li { max-width: 68ch; }
+.context-help-content p { margin: 0 0 .85em; }
+.context-help-content ul,
+.context-help-content ol { margin: .35em 0 1em; padding-left: 1.35em; }
+.context-help-content li + li { margin-top: .32em; }
+.context-help-content strong { color: #f0dfbd; font-weight: 700; }
+.context-help-content kbd {
+  padding: .08em .38em;
+  border: 1px solid rgba(185, 138, 93, .62);
+  border-radius: 2px;
+  background: rgba(6, 14, 15, .62);
+  color: var(--onboarding-ink);
+  font: 600 .88em/1.4 var(--ui-sans, "SecondChance Plex", "Malgun Gothic", sans-serif);
+}
+
+.context-help-dialog :focus-visible,
+.context-help-close:focus-visible {
+  outline: 2px solid #e5bd7c;
+  outline-offset: 3px;
+}
+
+/* Small contextual entry points remain legible without competing with the board. */
+.context-help-trigger {
+  position: relative;
+  z-index: 2;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 36px;
+  padding: 7px 11px;
+  border: 1px solid rgba(185, 138, 93, .82);
+  border-radius: 2px;
+  background: linear-gradient(150deg, #24383a 0%, #142426 58%, #0e1a1c 100%);
+  box-shadow: inset 0 0 0 1px rgba(7, 15, 16, .9), 0 3px 8px rgba(0, 0, 0, .3);
+  color: #ead9b8;
+  font: 600 13px/1.2 var(--ui-serif, "SecondChance Gowun Batang", Georgia, serif);
+  text-align: center;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease, color .15s ease, transform .15s ease;
+}
+
+.context-help-trigger:hover {
+  border-color: var(--onboarding-copper-bright);
+  background: linear-gradient(150deg, #304446 0%, #1a2c2e 58%, #122022 100%);
+  color: #fff2d7;
+}
+.context-help-trigger:active { transform: translateY(1px); }
+.context-help-trigger:focus-visible { outline: 2px solid #e5bd7c; outline-offset: 3px; }
+
+.deck-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+
+.map-dialog-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  min-width: 0;
+}
+.map-dialog-heading > :first-child { min-width: 0; margin: 0; }
+.map-dialog-heading .context-help-trigger { margin-left: auto; }
+
+/* The map plate owns the space for both controls; neither can cover its label. */
+body.game-active .board-map {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+  min-height: 48px;
+  padding: 7px 11px;
+}
+body.game-active .board-map > :is(.map-indicator, .match-hud) {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+body.game-active .board-map .match-hud:not([hidden]) { justify-content: center; }
+body.game-active #tutorialHelpButton {
+  position: static;
+  z-index: 2;
+  flex: 0 0 auto;
+  min-width: 66px;
+  min-height: 34px;
+  padding: 5px 10px;
+  border: 1px solid transparent;
+  border-image: var(--hud-compact-art) 106 136 106 136 fill / 7px / 0 stretch;
+  border-radius: 0;
+  background: #102021;
+  box-shadow: none;
+  color: #f0e5d1;
+  font: 600 12px/1.2 var(--ui-sans, "SecondChance Plex", "Malgun Gothic", sans-serif);
+  text-shadow: 0 1px 2px #000d;
+}
+body.game-active #tutorialHelpButton:hover { filter: brightness(1.13); }
+body.game-active #gameSettingsButton {
+  position: relative;
+  top: auto;
+  right: auto;
+  flex: 0 0 34px;
+  margin: 0;
+  transform: none;
+}
+
+@media (max-width: 620px) {
+  .context-help-trigger { min-height: 34px; padding: 6px 8px; font-size: 12px; }
+  .deck-header-actions { gap: 5px; }
+  .deck-header-actions .context-help-trigger { white-space: normal; }
+  .map-dialog-heading { gap: 7px; }
+  body.game-active .board-map { gap: 5px; padding: 6px 10px; }
+  body.game-active #tutorialHelpButton { min-width: 60px; min-height: 32px; padding: 4px 7px; font-size: 11px; }
+}
+
+@media (max-width: 620px) {
+  body.game-active .topbar { flex-wrap: wrap; }
+  body.game-active .topbar .board-map { flex: 1 1 100%; width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .context-help-trigger { transition: none; }
+}
+
+/* Help entry buttons share the tactile copper/teal salvage HUD surface. */
+.context-help-trigger {
+  border: 1px solid transparent;
+  border-image: url("shared-ui/deck-redesign/deck-slot-v2.png") 18% 7% fill / 7px / 0 stretch;
+  border-radius: 0;
+  background: #101d1e url("shared-ui/deck-redesign/deck-slot-v2.png") center / 100% 100% no-repeat;
+  box-shadow: 0 3px 8px rgba(0,0,0,.34), inset 0 1px rgba(232,206,158,.08);
+}
+
+.context-help-trigger:hover {
+  border-color: transparent;
+  background: #152729 url("shared-ui/deck-redesign/deck-slot-v2.png") center / 100% 100% no-repeat;
+  filter: brightness(1.13);
+  color: #fff2d7;
+}
+
+.home-settings-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.home-settings-actions > button { width: 100%; }
+
+@media (max-width: 480px) {
+  .home-settings-actions { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* The lobby dialog already carries the panel art; settings use its quiet center. */
+#homeSettingsScreen[hidden] { display: none !important; }
+
+#startOverlay #homeSettingsScreen:not([hidden]) {
+  box-sizing: border-box;
+  width: min(560px, 100%);
+  min-width: 0;
+  margin-inline: auto;
+  padding: clamp(18px, 3vw, 28px);
+  border: 0;
+  border-image: none;
+  background: transparent;
+  box-shadow: none;
+  color: var(--onboarding-ink);
+}
+
+#startOverlay:has(#homeSettingsScreen:not([hidden])) .dialog > h2,
+#startOverlay:has(#homeSettingsScreen:not([hidden])) #startScreenDescription,
+#startOverlay:has(#homeSettingsScreen:not([hidden])) .lobby-brand {
+  display: none;
+}
+
+#homeSettingsScreen .home-settings-dialog {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 18px;
+  min-width: 0;
+  max-height: min(72vh, 72dvh);
+}
+
+#homeSettingsScreen .home-settings-content { gap: 18px; }
+
+.home-settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-width: 0;
+  padding-bottom: 13px;
+  border-bottom: 1px solid rgba(185, 138, 93, .62);
+}
+
+.home-settings-header h2,
+.home-settings-title {
+  min-width: 0;
+  margin: 0;
+  color: var(--onboarding-ink);
+  font: 400 clamp(22px, 3vw, 29px)/1.25 var(--ui-serif, "SecondChance Gowun Batang", Georgia, serif);
+  letter-spacing: .02em;
+  overflow-wrap: anywhere;
+}
+
+.home-settings-close {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgba(185, 138, 93, .78);
+  border-radius: 2px;
+  background: linear-gradient(145deg, #203235, #101d1f 72%);
+  color: var(--onboarding-ink);
+  font: 400 22px/1 var(--ui-sans, "SecondChance Plex", "Malgun Gothic", sans-serif);
+  cursor: pointer;
+}
+
+.home-settings-content {
+  display: grid;
+  align-content: start;
+  gap: 13px;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 1px 3px 3px 0;
+}
+
+#homeSettingsScreen :is(.home-volume-row, .volume-row, [data-audio-setting]) {
+  display: grid;
+  grid-template-columns: minmax(94px, .34fr) minmax(0, 1fr) max-content;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+  color: #d3d9d2;
+  font: 500 15px/1.4 var(--ui-sans, "SecondChance Plex", "Malgun Gothic", sans-serif);
+}
+
+#homeSettingsScreen :is(.home-volume-row, .volume-row, [data-audio-setting]) > :is(span, strong) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+#homeSettingsScreen :is(.home-volume-row, .volume-row, [data-audio-setting]) input[type="range"] {
+  width: 100%;
+  min-width: 0;
+  height: 32px;
+  margin: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+#homeSettingsScreen input[type="range"]::-webkit-slider-runnable-track {
+  height: 7px;
+  border: 1px solid #a47950;
+  border-radius: 2px;
+  background: #0d2324;
+}
+#homeSettingsScreen input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -6px;
+  border: 1px solid #f0d5a3;
+  border-radius: 2px;
+  background: #bd8958;
+}
+#homeSettingsScreen input[type="range"]::-moz-range-track {
+  height: 7px;
+  border: 1px solid #a47950;
+  border-radius: 2px;
+  background: #0d2324;
+}
+#homeSettingsScreen input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border: 1px solid #f0d5a3;
+  border-radius: 2px;
+  background: #bd8958;
+}
+
+#homeSettingsScreen :is(.home-volume-row, .volume-row, [data-audio-setting]) output {
+  min-width: 4.2ch;
+  color: var(--onboarding-ink);
+  font: 600 14px/1.2 var(--ui-sans, "SecondChance Plex", "Malgun Gothic", sans-serif);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.home-settings-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 9px;
+  min-width: 0;
+  padding-top: 13px;
+  border-top: 1px solid rgba(185, 138, 93, .4);
+}
+
+.home-settings-actions > button {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 44px;
+  padding: 9px 14px;
+  color: var(--onboarding-ink);
+  font: 600 15px/1.35 var(--ui-sans, "SecondChance Plex", "Malgun Gothic", sans-serif);
+  line-height: 1.35;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+#homeSettingsScreen :is(button, input):focus-visible {
+  outline: 2px solid #e5bd7c;
+  outline-offset: 3px;
+}
+
+/* In-game settings share the same readable type and clear control spacing. */
+#gameSettingsOverlay > .dialog {
+  box-sizing: border-box;
+  width: min(480px, 100%);
+  padding: clamp(22px, 4vw, 32px);
+}
+#gameSettingsOverlay #settingsAudioControls .volume-row {
+  grid-template-columns: minmax(88px, .3fr) minmax(0, 1fr) max-content;
+  gap: 12px;
+  min-width: 0;
+  color: #e0dfd2;
+  font: 500 15px/1.4 var(--ui-sans, "SecondChance Plex", "Malgun Gothic", sans-serif);
+}
+#gameSettingsOverlay #settingsAudioControls .volume-row input[type="range"] {
+  min-width: 0;
+  width: 100%;
+  height: 32px;
+}
+#gameSettingsOverlay #settingsAudioControls .volume-row output {
+  min-width: 4.5ch;
+  color: #f0e5d1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+#gameSettingsOverlay :is(.settings-actions, .settings-leave) button {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 44px;
+  padding: 9px 14px;
+  color: #f0e5d1;
+  font: 600 15px/1.35 var(--ui-sans, "SecondChance Plex", "Malgun Gothic", sans-serif);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 480px) {
+  #gameSettingsOverlay #settingsAudioControls .volume-row {
+    grid-template-columns: minmax(0, 1fr) max-content;
+    gap: 3px 10px;
+  }
+  #gameSettingsOverlay #settingsAudioControls .volume-row input[type="range"] {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  #gameSettingsOverlay #settingsAudioControls .volume-row output {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}
+
+/* Existing power controls retain their HTML labels, IDs, events, and meter semantics. */
+body.game-active #powerControl {
+  box-sizing: border-box;
+  width: 138px;
+  max-width: calc(100vw - 16px);
+  text-align: center;
+}
+
+body.game-active #powerLaunchButton {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 100px;
+  min-height: 42px;
+  padding: 7px 17px;
+  border: 0;
+  border-radius: 0;
+  background: url("shared-ui/expedition-ui-kit-v1/buttons/salvage/power-confirm--desktop--idle.svg") center / 100% 100% no-repeat;
+  box-shadow: none;
+  color: #f1e4c8;
+  font: 600 15px/1.25 var(--ui-serif, "SecondChance Gowun Batang", Georgia, serif);
+  text-shadow: 0 1px 3px #000e;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: filter .14s ease, transform .14s ease;
+}
+
+body.game-active #powerLaunchButton:hover:not(:disabled) {
+  background-image: url("shared-ui/expedition-ui-kit-v1/buttons/salvage/power-confirm--desktop--hover.svg");
+  filter: brightness(1.08);
+}
+
+body.game-active #powerLaunchButton:active:not(:disabled) {
+  background-image: url("shared-ui/expedition-ui-kit-v1/buttons/salvage/power-confirm--desktop--pressed.svg");
+  transform: translateY(1px);
+}
+
+body.game-active #powerPanel {
+  position: relative;
+  box-sizing: border-box;
+  width: 138px;
+  height: 254px;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: url("shared-ui/expedition-ui-kit-v1/modules/salvage/power-meter--desktop.svg") center / 100% 100% no-repeat;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, .58);
+  isolation: isolate;
+}
+
+body.game-active #powerPanel.power-dismissing {
+  animation: onboarding-power-dismiss .3s ease-in forwards;
+}
+
+body.game-active #powerTrack {
+  position: absolute;
+  z-index: 1;
+  top: 9.05%;
+  left: 39%;
+  box-sizing: border-box;
+  width: 22%;
+  height: 62.2%;
+  margin: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  box-shadow: none;
+}
+
+body.game-active #powerTrack::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(116, 201, 192, .22), rgba(212, 163, 91, .1));
+  opacity: .72;
+  pointer-events: none;
+}
+
+body.game-active #powerNeedle {
+  z-index: 2;
+  left: -8px;
+  right: -8px;
+  height: 4px;
+  border: 1px solid #f0d4a0;
+  border-radius: 2px;
+  background: #d7ae6c;
+  box-shadow: 0 0 7px rgba(215, 174, 108, .66);
+}
+
+body.game-active #powerValue {
+  position: absolute;
+  z-index: 2;
+  top: 71.1%;
+  left: 13%;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 74%;
+  height: 7.8%;
+  min-height: 0;
+  margin: 0;
+  padding: 0 2px;
+  color: #f1e4c8;
+  font: 700 15px/1.1 var(--ui-sans, "SecondChance Plex", "Malgun Gothic", sans-serif);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 3px #000e;
+  white-space: nowrap;
+}
+
+body.game-active #powerConfirmButton {
+  position: absolute;
+  z-index: 2;
+  top: 79.1%;
+  left: 9.4%;
+  box-sizing: border-box;
+  width: 81.2%;
+  min-height: 0;
+  height: 13.8%;
+  margin: 0;
+  padding: 2px 8px;
+  border: 0;
+  border-radius: 0;
+  background: url("shared-ui/expedition-ui-kit-v1/buttons/salvage/power-confirm--desktop--idle.svg") center / 100% 100% no-repeat;
+  box-shadow: none;
+  color: #f1e4c8;
+  font: 600 13px/1.15 var(--ui-serif, "SecondChance Gowun Batang", Georgia, serif);
+  text-shadow: 0 1px 3px #000e;
+  cursor: pointer;
+}
+
+body.game-active #powerConfirmButton:hover:not(:disabled) {
+  background-image: url("shared-ui/expedition-ui-kit-v1/buttons/salvage/power-confirm--desktop--hover.svg");
+  filter: brightness(1.08);
+}
+
+body.game-active #powerConfirmButton:active:not(:disabled) {
+  background-image: url("shared-ui/expedition-ui-kit-v1/buttons/salvage/power-confirm--desktop--pressed.svg");
+}
+
+body.game-active #powerConfirmButton:disabled,
+body.game-active #powerLaunchButton:disabled {
+  background-image: url("shared-ui/expedition-ui-kit-v1/buttons/salvage/power-confirm--desktop--disabled.svg");
+  filter: grayscale(.65) brightness(.78);
+  cursor: not-allowed;
+}
+
+body.game-active :is(#powerLaunchButton, #powerConfirmButton):focus-visible {
+  outline: 2px solid #f0cc8a;
+  outline-offset: 3px;
+}
+
+@keyframes context-help-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes context-help-panel-in {
+  from { opacity: 0; transform: translateY(12px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes onboarding-power-dismiss {
+  to { opacity: 0; transform: translateY(-7px) scale(.97); }
+}
+
+@media (max-width: 700px) {
+  #contextHelpOverlay:not([hidden]) {
+    place-items: center;
+    padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
+  }
+
+  .context-help-dialog {
+    width: 100%;
+    max-height: min(88vh, 88dvh);
+    padding: 15px;
+    border-width: 12px;
+    border-image-width: 12px;
+  }
+
+  .context-help-content {
+    padding-top: 14px;
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  #startOverlay #homeSettingsScreen:not([hidden]) {
+    padding: 15px;
+  }
+
+  #homeSettingsScreen .home-settings-dialog { gap: 14px; }
+
+  #homeSettingsScreen :is(.home-volume-row, .volume-row, [data-audio-setting]) {
+    grid-template-columns: minmax(0, 1fr) max-content;
+    gap: 4px 10px;
+  }
+
+  #homeSettingsScreen :is(.home-volume-row, .volume-row, [data-audio-setting]) > :is(span, strong) {
+    grid-column: 1;
+  }
+
+  #homeSettingsScreen :is(.home-volume-row, .volume-row, [data-audio-setting]) input[type="range"] {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  #homeSettingsScreen :is(.home-volume-row, .volume-row, [data-audio-setting]) output {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+
+  body.game-active #powerControl { width: 108px; }
+
+  body.game-active #powerLaunchButton {
+    min-width: 96px;
+    min-height: 42px;
+    padding-inline: 12px;
+    font-size: 14px;
+  }
+
+  body.game-active #powerPanel {
+    width: 108px;
+    height: 208px;
+    background-image: url("shared-ui/expedition-ui-kit-v1/modules/salvage/power-meter--compact.svg");
+  }
+
+  body.game-active #powerTrack {
+    top: 11.05%;
+    height: 53.85%;
+  }
+
+  body.game-active #powerValue {
+    top: 64.9%;
+    height: 9.6%;
+    font-size: 13px;
+  }
+
+  body.game-active #powerConfirmButton {
+    top: 74.5%;
+    height: 16.8%;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 380px) {
+  .context-help-dialog { padding: 12px; }
+  .context-help-header { gap: 8px; padding-bottom: 10px; }
+  .context-help-header h2,
+  .context-help-header h3,
+  .context-help-title { font-size: 20px; }
+  .context-help-close,
+  .home-settings-close { width: 42px; min-width: 42px; height: 42px; }
+  #startOverlay #homeSettingsScreen:not([hidden]) { padding: 12px; }
+}
+
+@media (max-height: 520px) {
+  .context-help-dialog { max-height: calc(100dvh - 18px); }
+  #homeSettingsScreen .home-settings-dialog { max-height: calc(100dvh - 110px); }
+
+  body.game-active #powerControl { width: 96px; }
+  body.game-active #powerPanel {
+    width: 96px;
+    height: 185px;
+    background-image: url("shared-ui/expedition-ui-kit-v1/modules/salvage/power-meter--compact.svg");
+  }
+  body.game-active #powerTrack { top: 11.05%; height: 53.85%; }
+  body.game-active #powerValue { top: 64.9%; height: 9.6%; font-size: 12px; }
+  body.game-active #powerConfirmButton { top: 74.5%; height: 16.8%; font-size: 11px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #contextHelpOverlay:not([hidden]),
+  .context-help-dialog,
+  body.game-active #powerPanel.power-dismissing {
+    animation: none !important;
+  }
+
+  .context-help-close,
+  body.game-active #powerLaunchButton,
+  body.game-active #powerConfirmButton {
+    transition: none !important;
+  }
+}
+
+/* The close control exits settings; keep account information as the sole footer action. */
+.home-settings-actions { display: flex; justify-content: flex-end; }
+.home-settings-actions > button { width: auto; min-width: 160px; }
