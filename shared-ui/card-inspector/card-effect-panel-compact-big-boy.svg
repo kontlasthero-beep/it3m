@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="copper" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d4ab7b"/><stop offset=".16" stop-color="#734c35"/><stop offset=".34" stop-color="#bd8759"/><stop offset=".62" stop-color="#583a2a"/><stop offset=".84" stop-color="#a6744c"/><stop offset="1" stop-color="#d2a474"/>
+    </linearGradient>
+    <linearGradient id="surface" x1="0" y1="0" x2=".95" y2="1">
+      <stop offset="0" stop-color="#142a2a"/><stop offset=".52" stop-color="#0d1c1d"/><stop offset="1" stop-color="#091516"/>
+    </linearGradient>
+    <linearGradient id="hero-wash" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#756453" stop-opacity=".22"/><stop offset=".22" stop-color="#756453" stop-opacity=".08"/><stop offset=".62" stop-color="#756453" stop-opacity=".015"/><stop offset="1" stop-color="#756453" stop-opacity=".12"/>
+    </linearGradient>
+    <linearGradient id="top-sheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0d3a6" stop-opacity=".18"/><stop offset=".1" stop-color="#f0d3a6" stop-opacity=".025"/><stop offset="1" stop-color="#060c0d" stop-opacity=".2"/></linearGradient>
+    <pattern id="grain" width="113" height="79" patternUnits="userSpaceOnUse">
+      <path d="M9 13h8m25 32h5m45-27h8M21 69h4m65-3h7M61 9h3" stroke="#756453" stroke-width="1" opacity=".12"/>
+      <path d="m30 25 3-2m49 39 3 1m-54-7 2-2m60-40 3 1" stroke="#d1b894" stroke-width=".8" opacity=".09"/>
+      <circle cx="72" cy="18" r="1" fill="#c99d6c" opacity=".18"/><circle cx="17" cy="54" r=".8" fill="#756453" opacity=".16"/>
+    </pattern>
+    <clipPath id="inside"><path d="M42 18h1116l24 24v476l-24 24H42l-24-24V42z"/></clipPath>
+  </defs>
+  <path d="M38 9h1124l29 29v484l-29 29H38L9 522V38z" fill="#050a0b" opacity=".68"/>
+  <path d="M40 15h1120l25 25v480l-25 25H40l-25-25V40z" fill="url(#surface)" stroke="#49382b" stroke-width="2"/>
+  <g clip-path="url(#inside)">
+    <path d="M42 18h1116l24 24v476l-24 24H42l-24-24V42z" fill="url(#hero-wash)"/>
+    <path d="M42 18h1116l24 24v476l-24 24H42l-24-24V42z" fill="url(#grain)" opacity=".65"/>
+    <path d="M20 38h1160v74H20z" fill="url(#top-sheen)" opacity=".72"/>
+    <path d="M42 29h1116" stroke="#ead0a7" stroke-opacity=".12" stroke-width="1"/>
+  </g>
+  <path d="M40 15h1120l25 25v480l-25 25H40l-25-25V40z" fill="none" stroke="url(#copper)" stroke-width="7"/>
+  <path d="M48 26h1104l21 21v466l-21 21H48l-21-21V47z" fill="none" stroke="#7da39a" stroke-opacity=".58" stroke-width="2"/>
+  <path d="M64 34h156M980 34h156M64 526h110M1026 526h110" stroke="#756453" stroke-opacity=".72" stroke-width="3"/>
+  <path d="m29 71 10-10m1132 0 10 10m-1152 418 10 10m1132 0 10-10" stroke="#d1a477" stroke-opacity=".65" stroke-width="2"/>
+  <circle cx="55" cy="55" r="3" fill="#c69a6b" opacity=".72"/><circle cx="1145" cy="55" r="3" fill="#c69a6b" opacity=".72"/>
+  <circle cx="55" cy="505" r="3" fill="#c69a6b" opacity=".72"/><circle cx="1145" cy="505" r="3" fill="#c69a6b" opacity=".72"/>
+</svg>

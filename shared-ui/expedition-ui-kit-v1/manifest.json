@@ -2107,34 +2107,6 @@
       }
     },
     {
-      "id": "score-panel",
-      "group": "인게임",
-      "type": "score",
-      "size": [
-        300,
-        74
-      ],
-      "compact": [
-        160,
-        64
-      ],
-      "targets": [
-        ".player-panel",
-        ".player-score"
-      ],
-      "purpose": "플레이어 이름과 점수, hover 상세 점수",
-      "files": {
-        "salvage": {
-          "desktop": "modules/salvage/score-panel--desktop.svg",
-          "compact": "modules/salvage/score-panel--compact.svg"
-        },
-        "signal": {
-          "desktop": "modules/signal/score-panel--desktop.svg",
-          "compact": "modules/signal/score-panel--compact.svg"
-        }
-      }
-    },
-    {
       "id": "match-info",
       "group": "인게임",
       "type": "match",
@@ -2159,33 +2131,6 @@
         "signal": {
           "desktop": "modules/signal/match-info--desktop.svg",
           "compact": "modules/signal/match-info--compact.svg"
-        }
-      }
-    },
-    {
-      "id": "turn-timer",
-      "group": "인게임",
-      "type": "timer",
-      "size": [
-        124,
-        72
-      ],
-      "compact": [
-        86,
-        58
-      ],
-      "targets": [
-        "#turnTimer"
-      ],
-      "purpose": "남은 턴 시간; 마지막 10초 강조",
-      "files": {
-        "salvage": {
-          "desktop": "modules/salvage/turn-timer--desktop.svg",
-          "compact": "modules/salvage/turn-timer--compact.svg"
-        },
-        "signal": {
-          "desktop": "modules/signal/turn-timer--desktop.svg",
-          "compact": "modules/signal/turn-timer--compact.svg"
         }
       }
     },
@@ -2326,33 +2271,6 @@
       }
     },
     {
-      "id": "card-border",
-      "group": "카드",
-      "type": "card",
-      "size": [
-        142,
-        198
-      ],
-      "compact": [
-        100,
-        148
-      ],
-      "targets": [
-        ".ability-card"
-      ],
-      "purpose": "카드 삽화 창·이름판; 삽화는 별도 레이어",
-      "files": {
-        "salvage": {
-          "desktop": "modules/salvage/card-border--desktop.svg",
-          "compact": "modules/salvage/card-border--compact.svg"
-        },
-        "signal": {
-          "desktop": "modules/signal/card-border--desktop.svg",
-          "compact": "modules/signal/card-border--compact.svg"
-        }
-      }
-    },
-    {
       "id": "card-border-selected",
       "group": "카드",
       "type": "card-selected",
@@ -2403,33 +2321,6 @@
         "signal": {
           "desktop": "modules/signal/card-border-locked--desktop.svg",
           "compact": "modules/signal/card-border-locked--compact.svg"
-        }
-      }
-    },
-    {
-      "id": "card-hand-active",
-      "group": "카드",
-      "type": "hand-active",
-      "size": [
-        630,
-        182
-      ],
-      "compact": [
-        320,
-        174
-      ],
-      "targets": [
-        ".hand-panel.current"
-      ],
-      "purpose": "현재 차례인 플레이어의 카드 칸",
-      "files": {
-        "salvage": {
-          "desktop": "modules/salvage/card-hand-active--desktop.svg",
-          "compact": "modules/salvage/card-hand-active--compact.svg"
-        },
-        "signal": {
-          "desktop": "modules/signal/card-hand-active--desktop.svg",
-          "compact": "modules/signal/card-hand-active--compact.svg"
         }
       }
     },
@@ -2646,33 +2537,6 @@
         "signal": {
           "desktop": "modules/signal/entity-tooltip--desktop.svg",
           "compact": "modules/signal/entity-tooltip--compact.svg"
-        }
-      }
-    },
-    {
-      "id": "card-tooltip",
-      "group": "카드",
-      "type": "tooltip",
-      "size": [
-        360,
-        190
-      ],
-      "compact": [
-        280,
-        184
-      ],
-      "targets": [
-        ".card-tooltip"
-      ],
-      "purpose": "카드 효과·사용 가능 조건",
-      "files": {
-        "salvage": {
-          "desktop": "modules/salvage/card-tooltip--desktop.svg",
-          "compact": "modules/salvage/card-tooltip--compact.svg"
-        },
-        "signal": {
-          "desktop": "modules/signal/card-tooltip--desktop.svg",
-          "compact": "modules/signal/card-tooltip--compact.svg"
         }
       }
     },
@@ -3160,33 +3024,6 @@
         "signal": {
           "desktop": "modules/signal/stage-objective--desktop.svg",
           "compact": "modules/signal/stage-objective--compact.svg"
-        }
-      }
-    },
-    {
-      "id": "tutorial-step",
-      "group": "서사",
-      "type": "tutorial-step",
-      "size": [
-        560,
-        86
-      ],
-      "compact": [
-        320,
-        102
-      ],
-      "targets": [
-        ".tutorial-instruction"
-      ],
-      "purpose": "발사·카드·트리거 학습 단계 안내",
-      "files": {
-        "salvage": {
-          "desktop": "modules/salvage/tutorial-step--desktop.svg",
-          "compact": "modules/salvage/tutorial-step--compact.svg"
-        },
-        "signal": {
-          "desktop": "modules/signal/tutorial-step--desktop.svg",
-          "compact": "modules/signal/tutorial-step--compact.svg"
         }
       }
     },

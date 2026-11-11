@@ -1597,8 +1597,7 @@
   z-index: 3;
   inset: 0;
   box-sizing: border-box;
-  border: 12px solid transparent;
-  border-image: url("shared-ui/deck-redesign/hero-portrait-frame-v2.png") 7% 8% / 12px / 0 stretch;
+  background: center / 100% 100% no-repeat url("shared-ui/deck-redesign/hero-portrait-frame-v2.png");
   content: "";
   pointer-events: none;
 }
@@ -1606,15 +1605,16 @@
 #deckOverlay[data-view="hero"] .deck-hero-list-item img,
 #deckOverlay[data-view="hero"] .deck-hero-list-item .deck-hero-list-portrait {
   position: absolute;
-  inset: 5.5% 6% 4.5%;
-  width: 88%;
-  height: 90%;
+  inset: 6.6% 6.7% 5.4%;
+  width: calc(100% - 13.4%);
+  height: calc(100% - 12%);
   max-width: none;
   max-height: none;
   min-height: 0;
   border: 0;
   object-fit: cover;
   object-position: center 18%;
+  clip-path: polygon(4% 0, 96% 0, 100% 5%, 100% 95%, 96% 100%, 4% 100%, 0 95%, 0 5%);
   box-shadow: none;
 }
 
@@ -1630,9 +1630,9 @@
 #deckOverlay[data-view="hero"] .deck-hero-list-item strong {
   position: absolute;
   z-index: 2;
-  right: 16px;
-  bottom: 8%;
-  left: 16px;
+  right: 9%;
+  bottom: 7%;
+  left: 9%;
   width: auto;
   max-width: calc(100% - 32px);
   color: #f0e1c4;
@@ -1931,15 +1931,16 @@
   isolation: isolate;
 }
 
-/* Let the artwork bleed beneath the transparent aperture; the frame stays on top and masks its edge. */
+/* Final portrait aperture: match the frame's transparent window; never enlarge art beyond it. */
 #deckOverlay[data-view="hero"] .deck-hero-list-item img,
 #deckOverlay[data-view="hero"] .deck-hero-list-item .deck-hero-list-portrait {
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  transform: scale(1.055);
+  inset: 6.6% 6.7% 5.4%;
+  width: calc(100% - 13.4%);
+  height: calc(100% - 12%);
+  transform: none;
   transform-origin: center;
   z-index: 0;
+  clip-path: polygon(4% 0, 96% 0, 100% 5%, 100% 95%, 96% 100%, 4% 100%, 0 95%, 0 5%);
 }
 
 #deckOverlay[data-view="hero"] .deck-hero-list-item::after {

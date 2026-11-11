@@ -1014,17 +1014,18 @@
   <link rel="stylesheet" href="game-lobby-screen/lobby-layout.css?v=7">
   <link rel="stylesheet" href="entry-layout.css?v=5">
   <link rel="stylesheet" href="collection-layout.css?v=3">
-  <link rel="stylesheet" href="refined-card-detail-modal.css?v=3">
+  <link rel="stylesheet" href="refined-card-detail-modal.css?v=4">
   <link rel="stylesheet" href="refinery-visuals.css">
-  <link rel="stylesheet" href="deck-flow.css?v=10">
+  <link rel="stylesheet" href="deck-flow.css?v=11">
   <link rel="stylesheet" href="map-deck-assets.css?v=1">
-  <link rel="stylesheet" href="salvage-hud-v2.css?v=3">
+  <link rel="stylesheet" href="salvage-hud-v2.css?v=4">
   <link rel="stylesheet" href="salvage-game-finish.css?v=1">
   <link rel="stylesheet" href="salvage-selection-finish.css?v=1">
   <link rel="stylesheet" href="onboarding-context-ui.css?v=3">
   <link rel="stylesheet" href="card-trial.css?v=1">
   <link rel="stylesheet" href="training-ground.css?v=3">
   <link rel="stylesheet" href="hero-accent-colors.css?v=3">
+  <link rel="stylesheet" href="turn-step-hud.css?v=13">
 </head>
 <body>
   <main class="app">
@@ -1041,20 +1042,24 @@
       <p id="tutorialInstruction"></p>
       <div class="tutorial-actions"><span id="tutorialObjective" role="status" aria-live="polite"></span><button id="tutorialRetryButton" type="button">다시 연습</button><button id="tutorialNextButton" type="button">다음 연습 →</button></div>
     </section>
-    <section class="game-shell" aria-label="컬링 테이블">
-      <div class="board-hud" aria-label="플레이어 점수와 남은 시간">
+    <div class="board-hud" aria-label="플레이어 점수와 남은 시간">
         <div class="player-panel p1" id="panel0">
           <div class="player-label" id="playerLabel0">플레이어 1</div>
           <span class="hero-badge" id="heroBadge0" hidden></span>
           <div class="player-score" id="score0" tabindex="0" aria-label="플레이어 1 점수 0점">0점</div>
         </div>
-        <div class="table-clock-bar"><div class="turn-timer" id="turnTimer" aria-label="남은 턴 시간" hidden>40</div></div>
+        <div class="table-clock-bar">
+          <div class="turn-timer" id="turnTimer" aria-label="남은 턴 시간" hidden>40</div>
+          <span class="turn-arrival-notice" id="turnArrivalNotice" role="status" aria-live="polite"></span>
+          <span id="actionHint" aria-live="polite">스톤을 당겨 발사 파워와 방향을 정하세요.</span>
+        </div>
         <div class="player-panel p2" id="panel1">
           <div class="player-label" id="playerLabel1">플레이어 2</div>
           <span class="hero-badge" id="heroBadge1" hidden></span>
           <div class="player-score" id="score1" tabindex="0" aria-label="플레이어 2 점수 0점">0점</div>
         </div>
-      </div>
+    </div>
+    <section class="game-shell" aria-label="컬링 테이블">
       <canvas id="game" width="1200" height="772" aria-label="Second Chance 게임"></canvas>
       <div class="mimic-placement-bar" id="mimicPlacementBar" role="status" aria-live="polite" hidden>
         <span>원본 스톤 주변에 분신을 배치하세요</span>
@@ -1199,6 +1204,7 @@
               <div class="home-settings-content">
                 <label class="home-volume-row"><span>배경음악</span><input id="homeMusicVolume" type="range" min="0" max="100" value="100"><output id="homeMusicVolumeValue">100%</output></label>
                 <label class="home-volume-row"><span>효과음</span><input id="homeSfxVolume" type="range" min="0" max="100" value="100"><output id="homeSfxVolumeValue">100%</output></label>
+                <label class="step-hints-toggle privacy-consent-check"><input id="homeStepHintsToggle" type="checkbox" checked><span>단계 안내 표시</span></label>
               </div>
               <footer class="home-settings-actions"><button class="home-account" id="homeSettingsAccountButton" type="button">계정 정보</button></footer>
             </div>
@@ -1391,14 +1397,9 @@
         </div>
       </div>
     </section>
-    <section class="bottom-bar" aria-label="남은 스톤과 턴 조작">
-      <div class="turn-actions">
-        <span id="actionHint">스톤을 뒤로 당겨 파워와 방향을 정하세요</span>
-      </div>
-    </section>
     <section class="hands" aria-label="플레이어 카드">
-      <div class="hand-panel" id="handPanel0"><div class="hand-title"><span class="hand-owner-name" id="handOwner0">플레이어 1</span><span class="hand-hero-name" id="handHero0" hidden tabindex="0"></span></div><div class="hand-row"><div class="hand-cards" id="hand0"></div><button class="trigger-tool" data-owner="0" type="button" aria-label="트리거 배치, 남은 횟수 1" disabled><img src="Trigger_illustration/v6-organic/empty.webp" alt="" draggable="false"><span class="trigger-count" aria-hidden="true">1</span></button><button class="game-deck-button" data-owner="0" type="button" title="플레이어 1의 가방" aria-label="플레이어 1의 가방"></button></div></div>
-      <div class="hand-panel" id="handPanel1"><div class="hand-title"><span class="hand-owner-name" id="handOwner1">플레이어 2</span><span class="hand-hero-name" id="handHero1" hidden tabindex="0"></span></div><div class="hand-row"><div class="hand-cards" id="hand1"></div><button class="trigger-tool" data-owner="1" type="button" aria-label="트리거 배치, 남은 횟수 1" disabled><img src="Trigger_illustration/v6-organic/empty.webp" alt="" draggable="false"><span class="trigger-count" aria-hidden="true">1</span></button><button class="game-deck-button" data-owner="1" type="button" title="플레이어 2의 가방" aria-label="플레이어 2의 가방"></button></div></div>
+      <div class="hand-panel" id="handPanel0"><div class="hand-row"><div class="hand-hero-portrait" id="handPortrait0" role="img" tabindex="0" hidden><img class="hand-portrait-art" alt="" draggable="false"><img class="hand-portrait-frame" alt="" draggable="false"><span class="hand-portrait-name"></span></div><div class="hand-cards" id="hand0"></div><button class="trigger-tool" data-owner="0" type="button" aria-label="트리거 배치, 남은 횟수 1" disabled><img src="Trigger_illustration/v6-organic/empty.webp" alt="" draggable="false"><span class="trigger-count" aria-hidden="true">1</span></button><button class="game-deck-button" data-owner="0" type="button" title="플레이어 1의 가방" aria-label="플레이어 1의 가방"></button></div></div>
+      <div class="hand-panel" id="handPanel1"><div class="hand-row"><div class="hand-cards" id="hand1"></div><button class="trigger-tool" data-owner="1" type="button" aria-label="트리거 배치, 남은 횟수 1" disabled><img src="Trigger_illustration/v6-organic/empty.webp" alt="" draggable="false"><span class="trigger-count" aria-hidden="true">1</span></button><button class="game-deck-button" data-owner="1" type="button" title="플레이어 2의 가방" aria-label="플레이어 2의 가방"></button><div class="hand-hero-portrait" id="handPortrait1" role="img" tabindex="0" hidden><img class="hand-portrait-art" alt="" draggable="false"><img class="hand-portrait-frame" alt="" draggable="false"><span class="hand-portrait-name"></span></div></div></div>
     </section>
   </main>
 
@@ -1519,6 +1520,7 @@
       <div id="settingsAudioControls">
         <label class="volume-row">배경음악<input id="musicVolume" type="range" min="0" max="100" value="100"><output id="musicVolumeValue">100%</output></label>
         <label class="volume-row">효과음<input id="sfxVolume" type="range" min="0" max="100" value="100"><output id="sfxVolumeValue">100%</output></label>
+        <label class="step-hints-toggle privacy-consent-check"><input id="gameStepHintsToggle" type="checkbox" checked><span>단계 안내 표시</span></label>
       </div>
       <div class="settings-actions" id="tutorialSettingsActions" hidden><button id="tutorialRestartButton" type="button">현재 연습 다시 시작</button><button id="tutorialSkipButton" type="button">튜토리얼 스킵</button></div>
       <div class="settings-leave" id="gameLeaveActions" hidden>
@@ -1658,12 +1660,14 @@
       const entityTooltip = document.querySelector('#entityTooltip');
       const entityTooltipTitle = document.querySelector('#entityTooltipTitle');
       const entityTooltipDetail = document.querySelector('#entityTooltipDetail');
+      if (entityTooltip.parentElement !== document.body) document.body.append(entityTooltip);
       const startOverlay = document.querySelector('#startOverlay');
       const openHomeSettingsButton = document.querySelector('#openHomeSettingsButton');
       const homeMusicVolume = document.querySelector('#homeMusicVolume');
       const homeMusicVolumeValue = document.querySelector('#homeMusicVolumeValue');
       const homeSfxVolume = document.querySelector('#homeSfxVolume');
       const homeSfxVolumeValue = document.querySelector('#homeSfxVolumeValue');
+      const homeStepHintsToggle = document.querySelector('#homeStepHintsToggle');
       const homeSettingsCloseButton = document.querySelector('#homeSettingsCloseButton');
       const homeSettingsAccountButton = document.querySelector('#homeSettingsAccountButton');
       const contextHelpOverlay = document.querySelector('#contextHelpOverlay');
@@ -1873,17 +1877,74 @@
       const remainingEls = [document.querySelector('#remaining0'), document.querySelector('#remaining1')];
       const endTurnButton = document.querySelector('#endTurnButton');
       const actionHint = document.querySelector('#actionHint');
+      const turnArrivalNotice = document.querySelector('#turnArrivalNotice');
       const dealPlayer = document.querySelector('#dealPlayer');
       const dealCard = document.querySelector('#dealCard');
       const handEls = [document.querySelector('#hand0'), document.querySelector('#hand1')];
       const handPanels = [document.querySelector('#handPanel0'), document.querySelector('#handPanel1')];
-      const handOwnerEls = [document.querySelector('#handOwner0'), document.querySelector('#handOwner1')];
-      const handHeroEls = [document.querySelector('#handHero0'), document.querySelector('#handHero1')];
+      const handPortraitEls = [document.querySelector('#handPortrait0'), document.querySelector('#handPortrait1')];
       const handsElement = document.querySelector('.hands');
+      const gameViewportMeta = document.querySelector('meta[name="viewport"]');
+      const defaultViewportMetaContent = gameViewportMeta?.content || 'width=device-width, initial-scale=1, viewport-fit=cover';
+      let gameplayZoomLocked = null;
+      function syncGameplayZoomLock() {
+        const locked = document.body.classList.contains('game-active');
+        if (locked === gameplayZoomLocked || !gameViewportMeta) return;
+        gameplayZoomLocked = locked;
+        gameViewportMeta.content = locked
+          ? 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover'
+          : defaultViewportMetaContent;
+      }
+      document.addEventListener('keydown', event => {
+        if (!document.body.classList.contains('game-active') || !(event.ctrlKey || event.metaKey)) return;
+        if (['+', '=', '-', '_', '0'].includes(event.key)) event.preventDefault();
+      }, true);
+      document.addEventListener('wheel', event => {
+        if (document.body.classList.contains('game-active') && (event.ctrlKey || event.metaKey)) event.preventDefault();
+      }, { capture: true, passive: false });
+      for (const gesture of ['gesturestart', 'gesturechange', 'gestureend']) {
+        document.addEventListener(gesture, event => {
+          if (document.body.classList.contains('game-active')) event.preventDefault();
+        }, { capture: true, passive: false });
+      }
+      syncGameplayZoomLock();
+      handPortraitEls.forEach((portrait, index) => {
+        const showHeroDescription = event => {
+          const hero = heroFor(index);
+          if (!hero) return;
+          const rect = portrait.getBoundingClientRect();
+          showFloatingEntityTooltip(hero.name, hero.description, event?.clientX ?? rect.left + rect.width / 2, event?.clientY ?? rect.top);
+        };
+        portrait.addEventListener('pointerenter', showHeroDescription);
+        portrait.addEventListener('pointermove', event => {
+          if (event.pointerType !== 'touch' && !entityTooltip.hidden) showHeroDescription(event);
+        });
+        portrait.addEventListener('pointerleave', () => { entityTooltip.hidden = true; });
+        portrait.addEventListener('focus', showHeroDescription);
+        portrait.addEventListener('blur', () => { entityTooltip.hidden = true; });
+      });
+      scoreEls.forEach((score, index) => {
+        if (!score) return;
+        const showScoreDetail = event => {
+          const detail = score.dataset.scoreDetail;
+          if (!detail) return;
+          const rect = score.getBoundingClientRect();
+          const title = `${playerLabelEls[index]?.textContent?.trim() || PLAYER[index].name} 점수`;
+          showFloatingEntityTooltip(title, detail, event?.clientX ?? rect.left + rect.width / 2, event?.clientY ?? rect.bottom);
+        };
+        score.addEventListener('pointerenter', showScoreDetail);
+        score.addEventListener('pointermove', event => {
+          if (event.pointerType !== 'touch' && !entityTooltip.hidden) showScoreDetail(event);
+        });
+        score.addEventListener('pointerleave', () => { entityTooltip.hidden = true; });
+        score.addEventListener('focus', showScoreDetail);
+        score.addEventListener('blur', () => { entityTooltip.hidden = true; });
+      });
       const triggerToolButtons = [...document.querySelectorAll('.trigger-tool')];
       const gameSettingsOverlay = document.querySelector('#gameSettingsOverlay');
       const gameSettingsTitle = document.querySelector('#gameSettingsTitle');
       const settingsAudioControls = document.querySelector('#settingsAudioControls');
+      const gameStepHintsToggle = document.querySelector('#gameStepHintsToggle');
       const gameSettingsMainActions = document.querySelector('#gameSettingsMainActions');
       const gameReturnButton = document.querySelector('#gameReturnButton');
       const tutorialSettingsActions = document.querySelector('#tutorialSettingsActions');
@@ -2495,6 +2556,8 @@
       let publicRoomRefreshTimer = null;
       let publicRoomFetchPending = false;
       let feedbackSequence = 0;
+      let lastAnnouncedTurnKey = null;
+      let turnNoticeTimer = null;
 
       function savedVolume(key) {
         try { return Math.max(0, Math.min(100, Number(localStorage.getItem(key) ?? 100) || 0)); }
@@ -2509,6 +2572,50 @@
       homeMusicVolumeValue.textContent = `${audio.musicVolume}%`;
       homeSfxVolume.value = String(audio.sfxVolume);
       homeSfxVolumeValue.textContent = `${audio.sfxVolume}%`;
+      let stepHintsEnabled = true;
+      try { stepHintsEnabled = localStorage.getItem('ucc.stepHints') !== 'false'; } catch {}
+      homeStepHintsToggle.checked = stepHintsEnabled;
+      gameStepHintsToggle.checked = stepHintsEnabled;
+      document.body.dataset.stepHints = String(stepHintsEnabled);
+
+      function setStepHintsEnabled(enabled) {
+        stepHintsEnabled = Boolean(enabled);
+        homeStepHintsToggle.checked = stepHintsEnabled;
+        gameStepHintsToggle.checked = stepHintsEnabled;
+        document.body.dataset.stepHints = String(stepHintsEnabled);
+        try { localStorage.setItem('ucc.stepHints', String(stepHintsEnabled)); } catch {}
+        if (!stepHintsEnabled) {
+          actionHint.classList.remove('near-pointer');
+          turnArrivalNotice.classList.remove('is-visible');
+          document.querySelector('.table-clock-bar')?.classList.remove('has-turn-notice');
+        }
+      }
+
+      function resetTurnArrivalNotice() {
+        lastAnnouncedTurnKey = null;
+        clearTimeout(turnNoticeTimer);
+        turnNoticeTimer = null;
+        turnArrivalNotice.classList.remove('is-visible');
+        document.querySelector('.table-clock-bar')?.classList.remove('has-turn-notice');
+      }
+
+      function announceTurnIfChanged() {
+        if (!stepHintsEnabled || !document.body.classList.contains('game-active') || turns.isComplete ||
+            ['intro', 'map-select', 'hero-select', 'finished'].includes(state.phase)) return;
+        const key = `${onlineSession?.roundIndex ?? 0}:${turns.globalTurn}:${turns.playerIndex}`;
+        if (key === lastAnnouncedTurnKey) return;
+        lastAnnouncedTurnKey = key;
+        clearTimeout(turnNoticeTimer);
+        turnArrivalNotice.textContent = `${PLAYER[turns.playerIndex].name} 차례`;
+        turnArrivalNotice.classList.add('is-visible');
+        document.querySelector('.table-clock-bar')?.classList.add('has-turn-notice');
+        turnNoticeTimer = setTimeout(() => {
+          if (lastAnnouncedTurnKey !== key) return;
+          turnArrivalNotice.classList.remove('is-visible');
+          document.querySelector('.table-clock-bar')?.classList.remove('has-turn-notice');
+          turnNoticeTimer = null;
+        }, 1350);
+      }
 
       function updateDeviceLayout() {
         document.body.dataset.device = mobileLayoutQuery.matches ? 'mobile' : 'desktop';
@@ -2589,6 +2696,9 @@
           portrait.src = hero.portrait;
           portrait.alt = '';
           portrait.decoding = 'async';
+          const portraitWindow = document.createElement('span');
+          portraitWindow.className = 'hero-portrait-window';
+          portraitWindow.append(portrait);
           const copy = document.createElement('span');
           copy.className = 'hero-option-copy';
           const name = document.createElement('strong');
@@ -2599,7 +2709,7 @@
           detail.className = 'hero-option-detail';
           detail.textContent = hero.description;
           copy.append(name, detail);
-          button.append(portrait, copy);
+          button.append(portraitWindow, copy);
           button.addEventListener('click', () => chooseHero(owner, id));
           return button;
         }));
@@ -2734,6 +2844,7 @@
           aiming: false, aimPoint: null, aimTension: 0, powerMeter: null, repositionUnit: null, supportUnit: null, repositionMode: null,
           pendingTriggerPlacement: null, pendingTriggerCharge: null, lastTriggerCast: [null, null], selectedTriggerType: null, phaseBeforeTriggerSelect: null, phaseBeforeTriggerAim: null,
           turnDeadline: null, turnPausedAt: null, turnPausedByHost: false, timerTurn: -1, mapTime: 0 });
+        resetTurnArrivalNotice();
         turns.reset();
         analysisSelectOverlay.hidden = true;
         toolSwapSelectOverlay.hidden = true;
@@ -2795,6 +2906,7 @@
         state.bricks = [];
         state.effects = [];
         state.particles = [];
+        resetTurnArrivalNotice();
         turns.reset(0);
 
         const own = new CurlingUnit({ id: `trial-own-${Date.now()}`, owner: 0, turnNumber: 1, x: 410, y: 365 });
@@ -3848,9 +3960,9 @@
         if (nextLevel === state.speedLevel) return false;
         const previousLevel = state.speedLevel;
         state.speedLevel = nextLevel;
-        state.gameSpeed = [1, .65, .4][nextLevel];
+        state.gameSpeed = [1, .4, .25][nextLevel];
         speedToggle.dataset.speedLevel = String(nextLevel);
-        speedLabel.textContent = ['100%', '65%', '40%'][nextLevel];
+        speedLabel.textContent = ['100%', '40%', '25%'][nextLevel];
         speedToggle.setAttribute('aria-pressed', String(nextLevel > 0));
         speedToggle.setAttribute('aria-label', `게임 속도: ${nextLevel === 0 ? '정상 속도' : speedLabel.textContent}`);
         speedToggle.classList.remove('speed-changed');
@@ -3908,7 +4020,7 @@
           return;
         }
         const roundKey = `${snapshot.series?.roundIndex ?? 0}:${snapshot.currentMapId}`;
-        const speed = [1, .65, .4][snapshot.speedLevel] ?? 1;
+        const speed = [1, .4, .25][snapshot.speedLevel] ?? 1;
         const running = !['intro', 'map-select', 'hero-select', 'dealing', 'trigger-select', 'finished'].includes(snapshot.phase);
         const latencyCompensation = running ? Math.min(.12, Math.max(0, (onlineSession.connectionRtt || 0) / 2000)) * speed : 0;
         const sampleTime = snapshot.mapTime + latencyCompensation;
@@ -4201,6 +4313,7 @@
         gameSettingsTitle.textContent = '게임 설정';
         document.body.dataset.tutorial = 'false';
         delete document.body.dataset.tutorialStage;
+        resetTurnArrivalNotice();
         turns.reset(roundStartingPlayer());
         localAimPointerId = null;
         state.units = [];
@@ -4951,6 +5064,7 @@
         document.body.dataset.adventureHand = state.adventure && state.hands[0].length ? 'true' : 'false';
         document.body.dataset.adventureDeck = state.adventure?.hasBag ? 'true' : 'false';
         document.body.classList.toggle('game-active', !['intro', 'map-select', 'hero-select', 'finished'].includes(state.phase));
+        syncGameplayZoomLock();
         const scores = calculateScores();
         scores.forEach((result, index) => {
           const details = result.units.map((unit, unitIndex) => `${unit.turnNumber || unitIndex + 1}번째 스톤 ${unit.score}점`);
@@ -4963,16 +5077,24 @@
           scoreEls[index].dataset.scoreDetail = breakdown;
           scoreEls[index].setAttribute('aria-label', `${PLAYER[index].name} ${result.score}점. ${details.join('. ')}`);
           const hero = heroFor(index);
-          [panels[index], handPanels[index], handHeroEls[index], heroBadges[index]].forEach(element => {
+          [panels[index], handPanels[index], heroBadges[index]].forEach(element => {
             if (hero) element.dataset.heroId = hero.id;
             else delete element.dataset.heroId;
           });
-          handOwnerEls[index].textContent = PLAYER[index].name;
-          handHeroEls[index].hidden = !hero;
-          handHeroEls[index].textContent = hero?.name || '';
-          handHeroEls[index].setAttribute('data-description', hero?.description || '');
-          handHeroEls[index].setAttribute('aria-label', hero ? `${hero.name}: ${hero.description}` : '');
-          handHeroEls[index].title = hero?.description || '';
+          const portrait = handPortraitEls[index];
+          portrait.hidden = !hero;
+          if (hero) portrait.dataset.heroId = hero.id;
+          else delete portrait.dataset.heroId;
+          portrait.setAttribute('aria-label', hero ? `${hero.name}. ${hero.description}` : '');
+          const portraitArt = portrait.querySelector('.hand-portrait-art');
+          const portraitFrame = portrait.querySelector('.hand-portrait-frame');
+          const portraitName = portrait.querySelector('.hand-portrait-name');
+          portraitName.textContent = hero?.name || '';
+          if (hero) {
+            if (portraitArt.getAttribute('src') !== hero.portrait) portraitArt.src = hero.portrait;
+            const frameSource = 'shared-ui/deck-redesign/hero-portrait-frame-v2.png';
+            if (portraitFrame.getAttribute('src') !== frameSource) portraitFrame.src = frameSource;
+          }
           heroBadges[index].hidden = !hero;
           heroBadges[index].textContent = hero ? `영웅 · ${hero.name}` : '';
           heroBadges[index].title = hero?.description || '';
@@ -4987,11 +5109,29 @@
         endTurnButton.disabled = Boolean(state.adventure) || Boolean(state.mimicPlacement) || state.phase !== 'turn-ready' ||
           state.bullets.length > 0 || !canControlPlayer(turns.playerIndex);
         speedToggle.disabled = !canChangeSpeed();
-        actionHint.textContent = state.phase === 'placement' ? '발사할 높이를 골라 테이블을 클릭하세요' : state.phase === 'sliding' ? '스톤이 움직이는 중' : state.phase === 'turn-ready' ? '턴을 마치거나 카드를 사용하세요' : state.phase === 'reposition' && state.repositionMode === 'ammo' ? '총알 장전: 당겨서 발사' : state.phase === 'reposition' && state.repositionMode === 'heavy-blow' ? '묵직한 한방: 스톤을 당겨 충격파를 발산하세요' : state.phase === 'trigger-select' ? '트리거 종류를 선택하세요' : needsPowerMeter() && state.aiming && !aiControlsLaunch() ? `파워 ${Math.round(state.aimTension * 100)}% · 놓으면 발사됩니다` : needsPowerMeter() && state.powerMeter?.stage === 'locked' ? '스톤을 드래그해 방향을 지정하세요' : needsPowerMeter() && state.powerMeter?.stage === 'spinning' ? '미터를 보고 파워를 결정하세요' : '스톤을 뒤로 당겨 파워와 방향을 정하세요';
+        const currentUnitHasLaunched = Boolean(turns.currentUnit?.hasLaunched);
+        actionHint.textContent = state.phase === 'placement' ? '발사 위치에 스톤을 배치하세요.' :
+          state.phase === 'sliding' ? '스톤이 움직이고 있습니다.' :
+          state.phase === 'turn-ready' ? currentUnitHasLaunched
+            ? '카드를 사용하거나 트리거를 배치하고 턴을 넘기세요.'
+            : '스톤을 발사하거나 카드를 사용하고 트리거를 배치하세요.' :
+          state.phase === 'reposition' ? '스톤을 잡아당겨 카드 효과를 사용하세요.' :
+          state.phase === 'trigger-select' ? '트리거를 선택하세요.' :
+          needsPowerMeter() && state.aiming && !aiControlsLaunch() ? `발사 파워 ${Math.round(state.aimTension * 100)}% · 놓으면 발사됩니다.` :
+          needsPowerMeter() && state.powerMeter?.stage === 'locked' ? '스톤을 당겨 방향을 정하세요.' :
+          needsPowerMeter() && state.powerMeter?.stage === 'spinning' ? '미터를 확인해 발사 파워를 정하세요.' :
+          '스톤을 당겨 발사 파워와 방향을 정하세요.';
         if (state.aiMode && turns.playerIndex === state.aiOwner && !turns.isComplete)
-          actionHint.textContent = `${aiLevel().name} · 수를 계산하는 중`;
-        if (state.mimicPlacement) actionHint.textContent = '분신을 배치하거나 Esc를 눌러 취소하세요';
-        handPanels.forEach((panel, index) => panel.classList.toggle('current', !turns.isComplete && index === turns.playerIndex));
+          actionHint.textContent = 'AI가 수를 계산하고 있습니다.';
+        if (state.mimicPlacement) actionHint.textContent = '분신 위치를 선택하세요.';
+        handPanels.forEach((panel, index) => {
+          const current = !turns.isComplete && index === turns.playerIndex;
+          panel.classList.toggle('current', current);
+          const placementLocked = current && state.phase === 'placement';
+          panel.classList.toggle('placement-locked', placementLocked);
+          panel.setAttribute('aria-disabled', String(placementLocked));
+          panel.inert = placementLocked;
+        });
         handsElement.classList.toggle('active-p1', !turns.isComplete && turns.playerIndex === 0);
         handsElement.classList.toggle('active-p2', !turns.isComplete && turns.playerIndex === 1);
         updateTriggerTools();
@@ -5017,9 +5157,9 @@
           turnText.textContent = '모험 · 01';
           remainingEls[0].setAttribute('aria-label', `남은 스톤 ${turns.currentUnit?.hasLaunched ? 0 : 1}개`);
           remainingEls[0].querySelectorAll('img').forEach((image, index) => { image.hidden = index > 0 || Boolean(turns.currentUnit?.hasLaunched); });
-          actionHint.textContent = state.phase === 'reposition' ? '재배치: 파워와 방향을 정하세요' :
-            state.phase === 'turn-ready' ? '목표 영역에 도달하세요' : actionHint.textContent;
+          if (state.phase === 'turn-ready') actionHint.textContent = '목표 영역에 도달하세요.';
         }
+        announceTurnIfChanged();
       }
 
       function canChangeSpeed() {
@@ -8462,6 +8602,7 @@
           return;
         }
         if (state.cardTrial) {
+          setSpeedLevel(0);
           playSound('turn');
           state.powerMeter = null;
           state.repositionUnit = null;
@@ -8476,6 +8617,7 @@
           sendOnlineAction({ type: 'end-turn' });
           return;
         }
+        setSpeedLevel(0);
         playSound('turn');
         state.powerMeter = null;
         state.repositionUnit = null;
@@ -9010,6 +9152,7 @@
           addDrawnCardToHand(0, { ...deckCard(id), instanceId: `adventure-card-${++state.nextCardId}` });
         }
         state.heroChoices = [null, null];
+        resetTurnArrivalNotice();
         turns.reset(0);
         turns.createCurrentUnit();
         Object.assign(turns.currentUnit, adventureStage.start, {
@@ -9291,6 +9434,7 @@
       function finishAdventureStage(outcome) {
         const adventure = state.adventure;
         if (!adventure || adventure.outcome) return;
+        setSpeedLevel(0);
         adventure.outcome = outcome;
         emitAdventureEvent({ type: outcome === 'success' ? 'stage-success' : 'stage-failure' });
         adventure.markResult = SecondChanceAdventureMarks.evaluate(adventure.stage.explorationMarks, {
@@ -9419,6 +9563,7 @@
         pendingHeroTransition = null;
         pendingCardDraw = null;
         cardDrawVisual = null;
+        setSpeedLevel(0);
         state.powerMeter = null;
         dealOverlay.hidden = true;
         hideCardInspector();
@@ -10618,6 +10763,7 @@
           state.aiMatchPromise = matchPromise;
         }
         hideCardInspector();
+        resetTurnArrivalNotice();
         turns.reset(roundStartingPlayer());
         state.heroCardDraws = [0, 0];
         state.decks = state.playerDecks.map(ids => {
@@ -11408,17 +11554,51 @@
         const rect = element.getBoundingClientRect();
         const viewportWidth = window.innerWidth || 1200;
         const viewportHeight = window.innerHeight || 710;
-        const width = Math.min(232, viewportWidth - 16);
-        const height = Math.min(340, viewportHeight - 24);
+        const width = Math.max(280, Math.min(640, viewportWidth - 24));
         cardInspector.style.width = `${width}px`;
-        cardInspector.style.height = `${height}px`;
-        cardInspector.style.left = `${Math.max(8, Math.min(viewportWidth - width - 8, rect.left + rect.width / 2 - width / 2))}px`;
-        cardInspector.style.top = `${Math.max(8, Math.min(viewportHeight - height - 8, rect.top + rect.height - height))}px`;
+        cardInspector.style.height = 'auto';
+        cardInspector.style.maxHeight = '';
+        cardInspector.dataset.compact = 'false';
         cardInspector.dataset.owner = String(owner);
         cardInspector.dataset.cardId = card.instanceId;
+        cardInspector.dataset.heroId = CARD_METADATA[card.id]?.heroIds?.[0] || heroFor(owner)?.id || '';
+        cardInspector.dataset.refined = String(Boolean(card.refined));
         cardInspector.setAttribute('aria-label', `${cardDisplayName(card)}: ${cardDisplayDescription(card)}`);
-        cardInspector.replaceChildren(createCardFace(card));
+        const presentation = CARD_PRESENTATION[card.id] || {};
+        const content = document.createElement('div');
+        content.className = 'card-inspector-content';
+        const art = document.createElement('img');
+        art.className = 'card-inspector-art';
+        art.src = card.refined ? presentation.refinedArt || presentation.art || '' : presentation.art || '';
+        art.alt = `${cardDisplayName(card)} 카드 삽화`;
+        art.draggable = false;
+        const artFrame = document.createElement('div');
+        artFrame.className = 'card-inspector-art-frame';
+        artFrame.append(art);
+        const copy = document.createElement('div');
+        copy.className = 'card-inspector-copy';
+        const name = document.createElement('h2');
+        name.className = 'card-inspector-name';
+        name.textContent = cardDisplayName(card);
+        const rules = document.createElement('p');
+        rules.className = 'card-inspector-rules';
+        rules.textContent = cardDisplayDescription(card);
+        copy.append(name, rules);
+        content.append(artFrame, copy);
+        cardInspector.replaceChildren(content);
         cardInspector.hidden = false;
+        let panelHeight = cardInspector.getBoundingClientRect().height;
+        if (panelHeight > viewportHeight - 24) {
+          cardInspector.dataset.compact = 'true';
+          panelHeight = cardInspector.getBoundingClientRect().height;
+        }
+        const left = Math.max(12, Math.min(viewportWidth - width - 12, rect.left + rect.width / 2 - width / 2));
+        cardInspector.style.left = `${left}px`;
+        const aboveTop = rect.top - panelHeight - 12;
+        const belowTop = rect.bottom + 12;
+        const desiredTop = aboveTop >= 12 ? aboveTop : belowTop + panelHeight <= viewportHeight - 12
+          ? belowTop : rect.top + rect.height / 2 - panelHeight / 2;
+        cardInspector.style.top = `${Math.max(12, Math.min(viewportHeight - panelHeight - 12, desiredTop))}px`;
       }
 
       function fadeConsumedCard(element) {
@@ -11487,6 +11667,7 @@
       }
 
       function finishGame() {
+        setSpeedLevel(0);
         if (state.cardTrial) {
           state.phase = 'finished';
           state.powerMeter = null;
@@ -13332,6 +13513,23 @@
           : { own, fill: '#4b252b', outline: 'rgba(255, 150, 160, 0.58)', trace: ['#ff9da5', '#ffe0e2'], scan: '#ffc1c6', particle: '#ffd0d3' };
       }
 
+      function showFloatingEntityTooltip(title, detail, clientX, clientY) {
+        entityTooltipTitle.textContent = title;
+        entityTooltipDetail.textContent = detail;
+        entityTooltip.hidden = false;
+        const gap = 10;
+        const width = entityTooltip.offsetWidth;
+        const height = entityTooltip.offsetHeight;
+        const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+        const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+        let left = clientX + 14;
+        let top = clientY + 14;
+        if (left + width > viewportWidth - gap) left = clientX - width - 14;
+        if (top + height > viewportHeight - gap) top = clientY - height - 14;
+        entityTooltip.style.left = `${Math.max(gap, Math.min(viewportWidth - width - gap, left))}px`;
+        entityTooltip.style.top = `${Math.max(gap, Math.min(viewportHeight - height - gap, top))}px`;
+      }
+
       function updateEntityTooltip(event) {
         if (event.pointerType === 'touch' || state.cardDrag || state.effects.some(effect => effect.type === 'skull') || ['intro', 'map-select', 'hero-select', 'dealing', 'trigger-select', 'finished'].includes(state.phase)) {
           entityTooltip.hidden = true;
@@ -13373,16 +13571,7 @@
           entityTooltip.hidden = true;
           return;
         }
-        entityTooltipTitle.textContent = target.content.title;
-        entityTooltipDetail.textContent = target.content.detail;
-        entityTooltip.hidden = false;
-        const shellRect = canvas.parentElement.getBoundingClientRect();
-        const x = event.clientX - shellRect.left;
-        const y = event.clientY - shellRect.top;
-        const width = entityTooltip.offsetWidth;
-        const height = entityTooltip.offsetHeight;
-        entityTooltip.style.left = `${Math.max(8, Math.min(shellRect.width - width - 8, x + 14))}px`;
-        entityTooltip.style.top = `${Math.max(8, Math.min(shellRect.height - height - 8, y + 14))}px`;
+        showFloatingEntityTooltip(target.content.title, target.content.detail, event.clientX, event.clientY);
       }
 
       function drawItemTriggers() {
@@ -14435,6 +14624,20 @@
       for (const [key, controls] of Object.entries(audioVolumeControls)) {
         controls.forEach(input => input.addEventListener('input', () => setAudioVolume(key, input.value)));
       }
+      homeStepHintsToggle.addEventListener('change', () => setStepHintsEnabled(homeStepHintsToggle.checked));
+      gameStepHintsToggle.addEventListener('change', () => setStepHintsEnabled(gameStepHintsToggle.checked));
+      document.addEventListener('pointermove', event => {
+        if (!stepHintsEnabled || !['mouse', 'pen'].includes(event.pointerType)) {
+          actionHint.classList.remove('near-pointer');
+          return;
+        }
+        const rect = actionHint.getBoundingClientRect();
+        const nearestX = Math.max(rect.left, Math.min(event.clientX, rect.right));
+        const nearestY = Math.max(rect.top, Math.min(event.clientY, rect.bottom));
+        const distance = Math.hypot(event.clientX - nearestX, event.clientY - nearestY);
+        actionHint.classList.toggle('near-pointer', rect.width > 0 && rect.height > 0 && distance < 104);
+      }, { passive: true });
+      document.addEventListener('pointerleave', () => actionHint.classList.remove('near-pointer'));
       document.addEventListener('pointermove', moveCardGhost);
       document.addEventListener('pointerup', finishCardDrag);
       document.addEventListener('pointercancel', cancelCardDrag);

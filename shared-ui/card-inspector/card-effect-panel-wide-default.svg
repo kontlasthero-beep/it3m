@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="wide-copper-rim" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d2a477"/>
+      <stop offset="0.13" stop-color="#8c5a3b"/>
+      <stop offset="0.29" stop-color="#bd8457"/>
+      <stop offset="0.51" stop-color="#69432f"/>
+      <stop offset="0.74" stop-color="#b77b50"/>
+      <stop offset="0.91" stop-color="#754a32"/>
+      <stop offset="1" stop-color="#d0a174"/>
+    </linearGradient>
+    <linearGradient id="wide-surface" x1="0" y1="0" x2="0.96" y2="1">
+      <stop offset="0" stop-color="#102324"/>
+      <stop offset="0.5" stop-color="#0d1c1d"/>
+      <stop offset="1" stop-color="#0a1718"/>
+    </linearGradient>
+    <linearGradient id="wide-accent-wash" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#5b938c" stop-opacity="0.17"/>
+      <stop offset="0.09" stop-color="#5b938c" stop-opacity="0.07"/>
+      <stop offset="0.24" stop-color="#5b938c" stop-opacity="0.015"/>
+      <stop offset="0.5" stop-color="#5b938c" stop-opacity="0"/>
+      <stop offset="0.77" stop-color="#5b938c" stop-opacity="0.015"/>
+      <stop offset="0.92" stop-color="#5b938c" stop-opacity="0.07"/>
+      <stop offset="1" stop-color="#5b938c" stop-opacity="0.15"/>
+    </linearGradient>
+    <linearGradient id="wide-edge-sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f0c89a" stop-opacity="0.3"/>
+      <stop offset="0.07" stop-color="#f0c89a" stop-opacity="0.035"/>
+      <stop offset="0.9" stop-color="#080d0e" stop-opacity="0.015"/>
+      <stop offset="1" stop-color="#080d0e" stop-opacity="0.38"/>
+    </linearGradient>
+    <pattern id="wide-surface-grain" width="197" height="137" patternUnits="userSpaceOnUse">
+      <path d="M13 17h8 M72 29h5 M153 13h7 M38 57h6 M181 71h8 M19 101h4 M91 119h8 M137 128h5 M113 48h4 M57 87h3" fill="none" stroke="#5b938c" stroke-width="1" opacity="0.082"/>
+      <path d="M30 36l3-2 M109 24l2 1 M164 45l4-1 M62 74l2-2 M147 93l3 1 M27 122l4-1 M188 111l2-2 M84 101l2 1" fill="none" stroke="#b9a88d" stroke-width="0.8" opacity="0.065"/>
+      <circle cx="47" cy="22" r="0.85" fill="#c89b6d" opacity="0.1"/>
+      <circle cx="126" cy="67" r="0.75" fill="#b7c4b8" opacity="0.075"/>
+      <circle cx="173" cy="125" r="0.7" fill="#c89b6d" opacity="0.08"/>
+      <circle cx="9" cy="81" r="0.65" fill="#d5c3a7" opacity="0.065"/>
+    </pattern>
+    <pattern id="wide-rim-wear" width="151" height="83" patternUnits="userSpaceOnUse">
+      <path d="M8 12h9 M39 19l5-2 M83 8h4 M119 28l8 1 M15 56l5-1 M65 43h7 M97 68l6-2 M139 54h4 M48 79l3 1" fill="none" stroke="#f0c494" stroke-width="1.4" opacity="0.31"/>
+      <path d="M25 34h3 M72 24l2 1 M132 13l3-1 M9 72h5 M88 54l2-2 M146 77l2 1" fill="none" stroke="#382820" stroke-width="1.8" opacity="0.44"/>
+      <circle cx="55" cy="11" r="0.9" fill="#e6b986" opacity="0.26"/>
+      <circle cx="108" cy="45" r="0.75" fill="#35261d" opacity="0.52"/>
+    </pattern>
+    <clipPath id="wide-outer-shape">
+      <path d="M34 3H1246L1277 34V726L1246 757H34L3 726V34Z"/>
+    </clipPath>
+    <clipPath id="wide-inner-shape">
+      <path d="M45 17H1235L1263 45V715L1235 743H45L17 715V45Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- Transparent outside; the landscape frame keeps its clipped corners when scaled. -->
+  <path d="M34 3H1246L1277 34V726L1246 757H34L3 726V34Z" fill="url(#wide-copper-rim)" stroke="#4a3427" stroke-width="2"/>
+  <path d="M34 3H1246L1277 34V726L1246 757H34L3 726V34Z" fill="url(#wide-rim-wear)" clip-path="url(#wide-outer-shape)" opacity="0.67"/>
+  <path d="M40 10H1240L1270 40V720L1240 750H40L10 720V40Z" fill="#091314" stroke="#1b2928" stroke-width="2"/>
+  <path d="M45 17H1235L1263 45V715L1235 743H45L17 715V45Z" fill="url(#wide-surface)" stroke="#49382a" stroke-width="1.5"/>
+  <path d="M45 17H1235L1263 45V715L1235 743H45L17 715V45Z" fill="url(#wide-accent-wash)" clip-path="url(#wide-inner-shape)"/>
+  <path d="M45 17H1235L1263 45V715L1235 743H45L17 715V45Z" fill="url(#wide-surface-grain)" clip-path="url(#wide-inner-shape)" opacity="0.64"/>
+  <path d="M45 17H1235L1263 45V715L1235 743H45L17 715V45Z" fill="url(#wide-edge-sheen)" clip-path="url(#wide-inner-shape)"/>
+
+  <!-- One restrained inset rule and short horizontal edge engravings suited to the wide panel. -->
+  <path d="M53 33H1227L1247 53V707L1227 727H53L33 707V53Z" fill="none" stroke="#5b938c" stroke-width="1.4" opacity="0.52"/>
+  <path d="M65 25h136 M65 30h72 M1079 25h136 M1143 30h72 M65 735h136 M65 730h72 M1079 735h136 M1143 730h72" fill="none" stroke="#d0a078" stroke-width="1.2" opacity="0.25"/>
+  <path d="M10 720L40 750H1240" fill="none" stroke="#4a3326" stroke-width="1.5" opacity="0.7"/>
+  <path d="M17 88l5-8 M22 94l3-4 M1251 91l5 7 M1246 671l8-5 M29 711l8 5 M1211 20l8 2 M72 744l6 2 M1266 66l-2 6" fill="none" stroke="#d0a078" stroke-width="1.45" opacity="0.4"/>
+  <path d="M13 175l2-8 M1260 592l-3 7 M98 746l6 1 M1204 15l7-1" fill="none" stroke="#5b938c" stroke-width="1.8" opacity="0.34"/>
+</svg>

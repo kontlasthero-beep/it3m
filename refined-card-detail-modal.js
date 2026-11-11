@@ -27,6 +27,12 @@
     return { name, effect, artSrc, alt };
   }
 
+  const HERO_IDS = new Set(["trap-master", "hunter", "big-boy", "joker", "refiner"]);
+
+  function normalizeHeroId(value) {
+    return typeof value === "string" && HERO_IDS.has(value) ? value : "";
+  }
+
   function deckRefinedCard(base) {
     // The deck editor passes the displayed card, while the catalog passes a full
     // refinedCard. Match the editor's base name against the shared registry.
@@ -103,7 +109,10 @@
 
     const root = makeElement("div", ROOT_CLASS);
     root.setAttribute("data-sc-card-detail-modal", "");
+    const heroId = normalizeHeroId(settings.heroId);
+    if (heroId) root.dataset.heroId = heroId;
     const dialog = makeElement("section", "sc-card-detail-dialog");
+    if (heroId) dialog.dataset.heroId = heroId;
     dialog.setAttribute("role", "dialog");
     dialog.setAttribute("aria-modal", "true");
     dialog.setAttribute("aria-labelledby", "sc-card-detail-title");
@@ -132,19 +141,20 @@
 
     const main = makeElement("div", "sc-card-detail-main");
     const artFrame = makeElement("div", "sc-card-detail-art-frame");
+    const artWindow = makeElement("div", "sc-card-detail-art-window");
     const artImage = makeElement("img", "sc-card-detail-art");
     artImage.alt = base.alt;
     artImage.decoding = "async";
     artImage.draggable = false;
     const artPlaceholder = makeElement("div", "sc-card-detail-art-placeholder", "◇");
     artPlaceholder.setAttribute("aria-hidden", "true");
-    artFrame.append(artImage, artPlaceholder);
+    artWindow.append(artImage, artPlaceholder);
+    artFrame.append(artWindow);
     const copy = makeElement("div", "sc-card-detail-copy");
     const effectSection = makeElement("section", "sc-card-detail-effect-section");
-    const effectLabel = makeElement("span", "sc-card-detail-section-label", "카드 효과");
     const effectText = makeElement("p", "sc-card-detail-effect", base.effect);
     effectText.setAttribute("aria-live", "polite");
-    effectSection.append(effectLabel, effectText);
+    effectSection.append(effectText);
     const toggleRow = makeElement("div", "sc-card-detail-toggle-row");
     let toggleButton = null;
     if (refined) {

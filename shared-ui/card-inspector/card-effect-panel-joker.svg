@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="1040" viewBox="0 0 720 1040" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="copper-rim" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d2a477"/>
+      <stop offset="0.12" stop-color="#8c5a3b"/>
+      <stop offset="0.28" stop-color="#bd8457"/>
+      <stop offset="0.51" stop-color="#69432f"/>
+      <stop offset="0.73" stop-color="#b77b50"/>
+      <stop offset="0.9" stop-color="#754a32"/>
+      <stop offset="1" stop-color="#d0a174"/>
+    </linearGradient>
+    <linearGradient id="surface" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#19271e"/>
+      <stop offset="0.48" stop-color="#142019"/>
+      <stop offset="1" stop-color="#101812"/>
+    </linearGradient>
+    <linearGradient id="accent-wash" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#638166" stop-opacity="0.19"/>
+      <stop offset="0.16" stop-color="#638166" stop-opacity="0.08"/>
+      <stop offset="0.42" stop-color="#638166" stop-opacity="0"/>
+      <stop offset="0.82" stop-color="#638166" stop-opacity="0.025"/>
+      <stop offset="1" stop-color="#638166" stop-opacity="0.13"/>
+    </linearGradient>
+    <linearGradient id="edge-sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f0c89a" stop-opacity="0.34"/>
+      <stop offset="0.05" stop-color="#f0c89a" stop-opacity="0.05"/>
+      <stop offset="0.93" stop-color="#080d0e" stop-opacity="0.02"/>
+      <stop offset="1" stop-color="#080d0e" stop-opacity="0.42"/>
+    </linearGradient>
+    <pattern id="surface-grain" width="137" height="163" patternUnits="userSpaceOnUse">
+      <path d="M12 19h9 M73 33h4 M101 13h7 M35 61h5 M119 77h8 M18 105h4 M62 126h8 M93 149h5 M8 143h3 M127 116h4" fill="none" stroke="#638166" stroke-width="1" opacity="0.09"/>
+      <path d="M27 38l3-2 M86 58l2 1 M48 91l4-1 M108 101l2-2 M31 132l2 1 M76 11l2 2 M4 73l2-1 M115 39l3 1" fill="none" stroke="#b9a88d" stroke-width="0.8" opacity="0.07"/>
+      <circle cx="56" cy="22" r="0.9" fill="#c89b6d" opacity="0.1"/>
+      <circle cx="17" cy="83" r="0.8" fill="#b7c4b8" opacity="0.08"/>
+      <circle cx="99" cy="128" r="0.75" fill="#c89b6d" opacity="0.08"/>
+      <circle cx="129" cy="157" r="0.7" fill="#d5c3a7" opacity="0.07"/>
+    </pattern>
+    <pattern id="rim-wear" width="113" height="91" patternUnits="userSpaceOnUse">
+      <path d="M7 13h8 M29 19l5-2 M62 8h3 M84 29l7 1 M12 55l4-1 M45 42h6 M73 68l5-2 M101 54h4 M34 82l3 1 M91 87h6" fill="none" stroke="#f0c494" stroke-width="1.4" opacity="0.32"/>
+      <path d="M20 34h3 M54 25l2 1 M96 13l3-1 M8 73h5 M65 53l2-2 M108 78l2 1" fill="none" stroke="#382820" stroke-width="1.8" opacity="0.46"/>
+      <circle cx="42" cy="11" r="1" fill="#e6b986" opacity="0.28"/>
+      <circle cx="80" cy="45" r="0.8" fill="#35261d" opacity="0.55"/>
+    </pattern>
+    <clipPath id="outer-shape">
+      <path d="M38 3H682L717 38V1002L682 1037H38L3 1002V38Z"/>
+    </clipPath>
+    <clipPath id="inner-shape">
+      <path d="M48 18H672L702 48V992L672 1022H48L18 992V48Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- Transparent outside the clipped salvage-metal silhouette. -->
+  <path d="M38 3H682L717 38V1002L682 1037H38L3 1002V38Z" fill="url(#copper-rim)" stroke="#4a3427" stroke-width="2"/>
+  <path d="M38 3H682L717 38V1002L682 1037H38L3 1002V38Z" fill="url(#rim-wear)" clip-path="url(#outer-shape)" opacity="0.68"/>
+  <path d="M43 10H677L710 43V997L677 1030H43L10 997V43Z" fill="#091314" stroke="#1b2928" stroke-width="2"/>
+  <path d="M48 18H672L702 48V992L672 1022H48L18 992V48Z" fill="url(#surface)" stroke="#49382a" stroke-width="1.5"/>
+  <path d="M48 18H672L702 48V992L672 1022H48L18 992V48Z" fill="url(#accent-wash)" clip-path="url(#inner-shape)"/>
+  <path d="M48 18H672L702 48V992L672 1022H48L18 992V48Z" fill="url(#surface-grain)" clip-path="url(#inner-shape)" opacity="0.64"/>
+  <path d="M48 18H672L702 48V992L672 1022H48L18 992V48Z" fill="url(#edge-sheen)" clip-path="url(#inner-shape)"/>
+  <!-- Single fine inset rule; the central field remains open for interface content. -->
+  <path d="M54 35H665L685 55V985L665 1005H55L35 985V55Z" fill="none" stroke="#638166" stroke-width="1.35" opacity="0.53"/>
+  <path d="M43 11H677L709 43" fill="none" stroke="#f1c795" stroke-width="1.2" opacity="0.42"/>
+  <path d="M11 997L43 1029H677" fill="none" stroke="#4a3326" stroke-width="1.6" opacity="0.72"/>
+  <!-- Restrained edge wear, kept outside the safe content field. -->
+  <path d="M18 86l5-9 M22 91l3-4 M697 105l3 7 M690 953l8-5 M31 986l8 5 M658 20l7 2 M52 1020l8 3 M707 67l-2 6" fill="none" stroke="#d0a078" stroke-width="1.5" opacity="0.43"/>
+  <path d="M15 169l2-8 M704 851l-3 7 M83 1024l6 1 M646 14l7-1" fill="none" stroke="#638166" stroke-width="2" opacity="0.37"/>
+</svg>
